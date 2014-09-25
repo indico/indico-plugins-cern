@@ -8,7 +8,7 @@ setup(
     zip_safe=False,
     platforms='any',
     install_requires=[
-        'indico>=1.9',
+        'indico>=1.9.1',
         'cx_Oracle'
     ],
     entry_points={'indico.plugins': {'foundationsync = indico_foundationsync:FoundationSyncPlugin'}}
