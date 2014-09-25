@@ -17,13 +17,13 @@ from indico.core.db import DBMgr
 from indico.core.db.sqlalchemy import db
 from indico.core.db.sqlalchemy.util.session import update_session_options
 from indico.core.logger import Logger
-from indico.modules.rb.forms.base import IndicoForm
 from indico.modules.rb.models.holidays import Holiday
 from indico.modules.rb.models.locations import Location
 from indico.modules.rb.models.equipment import EquipmentType
 from indico.modules.rb.models.rooms import Room
 from indico.modules.scheduler import Client
 from indico.modules.scheduler.tasks.periodic import PeriodicUniqueTask
+from indico.web.forms.base import IndicoForm
 from MaKaC.user import AvatarHolder
 
 
