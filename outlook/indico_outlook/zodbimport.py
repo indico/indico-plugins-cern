@@ -36,7 +36,7 @@ class OutlookImporter(Importer):
             'status': 'status',
             'reminder': 'reminder',
             'reminder_minutes': 'reminder_minutes',
-            'prefix': 'operation_prefix',
+            'prefix': 'id_prefix',
             'timeout': 'timeout'
         }
         for old, new in settings_map.iteritems():
