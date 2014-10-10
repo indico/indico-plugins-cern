@@ -1,0 +1,46 @@
+<a href="#" id="toggle-outlook-events"
+   data-active="{{ 1 if active else 0 }}"
+   data-href="{{ url_for_plugin('outlook.toggle_blacklist', userId=user.id if session.user.id != user.id else None) }}"
+></a>
+<span style="color: #aaa; font-size: 10px;">
+    ({% trans %}Add Indico events in which I participate to my Outlook calendar{% endtrans %})
+</span>
+<script>
+    (function() {
+        var icons = [imageSrc('cross.png'), imageSrc('tick.png')];
+        var widget = $('#toggle-outlook-events');
+        var state = widget.data('active');
+        var image = $('<img>', {src: icons[state]}).height(11).appendTo(widget);
+        var loading = false;
+
+        function updateIcon() {
+            image.attr('src', loading ? imageSrc('loading') : icons[+state]);
+        }
+
+        widget.on('click', function(e) {
+            e.preventDefault();
+            if (loading) {
+                return;
+            }
+            loading = true;
+            updateIcon();
+
+            $.ajax({
+                url: widget.data('href'),
+                type: 'POST',
+                dataType: 'json',
+                complete: function() {
+                    loading = false;
+                    updateIcon();
+                },
+                success: function(data) {
+                    if (handleAjaxError(data)) {
+                        return;
+                    }
+                    state = data.state;
+                    updateIcon();
+                }
+            });
+        });
+    })();
+</script>

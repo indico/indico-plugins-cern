@@ -3,12 +3,13 @@ from __future__ import unicode_literals
 import sys
 
 from dateutil import rrule
-from flask_pluginengine import with_plugin_context
+from flask_pluginengine import with_plugin_context, render_plugin_template
 from wtforms.fields.core import SelectField, BooleanField, FloatField
 from wtforms.fields.html5 import URLField, IntegerField
 from wtforms.fields.simple import TextField
 from wtforms.validators import DataRequired, NumberRange, URL
 
+from indico.core import signals
 from indico.core.db import DBMgr, db
 from indico.core.db.sqlalchemy.util.session import update_session_options
 from indico.core.plugins import IndicoPlugin
@@ -19,6 +20,7 @@ from indico.web.forms.fields import UnsafePasswordField
 
 from indico_outlook.blueprint import blueprint
 from indico_outlook.calendar import update_calendar, OutlookTask
+from indico_outlook.models.blacklist import OutlookBlacklistUser
 
 
 _status_choices = [('free', _('Free')),
@@ -63,6 +65,13 @@ class OutlookPlugin(IndicoPlugin):
         'timeout': 3
     }
 
+    def init(self):
+        super(OutlookPlugin, self).init()
+        self.connect(signals.user_preferences, self.extend_user_preferences)
+
+    def get_blueprints(self):
+        return blueprint
+
     def add_cli_command(self, manager):
         @manager.option('--create-task', dest='create_task', metavar='N',
                         help='Create a task updating calendar entries every N minutes')
@@ -84,3 +93,8 @@ class OutlookPlugin(IndicoPlugin):
             else:
                 with DBMgr.getInstance().global_connection():
                     update_calendar()
+
+    def extend_user_preferences(self, user):
+        active = not OutlookBlacklistUser.find_first(user_id=int(user.id))
+        content = render_plugin_template('user_prefs.html', user=user, active=active)
+        return _('Sync with my Outlook calendar'), content
