@@ -13,8 +13,8 @@ from indico.modules.scheduler.tasks.periodic import PeriodicUniqueTask
 from indico.util.date_time import format_datetime
 from indico.util.string import strip_control_chars, to_unicode
 
-from indico_outlook.models.outlook_blacklist import OutlookBlacklistUser
-from indico_outlook.models.outlook_queue import OutlookQueueEntry, OutlookAction
+from indico_outlook.models.blacklist import OutlookBlacklistUser
+from indico_outlook.models.queue import OutlookQueueEntry, OutlookAction
 from indico_outlook.util import check_config
 
 

@@ -5,8 +5,8 @@ from indico.util.console import cformat
 from indico.util.struct.iterables import committing_iterator
 from indico_zodbimport import Importer, convert_to_unicode
 
-from indico_outlook.models.outlook_blacklist import OutlookBlacklistUser
-from indico_outlook.models.outlook_queue import OutlookQueueEntry, OutlookAction
+from indico_outlook.models.blacklist import OutlookBlacklistUser
+from indico_outlook.models.queue import OutlookQueueEntry, OutlookAction
 from indico_outlook.plugin import OutlookPlugin
 
 
