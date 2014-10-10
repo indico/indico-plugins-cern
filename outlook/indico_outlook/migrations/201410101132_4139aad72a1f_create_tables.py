@@ -20,14 +20,19 @@ def upgrade():
     op.create_table('outlook_queue',
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('user_id', sa.Integer(), nullable=False),
-                    sa.Column('event_id', sa.Integer(), nullable=False),
+                    sa.Column('event_id', sa.Integer(), nullable=False, index=True),
                     sa.Column('action', sa.SmallInteger(), nullable=False),
                     sa.CheckConstraint('action IN (1, 2, 3)'),
                     sa.PrimaryKeyConstraint('id'),
                     sa.UniqueConstraint('user_id', 'event_id', 'action'),
                     schema='plugin_outlook')
+    op.create_table('outlook_blacklist',
+                    sa.Column('user_id', sa.Integer(), autoincrement=False, nullable=False),
+                    sa.PrimaryKeyConstraint('user_id'),
+                    schema='plugin_outlook')
 
 
 def downgrade():
+    op.drop_table('outlook_blacklist', schema='plugin_outlook')
     op.drop_table('outlook_queue', schema='plugin_outlook')
     op.execute(DropSchema('plugin_outlook'))

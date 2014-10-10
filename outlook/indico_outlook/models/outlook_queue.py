@@ -14,6 +14,7 @@ class OutlookAction(int, IndicoEnum):
 
 
 class OutlookQueueEntry(db.Model):
+    """Pending calendar updates"""
     __tablename__ = 'outlook_queue'
     __table_args__ = (db.CheckConstraint('action IN ({})'.format(', '.join(map(str, OutlookAction)))),
                       db.UniqueConstraint('user_id', 'event_id', 'action'),

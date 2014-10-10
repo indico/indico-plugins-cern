@@ -13,6 +13,7 @@ from indico.modules.scheduler.tasks.periodic import PeriodicUniqueTask
 from indico.util.date_time import format_datetime
 from indico.util.string import strip_control_chars, to_unicode
 
+from indico_outlook.models.outlook_blacklist import OutlookBlacklistUser
 from indico_outlook.models.outlook_queue import OutlookQueueEntry, OutlookAction
 from indico_outlook.util import check_config
 
@@ -58,6 +59,10 @@ def _update_calendar_entry(logger, entry):
     user = entry.user
     email = to_unicode(user.email)
     unique_id = '{}{}_{}'.format(settings['id_prefix'], user.id, event.id)
+
+    if OutlookBlacklistUser.find_first(user_id=int(user.id)):
+        logger.debug('User {} has disabled calendar entries'.format(user.id))
+        return True
 
     if entry.action in {OutlookAction.add, OutlookAction.update}:
         location = strip_control_chars(event.getRoom().getName()) if event.getRoom() else ''
