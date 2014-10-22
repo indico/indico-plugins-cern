@@ -16,7 +16,6 @@ from indico.core.plugins import IndicoPlugin, plugin_engine
 from indico.core.db import DBMgr
 from indico.core.db.sqlalchemy import db
 from indico.core.db.sqlalchemy.util.session import update_session_options
-from indico.core.logger import Logger
 from indico.modules.rb.models.holidays import Holiday
 from indico.modules.rb.models.locations import Location
 from indico.modules.rb.models.equipment import EquipmentType
@@ -367,4 +366,4 @@ class FoundationSyncPlugin(IndicoPlugin):
                 print 'Task created'
                 return
 
-            FoundationSync(db_name, Logger.get('foundation_sync')).run_all(room_name)
+            FoundationSync(db_name, self.logger).run_all(room_name)
