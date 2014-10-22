@@ -8,6 +8,7 @@ from indico.web.forms.base import IndicoForm
 from indico_search import SearchPluginBase
 
 from indico_search_cern.blueprint import blueprint
+from indico_search_cern.engine import CERNSearchEngine
 
 
 class SettingsForm(IndicoForm):
@@ -24,6 +25,7 @@ class CERNSearchPlugin(SearchPluginBase):
     default_settings = {
         'search_url': 'https://search.cern.ch/Pages/IndicoFrame.aspx'
     }
+    engine_class = CERNSearchEngine
 
     def get_blueprints(self):
         return blueprint

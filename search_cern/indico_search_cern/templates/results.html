@@ -1,0 +1,36 @@
+{% extends 'search:results.html' %}
+
+{% block banner %}
+    <a href="http://search.cern.ch"><img src="{{ url_for_plugin('search_cern.static', filename='images/logo.png') }}"
+                                         alt="CERN Search" style="vertical-align: middle; border: 0;"></a>
+{% endblock %}
+
+{% block tooltip %}
+    <span class="icon icon-info js-advanced-search-help"
+          style="cursor: default; font-size: 1.2em; vertical-align: middle;"></span>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        window.addEventListener('message', function(e) {
+            var iframe = $('#search-results');
+            var data = e.data.split(';');
+            iframe.height(25 + parseInt(data[0], 10));
+        }, false);
+    </script>
+{% endblock %}
+
+{% block results %}
+    {% set errors = form.error_list %}
+    {% if errors %}
+        <ul>
+            {% for error in errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    {% if result %}
+        <iframe id="search-results" src="{{ result.iframe_url }}" frameborder="0" width="100%" height="680px"
+                style="margin-top: 0; overflow: hidden;"></iframe>
+    {% endif %}
+{% endblock %}
