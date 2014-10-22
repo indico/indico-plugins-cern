@@ -5,10 +5,10 @@ import pytz
 from pprint import pformat
 
 import requests
+from flask_pluginengine import current_plugin
 from requests.exceptions import Timeout, RequestException
 
 from indico.core.db import db
-from indico.core.logger import Logger
 from indico.modules.scheduler.tasks.periodic import PeriodicUniqueTask
 from indico.util.date_time import format_datetime
 from indico.util.string import strip_control_chars, to_unicode
@@ -32,7 +32,7 @@ def update_calendar(logger=None):
                    None, the plugin logger is used
     """
     if logger is None:
-        logger = Logger.get('plugin.outlook')
+        logger = current_plugin.logger
 
     if not check_config():
         logger.error('Plugin is not configured properly')

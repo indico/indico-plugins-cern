@@ -12,7 +12,6 @@ from wtforms.validators import DataRequired, NumberRange, URL
 from indico.core import signals
 from indico.core.db import DBMgr, db
 from indico.core.db.sqlalchemy.util.session import update_session_options
-from indico.core.logger import Logger
 from indico.core.plugins import IndicoPlugin
 from indico.modules.scheduler import Client
 from indico.util.i18n import _
@@ -108,20 +107,19 @@ class OutlookPlugin(IndicoPlugin):
 
     def event_participation_changed(self, event, user, action, **kwargs):
         if user:
-            print action, kwargs
             if action == 'added':
-                Logger.get('plugin.outlook').info('Participation change: adding {} in {!r}'.format(user, event))
+                self.logger.info('Participation change: adding {} in {!r}'.format(user, event))
                 OutlookQueueEntry.record(event, user, OutlookAction.add)
             elif action == 'removed':
-                Logger.get('plugin.outlook').info('Participation change: removing {} in {!r}'.format(user, event))
+                self.logger.info('Participation change: removing {} in {!r}'.format(user, event))
                 OutlookQueueEntry.record(event, user, OutlookAction.remove)
 
     def event_data_changed(self, event, attr, **kwargs):
         for user in get_participating_users(event):
-            Logger.get('plugin.outlook').info('Event data change ({}): updating {} in {!r}'.format(attr, user, event))
+            self.logger.info('Event data change ({}): updating {} in {!r}'.format(attr, user, event))
             OutlookQueueEntry.record(event, user, OutlookAction.update)
 
     def event_deleted(self, event, **kwargs):
         for user in get_participating_users(event):
-            Logger.get('plugin.outlook').info('Event deletion: removing {} in {!r}'.format(user, event))
+            self.logger.info('Event deletion: removing {} in {!r}'.format(user, event))
             OutlookQueueEntry.record(event, user, OutlookAction.remove)
