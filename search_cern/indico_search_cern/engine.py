@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from flask import redirect
 from flask_pluginengine import current_plugin
 from werkzeug.urls import url_encode
 
@@ -15,14 +16,21 @@ FIELD_MAP = {'title': 'title',
 
 
 class CERNSearchEngine(SearchEngine):
+    @property
+    def use_iframe(self):
+        return current_plugin.settings.get('display_mode') == 'iframe'
+
     def process(self):
         query = self._make_query()
         if not query:
             return None
-        return {'iframe_url': self.build_url(k=query)}
+        elif self.use_iframe:
+            return {'iframe_url': self.build_url(k=query)}
+        else:
+            return redirect(self.build_url(k=query))
 
     def build_url(self, **query_params):
-        params = {'isFrame': '1',
+        params = {'isFrame': unicode(int(self.use_iframe)),
                   'isDlg': '1',
                   'autologin': unicode(int(not current_plugin.only_public)),
                   'httpsActivation': '1'}
