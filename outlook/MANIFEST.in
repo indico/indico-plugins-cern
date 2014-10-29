@@ -1,1 +1,2 @@
 graft indico_outlook/migrations
+graft indico_outlook/templates
