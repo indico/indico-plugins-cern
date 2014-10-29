@@ -4,8 +4,9 @@ from flask import redirect
 from flask_pluginengine import current_plugin
 from werkzeug.urls import url_encode
 
-from MaKaC.conference import Category, Conference
+from indico.util.string import to_unicode
 from indico_search import SearchEngine
+from MaKaC.conference import Category, Conference
 
 
 FIELD_MAP = {'title': 'title',
@@ -73,7 +74,7 @@ class CERNSearchEngine(SearchEngine):
 
     def _make_taxonomy_query(self):
         if isinstance(self.obj, Category) and not self.obj.isRoot():
-            titles = '/'.join(name.replace('/', '%2F') for name in self.obj.getCategoryPathTitles()[1:])
+            titles = '/'.join(to_unicode(name).replace('/', '%2F') for name in self.obj.getCategoryPathTitles()[1:])
             return "cerntaxonomy:'Indico/{}'".format(titles)
         elif isinstance(self.obj, Conference):
             return 'EventID:{}'.format(self.obj.id)
