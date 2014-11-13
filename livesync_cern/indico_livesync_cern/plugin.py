@@ -2,13 +2,13 @@ from __future__ import unicode_literals
 
 from indico_livesync import LiveSyncPluginBase
 
-from indico_livesync_cern.agent import LiveSyncCERNAgent
+from indico_livesync_cern.agent import CERNLiveSyncAgent
 
 
-class LiveSyncCERNPlugin(LiveSyncPluginBase):
+class CERNLiveSyncPlugin(LiveSyncPluginBase):
     """LiveSync CERN
 
-    Provides a CERNsearch agent LiveSync
+    Provides a CERNsearch agent for LiveSync
     """
 
-    agent_classes = {'cernsearch': LiveSyncCERNAgent}
+    agent_classes = {'cernsearch': CERNLiveSyncAgent}

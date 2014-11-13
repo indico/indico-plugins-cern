@@ -8,7 +8,7 @@ class CERNUploader(MARCXMLUploader):
         pass
 
 
-class LiveSyncCERNAgent(LiveSyncAgentBase):
+class CERNLiveSyncAgent(LiveSyncAgentBase):
     """CERNsearch Agent
 
     This agent uploads data to CERNsearch.

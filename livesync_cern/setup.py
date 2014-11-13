@@ -17,5 +17,5 @@ setup(
         'indico>=1.9.1',
         'indico_livesync'
     ],
-    entry_points={'indico.plugins': {'livesync_cern = indico_livesync_cern.plugin:LiveSyncCERNPlugin'}}
+    entry_points={'indico.plugins': {'livesync_cern = indico_livesync_cern.plugin:CERNLiveSyncPlugin'}}
 )
