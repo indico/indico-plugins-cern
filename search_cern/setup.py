@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+
+
 from setuptools import setup, find_packages
 
 
@@ -15,5 +18,6 @@ setup(
         'indico>=1.9.1',
         'indico_search'
     ],
-    entry_points={'indico.plugins': {'search_cern = indico_search_cern.plugin:CERNSearchPlugin'}}
+    entry_points={'indico.plugins': {'search_cern = indico_search_cern.plugin:CERNSearchPlugin'},
+                  'indico.zodb_importers': {'search_cern = indico_search_cern.zodbimport:CERNSearchImporter'}}
 )
