@@ -1,5 +1,10 @@
 from __future__ import unicode_literals
 
+import base64
+from urllib import urlencode
+from urllib2 import urlopen, Request
+
+from lxml import etree
 from wtforms.fields.core import StringField
 from wtforms.fields.html5 import URLField
 from wtforms.validators import DataRequired, URL
@@ -19,9 +24,28 @@ class CERNAgentForm(AgentForm):
     password = UnsafePasswordField(_('Password'), [DataRequired()], filters=[strip_whitespace])
 
 
+class CERNUploaderError(Exception):
+    pass
+
+
 class CERNUploader(MARCXMLUploader):
+    def __init__(self):
+        super(CERNUploader, self).__init__()
+        url = self.agent.agent.settings.get('server_url')
+        username = self.agent.agent.settings.get('username')
+        password = self.agent.agent.settings.get('password')
+        credentials = base64.encodestring('{}:{}'.format(username, password)).strip()
+        self.request = Request('{}/ImportXML'.format(url))
+        self.request.add_header('Authorization', 'Basic {}'.format(credentials))
+
     def upload_xml(self, xml):
-        pass
+        result = urlopen(self.request, data=urlencode({'xml': xml}))
+
+        xmlDoc = etree.fromstring(result.read())
+        booleanResult = etree.tostring(xmlDoc, method="text")
+
+        if not result.code == 200 or not booleanResult == 'true':
+            raise CERNUploaderError('{} - {}'.format(result.code, result.read()))
 
 
 class CERNLiveSyncAgent(LiveSyncAgentBase):
