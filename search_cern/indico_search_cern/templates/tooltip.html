@@ -1,0 +1,56 @@
+<div id="search-advanced-help-tooltip">
+    <p>{% trans %}You can search multiple fields and narrow down the search results by using the advanced syntax in the search field above.{% endtrans %}</p>
+
+    <h1>{% trans %}General Syntax{% endtrans %}</h1>
+
+    <ul>
+        <li><code><span class="field">FIELD</span>:TERM</code> - {% trans %}field contains term{% endtrans %}</li>
+        <li><code><span class="field">FIELD</span>=TERM</code> - {% trans %}field equals term{% endtrans %}</li>
+        <li><code><span class="negation">-</span><span class="field">FIELD</span>:TERM</code> - {% trans %}field does not contain term{% endtrans %}</li>
+        <li><code><span class="field">FIELD</span>&lt;&gt;TERM</code> - {% trans %}field does not equal term{% endtrans %}</li>
+    </ul>
+
+    <p>
+        {% trans %}A term containing spaces should be enclosed in quotes.{% endtrans %}
+        {% trans %}Multiple criteria can be separated using <code>AND</code> (default, can be omitted) or <code>OR</code>.{% endtrans %}
+    </p>
+
+    <h1>{% trans %}Examples{% endtrans %}</h1>
+
+    <ul>
+        <li><code><span class="field">Location</span>:123-2-025</code></li>
+        <li><code><span class="field">Author</span>:"John Doe" <span class="field">Title</span>:Indico</code></li>
+        <li><code><span class="negation">-</span><span class="field">Author</span>:"Bobby Boring" <span class="field">Title</span>:Indico</code></li>
+        <li><code><span class="field">Author</span>:Doe <span class="field">Format</span>:PDF</code></li>
+    </ul>
+
+    <h1>{% trans %}Available Fields{% endtrans %}</h1>
+
+    <ul>
+        <li>Title</li>
+        <li>Author</li>
+        <li>Description</li>
+        <li>Keywords</li>
+        <li>Location</li>
+        <li>URL</li>
+        <li>Format</li>
+        <li>FileExtension</li>
+        <li>CernTaxonomy (a category or category path, e.g. <code>Committees/Council</code> or <code>ATLAS</code>)</li>
+    </ul>
+</div>
+<script>
+    $(document).ready(function() {
+        $('.js-advanced-search-help').qtip({
+            content: function() {
+                // Using a function here to avoid an empty tooltip if someone quickly moves from one icon
+                // to the other one (while the first tooltip is not fully hidden yet). Yes, that case is not
+                // very likely but it's easy to avoid the risk altogether so why not do it :)
+                return $('#search-advanced-help-tooltip');
+            },
+            hide: {
+                fixed: true,
+                delay: 200
+            }
+        });
+    });
+</script>

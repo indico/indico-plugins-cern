@@ -1,0 +1,2 @@
+graft indico_search_cern/static
+graft indico_search_cern/templates
