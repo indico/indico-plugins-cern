@@ -40,12 +40,12 @@ class CERNUploader(MARCXMLUploader):
 
     def upload_xml(self, xml):
         result = urlopen(self.request, data=urlencode({'xml': xml}))
+        result_text = self._get_result_text(result)
+        if not result.code == 200 or not result_text == 'true':
+            raise CERNUploaderError('{} - {}'.format(result.code, result_text))
 
-        xmlDoc = etree.fromstring(result.read())
-        booleanResult = etree.tostring(xmlDoc, method="text")
-
-        if not result.code == 200 or not booleanResult == 'true':
-            raise CERNUploaderError('{} - {}'.format(result.code, result.read()))
+    def _get_result_text(result):
+        return etree.tostring(etree.fromstring(result.read()), method="text")
 
 
 class CERNLiveSyncAgent(LiveSyncAgentBase):
