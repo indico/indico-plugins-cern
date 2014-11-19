@@ -41,7 +41,8 @@ class CERNUploader(MARCXMLUploader):
     def upload_xml(self, xml):
         result = urlopen(self.request, data=urlencode({'xml': xml}))
         result_text = self._get_result_text(result)
-        if not result.code == 200 or not result_text == 'true':
+
+        if result.code != 200 or result_text != 'true':
             raise CERNUploaderError('{} - {}'.format(result.code, result_text))
 
     def _get_result_text(result):
