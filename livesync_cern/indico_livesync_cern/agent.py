@@ -1,8 +1,6 @@
 from __future__ import unicode_literals
 
-import base64
-from urllib import urlencode
-from urllib2 import urlopen, Request
+import requests
 
 from lxml import etree
 from wtforms.fields.core import StringField
@@ -31,15 +29,12 @@ class CERNUploaderError(Exception):
 class CERNUploader(MARCXMLUploader):
     def __init__(self):
         super(CERNUploader, self).__init__()
-        url = self.agent.agent.settings.get('server_url')
-        username = self.agent.agent.settings.get('username')
-        password = self.agent.agent.settings.get('password')
-        credentials = base64.encodestring('{}:{}'.format(username, password)).strip()
-        self.request = Request('{}/ImportXML'.format(url))
-        self.request.add_header('Authorization', 'Basic {}'.format(credentials))
+        self.url = self.agent.agent.settings.get('server_url')
+        self.username = self.agent.agent.settings.get('username')
+        self.password = self.agent.agent.settings.get('password')
 
     def upload_xml(self, xml):
-        result = urlopen(self.request, data=urlencode({'xml': xml}))
+        result = requests.get(self.url, auth=(self.username, self.password), data={'xml': xml})
         result_text = self._get_result_text(result)
 
         if result.code != 200 or result_text != 'true':
