@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from indico_livesync import LiveSyncPluginBase
 
-from indico_livesync_cern.agent import CERNLiveSyncBackend
+from indico_livesync_cern.backend import CERNLiveSyncBackend
 
 
 class CERNLiveSyncPlugin(LiveSyncPluginBase):
