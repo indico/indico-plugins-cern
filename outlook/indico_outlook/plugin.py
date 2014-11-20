@@ -70,10 +70,10 @@ class OutlookPlugin(IndicoPlugin):
     def init(self):
         super(OutlookPlugin, self).init()
         self.connect(signals.user_preferences, self.extend_user_preferences)
-        self.connect(signals.event_registrant_changed, self.event_participation_changed)
-        self.connect(signals.event_participant_changed, self.event_participation_changed)
-        self.connect(signals.event_data_changed, self.event_data_changed)
-        self.connect(signals.event_deleted, self.event_deleted)
+        self.connect(signals.event.registrant_changed, self.event_participation_changed)
+        self.connect(signals.event.participant_changed, self.event_participation_changed)
+        self.connect(signals.event.data_changed, self.event_data_changed)
+        self.connect(signals.event.deleted, self.event_deleted)
 
     def get_blueprints(self):
         return blueprint
