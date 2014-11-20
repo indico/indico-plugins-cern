@@ -11,7 +11,7 @@ from indico.util.i18n import _
 from indico.util.string import strip_whitespace
 from indico.web.forms.fields import UnsafePasswordField
 
-from indico_livesync import LiveSyncAgentBase, MARCXMLUploader
+from indico_livesync import LiveSyncBackendBase, MARCXMLUploader
 from indico_livesync import AgentForm
 
 
@@ -29,9 +29,9 @@ class CERNUploaderError(Exception):
 class CERNUploader(MARCXMLUploader):
     def __init__(self):
         super(CERNUploader, self).__init__()
-        self.url = self.agent.agent.settings.get('server_url')
-        self.username = self.agent.agent.settings.get('username')
-        self.password = self.agent.agent.settings.get('password')
+        self.url = self.backend.agent.settings.get('server_url')
+        self.username = self.backend.agent.settings.get('username')
+        self.password = self.backend.agent.settings.get('password')
 
     def upload_xml(self, xml):
         result = requests.get(self.url, auth=(self.username, self.password), data={'xml': xml})
@@ -44,10 +44,10 @@ class CERNUploader(MARCXMLUploader):
         return etree.tostring(etree.fromstring(result.read()), method="text")
 
 
-class CERNLiveSyncAgent(LiveSyncAgentBase):
-    """CERNsearch Agent
+class CERNLiveSyncBackend(LiveSyncBackendBase):
+    """CERNsearch
 
-    This agent uploads data to CERNsearch.
+    This backend uploads data to CERNsearch.
     """
 
     uploader = CERNUploader
