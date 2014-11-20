@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 
 import requests
-
 from lxml import etree
 from wtforms.fields.core import StringField
 from wtforms.fields.html5 import URLField
@@ -34,11 +33,11 @@ class CERNUploader(MARCXMLUploader):
         self.password = self.backend.agent.settings.get('password')
 
     def upload_xml(self, xml):
-        result = requests.get(self.url, auth=(self.username, self.password), data={'xml': xml})
-        result_text = self._get_result_text(result)
+        response = requests.post(self.url, auth=(self.username, self.password), data={'xml': xml})
+        result_text = self._get_result_text(response.text)
 
-        if result.code != 200 or result_text != 'true':
-            raise CERNUploaderError('{} - {}'.format(result.code, result_text))
+        if response.status_code != 200 or result_text != 'true':
+            raise CERNUploaderError('{} - {}'.format(response.status_code, result_text))
 
     def _get_result_text(result):
         return etree.tostring(etree.fromstring(result.read()), method="text")
