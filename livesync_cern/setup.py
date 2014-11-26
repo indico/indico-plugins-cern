@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 setup(
     name='indico_livesync_cern',
     version='0.1',
-    url='https://gitlab.cern.ch/indico/indico-plugin-livesync-cern',
+    url='https://gitlab.cern.ch/indico/indico-plugins-cern',
     author='Indico Team',
     author_email='indico-team@cern.ch',
     packages=find_packages(),
