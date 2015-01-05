@@ -37,6 +37,7 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     settings_form = PluginSettingsForm
     event_settings_form = EventSettingsForm
     default_settings = {'method_name': 'CERN YellowPay'}
+    valid_currencies = {'CHF'}
 
     def can_be_modified(self, user, event):
         if user.isAdmin():
