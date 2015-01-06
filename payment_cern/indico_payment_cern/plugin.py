@@ -69,8 +69,9 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         base_amount = data['amount']
         if selected_method:
             method = get_payment_method(data['event'], selected_method)
-            data['fee'] = base_amount * method['fee'] / 100
-            data['amount'] = base_amount + method['fee']
+            modifier = 1 / (1 - method['fee'] / 100)
+            data['amount'] = base_amount * modifier
+            data['fee'] = data['amount'] - base_amount
         else:
             data['fee'] = None
             if data['event_settings']['apply_fees']:  # we don't know the final price

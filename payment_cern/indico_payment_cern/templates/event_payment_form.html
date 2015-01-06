@@ -12,9 +12,6 @@ Select a CERN YellowPay payment method to proceed with your payment.
             {% for method in yellowpay_methods %}
                 <option value="{{ method.name }}" {%- if method.name == selected_method %} selected{% endif %}>
                     {{ method.title }}
-                    {% if method.fee %}
-                        (+{{ method.fee }}%)
-                    {% endif %}
                 </option>
             {% endfor %}
         </select>
