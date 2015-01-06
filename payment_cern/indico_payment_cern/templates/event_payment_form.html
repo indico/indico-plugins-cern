@@ -1,14 +1,42 @@
 Select a CERN YellowPay payment method to proceed with your payment.
 
-{# TODO: Add select with payment methods #}
-
 <dl class="i-data-list">
-    <dt>First name</dt>
+    <dt>{% trans %}First name{% endtrans %}</dt>
     <dd>{{ registrant.getFirstName() }}</dd>
-    <dt>Last name</dt>
+    <dt>{% trans %}Last name{% endtrans %}</dt>
     <dd>{{ registrant.getFamilyName() }}</dd>
-    <dt>Total amount</dt>
-    <dd>{{ amount }} {{ currency }}</dd>
+    <dt>{% trans %}Pay using{% endtrans %}</dt>
+    <dd>
+        <select id="yellowpay-method">
+            <option value="">{% trans %}Please choose an option{% endtrans %}</option>
+            {% for method in yellowpay_methods %}
+                <option value="{{ method.name }}" {%- if method.name == selected_method %} selected{% endif %}>
+                    {{ method.title }}
+                    {% if method.fee %}
+                        (+{{ method.fee }}%)
+                    {% endif %}
+                </option>
+            {% endfor %}
+        </select>
+    </dd>
+    {% if event_settings.apply_fees %}
+        <dt>{% trans %}Extra fee{% endtrans %}</dt>
+        <dd>
+            {% if fee is not none %}
+                {{ format_currency(fee, currency, locale=session.lang) }}
+            {% else %}
+                {% trans %}n/a{% endtrans %}
+            {% endif %}
+        </dd>
+    {% endif %}
+    <dt>{% trans %}Total amount{% endtrans %}</dt>
+    <dd>
+        {% if amount is not none %}
+            <strong>{{ format_currency(amount, currency, locale=session.lang) }}</strong>
+        {% else %}
+            {% trans %}n/a{% endtrans %}
+        {% endif %}
+    </dd>
     <dt></dt>
     <dd>
         <form action="{{ settings.payment_url }}" method="POST" id="cernyellowpay">
@@ -33,11 +61,19 @@ Select a CERN YellowPay payment method to proceed with your payment.
             <input type="hidden" name="PARAMVAR" id="PARAMVAR" value="">
             <input type="hidden" name="PM" id="PM" value="">
             <input type="hidden" name="PSPID" id="PSPID" value="">
-            <input type="hidden" name="TP" id="TP" value=""> -->
-            {% if event_settings.apply_fees %}
-                <input type="hidden" name="SHASIGN" id="SHASIGN" value="">
-            {% endif %}
-            <input class="i-button highlight" type="submit" name="submit" value="Pay now">
+            <input type="hidden" name="TP" id="TP" value="">
+            <input type="hidden" name="SHASIGN" id="SHASIGN" value="">
+            -->
+            <input class="i-button highlight" type="submit" name="submit" value="Pay now" {%- if amount is none %} disabled{% endif %}>
         </form>
     </dd>
 </dl>
+
+
+<script>
+    (function() {
+        $('#yellowpay-method').on('change', function() {
+            reloadPaymentMethod({yellowpay_method: $(this).val()});
+        });
+    })();
+</script>
