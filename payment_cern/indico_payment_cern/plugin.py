@@ -61,6 +61,7 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
                         'payment_methods': []}
     default_event_settings = {'apply_fees': True}
     valid_currencies = {'CHF'}
+    category = 'payment'
 
     def get_blueprints(self):
         return blueprint
