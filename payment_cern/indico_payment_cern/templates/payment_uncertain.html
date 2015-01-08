@@ -1,0 +1,6 @@
+<p>The status of your payment is unknown. Please do not pay again but contact the
+<a href="mailto:{{ settings.fp_email_address }}">{{ settings.fp_department_name }}</a>
+instead and provide the following information:</p>
+
+Event: {{ url_for('event.conferenceDisplay', event, _external=True) }}<br>
+Payment ID: {{ registrant.getIdPay() }}

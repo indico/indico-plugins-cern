@@ -36,31 +36,10 @@ Select a CERN YellowPay payment method to proceed with your payment.
     </dd>
     <dt></dt>
     <dd>
-        <form action="{{ settings.payment_url }}" method="POST" id="cernyellowpay">
-        {# TODO: Complete form #}
-        <!--<input type="hidden" name="ACCEPTURL" id="ACCEPTURL" value="">
-            <input type="hidden" name="AMOUNT" id="AMOUNT" value="{{ amount }}">
-            <input type="hidden" name="BACKURL" id="BACKURL" value="">
-            <input type="hidden" name="BRAND" id="BRAND" value="">
-            <input type="hidden" name="CANCELURL" id="CANCELURL" value="">
-            <input type="hidden" name="CN" id="CN" value="">
-            <input type="hidden" name="CURRENCY" id="CURRENCY" value="{{ currency }}">
-            <input type="hidden" name="DECLINEURL" id="DECLINEURL" value="">
-            <input type="hidden" name="EMAIL" id="EMAIL" value="">
-            <input type="hidden" name="EXCEPTIONURL" id="EXCEPTIONURL" value="">
-            <input type="hidden" name="HOMEURL" id="HOMEURL" value="">
-            <input type="hidden" name="LANGUAGE" id="LANGUAGE" value="">
-            <input type="hidden" name="ORDERID" id="ORDERID" value="">
-            <input type="hidden" name="OWNERADDRESS" id="OWNERADDRESS" value="">
-            <input type="hidden" name="OWNERCTY" id="OWNERCTY" value="">
-            <input type="hidden" name="OWNERTELNO" id="OWNERTELNO" value="">
-            <input type="hidden" name="OWNERTOWN" id="OWNERTOWN" value="">
-            <input type="hidden" name="PARAMVAR" id="PARAMVAR" value="">
-            <input type="hidden" name="PM" id="PM" value="">
-            <input type="hidden" name="PSPID" id="PSPID" value="">
-            <input type="hidden" name="TP" id="TP" value="">
-            <input type="hidden" name="SHASIGN" id="SHASIGN" value="">
-            -->
+        <form action="{{ settings.payment_url }}" method="POST">
+            {% for name, value in form_data | dictsort -%}
+                <input type="hidden" name="{{ name }}" value="{{ value }}">
+            {% endfor %}
             <input class="i-button highlight" type="submit" name="submit" value="Pay now" {%- if amount is none %} disabled{% endif %}>
         </form>
     </dd>

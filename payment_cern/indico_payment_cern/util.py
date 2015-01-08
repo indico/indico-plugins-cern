@@ -16,6 +16,8 @@
 
 from __future__ import unicode_literals
 
+from hashlib import sha512
+
 from flask_pluginengine import current_plugin
 
 
@@ -43,3 +45,9 @@ def get_payment_methods(event):
 def get_payment_method(event, name):
     """Returns a specific payment method with the correct fee"""
     return next(x for x in get_payment_methods(event) if x['name'] == name)
+
+
+def create_hash(seed, form_data):
+    """Creates the weird hash for postfinance"""
+    data_str = seed.join('{}={}'.format(key, value) for key, value in sorted(form_data.items()) if value) + seed
+    return sha512(data_str).hexdigest().upper()
