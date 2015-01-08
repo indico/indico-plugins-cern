@@ -1,4 +1,4 @@
-Select a CERN YellowPay payment method to proceed with your payment.
+Select a PostFinance payment method to proceed with your payment.
 
 <dl class="i-data-list">
     <dt>{% trans %}First name{% endtrans %}</dt>
@@ -7,9 +7,9 @@ Select a CERN YellowPay payment method to proceed with your payment.
     <dd>{{ registrant.getFamilyName() }}</dd>
     <dt>{% trans %}Pay using{% endtrans %}</dt>
     <dd>
-        <select id="yellowpay-method">
+        <select id="postfinance-method">
             <option value="">{% trans %}Please choose an option{% endtrans %}</option>
-            {% for method in yellowpay_methods %}
+            {% for method in postfinance_methods %}
                 <option value="{{ method.name }}" {%- if method.name == selected_method %} selected{% endif %}>
                     {{ method.title }}
                 </option>
@@ -48,8 +48,8 @@ Select a CERN YellowPay payment method to proceed with your payment.
 
 <script>
     (function() {
-        $('#yellowpay-method').on('change', function() {
-            reloadPaymentMethod({yellowpay_method: $(this).val()});
+        $('#postfinance-method').on('change', function() {
+            reloadPaymentMethod({postfinance_method: $(this).val()});
         });
     })();
 </script>

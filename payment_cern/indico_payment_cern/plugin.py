@@ -54,10 +54,10 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
 
 
 class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
-    """Payment: CERN YellowPay"""
+    """Payment: PostFinance CERN"""
     settings_form = PluginSettingsForm
     event_settings_form = EventSettingsForm
-    default_settings = {'method_name': 'CERN YellowPay',
+    default_settings = {'method_name': 'PostFinance CERN',
                         'payment_methods': []}
     default_event_settings = {'apply_fees': True}
     valid_currencies = {'CHF'}
@@ -72,8 +72,8 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         return any(principal.containsUser(user) for principal in authorized_users)
 
     def adjust_payment_form_data(self, data):
-        data['yellowpay_methods'] = get_payment_methods(data['event'])
-        data['selected_method'] = selected_method = request.args.get('yellowpay_method', '')
+        data['postfinance_methods'] = get_payment_methods(data['event'])
+        data['selected_method'] = selected_method = request.args.get('postfinance_method', '')
         base_amount = data['amount']
         if selected_method:
             method = get_payment_method(data['event'], selected_method)
