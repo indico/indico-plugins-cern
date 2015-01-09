@@ -54,7 +54,12 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
 
 
 class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
-    """Payment: PostFinance CERN"""
+    """PostFinance CERN
+
+    Providing a payment method using the PostFinance system.
+    Extra fees can be set for each payment method so the price after the
+    cut taken by the bank is the correct one.
+    """
     settings_form = PluginSettingsForm
     event_settings_form = EventSettingsForm
     default_settings = {'method_name': 'PostFinance CERN',
