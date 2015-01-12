@@ -12,4 +12,3 @@ class CERNLiveSyncPlugin(LiveSyncPluginBase):
     """
 
     backend_classes = {'cernsearch': CERNLiveSyncBackend}
-    category = 'synchronization'
