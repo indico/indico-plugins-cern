@@ -1,1 +1,2 @@
+graft indico_payment_cern/static
 graft indico_payment_cern/templates

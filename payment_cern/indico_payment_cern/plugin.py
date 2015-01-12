@@ -67,6 +67,10 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     default_event_settings = {'apply_fees': True}
     valid_currencies = {'CHF'}
 
+    @property
+    def logo_url(self):
+        return url_for_plugin(self.name + '.static', filename='images/logo.png')
+
     def get_blueprints(self):
         return blueprint
 
