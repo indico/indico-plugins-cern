@@ -24,7 +24,7 @@ from markupsafe import Markup
 from werkzeug.exceptions import BadRequest
 
 from indico.modules.payment.models.transactions import TransactionAction, PaymentTransaction
-from indico.modules.payment.util import register_transaction
+from indico.modules.payment.util import register_transaction, get_registrant_params
 from indico.util.i18n import _
 from indico.web.flask.util import url_for
 from MaKaC.conference import ConferenceHolder
@@ -104,11 +104,11 @@ class RHPaymentSuccess(PaymentSuccessMixin, RHRegistrationFormRegistrantBase):
     def _process(self):
         if not self._check_hash():
             flash('Your transaction could not be authorized.', 'error')
-            return redirect(url_for('event.confRegistrationFormDisplay', self.event))
+            return redirect(url_for('event.confRegistrationFormDisplay', self.event, **get_registrant_params()))
 
         self._create_transaction()
         flash(_('Your payment request has been processed.'), 'success')
-        return redirect(url_for('event.confRegistrationFormDisplay', self._conf))
+        return redirect(url_for('event.confRegistrationFormDisplay', self.event, **get_registrant_params()))
 
 
 class RHPaymentSuccessBackground(PaymentSuccessMixin, RH):

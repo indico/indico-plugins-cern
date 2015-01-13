@@ -10,6 +10,7 @@ from wtforms.validators import DataRequired
 from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.modules.payment import (PaymentPluginMixin, PaymentPluginSettingsFormBase, PaymentEventSettingsFormBase,
                                     event_settings)
+from indico.modules.payment.util import get_registrant_params
 from indico.util.i18n import _
 from indico.util.string import remove_accents, remove_non_alpha
 from indico.util.user import retrieve_principals
@@ -64,7 +65,8 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     event_settings_form = EventSettingsForm
     default_settings = {'method_name': 'PostFinance CERN',
                         'payment_methods': []}
-    default_event_settings = {'apply_fees': True}
+    default_event_settings = {'apply_fees': True,
+                              'custom_fees': {}}
     valid_currencies = {'CHF'}
 
     @property
@@ -114,6 +116,7 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         template_page = ''  # yes, apparently it's supposed to be empty..
         template_hash = sha512(seed + template_page).hexdigest()
         order_id = self._get_order_id(data)
+        parameters = get_registrant_params()
 
         form_data = {
             'PSPID': data['settings']['shop_id'],
@@ -131,12 +134,12 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             'PM': method['type'],
             'BRAND': method['name'],
             'PARAMVAR': data['settings']['server_url_suffix'],
-            'HOMEURL': url_for('event.conferenceDisplay', event, _external=True, _secure=True),
-            'ACCEPTURL': url_for_plugin('payment_cern.success', event, _external=True, _secure=True),
-            'CANCELURL': url_for_plugin('payment_cern.cancel', event, _external=True, _secure=True),
-            'DECLINEURL': url_for_plugin('payment_cern.decline', event, _external=True, _secure=True),
-            'EXCEPTIONURL': url_for_plugin('payment_cern.uncertain', event, _external=True, _secure=True),
-            'BACKURL': url_for('payment.event_payment', event, _external=True, _secure=True)
+            'HOMEURL': url_for('event.conferenceDisplay', event, _external=True, _secure=True, **parameters),
+            'ACCEPTURL': url_for_plugin('payment_cern.success', event, _external=True, _secure=True, **parameters),
+            'CANCELURL': url_for_plugin('payment_cern.cancel', event, _external=True, _secure=True, **parameters),
+            'DECLINEURL': url_for_plugin('payment_cern.decline', event, _external=True, _secure=True, **parameters),
+            'EXCEPTIONURL': url_for_plugin('payment_cern.uncertain', event, _external=True, _secure=True, **parameters),
+            'BACKURL': url_for('payment.event_payment', event, _external=True, _secure=True, **parameters)
         }
         form_data['SHASIGN'] = create_hash(seed, form_data)
         return form_data
