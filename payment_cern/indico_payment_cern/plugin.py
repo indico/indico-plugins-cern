@@ -134,7 +134,7 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             'PM': method['type'],
             'BRAND': method['name'],
             'PARAMVAR': data['settings']['server_url_suffix'],
-            'HOMEURL': url_for('event.conferenceDisplay', event, _external=True, _secure=True, **parameters),
+            'HOMEURL': url_for('event.conferenceDisplay', event, _external=True, _secure=True),
             'ACCEPTURL': url_for_plugin('payment_cern.success', event, _external=True, _secure=True, **parameters),
             'CANCELURL': url_for_plugin('payment_cern.cancel', event, _external=True, _secure=True, **parameters),
             'DECLINEURL': url_for_plugin('payment_cern.decline', event, _external=True, _secure=True, **parameters),
