@@ -35,11 +35,11 @@ class CERNPaymentImporter(Importer):
         opts = self.zodb_root['plugins']['EPayment']._PluginType__plugins['CERNYellowPay']._PluginBase__options
         # Migrate payment methods
         payment_methods = [{new: pm[old] for old, new in payment_method_map.iteritems()}
-                           for pm in opts['paymentMethods'].getValue()]
+                           for pm in opts['paymentMethods']._PluginOption__value]
         CERNPaymentPlugin.settings.set('payment_methods', payment_methods)
         # Migrate other options
         for old, new in settings_map.iteritems():
-            value = opts[old].getValue()
+            value = opts[old]._PluginOption__value
             if isinstance(value, basestring):
                 value = convert_to_unicode(value).strip()
             CERNPaymentPlugin.settings.set(new, value)

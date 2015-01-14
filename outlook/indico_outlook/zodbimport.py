@@ -42,7 +42,7 @@ class OutlookImporter(Importer):
             'timeout': 'timeout'
         }
         for old, new in settings_map.iteritems():
-            value = opts[old].getValue()
+            value = opts[old]._PluginOption__value
             if isinstance(value, basestring):
                 value = convert_to_unicode(value).strip()
             OutlookPlugin.settings.set(new, value)

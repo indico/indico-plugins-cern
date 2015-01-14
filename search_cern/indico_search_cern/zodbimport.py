@@ -17,5 +17,5 @@ class CERNSearchImporter(Importer):
         print cformat('%{white!}migrating settings')
         CERNSearchPlugin.settings.delete_all()
         opts = self.zodb_root['plugins']['search']._PluginType__plugins['cern_search']._PluginBase__options
-        CERNSearchPlugin.settings.set('search_url', convert_to_unicode(opts['serverUrl'].getValue()).strip())
+        CERNSearchPlugin.settings.set('search_url', convert_to_unicode(opts['serverUrl']._PluginOption__value).strip())
         db.session.commit()
