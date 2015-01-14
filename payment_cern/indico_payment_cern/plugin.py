@@ -3,6 +3,7 @@ from __future__ import unicode_literals, division
 from hashlib import sha512
 
 from flask import request, session
+from flask_pluginengine import render_plugin_template
 from wtforms.fields.core import StringField, BooleanField
 from wtforms.fields.html5 import URLField, EmailField
 from wtforms.validators import DataRequired
@@ -64,10 +65,15 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     settings_form = PluginSettingsForm
     event_settings_form = EventSettingsForm
     default_settings = {'method_name': 'PostFinance CERN',
+                        'authorized_users': [],
                         'payment_methods': []}
     default_event_settings = {'apply_fees': True,
                               'custom_fees': {}}
     valid_currencies = {'CHF'}
+
+    def init(self):
+        super(CERNPaymentPlugin, self).init()
+        self.template_hook('event-manage-payment-plugin-cannot-modify', self._get_cannot_modify_message)
 
     @property
     def logo_url(self):
@@ -81,6 +87,13 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             return True
         authorized_users = retrieve_principals(self.settings.get('authorized_users'))
         return any(principal.containsUser(user) for principal in authorized_users)
+
+    def _get_cannot_modify_message(self, plugin, event, **kwargs):
+        if self != plugin:
+            return
+        fp_name = self.settings.get('fp_department_name')
+        fp_email = self.settings.get('fp_email_address')
+        return render_plugin_template('event_settings_readonly.html', fp_name=fp_name, fp_email=fp_email)
 
     def adjust_payment_form_data(self, data):
         data['postfinance_methods'] = get_payment_methods(data['event'])
