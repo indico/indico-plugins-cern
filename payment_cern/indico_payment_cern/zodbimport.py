@@ -28,9 +28,9 @@ class CERNPaymentImporter(Importer):
             'FPEmaillAddress': 'fp_email_address',
             'FPDepartmentName': 'fp_department_name',
             'paymentURL': 'payment_url',
-            'shopID': 'shop_id',
-            'hashSeed': 'hash_seed',
-            'hashSeedOut': 'hash_seed_out',
+            'shopID': 'shop_id_chf',
+            'hashSeed': 'hash_seed_chf',
+            'hashSeedOut': 'hash_seed_out_chf',
             'serverURLSuffix': 'server_url_suffix',
             'orderIDPrefix': 'order_id_prefix'
         }

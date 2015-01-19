@@ -9,8 +9,8 @@ from wtforms.fields.html5 import URLField, EmailField
 from wtforms.validators import DataRequired
 
 from indico.core.plugins import IndicoPlugin, url_for_plugin
-from indico.modules.payment import (PaymentPluginMixin, PaymentPluginSettingsFormBase, PaymentEventSettingsFormBase,
-                                    event_settings)
+from indico.modules.payment import PaymentPluginMixin, PaymentPluginSettingsFormBase, PaymentEventSettingsFormBase
+from indico.modules.payment import event_settings as payment_event_settings
 from indico.modules.payment.util import get_registrant_params
 from indico.util.i18n import _
 from indico.util.string import remove_accents, remove_non_alpha
@@ -35,9 +35,12 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
     fp_email_address = EmailField(_('FP email adress'), [DataRequired()], description=_('Email address to contact FP.'))
     fp_department_name = StringField(_('FP department name'), [DataRequired()])
     payment_url = URLField(_('Payment URL'), [DataRequired()], description=_('URL used for the epayment'))
-    shop_id = StringField(_('Shop ID'), [DataRequired()])
-    hash_seed = StringField(_('Hash seed'), [DataRequired()])
-    hash_seed_out = StringField(_('Hash seed out'), [DataRequired()])
+    shop_id_chf = StringField(_('Shop ID (CHF)'), [DataRequired()])
+    shop_id_eur = StringField(_('Shop ID (EUR)'), [DataRequired()])
+    hash_seed_chf = StringField(_('Hash seed (CHF)'), [DataRequired()])
+    hash_seed_eur = StringField(_('Hash seed (EUR)'), [DataRequired()])
+    hash_seed_out_chf = StringField(_('Hash seed out (CHF)'), [DataRequired()])
+    hash_seed_out_eur = StringField(_('Hash seed out (EUR)'), [DataRequired()])
     server_url_suffix = StringField(_('Server URL Suffix'), description='Server URL Suffix (indico[suffix].cern.ch)')
     order_id_prefix = StringField(_('Order ID Prefix'))
     payment_methods = MultipleItemsField(_('Payment Methods'), fields=PAYMENT_METHODS_FIELDS, unique_field='name')
@@ -69,7 +72,7 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
                         'payment_methods': []}
     default_event_settings = {'apply_fees': True,
                               'custom_fees': {}}
-    valid_currencies = {'CHF'}
+    valid_currencies = {'EUR', 'CHF'}
 
     def init(self):
         super(CERNPaymentPlugin, self).init()
@@ -124,7 +127,9 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
 
         registrant = data['registrant']
         event = data['event']
-        seed = data['settings']['hash_seed']
+        currency = data['currency']
+        seed = data['settings']['hash_seed_{}'.format(currency.lower())]
+        shop_id = data['settings']['shop_id_{}'.format(currency.lower())]
         method = get_payment_method(event, data['selected_method'])
         template_page = ''  # yes, apparently it's supposed to be empty..
         template_hash = sha512(seed + template_page).hexdigest()
@@ -132,10 +137,10 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         parameters = get_registrant_params()
 
         form_data = {
-            'PSPID': data['settings']['shop_id'],
+            'PSPID': shop_id,
             'ORDERID': order_id,
             'AMOUNT': int(amount * 100),
-            'CURRENCY': event_settings.get(event, 'currency'),
+            'CURRENCY': currency,
             'LANGUAGE': session.lang,
             'CN': remove_accents(registrant.getFullName(title=False, firstNameFirst=True)[:35]),
             'EMAIL': registrant.getEmail()[:50],

@@ -72,7 +72,7 @@ class PaymentSuccessMixin:
             raise BadRequest
         fields = {'AAVCheck', 'ACCEPTANCE', 'BRAND', 'CARDNO', 'CCCTY', 'CN', 'CVCCheck', 'ECI', 'ED', 'IP', 'IPCTY',
                   'NCERROR', 'PAYID', 'PM', 'STATUS', 'TRXDATE', 'VC', 'amount', 'currency', 'orderID'}
-        seed = current_plugin.settings.get('hash_seed_out')
+        seed = current_plugin.settings.get('hash_seed_out_{}'.format(request.values['currency'].lower()))
         expected_hash = create_hash(seed, {k.upper(): v for k, v in request.values.iteritems() if k in fields})
         return request.values['SHASIGN'] == expected_hash
 
