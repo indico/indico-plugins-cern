@@ -6,7 +6,7 @@ from dateutil import rrule
 from flask_pluginengine import with_plugin_context, render_plugin_template
 from wtforms.fields.core import SelectField, BooleanField, FloatField
 from wtforms.fields.html5 import URLField, IntegerField
-from wtforms.fields.simple import TextField
+from wtforms.fields.simple import StringField
 from wtforms.validators import DataRequired, NumberRange, URL
 
 from indico.core import signals
@@ -36,8 +36,8 @@ class SettingsForm(IndicoForm):
                          description=_("If enabled, requests are not sent to the API but logged instead"))
     service_url = URLField(_('Service URL'), [URL(require_tld=False)],
                            description=_("The URL of the CERN calendar service"))
-    username = TextField(_('Username'), [DataRequired()],
-                         description=_("The username used to authenticate with the CERN calendar service"))
+    username = StringField(_('Username'), [DataRequired()],
+                           description=_("The username used to authenticate with the CERN calendar service"))
     password = UnsafePasswordField(_('Password'), [DataRequired()],
                                    description=_("The password used to authenticate with the CERN calendar service"))
     status = SelectField(_('Status'), [DataRequired()], choices=_status_choices,
@@ -45,9 +45,9 @@ class SettingsForm(IndicoForm):
     reminder = BooleanField(_('Reminder'), description=_("Enable calendar reminder"))
     reminder_minutes = IntegerField(_('Reminder time'), [NumberRange(min=0)],
                                     description=_("Remind users X minutes before the event"))
-    id_prefix = TextField(_('Prefix'),
-                          description=_("Prefix for calendar item IDs. If you change this, existing calendar entries "
-                                        "cannot be deleted/updated anymore!"))
+    id_prefix = StringField(_('Prefix'),
+                            description=_("Prefix for calendar item IDs. If you change this, existing calendar entries "
+                                          "cannot be deleted/updated anymore!"))
     timeout = FloatField(_('Request timeout'), [NumberRange(min=0.25)], description=_("Request timeout in seconds"))
 
 
