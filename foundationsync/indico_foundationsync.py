@@ -341,6 +341,7 @@ class FoundationSyncPlugin(IndicoPlugin):
 
     Synchronizes holidays, rooms and equipment with the CERN Foundation Database.
     """
+    configurable = True
     settings_form = SettingsForm
 
     def add_cli_command(self, manager):

@@ -56,7 +56,7 @@ class OutlookPlugin(IndicoPlugin):
 
     Enables outlook calendar notifications when a user registers in a conference or participates in a meeting/lecture.
     """
-
+    configurable = True
     settings_form = SettingsForm
     default_settings = {
         'debug': False,

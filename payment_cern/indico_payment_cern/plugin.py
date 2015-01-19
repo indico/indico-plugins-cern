@@ -10,7 +10,6 @@ from wtforms.validators import DataRequired
 
 from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.modules.payment import PaymentPluginMixin, PaymentPluginSettingsFormBase, PaymentEventSettingsFormBase
-from indico.modules.payment import event_settings as payment_event_settings
 from indico.modules.payment.util import get_registrant_params
 from indico.util.i18n import _
 from indico.util.string import remove_accents, remove_non_alpha
@@ -65,6 +64,7 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     Extra fees can be set for each payment method so the price after the
     cut taken by the bank is the correct one.
     """
+    configurable = True
     settings_form = PluginSettingsForm
     event_settings_form = EventSettingsForm
     default_settings = {'method_name': 'PostFinance CERN',

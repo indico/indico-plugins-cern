@@ -23,7 +23,7 @@ class CERNSearchPlugin(SearchPluginBase):
 
     Uses CERNsearch as Indico's search engine
     """
-
+    configurable = True
     settings_form = SettingsForm
     default_settings = {
         'search_url': 'https://search.cern.ch/Pages/IndicoFrame.aspx',
