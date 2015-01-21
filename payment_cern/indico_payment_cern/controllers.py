@@ -84,8 +84,7 @@ class PaymentSuccessMixin:
         if transaction and transaction.data == request_data:
             # Same request, e.g. because of the client-side and server-side success notification
             return
-        register_transaction(event_id=self.event.getId(),
-                             registrant_id=self.registrant.getId(),
+        register_transaction(registrant=self.registrant,
                              amount=amount,
                              currency=currency,
                              action=TransactionAction.complete,
