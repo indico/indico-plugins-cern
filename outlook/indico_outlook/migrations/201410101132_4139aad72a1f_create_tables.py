@@ -9,6 +9,9 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.sql.ddl import CreateSchema, DropSchema
 
+from indico.core.db.sqlalchemy import PyIntEnum
+
+from indico_outlook.models.queue import OutlookAction
 
 # revision identifiers, used by Alembic.
 revision = '4139aad72a1f'
@@ -21,8 +24,7 @@ def upgrade():
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('user_id', sa.Integer(), nullable=False),
                     sa.Column('event_id', sa.Integer(), nullable=False, index=True),
-                    sa.Column('action', sa.SmallInteger(), nullable=False),
-                    sa.CheckConstraint('action IN (1, 2, 3)'),
+                    sa.Column('action', PyIntEnum(OutlookAction), nullable=False),
                     sa.PrimaryKeyConstraint('id'),
                     sa.UniqueConstraint('user_id', 'event_id', 'action'),
                     schema='plugin_outlook')
