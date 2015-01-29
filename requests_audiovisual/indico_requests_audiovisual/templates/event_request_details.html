@@ -1,0 +1,23 @@
+{% extends 'events/requests/event_request_details.html' %}
+
+{% block warnings %}
+    {{ super() }}
+    {%- if req and req.state.name == 'accepted' -%}
+        {% call message_box('warning') %}
+            <p>
+                {%- trans -%}
+                    Please note that all speakers are required to sign the <em>Speaker Release Form</em> before the
+                    webcast or recording can be published!
+                {%- endtrans -%}
+            </p>
+        {% endcall %}
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        $('input[name="request-services"][value="webcast"]').on('change', function() {
+            $('#request-webcast_audience').closest('.form-group').toggle(this.checked);
+        }).trigger('change');
+    </script>
+{% endblock %}
