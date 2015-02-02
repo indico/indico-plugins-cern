@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+
+from flask_pluginengine import render_plugin_template
 from wtforms.fields import TextAreaField, SelectField
 from wtforms.validators import DataRequired
 
@@ -9,6 +11,7 @@ from indico.modules.events.requests import RequestDefinitionBase
 from indico.util.i18n import _
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import PrincipalField, MultipleItemsField, IndicoSelectMultipleCheckboxField
+from indico.web.forms.widgets import JinjaWidget
 
 from indico_requests_audiovisual.util import is_av_manager
 
@@ -50,6 +53,7 @@ class AVRequestsPlugin(IndicoPlugin):
 
 class AVRequestForm(IndicoForm):
     services = IndicoSelectMultipleCheckboxField(_('Services'), [DataRequired()],
+                                                 widget=JinjaWidget('service_type_widget.html', render_plugin_template),
                                                  choices=[('webcast', _('Webcast')), ('recording', _('Recording'))],
                                                  description=_("Please choose whether you want a webcast, recording or "
                                                                "both."))
