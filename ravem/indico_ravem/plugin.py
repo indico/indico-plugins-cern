@@ -11,8 +11,7 @@ __all__ = ['RavemPlugin']
 
 
 class SettingsForm(IndicoForm):
-    api_endpoint = URLField(_('API endpoint'), [DataRequired()], filters=[lambda x: x.rstrip('/')],
-                            description=_('The endpoint for the RAVEM API'))
+    api_endpoint = URLField(_('API endpoint'), [DataRequired()], description=_('The endpoint for the RAVEM API'))
     username = StringField(_('Username'), [DataRequired()],
                            description=_('The username used to connect to the RAVEM API'))
     password = UnsafePasswordField(_('Password'), [DataRequired()],

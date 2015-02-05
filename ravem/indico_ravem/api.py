@@ -24,7 +24,7 @@ def get_legacy_endpoint_status(room_ip):
     :returns: :class: requests.models.Response -- The response from the RAVEM
     API usually as a JSON (with an `error` message if the call failed.)
     """
-    return ravem_api_call('/getstatus', where='vc_endpoint_legacy_ip', value=room_ip)
+    return ravem_api_call('getstatus', where='vc_endpoint_legacy_ip', value=room_ip)
 
 
 def get_vidyo_panorama_endpoint_status(vidyo_panorama_id):
@@ -38,7 +38,7 @@ def get_vidyo_panorama_endpoint_status(vidyo_panorama_id):
     :returns: :class: requests.models.Response -- The response from the RAVEM
     API usually as a JSON (with an `error` message if the call failed.)
     """
-    return ravem_api_call('/getstatus', where='vc_endpoint_vidyo_username', value=vidyo_panorama_id)
+    return ravem_api_call('getstatus', where='vc_endpoint_vidyo_username', value=vidyo_panorama_id)
 
 
 def disconnect_legacy_endpoint(room_ip, service_type, room_name):
@@ -54,7 +54,7 @@ def disconnect_legacy_endpoint(room_ip, service_type, room_name):
     :returns: :class: requests.models.Response -- The response from the RAVEM
     API usually as a JSON (with an `error` message if the call failed.)
     """
-    return ravem_api_call('/videoconference/disconnect', where='vc_endpoint_legacy_ip',
+    return ravem_api_call('videoconference/disconnect', where='vc_endpoint_legacy_ip',
                           value=room_ip, vidyo_room_name=room_name, type=service_type)
 
 
@@ -72,7 +72,7 @@ def disconnect_vidyo_panorama_endpoint(vidyo_panorama_id, service_type, room_nam
     :returns: :class: requests.models.Response -- The response from the RAVEM
     API usually as a JSON (with an `error` message if the call failed.)
     """
-    return ravem_api_call('/videoconference/disconnect', where='vc_endpoint_vidyo_username',
+    return ravem_api_call('videoconference/disconnect', where='vc_endpoint_vidyo_username',
                           value=vidyo_panorama_id, vidyo_room_name=room_name, type=service_type)
 
 
