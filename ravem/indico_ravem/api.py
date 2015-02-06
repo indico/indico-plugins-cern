@@ -10,8 +10,8 @@ disconnect_vidyo_panorama -- disconnect from a Vidyo legacy endpoint using the R
 """
 from indico_ravem.util import ravem_api_call
 
-__all__ = ['get_legacy_endpoint_status', 'get_vidyo_panorama_endpoint_status', 'disconnect_legacy_endpoint',
-           'disconnect_vidyo_panorama_endpoint', 'connect_to_endpoint']
+__all__ = ('get_legacy_endpoint_status', 'get_vidyo_panorama_endpoint_status', 'disconnect_legacy_endpoint',
+           'disconnect_vidyo_panorama_endpoint', 'connect_to_endpoint')
 
 
 def get_legacy_endpoint_status(room_ip):

@@ -22,7 +22,7 @@ def ravem_api_call(api_endpoint, **kwargs):
     root_endpoint = RavemPlugin.settings.get('api_endpoint')
     username = RavemPlugin.settings.get('username')
     password = RavemPlugin.settings.get('password')
-    headers = {'Accept': 'text/*;q=.5, application/json'}
+    headers = {'Accept': 'application/json'}
     try:
         return requests.get(urljoin(root_endpoint, api_endpoint), auth=HTTPDigestAuth(username, password),
                             params=kwargs, verify=False, headers=headers)

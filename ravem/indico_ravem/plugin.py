@@ -7,11 +7,10 @@ from indico.util.i18n import _
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import UnsafePasswordField
 
-__all__ = ['RavemPlugin']
 
-
-class SettingsForm(IndicoForm):
-    api_endpoint = URLField(_('API endpoint'), [DataRequired()], description=_('The endpoint for the RAVEM API'))
+class SettingsForm(IndicoForm):  # pragma: no cover
+    api_endpoint = URLField(_('API endpoint'), [DataRequired()], filters=[lambda x: x.rstrip('/') + '/'],
+                            description=_('The endpoint for the RAVEM API'))
     username = StringField(_('Username'), [DataRequired()],
                            description=_('The username used to connect to the RAVEM API'))
     password = UnsafePasswordField(_('Password'), [DataRequired()],
