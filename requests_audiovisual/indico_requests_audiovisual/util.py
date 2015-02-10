@@ -32,8 +32,9 @@ def get_contributions(event):
     contribs = [cont for cont in event.getContributionList() if not_poster.satisfies(cont)]
     contribs = sorted(contribs, key=attrgetter('startDate'))
     av_capable_rooms = {r.name for r in get_av_capable_rooms()}
-    event_room = event.getRoom().getName()
+    event_room = event.getRoom() and event.getRoom().getName()
     return [(c,
-             (c.getLocation().getName() == 'CERN' and c.getRoom().getName() in av_capable_rooms),
-             (c.getRoom().getName() if c.getRoom().getName() != event_room else None))
+             (c.getLocation() and c.getLocation().getName() == 'CERN' and
+              c.getRoom() and c.getRoom().getName() in av_capable_rooms),
+             (c.getRoom().getName() if c.getRoom() and c.getRoom().getName() != event_room else None))
             for c in contribs]

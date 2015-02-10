@@ -140,7 +140,7 @@ class AVRequest(RequestDefinitionBase):
         """Checks if there are any contributions in AV-capable rooms"""
         if event.getType() == 'simple_event':
             av_capable_rooms = {r.name for r in get_av_capable_rooms()}
-            return event.getRoom().getName() in av_capable_rooms
+            return event.getRoom() and event.getRoom().getName() in av_capable_rooms
         else:
             return any(capable for _, capable, _ in get_contributions(event))
 
