@@ -152,3 +152,8 @@ class AVRequest(RequestDefinitionBase):
             return True
         else:
             return bool(get_contributions(event))
+
+    @classmethod
+    def get_capable_rooms(cls):
+        """Returns the list of AV-capable rooms"""
+        return get_av_capable_rooms()
