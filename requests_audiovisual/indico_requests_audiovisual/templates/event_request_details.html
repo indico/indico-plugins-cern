@@ -17,7 +17,11 @@
 {% block scripts %}
     <script>
         $('input[name="request-services"][value="webcast"]').on('change', function() {
-            $('#request-webcast_audience').closest('.form-group').toggle(this.checked);
+            $('#form-group-request-webcast_audience').toggle(this.checked);
+        }).trigger('change');
+
+        $('#request-all_contributions').on('change', function() {
+            $('#form-group-request-contributions').toggle(!this.checked);
         }).trigger('change');
     </script>
 {% endblock %}
