@@ -91,8 +91,9 @@ class AVRequestForm(RequestFormBase):
 
     def _get_contrib_choices(self):
         is_manager = session.user.isAdmin() or is_av_manager(session.user)
+        selected = set(self.request.data.get('contributions', [])) if self.request else set()
         for contrib, capable, custom_room in get_contributions(self.event):
-            if not capable and not is_manager:
+            if not capable and not is_manager and contrib.id not in selected:
                 continue
             yield contrib.id, render_template('requests_audiovisual:contrib_selector_entry.html', contrib=contrib,
                                               capable=capable, custom_room=custom_room)
