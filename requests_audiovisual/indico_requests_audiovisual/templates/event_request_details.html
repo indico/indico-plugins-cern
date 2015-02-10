@@ -1,4 +1,47 @@
 {% extends 'events/requests/event_request_details.html' %}
+{% from 'message_box.html' import message_box %}
+{% set has_any_contributions = definition.has_any_contributions(event) %}
+{% set has_capable_contributions = has_any_contributions and definition.has_capable_contributions(event) %}
+
+
+{% block content %}
+    {% if not has_any_contributions %}
+        <div class="i-form">
+            {% call message_box('warning') %}
+                {% trans -%}
+                    This event does not have any contributions, so there's nothing that could be
+                    recorded or webcast. Please add some contributions first.
+                {%- endtrans %}
+            {% endcall %}
+        </div>
+    {% elif not has_capable_contributions %}
+        <div class="i-form">
+            {% call message_box('warning') %}
+                <p>
+                    {% trans -%}
+                        This event has no contributions in rooms capable of webcast or recording.
+                        Please choose (and book!) a room which has the necessary equipment.
+                    {%- endtrans %}
+                </p>
+
+                <p>
+                    <strong>The following rooms support webcast/recording equipment:</strong>
+                </p>
+                <ul>
+                    <li>foo</li>
+                    <li>bar</li>
+                    <li>foobar</li>
+                </ul>
+            {% endcall %}
+        </div>
+    {% endif %}
+    {% if has_capable_contributions or is_manager or (req and req.state.name != 'withdrawn') %}
+        {{ super() }}
+    {% else %}
+        <a href="{{ url_for('.event_requests', event) }}" class="i-button big">{% trans %}Back{% endtrans %}</a>
+    {% endif %}
+{% endblock %}
+
 
 {% block warnings %}
     {{ super() }}
@@ -13,6 +56,7 @@
         {% endcall %}
     {% endif %}
 {% endblock %}
+
 
 {% block scripts %}
     <script>

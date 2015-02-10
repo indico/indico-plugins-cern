@@ -14,7 +14,7 @@ from indico.web.forms.fields import (PrincipalField, MultipleItemsField, IndicoS
                                      EmailListField)
 from indico.web.forms.widgets import JinjaWidget
 
-from indico_requests_audiovisual.util import is_av_manager, get_contributions
+from indico_requests_audiovisual.util import is_av_manager, get_contributions, get_av_capable_rooms
 
 
 SERVICES = {'webcast': _('Webcast'), 'recording': _('Recording')}
@@ -134,3 +134,21 @@ class AVRequest(RequestDefinitionBase):
         :return: list of service names
         """
         return [SERVICES.get(s, s) for s in req.data['services']]
+
+    @classmethod
+    def has_capable_contributions(cls, event):
+        """Checks if there are any contributions in AV-capable rooms"""
+        if event.getType() == 'simple_event':
+            av_capable_rooms = {r.name for r in get_av_capable_rooms()}
+            return event.getRoom().getName() in av_capable_rooms
+        else:
+            return any(capable for _, capable, _ in get_contributions(event))
+
+    @classmethod
+    def has_any_contributions(cls, event):
+        """Checks if there are any contributions in the event"""
+        if event.getType() == 'simple_event':
+            # a lecture is basically a contribution on its own
+            return True
+        else:
+            return bool(get_contributions(event))
