@@ -56,6 +56,7 @@ class AVRequestsPlugin(IndicoPlugin):
                         condition=lambda: request.view_args.get('type') == AVRequest.name)
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
         self.template_hook('event-header', self._inject_event_header)
+        self.template_hook('conference-header-subtitle', self._inject_conference_header_subtitle)
 
     def get_blueprints(self):
         return IndicoPluginBlueprint('requests_audiovisual', 'indico_requests_audiovisual')
@@ -66,13 +67,24 @@ class AVRequestsPlugin(IndicoPlugin):
     def _get_event_request_definitions(self, sender, **kwargs):
         return AVRequest
 
-    def _inject_event_header(self, event, **kwargs):
+    def _get_event_webcast_url(self, event):
         req = Request.find_latest_for_event(event, AVRequest.name)
         if not req or req.state != RequestState.accepted or 'webcast' not in req.data['services']:
-            return ''
+            return None
         try:
-            url = self.settings.get('webcast_url').format(event_id=event.id)
+            return self.settings.get('webcast_url').format(event_id=event.id)
         except Exception:
             self.logger.exception('Could not build webcast URL')
-            return ''
+            return None
+
+    def _inject_event_header(self, event, **kwargs):
+        url = self._get_event_webcast_url(event)
+        if not url:
+            return
         return render_plugin_template('event_header.html', url=url)
+
+    def _inject_conference_header_subtitle(self, event, **kwargs):
+        url = self._get_event_webcast_url(event)
+        if not url:
+            return
+        return render_plugin_template('conference_header.html', url=url)
