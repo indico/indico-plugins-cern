@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from flask import session, render_template
 from flask_pluginengine import current_plugin
+from markupsafe import Markup
 from wtforms.fields import TextAreaField, SelectField, BooleanField
 from wtforms.validators import DataRequired
 
@@ -24,7 +25,9 @@ class AVRequestForm(RequestFormBase):
                                      description=_('Uncheck this if you want to select only certain contributions.'))
     contributions = IndicoSelectMultipleCheckboxField(_('Contributions'),
                                                       [UsedIf(lambda form, field: not form.all_contributions.data),
-                                                       DataRequired()])
+                                                       DataRequired()],
+                                                      widget=JinjaWidget('contribution_list_widget.html',
+                                                                         'requests_audiovisual'))
     webcast_audience = SelectField(_('Webcast Audience'),
                                    description=_("Select the audience to which the webcast will be restricted"))
     comments = TextAreaField(_('Comments'),
@@ -33,10 +36,13 @@ class AVRequestForm(RequestFormBase):
 
     def __init__(self, *args, **kwargs):
         super(AVRequestForm, self).__init__(*args, **kwargs)
+        self._update_audiences()
+        self._update_contribution_fields()
+
+    def _update_audiences(self):
         audiences = [('', _("No restriction - everyone can watch the public webcast"))]
         audiences += sorted((x['audience'], x['audience']) for x in current_plugin.settings.get('webcast_audiences'))
         self.webcast_audience.choices = audiences
-        self._update_contribution_fields()
 
     def _update_contribution_fields(self):
         if self.event.getType() == 'simple_event':
@@ -44,13 +50,16 @@ class AVRequestForm(RequestFormBase):
             del self.all_contributions
             del self.contributions
         else:
-            self.contributions.choices = list(self._get_contrib_choices())
-
-    def _get_contrib_choices(self):
-        is_manager = session.user.isAdmin() or is_av_manager(session.user)
-        selected = set(self.request.data.get('contributions', [])) if self.request else set()
-        for contrib, capable, custom_room in get_contributions(self.event):
-            if not capable and not is_manager and contrib.id not in selected:
-                continue
-            yield contrib.id, render_template('requests_audiovisual:contrib_selector_entry.html', contrib=contrib,
-                                              capable=capable, custom_room=custom_room)
+            choices = self.contributions.choices = []
+            disabled_contribs = self.contributions._disabled_contributions = []
+            contributions = self.contributions._contributions = {}
+            is_manager = session.user.isAdmin() or is_av_manager(session.user)
+            selected = set(self.request.data.get('contributions', [])) if self.request else set()
+            for contrib, capable, custom_room in get_contributions(self.event):
+                contributions[contrib.id] = contrib
+                line = Markup(render_template('requests_audiovisual:contribution_list_entry.html', contrib=contrib,
+                                              capable=capable, custom_room=custom_room))
+                if not capable and not is_manager and contrib.id not in selected:
+                    disabled_contribs.append((contrib, line))
+                else:
+                    choices.append((contrib.id, line))

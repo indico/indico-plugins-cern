@@ -1,1 +1,2 @@
+graft indico_requests_audiovisual/static
 graft indico_requests_audiovisual/templates
