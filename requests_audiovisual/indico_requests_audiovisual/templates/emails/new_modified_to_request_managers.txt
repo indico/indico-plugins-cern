@@ -6,10 +6,10 @@
     {%- if custom_room %} (in {{ custom_room }}){% endif %} - {{ contrib.title }}
 {%- endmacro %}
 
-{% set contributions = req.definition.get_selected_contributions(req) %}
+{% set contributions = req.definition.util.get_selected_contributions(req) %}
 
 {% block request_details -%}
-    Requested services: {{ req.definition.get_selected_services(req)|join(', ') }}
+    Requested services: {{ req.definition.util.get_selected_services(req)|join(', ') }}
     {%- if event.getType() != 'simple_event' %}
         All contributions: {{ _('Yes') if req.data.all_contributions else _('No') }}
     {%- endif -%}

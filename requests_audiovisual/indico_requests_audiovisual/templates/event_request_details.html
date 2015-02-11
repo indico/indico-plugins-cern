@@ -1,7 +1,7 @@
 {% extends 'events/requests/event_request_details.html' %}
 {% from 'message_box.html' import message_box %}
-{% set has_any_contributions = definition.has_any_contributions(event) %}
-{% set has_capable_contributions = has_any_contributions and definition.has_capable_contributions(event) %}
+{% set has_any_contributions = definition.util.has_any_contributions(event) %}
+{% set has_capable_contributions = has_any_contributions and definition.util.has_capable_contributions(event) %}
 
 
 {% block content %}
@@ -28,7 +28,7 @@
                     <strong>The following rooms support webcast/recording equipment:</strong>
                 </p>
                 <ul>
-                    {% for room in definition.get_capable_rooms()|natsort(attribute='full_name') -%}
+                    {% for room in definition.util.get_av_capable_rooms()|natsort(attribute='full_name') -%}
                         <li><a href="{{ url_for('event_mgmt.rooms_room_details', event, room) }}">{{ room.full_name }}</a></li>
                     {% endfor %}
                 </ul>

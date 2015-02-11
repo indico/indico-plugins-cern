@@ -8,6 +8,8 @@ from indico.modules.rb.models.rooms import Room
 from indico.util.user import retrieve_principals
 from MaKaC.webinterface.common.contribFilters import PosterFilterField
 
+from indico_requests_audiovisual import SERVICES
+
 
 def is_av_manager(user):
     """Checks if a user is an AV manager"""
@@ -38,3 +40,43 @@ def get_contributions(event):
               c.getRoom() and c.getRoom().getName() in av_capable_rooms),
              (c.getRoom().getName() if c.getRoom() and c.getRoom().getName() != event_room else None))
             for c in contribs]
+
+
+def get_selected_contributions(req):
+    """Gets the selected contributions for a request.
+
+    :return: list of ``(contribution, capable, custom_room)`` tuples
+    """
+    if req.event.getType() == 'simple_event':
+        return []
+    contributions = get_contributions(req.event)
+    if not req.data.get('all_contributions', True):
+        selected = set(req.data['contributions'])
+        contributions = [x for x in contributions if x[0].id in selected]
+    return contributions
+
+
+def get_selected_services(req):
+    """Gets the selected services
+
+    :return: list of service names
+    """
+    return [SERVICES.get(s, s) for s in req.data['services']]
+
+
+def has_capable_contributions(event):
+    """Checks if there are any contributions in AV-capable rooms"""
+    if event.getType() == 'simple_event':
+        av_capable_rooms = {r.name for r in get_av_capable_rooms()}
+        return event.getRoom() and event.getRoom().getName() in av_capable_rooms
+    else:
+        return any(capable for _, capable, _ in get_contributions(event))
+
+
+def has_any_contributions(event):
+    """Checks if there are any contributions in the event"""
+    if event.getType() == 'simple_event':
+        # a lecture is basically a contribution on its own
+        return True
+    else:
+        return bool(get_contributions(event))
