@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from flask import request
+from wtforms.fields.html5 import URLField
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin, IndicoPluginBlueprint
@@ -21,7 +22,9 @@ class PluginSettingsForm(IndicoForm):
     webcast_audiences = MultipleItemsField(_('Webcast Audiences'), fields=[('audience', _('Audience'))],
                                            unique_field='audience',
                                            description=_('List of audiences for non-public webcasts.'))
-    # TODO: ping url when request is accepted
+    webcast_ping_url = URLField(_('Webcast Ping URL'),
+                                description=_("A ping is sent via HTTP GET to this URL whenever a webcast request "
+                                              "enters/leaves the 'accepted' state."))
     # TODO: agreement settings
 
 
@@ -36,7 +39,8 @@ class AVRequestsPlugin(IndicoPlugin):
     settings_form = PluginSettingsForm
     default_settings = {'managers': [],
                         'webcast_audiences': [],
-                        'notification_emails': []}
+                        'notification_emails': [],
+                        'webcast_ping_url': None}
     strict_settings = True
 
     def init(self):

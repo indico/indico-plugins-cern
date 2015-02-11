@@ -2,6 +2,10 @@ from __future__ import unicode_literals
 
 from operator import attrgetter
 
+import requests
+from requests import RequestException
+
+from indico.core.db.util import run_after_commit
 from indico.modules.rb.models.equipment import EquipmentType
 from indico.modules.rb.models.locations import Location
 from indico.modules.rb.models.rooms import Room
@@ -80,3 +84,18 @@ def has_any_contributions(event):
         return True
     else:
         return bool(get_contributions(event))
+
+
+@run_after_commit  # otherwise the remote side might read old data
+def send_webcast_ping():
+    """Sends a ping notification when a webcast request changes"""
+    from indico_requests_audiovisual.plugin import AVRequestsPlugin
+    url = AVRequestsPlugin.settings.get('webcast_ping_url')
+    if not url:
+        return
+    AVRequestsPlugin.logger.info('Sending webcast ping to {}'.format(url))
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+    except RequestException:
+        AVRequestsPlugin.logger.exception('Could not send webcast ping')
