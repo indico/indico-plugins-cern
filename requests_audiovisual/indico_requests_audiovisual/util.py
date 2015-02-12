@@ -95,7 +95,7 @@ def send_webcast_ping():
         return
     AVRequestsPlugin.logger.info('Sending webcast ping to {}'.format(url))
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, timeout=10, verify=False)
         response.raise_for_status()
     except RequestException:
         AVRequestsPlugin.logger.exception('Could not send webcast ping')
