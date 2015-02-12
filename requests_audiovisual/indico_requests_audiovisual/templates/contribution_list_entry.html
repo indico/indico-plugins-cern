@@ -1,4 +1,4 @@
-{{ contrib.startDate | format_date() }}
+{{ contrib.startDate | format_date() }}, {{ contrib.startDate | format_time() }}
 -
 {{ contrib.duration | format_timedelta }}
 {% if custom_room %}(in {{ custom_room }}){% endif %}
