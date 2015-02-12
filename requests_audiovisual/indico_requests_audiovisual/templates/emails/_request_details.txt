@@ -1,0 +1,39 @@
+{% macro _contribution_line(contrib, custom_room) -%}
+    {{ contrib.startDate | format_date() }} - {{ contrib.duration | format_timedelta }}
+    {%- if custom_room %} (in {{ custom_room }}){% endif %} - {{ contrib.title }}
+{%- endmacro %}
+
+
+{% macro _contribution_list(contributions, title, non_capable_info=false) -%}
+    {%- set contributions_in_non_capable_rooms = contributions|rejectattr('1')|list -%}
+    {{ title }}
+    {%- for contrib, capable, custom_room in contributions %}
+        - {{ _contribution_line(contrib, custom_room) }}
+    {%- endfor -%}
+    {%- if contributions_in_non_capable_rooms and non_capable_info %}
+
+        Contributions in room without webcast/recording equipment:
+        {%- for contrib, capable, custom_room in contributions_in_non_capable_rooms %}
+            - {{ _contribution_line(contrib, custom_room) }}
+        {%- endfor -%}
+    {% endif -%}
+{%- endmacro %}
+
+
+{% macro request_details(req) -%}
+    {%- set is_lecture = req.event.getType() == 'simple_event' -%}
+    {%- set contributions = req.definition.util.get_selected_contributions(req) -%}
+    Requested services: {{ req.definition.util.get_selected_services(req)|join(', ') }}
+    {%- if not is_lecture %}
+        All contributions: {{ _('Yes') if req.data.all_contributions else _('No') }}
+    {%- endif -%}
+    {%- if req.data.comments %}
+        Comments: {{ req.data.comments }}
+    {%- endif -%}
+    {%- if not is_lecture %}
+
+        {{ _contribution_list(contributions,
+                              _('All contributions:') if req.data.all_contributions else _('Selected contributions:'),
+                              true) }}
+    {%- endif -%}
+{%- endmacro %}

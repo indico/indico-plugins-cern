@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import json
 from operator import attrgetter
 
 import requests
@@ -84,6 +85,44 @@ def has_any_contributions(event):
         return True
     else:
         return bool(get_contributions(event))
+
+
+def _get_location_tuple(obj):
+    location = obj.getLocation().getName() if obj.getLocation() else None
+    room = obj.getRoom().getName() if obj.getRoom() else None
+    return location, room
+
+
+def _get_date_tuple(obj):
+    if not hasattr(obj, 'getStartDate') or not hasattr(obj, 'getEndDate'):
+        # subcontributions don't have dates
+        return None
+    return obj.getStartDate().isoformat(), obj.getEndDate().isoformat()
+
+
+def get_data_identifiers(req):
+    """Returns identifiers to determine if relevant data changed.
+
+    Only the event and selected contributions are taken into account.
+    While the event date/location doesn't really matter since we already
+    check all the contribution dates/locations, we still keep it since a
+    location change of the main event could still be relevant to the AV team.
+
+    :return: a dict containing `dates` and `locations`
+    """
+    event = req.event
+    location_identifiers = {}
+    date_identifiers = {}
+    for obj in [event] + [x[0] for x in get_selected_contributions(req)]:
+        obj_id = type(obj).__name__, obj.id
+        date_identifiers[obj_id] = _get_date_tuple(obj)
+        location_identifiers[obj_id] = _get_location_tuple(obj)
+    # we do a json cycle here so we have something that can be compared with data
+    # coming from a json storage later. for example, we need lists instead of tuples
+    return json.loads(json.dumps({
+        'dates': sorted(date_identifiers.items()),
+        'locations': sorted(location_identifiers.items())
+    }))
 
 
 @run_after_commit  # otherwise the remote side might read old data

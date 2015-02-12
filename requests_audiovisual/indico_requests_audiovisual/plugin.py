@@ -1,7 +1,8 @@
 from __future__ import unicode_literals
 
-from flask import request
+from flask import request, g
 from flask_pluginengine import render_plugin_template
+from sqlalchemy.orm.attributes import flag_modified
 from wtforms.fields.html5 import URLField
 from wtforms.validators import DataRequired
 
@@ -14,6 +15,8 @@ from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import PrincipalField, MultipleItemsField, EmailListField
 
 from indico_requests_audiovisual.definition import AVRequest
+from indico_requests_audiovisual.notifications import notify_relocated_request, notify_rescheduled_request
+from indico_requests_audiovisual.util import get_data_identifiers
 
 
 class PluginSettingsForm(IndicoForm):
@@ -55,6 +58,10 @@ class AVRequestsPlugin(IndicoPlugin):
         self.inject_css('requests_audiovisual_css', WPRequestsEventManagement, subclasses=False,
                         condition=lambda: request.view_args.get('type') == AVRequest.name)
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
+        self.connect(signals.event.data_changed, self._data_changed)
+        self.connect(signals.event.contribution_data_changed, self._data_changed)
+        self.connect(signals.after_process, self._apply_changes)
+        self.connect(signals.before_retry, self._clear_changes)
         self.template_hook('event-header', self._inject_event_header)
         self.template_hook('conference-header-subtitle', self._inject_conference_header_subtitle)
 
@@ -66,6 +73,37 @@ class AVRequestsPlugin(IndicoPlugin):
 
     def _get_event_request_definitions(self, sender, **kwargs):
         return AVRequest
+
+    def _data_changed(self, sender, **kwargs):
+        # sender can be `Conference`, `Contribution` or `SubContribution`
+        event = sender.getConference()
+        if not event.id.isdigit():
+            # Legacy event. Unlikely to change, but let's not break if it does.
+            return
+        req = Request.find_latest_for_event(event, AVRequest.name)
+        if not req or req.state != RequestState.accepted:
+            return
+        if 'av_request_changes' not in g:
+            g.av_request_changes = set()
+        g.av_request_changes.add(req)
+
+    def _apply_changes(self, sender, **kwargs):
+        # we are using after_request to avoid spam in case someone changes many contribution times
+        if 'av_request_changes' not in g:
+            return
+        for req in g.av_request_changes:
+            identifiers = get_data_identifiers(req)
+            if identifiers['dates'] != req.data['identifiers']['dates']:
+                notify_rescheduled_request(req)
+            if identifiers['locations'] != req.data['identifiers']['locations']:
+                notify_relocated_request(req)
+            req.data['identifiers'] = identifiers
+            flag_modified(req, 'data')
+
+    def _clear_changes(self, sender, **kwargs):
+        if 'av_request_changes' not in g:
+            return
+        del g.av_request_changes
 
     def _get_event_webcast_url(self, event):
         req = Request.find_latest_for_event(event, AVRequest.name)

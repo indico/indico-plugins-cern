@@ -1,25 +1,6 @@
 {% extends 'events/requests/emails/new_modified_to_request_managers.txt' %}
-{% from 'requests_audiovisual:emails/_contribution_list.txt' import contribution_list %}
-
-{% macro contribution_line(contrib, custom_room) -%}
-    {{ contrib.startDate | format_date() }} - {{ contrib.duration | format_timedelta }}
-    {%- if custom_room %} (in {{ custom_room }}){% endif %} - {{ contrib.title }}
-{%- endmacro %}
-
-{% set contributions = req.definition.util.get_selected_contributions(req) %}
+{% from 'requests_audiovisual:emails/_request_details.txt' import request_details %}
 
 {% block request_details -%}
-    Requested services: {{ req.definition.util.get_selected_services(req)|join(', ') }}
-    {%- if event.getType() != 'simple_event' %}
-        All contributions: {{ _('Yes') if req.data.all_contributions else _('No') }}
-    {%- endif -%}
-    {%- if req.data.comments %}
-        Comments: {{ req.data.comments }}
-    {%- endif -%}
-    {%- if event.getType() != 'simple_event' %}
-
-        {{ contribution_list(contributions,
-                             _('All contributions:') if req.data.all_contributions else _('Selected contributions:'),
-                             true) }}
-    {%- endif -%}
+    {{ request_details(req) }}
 {%- endblock %}

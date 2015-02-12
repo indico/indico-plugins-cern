@@ -1,0 +1,17 @@
+{% extends 'events/requests/emails/base_to_request_managers.txt' %}
+{% from 'requests_audiovisual:emails/_request_details.txt' import request_details %}
+
+
+{% block request_subject -%}
+    Relocated service request
+{%- endblock %}
+
+
+{% block request_message -%}
+    A {{ req.definition.title }} request has been relocated.
+{%- endblock %}
+
+
+{% block request_details -%}
+    {{ request_details(req) }}
+{%- endblock %}

@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from flask_pluginengine import current_plugin
+from sqlalchemy.orm.attributes import flag_modified
 
 from indico.modules.events.requests import RequestDefinitionBase
 from indico.modules.events.requests.models.requests import RequestState
@@ -8,7 +9,7 @@ from indico.util.i18n import _
 
 from indico_requests_audiovisual import util
 from indico_requests_audiovisual.forms import AVRequestForm
-from indico_requests_audiovisual.util import is_av_manager, send_webcast_ping
+from indico_requests_audiovisual.util import is_av_manager, send_webcast_ping, get_data_identifiers
 
 
 class AVRequest(RequestDefinitionBase):
@@ -31,7 +32,9 @@ class AVRequest(RequestDefinitionBase):
         if (req.id is not None and req.state == RequestState.accepted and
                 ('webcast' in req.data['services']) != ('webcast' in data['services'])):
             send_webcast_ping()
-        return super(AVRequest, cls).send(req, data)
+        super(AVRequest, cls).send(req, data)
+        req.data['identifiers'] = get_data_identifiers(req)
+        flag_modified(req, 'data')
 
     @classmethod
     def withdraw(cls, req, notify_event_managers=True):
@@ -43,10 +46,10 @@ class AVRequest(RequestDefinitionBase):
     def accept(cls, req, data, user):
         if 'webcast' in req.data['services']:
             send_webcast_ping()
-        return super(AVRequest, cls).accept(req, data, user)
+        super(AVRequest, cls).accept(req, data, user)
 
     @classmethod
     def reject(cls, req, data, user):
         if req.state == RequestState.accepted and 'webcast' in req.data['services']:
             send_webcast_ping()
-        return super(AVRequest, cls).reject(req, data, user)
+        super(AVRequest, cls).reject(req, data, user)
