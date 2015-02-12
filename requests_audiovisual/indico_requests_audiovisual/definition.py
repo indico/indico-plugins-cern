@@ -34,6 +34,12 @@ class AVRequest(RequestDefinitionBase):
         return super(AVRequest, cls).send(req, data)
 
     @classmethod
+    def withdraw(cls, req, notify_event_managers=True):
+        if req.state == RequestState.accepted and 'webcast' in req.data['services']:
+            send_webcast_ping()
+        super(AVRequest, cls).withdraw(req, notify_event_managers)
+
+    @classmethod
     def accept(cls, req, data, user):
         if 'webcast' in req.data['services']:
             send_webcast_ping()
