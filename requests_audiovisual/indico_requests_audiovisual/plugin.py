@@ -81,7 +81,7 @@ class AVRequestsPlugin(IndicoPlugin):
             # Legacy event. Unlikely to change, but let's not break if it does.
             return
         req = Request.find_latest_for_event(event, AVRequest.name)
-        if not req or req.state != RequestState.accepted:
+        if not req:
             return
         if 'av_request_changes' not in g:
             g.av_request_changes = set()
@@ -93,10 +93,11 @@ class AVRequestsPlugin(IndicoPlugin):
             return
         for req in g.av_request_changes:
             identifiers = get_data_identifiers(req)
-            if identifiers['dates'] != req.data['identifiers']['dates']:
-                notify_rescheduled_request(req)
-            if identifiers['locations'] != req.data['identifiers']['locations']:
-                notify_relocated_request(req)
+            if req.state == RequestState.accepted:
+                if identifiers['dates'] != req.data['identifiers']['dates']:
+                    notify_rescheduled_request(req)
+                if identifiers['locations'] != req.data['identifiers']['locations']:
+                    notify_relocated_request(req)
             req.data['identifiers'] = identifiers
             flag_modified(req, 'data')
 
