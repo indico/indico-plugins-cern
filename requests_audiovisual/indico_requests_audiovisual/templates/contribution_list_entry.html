@@ -1,10 +1,21 @@
-{{ contrib.startDate | format_date() }}, {{ contrib.startDate | format_time() }}
--
-{{ contrib.duration | format_timedelta }}
-{% if custom_room %}(in {{ custom_room }}){% endif %}
--
-{{ contrib.title }}
-{% if not capable %}
-    <i class="icon-warning warningText"
-       title="{% trans %}This room does not have Webcast/Recording equipment.{%- endtrans %}"></i>
+{%- macro contrib_line(contrib) -%}
+    {{ contrib.startDate | format_date() }}, {{ contrib.startDate | format_time() }}
+    -
+    {{ contrib.duration | format_timedelta }}
+    {% if custom_room %}(in {{ custom_room }}){% endif %}
+    -
+    {{ contrib.title }}
+    {% if caller %}{{ caller() }}{% endif %}
+    {% if not capable %}
+        <i class="icon-warning warningText"
+           title="{% trans %}This room does not have Webcast/Recording equipment.{%- endtrans %}"></i>
+    {% endif %}
+{%- endmacro -%}
+
+{% if is_subcontrib %}
+    {%- call contrib_line(contrib.getContribution()) %}
+        - {{ contrib.getTitle() }}
+    {% endcall -%}
+{% else %}
+    {{ contrib_line(contrib) }}
 {% endif %}

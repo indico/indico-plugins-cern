@@ -1,6 +1,17 @@
 {% macro _contribution_line(contrib, custom_room) -%}
     {{ contrib.startDate | format_date() }}, {{ contrib.startDate | format_time() }} - {{ contrib.duration | format_timedelta }}
     {%- if custom_room %} (in {{ custom_room }}){% endif %} - {{ contrib.title }}
+    {%- if caller %} - {{ caller() }}{%- endif -%}
+{%- endmacro %}
+
+{% macro _contribution_or_subcontribution_line(contrib, custom_room) -%}
+    {%- if contrib is instanceof SubContribution %}
+        {%- call _contribution_line(contrib.getContribution(), custom_room) -%}
+            {{ contrib.getTitle() }} ({{ contrib.duration | format_timedelta }})
+        {%- endcall -%}
+    {%- else -%}
+        {{ _contribution_line(contrib, custom_room) }}
+    {%- endif -%}
 {%- endmacro %}
 
 
@@ -8,13 +19,13 @@
     {%- set contributions_in_non_capable_rooms = contributions|rejectattr('1')|list -%}
     {{ title|underline }}
     {%- for contrib, capable, custom_room in contributions %}
-        - {{ _contribution_line(contrib, custom_room) }}
+        - {{ _contribution_or_subcontribution_line(contrib, custom_room) }}
     {%- endfor -%}
     {%- if contributions_in_non_capable_rooms and non_capable_info %}
 
         {% filter underline %}Contributions in rooms without webcast/recording equipment{% endfilter %}
         {%- for contrib, capable, custom_room in contributions_in_non_capable_rooms %}
-            - {{ _contribution_line(contrib, custom_room) }}
+            - {{ _contribution_or_subcontribution_line(contrib, custom_room) }}
         {%- endfor -%}
     {% endif -%}
 {%- endmacro %}

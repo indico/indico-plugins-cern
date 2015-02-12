@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 import json
-from operator import attrgetter
+from itertools import chain
 
 import requests
 from requests import RequestException
@@ -11,6 +11,7 @@ from indico.modules.rb.models.equipment import EquipmentType
 from indico.modules.rb.models.locations import Location
 from indico.modules.rb.models.rooms import Room
 from indico.util.user import retrieve_principals
+from MaKaC.conference import SubContribution
 from MaKaC.webinterface.common.contribFilters import PosterFilterField
 
 from indico_requests_audiovisual import SERVICES
@@ -30,6 +31,16 @@ def get_av_capable_rooms():
     return set(Room.find_with_filters({'available_equipment': eq_types}))
 
 
+def _contrib_key(contrib):
+    # key function to sort contributions and their subcontributions properly
+    is_subcontrib = isinstance(contrib, SubContribution)
+    return (contrib.getContribution().startDate,
+            contrib.getContribution().id,
+            is_subcontrib,
+            (contrib.getContribution().getSubContributionList().index(contrib) if is_subcontrib else None),
+            contrib.getTitle())
+
+
 def get_contributions(event):
     """Returns a list of contributions in rooms with AV equipment
 
@@ -37,7 +48,9 @@ def get_contributions(event):
     """
     not_poster = PosterFilterField(event, False, False)
     contribs = [cont for cont in event.getContributionList() if not_poster.satisfies(cont)]
-    contribs = sorted(contribs, key=attrgetter('startDate'))
+    # XXX: commenting out the next line disables subcontribution support everywhere
+    contribs.extend(list(chain.from_iterable(cont.getSubContributionList() for cont in contribs)))
+    contribs = sorted(contribs, key=_contrib_key)
     av_capable_rooms = {r.name for r in get_av_capable_rooms()}
     event_room = event.getRoom() and event.getRoom().getName()
     return [(c,
@@ -45,6 +58,14 @@ def get_contributions(event):
               c.getRoom() and c.getRoom().getName() in av_capable_rooms),
              (c.getRoom().getName() if c.getRoom() and c.getRoom().getName() != event_room else None))
             for c in contribs]
+
+
+def contribution_id(contrib_or_subcontrib):
+    """Returns an ID for the contribution/subcontribution"""
+    if isinstance(contrib_or_subcontrib, SubContribution):
+        return '{}-{}'.format(contrib_or_subcontrib.getContribution().id, contrib_or_subcontrib.id)
+    else:
+        return contrib_or_subcontrib.id
 
 
 def get_selected_contributions(req):
@@ -57,7 +78,7 @@ def get_selected_contributions(req):
     contributions = get_contributions(req.event)
     if not req.data.get('all_contributions', True):
         selected = set(req.data['contributions'])
-        contributions = [x for x in contributions if x[0].id in selected]
+        contributions = [x for x in contributions if contribution_id(x[0]) in selected]
     return contributions
 
 

@@ -1,5 +1,5 @@
 {% extends 'events/requests/emails/accepted_to_request_managers.txt' %}
-{% from 'requests_audiovisual:emails/_request_details.txt' import request_details %}
+{% from 'requests_audiovisual:emails/_request_details.txt' import request_details with context %}
 
 {% block request_details -%}
     {{ request_details(req) }}

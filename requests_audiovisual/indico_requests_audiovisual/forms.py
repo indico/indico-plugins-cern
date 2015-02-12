@@ -11,9 +11,10 @@ from indico.web.forms.validators import UsedIf
 from indico.web.forms.widgets import JinjaWidget
 from indico.web.forms.fields import IndicoSelectMultipleCheckboxField
 from indico.util.i18n import _
+from MaKaC.conference import SubContribution
 
 from indico_requests_audiovisual import SERVICES
-from indico_requests_audiovisual.util import is_av_manager, get_contributions
+from indico_requests_audiovisual.util import is_av_manager, get_contributions, contribution_id
 
 
 class AVRequestForm(RequestFormBase):
@@ -27,7 +28,8 @@ class AVRequestForm(RequestFormBase):
                                                       [UsedIf(lambda form, field: not form.all_contributions.data),
                                                        DataRequired()],
                                                       widget=JinjaWidget('contribution_list_widget.html',
-                                                                         'requests_audiovisual'))
+                                                                         'requests_audiovisual',
+                                                                         SubContribution=SubContribution))
     webcast_audience = SelectField(_('Webcast Audience'),
                                    description=_("Select the audience to which the webcast will be restricted"))
     comments = TextAreaField(_('Comments'),
@@ -56,10 +58,12 @@ class AVRequestForm(RequestFormBase):
             is_manager = session.user.isAdmin() or is_av_manager(session.user)
             selected = set(self.request.data.get('contributions', [])) if self.request else set()
             for contrib, capable, custom_room in get_contributions(self.event):
-                contributions[contrib.id] = contrib
+                is_subcontrib = isinstance(contrib, SubContribution)
+                id_ = contribution_id(contrib)
+                contributions[id_] = contrib
                 line = Markup(render_template('requests_audiovisual:contribution_list_entry.html', contrib=contrib,
-                                              capable=capable, custom_room=custom_room))
+                                              is_subcontrib=is_subcontrib, capable=capable, custom_room=custom_room))
                 if not capable and not is_manager and contrib.id not in selected:
                     disabled_contribs.append((contrib, line))
                 else:
-                    choices.append((contrib.id, line))
+                    choices.append((id_, line))

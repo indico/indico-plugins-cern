@@ -6,6 +6,7 @@ from sqlalchemy.orm.attributes import flag_modified
 from indico.modules.events.requests import RequestDefinitionBase
 from indico.modules.events.requests.models.requests import RequestState
 from indico.util.i18n import _
+from MaKaC.conference import SubContribution
 
 from indico_requests_audiovisual import util
 from indico_requests_audiovisual.forms import AVRequestForm
@@ -26,6 +27,11 @@ class AVRequest(RequestDefinitionBase):
     @classmethod
     def get_manager_notification_emails(cls):
         return set(current_plugin.settings.get('notification_emails'))
+
+    @classmethod
+    def get_notification_template(cls, name, **context):
+        context['SubContribution'] = SubContribution
+        return super(AVRequest, cls).get_notification_template(name, **context)
 
     @classmethod
     def send(cls, req, data):

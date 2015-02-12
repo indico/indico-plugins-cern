@@ -1,18 +1,22 @@
+{%- macro edit_link(contrib) -%}
+    {% set endpoint = 'event_mgmt.subContributionModification' if contrib is instanceof SubContribution else 'event_mgmt.contributionModification' %}
+    <a href="{{ url_for(endpoint, contrib) }}" class="icon-edit edit-link"
+       title="{% trans %}Edit this contribution{% endtrans %}"></a>
+{%- endmacro -%}
+
 <div class="av-contribution-list">
     {% for subfield in field %}
         <div class="i-checkbox">
             {{ subfield() }}
             {{ subfield.label }}
-            <a href="{{ url_for('event_mgmt.contributionModification', field._contributions[subfield.data]) }}"
-               class="icon-edit edit-link" title="{% trans %}Edit this contribution{% endtrans %}"></a>
+            {{ edit_link(field._contributions[subfield.data]) }}
         </div>
     {% endfor %}
     {% for contrib, line in field._disabled_contributions %}
         <div class="i-checkbox">
             <input type="checkbox" disabled>
             <label>{{ line }}</label>
-            <a href="{{ url_for('event_mgmt.contributionModification', contrib) }}" class="icon-edit edit-link"
-               title="{% trans %}Edit this contribution{% endtrans %}"></a>
+            {{ edit_link(contrib) }}
         </div>
     {% endfor %}
 </div>

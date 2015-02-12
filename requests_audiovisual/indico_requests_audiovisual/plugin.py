@@ -60,6 +60,7 @@ class AVRequestsPlugin(IndicoPlugin):
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
         self.connect(signals.event.data_changed, self._data_changed)
         self.connect(signals.event.contribution_data_changed, self._data_changed)
+        self.connect(signals.event.subcontribution_data_changed, self._data_changed)
         self.connect(signals.after_process, self._apply_changes)
         self.connect(signals.before_retry, self._clear_changes)
         self.template_hook('event-header', self._inject_event_header)
