@@ -6,13 +6,13 @@
 
 {% macro _contribution_list(contributions, title, non_capable_info=false) -%}
     {%- set contributions_in_non_capable_rooms = contributions|rejectattr('1')|list -%}
-    {{ title }}
+    {{ title|underline }}
     {%- for contrib, capable, custom_room in contributions %}
         - {{ _contribution_line(contrib, custom_room) }}
     {%- endfor -%}
     {%- if contributions_in_non_capable_rooms and non_capable_info %}
 
-        Contributions in room without webcast/recording equipment:
+        {% filter underline %}Contributions in rooms without webcast/recording equipment{% endfilter %}
         {%- for contrib, capable, custom_room in contributions_in_non_capable_rooms %}
             - {{ _contribution_line(contrib, custom_room) }}
         {%- endfor -%}
@@ -24,16 +24,21 @@
     {%- set is_lecture = req.event.getType() == 'simple_event' -%}
     {%- set contributions = req.definition.util.get_selected_contributions(req) -%}
     Requested services: {{ req.definition.util.get_selected_services(req)|join(', ') }}
+    {%- if 'webcast' in req.data.services %}
+        Webcast audience:   {{ req.data.webcast_audience or 'No restriction' }}
+    {%- endif -%}
     {%- if not is_lecture %}
-        All contributions: {{ _('Yes') if req.data.all_contributions else _('No') }}
+        Contributions:      {{ 'All' if req.data.all_contributions else 'Only selected' }}
     {%- endif -%}
     {%- if req.data.comments %}
-        Comments: {{ req.data.comments }}
+
+        {% filter underline %}Comments{% endfilter %}
+        {{ req.data.comments }}
     {%- endif -%}
     {%- if not is_lecture %}
 
         {{ _contribution_list(contributions,
-                              _('All contributions:') if req.data.all_contributions else _('Selected contributions:'),
+                              'All contributions' if req.data.all_contributions else 'Selected contributions',
                               true) }}
     {%- endif -%}
 {%- endmacro %}
