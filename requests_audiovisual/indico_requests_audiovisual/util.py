@@ -46,10 +46,11 @@ def get_contributions(event):
 
     :return: a list of ``(contribution, capable, custom_room)`` tuples
     """
+    from indico_requests_audiovisual.plugin import AVRequestsPlugin
     not_poster = PosterFilterField(event, False, False)
     contribs = [cont for cont in event.getContributionList() if not_poster.satisfies(cont)]
-    # XXX: commenting out the next line disables subcontribution support everywhere
-    contribs.extend(list(chain.from_iterable(cont.getSubContributionList() for cont in contribs)))
+    if AVRequestsPlugin.settings.get('allow_subcontributions'):
+        contribs.extend(list(chain.from_iterable(cont.getSubContributionList() for cont in contribs)))
     contribs = sorted(contribs, key=_contrib_key)
     av_capable_rooms = {r.name for r in get_av_capable_rooms()}
     event_room = event.getRoom() and event.getRoom().getName()
