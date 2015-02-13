@@ -48,7 +48,7 @@ def get_contributions(event):
     """
     from indico_requests_audiovisual.plugin import AVRequestsPlugin
     not_poster = PosterFilterField(event, False, False)
-    contribs = [cont for cont in event.getContributionList() if not_poster.satisfies(cont)]
+    contribs = [cont for cont in event.getContributionList() if cont.startDate and not_poster.satisfies(cont)]
     if AVRequestsPlugin.settings.get('allow_subcontributions'):
         contribs.extend(list(chain.from_iterable(cont.getSubContributionList() for cont in contribs)))
     contribs = sorted(contribs, key=_contrib_key)
