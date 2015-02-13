@@ -2,6 +2,7 @@ from wtforms.fields.simple import StringField
 from wtforms.fields.html5 import URLField
 from wtforms.validators import DataRequired
 
+from indico.core.config import Config
 from indico.core.plugins import IndicoPlugin, PluginCategory
 from indico.util.i18n import _
 from indico.web.forms.base import IndicoForm
@@ -18,7 +19,7 @@ class SettingsForm(IndicoForm):  # pragma: no cover
 
 
 class RavemPlugin(IndicoPlugin):
-    """RAVEM
+    """Conference Ravem Auxiliary Plugin
 
     Manages connections to Vidyo rooms from Indico through the RAVEM api
     """
@@ -31,3 +32,8 @@ class RavemPlugin(IndicoPlugin):
         'password': None
     }
     category = PluginCategory.video_conference
+
+    def init(self):
+        if not Config.getInstance().getIsRoomBookingActive():
+            from indico_ravem.util import RavemException
+            raise RavemException('RoomBooking is inactive.')

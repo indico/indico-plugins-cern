@@ -90,3 +90,11 @@ def test_params_generated(mocker, params):
     ravem_api_call('test_endpoint', **params)
     assert request.assert_called_once()
     assert request.call_args[1]['params'] == params
+
+
+@pytest.mark.usefixtures('db')
+@pytest.mark.parametrize('method', ('put', 'PUT', 'verybad', 'VERY_BAD'))
+def test_invalid_method(method):
+    with pytest.raises(ValueError) as err_info:
+        ravem_api_call('test_endpoint', param1='test1', param2='test2', method=method)
+    assert err_info.value.message == 'Unsupported HTTP method {0}, must be GET or POST'.format(method)

@@ -10,73 +10,51 @@ disconnect_vidyo_panorama -- disconnect from a Vidyo legacy endpoint using the R
 """
 from indico_ravem.util import ravem_api_call
 
-__all__ = ('get_legacy_endpoint_status', 'get_vidyo_panorama_endpoint_status', 'disconnect_legacy_endpoint',
-           'disconnect_vidyo_panorama_endpoint', 'connect_to_endpoint')
+__all__ = ('get_endpoint_status', 'disconnect_endpoint', 'connect_endpoint')
 
 
-def get_legacy_endpoint_status(room_ip):
-    """Returns the status of a legacy endpoint.
+def get_endpoint_status(room_name):
+    """Returns the status of an endpoint.
 
-    This call returns the status of a room equipped with a legacy device.
+    This call returns the status of a room equipped with either a legacy device
+    or a vidyo panorama endpoint depending on the type.
 
-    :param room_ip: str -- the IP of the room
-
-    :returns: :class: requests.models.Response -- The response from the RAVEM
-    API usually as a JSON (with an `error` message if the call failed.)
-    """
-    return ravem_api_call('getstatus', where='vc_endpoint_legacy_ip', value=room_ip)
-
-
-def get_vidyo_panorama_endpoint_status(vidyo_panorama_id):
-    """Returns the status of a Vidyo panorama endpoint.
-
-    This call returns the status of a room equipped with a Vidyo panorama
-    device.
-
-    :param vidyo_panorama_id: str -- the Vidyo user name of the room
+    :param endpoint_type: IndicoEnum -- the type of endpoint, either legacy or
+    Vidyo panorama as defined in indico_ravem.util.EndpointType.
+    :param endpoint_identifier: str -- the identifier of the endpoint either the
+    room's IP for legacy endpoint or the Vidyo username for the room for Vidyo
+    panorama endpoints
 
     :returns: :class: requests.models.Response -- The response from the RAVEM
     API usually as a JSON (with an `error` message if the call failed.)
     """
-    return ravem_api_call('getstatus', where='vc_endpoint_vidyo_username', value=vidyo_panorama_id)
+    return ravem_api_call('getstatus', method='GET', service_name='videoconference', where='room_name', value=room_name)
 
 
-def disconnect_legacy_endpoint(room_ip, service_type, room_name):
-    """Disconnects from a room with a legacy endpoint using the RAVEM API.
+def disconnect_endpoint(room_name, service_type):
+    """Disconnects from a room using the RAVEM API.
 
-    This call will disconnect from a room with a legacy endpoint based on the
-    Vidyo room id and a search query to find the room from the Vidyo user API.
+    This call will disconnect from a room with either a legacy endpoint or a
+    Vidyo panorama endpoint based on the Vidyo room id and a search query to
+    find the room from the Vidyo user API.
 
-    :param room_ip: str -- target Vidyo room ID
+    :param endpoint_type: IndicoEnum -- the type of endpoint, either legacy or
+    Vidyo panorama as defined in indico_ravem.util.EndpointType.
+    :param endpoint_identifier: str -- the identifier of the endpoint either the
+    room's IP for legacy endpoint or the Vidyo username for the room for Vidyo
+    panorama endpoints
     :param service_type: str -- The endpoint type (usually `vidyo` or `other`)
-    :param room_name: str -- The Vidyo room name
+    :param room_name: str -- The Vidyo room name (used as the query to find the
+    room)
 
     :returns: :class: requests.models.Response -- The response from the RAVEM
     API usually as a JSON (with an `error` message if the call failed.)
     """
-    return ravem_api_call('videoconference/disconnect', where='vc_endpoint_legacy_ip',
-                          value=room_ip, vidyo_room_name=room_name, type=service_type)
+    return ravem_api_call('videoconference/disconnect', method='POST', where='room_name', value=room_name,
+                          type=service_type, vidyo_room_name=room_name)
 
 
-def disconnect_vidyo_panorama_endpoint(vidyo_panorama_id, service_type, room_name):
-    """Disconnects from a room with a Vidyo panorama endpoint using the RAVEM API.
-
-    This call will disconnect from a room with a Vidyo panorama endpoint based
-    on the Vidyo room id and a search query to find the room from the Vidyo user
-    API.
-
-    :param vidyo_panorama_id: str -- target Vidyo user name
-    :param service_type: str -- The endpoint type (usually `vidyo` or `other`)
-    :param room_name: str -- The Vidyo room name
-
-    :returns: :class: requests.models.Response -- The response from the RAVEM
-    API usually as a JSON (with an `error` message if the call failed.)
-    """
-    return ravem_api_call('videoconference/disconnect', where='vc_endpoint_vidyo_username',
-                          value=vidyo_panorama_id, vidyo_room_name=room_name, type=service_type)
-
-
-def connect_to_endpoint(vidyo_room_id, query):
+def connect_endpoint(vidyo_room_id, query):
     """Connects to a room using the RAVEM API.
 
     This call will establish a connection to a room using a legacy or Vidyo
@@ -90,4 +68,4 @@ def connect_to_endpoint(vidyo_room_id, query):
     :returns: :class: requests.models.Response -- The response from the RAVEM
     API usually as a JSON (with an `error` message if the call failed.)
     """
-    return ravem_api_call('videoconference/connect', vidyo_room_id=vidyo_room_id, query=query)
+    return ravem_api_call('videoconference/connect', method='POST', vidyo_room_id=vidyo_room_id, query=query)

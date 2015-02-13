@@ -13,5 +13,8 @@ setup(
     install_requires=[
         'indico>=1.9.1'
     ],
+    test_requires=[
+        'responses>=0.3.0'
+    ],
     entry_points={'indico.plugins': {'ravem = indico_ravem.plugin:RavemPlugin'}}
 )
