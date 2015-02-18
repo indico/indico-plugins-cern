@@ -1,16 +1,20 @@
 from __future__ import unicode_literals
 
+import os
+import sys
 from contextlib import contextmanager
 
 from indico.core.config import Config
 from indico.core.db import db
 from indico.modules.events.requests.models.requests import Request, RequestState
+from indico.modules.agreements.models.agreements import Agreement, AgreementState
 from indico.util.console import cformat
+from indico.util.date_time import now_utc
 from indico.util.string import is_valid_mail
 from indico.util.struct.iterables import committing_iterator
 from indico_zodbimport import Importer, convert_to_unicode, convert_principal_list, option_value
 
-from indico_requests_audiovisual.definition import AVRequest
+from indico_requests_audiovisual.definition import AVRequest, SpeakerReleaseAgreement
 from indico_requests_audiovisual.plugin import AVRequestsPlugin
 from indico_requests_audiovisual.util import get_data_identifiers
 
@@ -37,7 +41,6 @@ class AVRequestsImporter(Importer):
         self.migrate_settings()
         with self._monkeypatch():
             self.migrate_requests()
-        # TODO: migrate agreements
 
     def migrate_settings(self):
         print cformat('%{white!}migrating settings')
@@ -57,7 +60,16 @@ class AVRequestsImporter(Importer):
         AVRequestsPlugin.settings.set('webcast_url', 'http://webcast.web.cern.ch/webcast/play.php?event={event_id}')
         AVRequestsPlugin.settings.set('webcast_ping_url',
                                       convert_to_unicode(self.zodb_root['WebcastManager']._webcastSynchronizationURL))
-        # TODO: migrate agreement-related settings
+        wc_form_url = option_value(wc_opts['ConsentFormURL'])
+        rr_form_url = option_value(rr_opts['ConsentFormURL'])
+        wc_ping_url = option_value(wc_opts['AgreementNotificationURL'])
+        rr_ping_url = option_value(rr_opts['AgreementNotificationURL'])
+        if wc_form_url and rr_form_url:
+            assert wc_form_url == rr_form_url
+        if wc_ping_url and rr_ping_url:
+            assert wc_ping_url == rr_ping_url
+        AVRequestsPlugin.settings.set('agreement_ping_url', wc_ping_url or rr_ping_url)
+        AVRequestsPlugin.settings.set('agreement_paper_url', wc_form_url or rr_form_url)
         db.session.commit()
 
     def migrate_requests(self):
@@ -117,6 +129,72 @@ class AVRequestsImporter(Importer):
             if wc_ignored:
                 print cformat('   %{yellow}ignored webcast request ({})').format(
                     status_map[wc_ignored._acceptRejectStatus].name)
+            self.migrate_agreements(csbm)
+
+    def migrate_agreements(self, csbm):
+        # old: NOEMAIL, NOTSIGNED, SIGNED, FROMFILE, PENDING, REFUSED = xrange(6)
+        # NOEMAIL was for speakers with no email set (wtf?)
+        # NOTSIGNED was for speakers where nothing was set yet
+        status_map = [None, None, AgreementState.accepted, AgreementState.accepted_on_behalf,
+                      AgreementState.pending, AgreementState.rejected]
+
+        unsent = 0
+        for speaker_wrapper in csbm._speakerWrapperList:
+            speaker = speaker_wrapper.speaker
+            new_status = status_map[speaker_wrapper.status]
+            if new_status is None:
+                unsent += 1
+                continue
+            status_name = new_status.name if new_status is not None else '(unsent)'
+            print cformat('   %{blue!}agreement for {}: {}').format(speaker._email or '(no email)', status_name)
+            if new_status is None:
+                print cformat('     %{yellow}skipped unsent agreement')
+                continue
+            data = {}
+            if speaker.__class__.__name__ == 'ContributionParticipation':
+                data['type'] = 'contribution'
+                data['contribution'] = speaker_wrapper.contId
+            elif speaker.__class__.__name__ == 'ConferenceChair':
+                data['type'] = 'lecture_speaker'
+            agreement = Agreement(event=csbm._conf, type=SpeakerReleaseAgreement.name)
+            agreement.uuid = speaker_wrapper.uniqueIdHash
+            agreement.person_email = convert_to_unicode(speaker._email)
+            agreement.person_name = convert_to_unicode('{0._firstName} {0._surName}'.format(speaker))
+            agreement.state = new_status
+            agreement.signed_dt = speaker_wrapper.dateAgreement or now_utc()
+            agreement.signed_from_ip = speaker_wrapper.ipSignature
+            agreement.reason = speaker_wrapper.reason
+            agreement.data = data
+            if new_status == AgreementState.accepted_on_behalf:
+                filename, path = self._get_file_data(speaker_wrapper.localFile)
+                if not path:
+                    print cformat('     %{red!}uploaded file not found')
+                    # XXX: should we set status to `accepted` instead to avoid broken links?
+                else:
+                    agreement.attachment_filename = filename
+                    with open(path, 'rb') as f:
+                        agreement.attachment = f.read()
+                    print cformat('     %{grey!}attachment: {} ({} bytes)').format(filename,
+                                                                                   len(agreement.attachment_filename))
+            db.session.add(agreement)
+
+        if unsent:
+            print cformat('   %{yellow}skipped {} unsent agreements').format(unsent)
+
+    def _get_file_data(self, f):
+        # this is based pretty much on MaterialLocalRepository.__getFilePath, but we don't
+        # call any legacy methods in ZODB migrations to avoid breakage in the future.
+        archive_path = Config.getInstance().getArchiveDir()
+        archive_id = f._LocalFile__archivedId
+        repo = f._LocalFile__repository
+        path = os.path.join(archive_path, repo._MaterialLocalRepository__files[archive_id])
+        if os.path.exists(path):
+            return f.fileName, path
+        for mode, enc in (('strict', 'iso-8859-1'), ('replace', sys.getfilesystemencoding()), ('replace', 'ascii')):
+            enc_path = path.decode('utf-8', mode).encode(enc, 'replace')
+            if os.path.exists(enc_path):
+                return f.fileName, enc_path
+        return f.fileName, None
 
     def _iter_csbms(self):
         idx = self.zodb_root['catalog']['cs_bookingmanager_conference']._tree

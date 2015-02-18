@@ -1,0 +1,68 @@
+{% extends 'agreements/agreement_form.html' %}
+
+{%- if talk_type == 'lecture' %}
+    {% set data_source = event %}
+{% else %}
+    {% set data_source = contrib.getContribution() if is_subcontrib else contrib %}
+{% endif -%}
+
+{% block info_more %}
+    <div class="titled-rule">
+        {%- if talk_type == 'lecture' -%}
+            {% trans %}Lecture details{% endtrans %}
+        {%- else -%}
+            {% trans %}Contribution details{% endtrans %}
+        {%- endif -%}
+    </div>
+    <div class="info-section">
+        <table class="info-tabular">
+            <tr>
+                <td>{% trans %}Talk{% endtrans %}:</td>
+                <td>
+                    {% if talk_type == 'lecture' %}
+                        <a href="{{ url_for('event.conferenceDisplay', event) }}">{{ event.getTitle() }}</a>
+                    {% else %}
+                        {% set endpoint = 'event.subContributionDisplay' if is_subcontrib else 'event.contributionDisplay' %}
+                        <a href="{{ url_for(endpoint, contrib) }}">{{ contrib.getTitle() }}</a>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td>{% trans %}Scheduled on{% endtrans %}:</td>
+                <td>
+                    {{ data_source.getStartDate() | format_date }}
+                    from {{ data_source.getStartDate() | format_time('short') }}
+                    to {{ data_source.getEndDate() | format_time('short') }}
+                </td>
+            </tr>
+            <tr>
+                <td>{% trans %}Place{% endtrans %}:</td>
+                <td>
+                    {% set sep = joiner(': ') %}
+                    {% if data_source.getLocation() %}{{ data_source.getLocation().getName() }}{{ sep() }}{% endif -%}
+                    {%- if data_source.getRoom() %}{{ sep() }}{{ data_source.getRoom().getName() }}{% endif %}
+                </td>
+            </tr>
+        </table>
+    </div>
+{% endblock %}
+
+{% block legal_body %}
+    <h3>CERN Speaker Release</h3>
+    <p>
+        I hereby consent to the photographic, audio and video recording of my performance or presentation at CERN.
+        The term "performance or presentation" includes any material incorporated therein including but not limited
+        to text, images and references.
+    </p>
+    <p>
+        I hereby grant CERN a royalty-free license to use my image and name as well as the aforementioned recordings,
+        in whole or in part, and to broadcast or distribute same in any format, in the furtherance of CERN's scientific
+        and educational mission. I agree to the modification of the afore-mentioned recordings provided that the
+        substance of the performance or presentation is preserved.
+    </p>
+    <p>
+        I hereby confirm that the content of my performance or presentation does not infringe the copyright,
+        intellectual property or privacy rights of any third party. I have cited and credited any third party
+        contribution in accordance with applicable professional standards and legislation in matters of attribution.
+    </p>
+{% endblock %}

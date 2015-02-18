@@ -15,8 +15,9 @@ from indico.util.i18n import _
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import PrincipalField, MultipleItemsField, EmailListField
 
-from indico_requests_audiovisual.definition import AVRequest
+from indico_requests_audiovisual.definition import AVRequest, SpeakerReleaseAgreement
 from indico_requests_audiovisual.notifications import notify_relocated_request, notify_rescheduled_request
+from indico_requests_audiovisual.compat import compat_blueprint
 from indico_requests_audiovisual.util import get_data_identifiers
 
 
@@ -40,7 +41,11 @@ class PluginSettingsForm(IndicoForm):
                                                         'recording/webcast request. Note that selected '
                                                         'subcontributions will be lost when a request is modified '
                                                         'after disabling this setting.'))
-    # TODO: agreement settings
+    agreement_ping_url = URLField(_('Agreement Ping URL'),
+                                  description=_("A ping is sent via HTTP POST to this URL whenever an agreement is "
+                                                "signed."))
+    agreement_paper_url = URLField(_('Agreement Paper URL'),
+                                   description=_("The URL to the agreement that can be printed and signed offline."))
 
 
 class AVRequestsPlugin(IndicoPlugin):
@@ -57,7 +62,9 @@ class AVRequestsPlugin(IndicoPlugin):
                         'notification_emails': [],
                         'webcast_ping_url': None,
                         'webcast_url': '',
-                        'allow_subcontributions': False}
+                        'allow_subcontributions': False,
+                        'agreement_ping_url': None,
+                        'agreement_paper_url': None}
     strict_settings = True
 
     def init(self):
@@ -65,6 +72,7 @@ class AVRequestsPlugin(IndicoPlugin):
         self.inject_css('requests_audiovisual_css', WPRequestsEventManagement, subclasses=False,
                         condition=lambda: request.view_args.get('type') == AVRequest.name)
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
+        self.connect(signals.agreements.get_definitions, self._get_agreement_definitions)
         self.connect(signals.event.data_changed, self._data_changed)
         self.connect(signals.event.contribution_data_changed, self._data_changed)
         self.connect(signals.event.subcontribution_data_changed, self._data_changed)
@@ -74,13 +82,17 @@ class AVRequestsPlugin(IndicoPlugin):
         self.template_hook('conference-header-subtitle', self._inject_conference_header_subtitle)
 
     def get_blueprints(self):
-        return IndicoPluginBlueprint('requests_audiovisual', 'indico_requests_audiovisual')
+        yield IndicoPluginBlueprint('requests_audiovisual', 'indico_requests_audiovisual')
+        yield compat_blueprint
 
     def register_assets(self):
         self.register_css_bundle('requests_audiovisual_css', 'css/requests_audiovisual.scss')
 
     def _get_event_request_definitions(self, sender, **kwargs):
         return AVRequest
+
+    def _get_agreement_definitions(self, sender, **kwargs):
+        return SpeakerReleaseAgreement
 
     def _data_changed(self, sender, **kwargs):
         # sender can be `Conference`, `Contribution` or `SubContribution`

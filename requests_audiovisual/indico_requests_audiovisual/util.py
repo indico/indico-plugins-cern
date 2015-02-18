@@ -10,6 +10,8 @@ from indico.core.db.util import run_after_commit
 from indico.modules.rb.models.equipment import EquipmentType
 from indico.modules.rb.models.locations import Location
 from indico.modules.rb.models.rooms import Room
+from indico.modules.scheduler import Client
+from indico.modules.scheduler.tasks import HTTPTask
 from indico.util.user import retrieve_principals
 from MaKaC.conference import SubContribution
 from MaKaC.webinterface.common.contribFilters import PosterFilterField
@@ -66,7 +68,16 @@ def contribution_id(contrib_or_subcontrib):
     if isinstance(contrib_or_subcontrib, SubContribution):
         return '{}-{}'.format(contrib_or_subcontrib.getContribution().id, contrib_or_subcontrib.id)
     else:
-        return contrib_or_subcontrib.id
+        return unicode(contrib_or_subcontrib.id)
+
+
+def contribution_by_id(event, contrib_or_subcontrib_id):
+    """Returns a contribution/subcontriution from an :func:`contribution_id`-style ID"""
+    contrib_id, _, subcontrib_id = contrib_or_subcontrib_id.partition('-')
+    contrib = event.getContributionById(contrib_id)
+    if contrib and subcontrib_id:
+        contrib = contrib.getSubContributionById(subcontrib_id)
+    return contrib
 
 
 def get_selected_contributions(req):
@@ -160,3 +171,27 @@ def send_webcast_ping():
         response.raise_for_status()
     except RequestException:
         AVRequestsPlugin.logger.exception('Could not send webcast ping')
+
+
+def send_agreement_ping(agreement):
+    """Sends a ping notification when a speaker release is updated"""
+    from indico_requests_audiovisual.plugin import AVRequestsPlugin
+    url = AVRequestsPlugin.settings.get('agreement_ping_url')
+    if not url:
+        return
+    AVRequestsPlugin.logger.info('Sending agreement ping to {}'.format(url))
+    payload = {
+        'event_id': agreement.event_id,
+        'status': agreement.state.name,
+        'accepted': None if agreement.pending else agreement.accepted,
+        'speaker': {
+            'name': agreement.person_name,
+            'email': agreement.person_email
+        }
+    }
+    if agreement.data['type'] == 'contribution':
+        contrib_id, _, subcontrib_id = agreement.data['contribution'].partition('-')
+        payload['contribution_id'] = int(contrib_id)
+        if subcontrib_id is not None:
+            payload['subcontribution_id'] = int(subcontrib_id)
+    Client().enqueue(HTTPTask(url, {'data': json.dumps(payload)}))
