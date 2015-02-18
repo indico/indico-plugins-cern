@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from flask_pluginengine import current_plugin, plugin_context, render_plugin_template
+from flask_pluginengine import current_plugin
 from sqlalchemy.orm.attributes import flag_modified
 
 from indico.modules.agreements.base import AgreementDefinitionBase
@@ -69,6 +69,7 @@ class AVRequest(RequestDefinitionBase):
 class SpeakerReleaseAgreement(AgreementDefinitionBase):
     name = 'webcast-recording-speaker-release'
     title = _('Speaker Release')
+    template_name = 'agreement_form.html'
 
     @classproperty
     @classmethod
@@ -88,9 +89,11 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
             talk_type = 'lecture'
         else:
             raise ValueError('Unexpected type: {}'.format(agreement.data['type']))
-        with plugin_context(cls.plugin):
-            return render_plugin_template('agreement_form.html', agreement=agreement, form=form, contrib=contrib,
-                                          is_subcontrib=is_subcontrib, talk_type=talk_type, event=event, **kwargs)
+        kwargs.update({'contrib': contrib,
+                       'is_subcontrib': is_subcontrib,
+                       'talk_type': talk_type,
+                       'event': event})
+        return super(SpeakerReleaseAgreement, cls).render_form(agreement, form, **kwargs)
 
     @classmethod
     def handle_accepted(cls, agreement):
