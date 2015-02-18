@@ -66,6 +66,18 @@ class AVRequest(RequestDefinitionBase):
         super(AVRequest, cls).reject(req, data, user)
 
 
+class SpeakerPersonInfo(AgreementPersonInfo):
+    @property
+    def identifier(self):
+        prefix = '{}-{}'.format(self.email, self.data['type'])
+        if self.data['type'] == 'lecture_speaker':
+            return '{}:{}'.format(prefix, self.data['speaker_id'])
+        elif self.data['type'] == 'contribution':
+            return '{}:{}'.format(prefix, self.data['contribution'])
+        else:
+            raise ValueError('Unexpected type: {}'.format(self.data['type']))
+
+
 class SpeakerReleaseAgreement(AgreementDefinitionBase):
     name = 'webcast-recording-speaker-release'
     title = _('Speaker Release')
@@ -110,11 +122,12 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
             return
         if event.getType() == 'simple_event':
             for speaker in event.getChairList():
-                yield AgreementPersonInfo(speaker.getDirectFullNameNoTitle(), speaker.getEmail(),
-                                          data={'type': 'lecture_speaker'})
+                yield SpeakerPersonInfo(speaker.getDirectFullNameNoTitle(), speaker.getEmail(),
+                                        data={'type': 'lecture_speaker', 'speaker_id': speaker.getId()})
         else:
             contribs = [x[0] for x in get_selected_contributions(req)]
             for contrib in contribs:
                 for speaker in contrib.getSpeakerList():
-                    yield AgreementPersonInfo(speaker.getDirectFullNameNoTitle(upper=False), speaker.getEmail(),
-                                              data={'type': 'contribution', 'contribution': contribution_id(contrib)})
+                    yield SpeakerPersonInfo(speaker.getDirectFullNameNoTitle(upper=False), speaker.getEmail(),
+                                            data={'type': 'contribution', 'contribution': contribution_id(contrib),
+                                                  'speaker_id': speaker.getId()})

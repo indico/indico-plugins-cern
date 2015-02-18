@@ -177,9 +177,9 @@ def send_agreement_ping(agreement):
     AVRequestsPlugin.logger.info('Sending agreement ping to {}'.format(url))
     payload = {
         'event_id': agreement.event_id,
-        'status': agreement.state.name,
         'accepted': None if agreement.pending else agreement.accepted,
         'speaker': {
+            'id': agreement.data['speaker_id'],
             'name': agreement.person_name,
             'email': agreement.person_email
         }

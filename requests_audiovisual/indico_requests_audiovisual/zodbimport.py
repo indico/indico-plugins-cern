@@ -14,7 +14,7 @@ from indico.util.string import is_valid_mail
 from indico.util.struct.iterables import committing_iterator
 from indico_zodbimport import Importer, convert_to_unicode, convert_principal_list, option_value
 
-from indico_requests_audiovisual.definition import AVRequest, SpeakerReleaseAgreement
+from indico_requests_audiovisual.definition import AVRequest, SpeakerReleaseAgreement, SpeakerPersonInfo
 from indico_requests_audiovisual.plugin import AVRequestsPlugin
 from indico_requests_audiovisual.util import get_data_identifiers
 
@@ -154,8 +154,12 @@ class AVRequestsImporter(Importer):
             if speaker.__class__.__name__ == 'ContributionParticipation':
                 data['type'] = 'contribution'
                 data['contribution'] = speaker_wrapper.contId
+                data['speaker_id'] = speaker._id
             elif speaker.__class__.__name__ == 'ConferenceChair':
                 data['type'] = 'lecture_speaker'
+                data['speaker_id'] = speaker._id
+            else:
+                raise ValueError('Unexpected speaker: {}'.format(speaker.__class__.__name__))
             agreement = Agreement(event=csbm._conf, type=SpeakerReleaseAgreement.name)
             agreement.uuid = speaker_wrapper.uniqueIdHash
             agreement.person_email = convert_to_unicode(speaker._email)
@@ -165,6 +169,8 @@ class AVRequestsImporter(Importer):
             agreement.signed_from_ip = speaker_wrapper.ipSignature
             agreement.reason = speaker_wrapper.reason
             agreement.data = data
+            spi = SpeakerPersonInfo(agreement.person_name, agreement.person_email, data=agreement.data)
+            agreement.identifier = spi.identifier
             if new_status == AgreementState.accepted_on_behalf:
                 filename, path = self._get_file_data(speaker_wrapper.localFile)
                 if not path:
