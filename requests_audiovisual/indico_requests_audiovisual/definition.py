@@ -122,12 +122,16 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
             return
         if event.getType() == 'simple_event':
             for speaker in event.getChairList():
+                if not speaker.getEmail():
+                    continue
                 yield SpeakerPersonInfo(speaker.getDirectFullNameNoTitle(), speaker.getEmail(),
                                         data={'type': 'lecture_speaker', 'speaker_id': speaker.getId()})
         else:
             contribs = [x[0] for x in get_selected_contributions(req)]
             for contrib in contribs:
                 for speaker in contrib.getSpeakerList():
+                    if not speaker.getEmail():
+                        continue
                     yield SpeakerPersonInfo(speaker.getDirectFullNameNoTitle(upper=False), speaker.getEmail(),
                                             data={'type': 'contribution', 'contribution': contribution_id(contrib),
                                                   'speaker_id': speaker.getId()})

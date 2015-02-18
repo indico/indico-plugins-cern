@@ -169,7 +169,11 @@ class AVRequestsImporter(Importer):
             agreement.signed_from_ip = speaker_wrapper.ipSignature
             agreement.reason = speaker_wrapper.reason
             agreement.data = data
-            spi = SpeakerPersonInfo(agreement.person_name, agreement.person_email, data=agreement.data)
+            # no-email-address is terrible but we have a few (~10) speakers without an email.
+            # those will never show up in the agreement listing but at least we keep the information
+            # that they did sign (on paper) in the database..
+            spi = SpeakerPersonInfo(agreement.person_name, agreement.person_email or 'no-email-address',
+                                    data=agreement.data)
             agreement.identifier = spi.identifier
             if new_status == AgreementState.accepted_on_behalf:
                 filename, path = self._get_file_data(speaker_wrapper.localFile)
