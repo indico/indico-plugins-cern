@@ -158,7 +158,6 @@ def get_data_identifiers(req):
     }))
 
 
-@run_after_commit  # otherwise the remote side might read old data
 def send_webcast_ping():
     """Sends a ping notification when a webcast request changes"""
     from indico_requests_audiovisual.plugin import AVRequestsPlugin
@@ -166,11 +165,7 @@ def send_webcast_ping():
     if not url:
         return
     AVRequestsPlugin.logger.info('Sending webcast ping to {}'.format(url))
-    try:
-        response = requests.get(url, timeout=10, verify=False)
-        response.raise_for_status()
-    except RequestException:
-        AVRequestsPlugin.logger.exception('Could not send webcast ping')
+    Client().enqueue(HTTPTask(url))
 
 
 def send_agreement_ping(agreement):
