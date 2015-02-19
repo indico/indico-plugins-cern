@@ -87,6 +87,22 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
     description = _('For talks to be recorded or webcast, all involved speakers need to sign the speaker release form.')
     template_name = 'agreement_form.html'
 
+    @classmethod
+    def can_access_api(cls, user, event):
+        return super(SpeakerReleaseAgreement, cls).can_access_api(user, event) or is_av_manager(user)
+
+    @classmethod
+    def extend_api_data(cls, event, person, agreement, data):
+        data['confId'] = event.getId()
+        data['signed'] = data['accepted']
+        data['speaker'] = {'id': person.data['speaker_id'],
+                           'name': person.name,
+                           'email': person.email}
+        if person.data['type'] == 'lecture_speaker':
+            data['contrib'] = event.getId()
+        elif person.data['type'] == 'contribution':
+            data['contrib'] = person.data['contribution']
+
     @classproperty
     @classmethod
     def paper_form_url(cls):
