@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from flask_pluginengine import current_plugin
+from markupsafe import Markup, escape
 from sqlalchemy.orm.attributes import flag_modified
 
 from indico.modules.events.agreements.base import AgreementDefinitionBase
@@ -10,6 +11,7 @@ from indico.modules.events.requests.models.requests import RequestState, Request
 from indico.util.decorators import classproperty
 from indico.util.i18n import _
 from indico.util.string import to_unicode
+from indico.web.flask.util import url_for
 from MaKaC.conference import SubContribution
 
 from indico_requests_audiovisual import util
@@ -116,6 +118,24 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
     @classmethod
     def handle_rejected(cls, agreement):
         send_agreement_ping(agreement)
+
+    @classmethod
+    def render_data(cls, event, data):
+        info = ''
+        if data['type'] == 'lecture_speaker':
+            info = '<a href="{}">{}</a>'.format(url_for('event.conferenceDisplay', event),
+                                                to_unicode(event.getTitle()))
+        elif data['type'] == 'contribution':
+            contrib_id, _, subcontrib_id = data['contribution'].partition('-')
+            contrib = event.getContributionById(contrib_id)
+            if subcontrib_id:
+                subcontrib = contrib.getSubContributionById(subcontrib_id)
+                info = '<a href="{}">{}</a>'.format(url_for('event.subContributionDisplay', subcontrib),
+                                                    escape(to_unicode(subcontrib.getTitle())))
+            else:
+                info = '<a href="{}">{}</a>'.format(url_for('event.contributionDisplay', contrib),
+                                                    escape(to_unicode(contrib.getTitle())))
+        return [Markup(info)]
 
     @classmethod
     def iter_people(cls, event):
