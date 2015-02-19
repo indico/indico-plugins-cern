@@ -4,7 +4,7 @@ from flask import request, redirect
 from werkzeug.exceptions import NotFound
 
 from indico.core.plugins import IndicoPluginBlueprint
-from indico.modules.agreements.models.agreements import Agreement
+from indico.modules.events.agreements.models.agreements import Agreement
 from indico.web.flask.util import url_for
 
 

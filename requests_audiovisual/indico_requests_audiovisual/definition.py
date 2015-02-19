@@ -3,12 +3,13 @@ from __future__ import unicode_literals
 from flask_pluginengine import current_plugin
 from sqlalchemy.orm.attributes import flag_modified
 
-from indico.modules.agreements.base import AgreementDefinitionBase
-from indico.modules.agreements.models.agreements import AgreementPersonInfo
+from indico.modules.events.agreements.base import AgreementDefinitionBase
+from indico.modules.events.agreements.models.agreements import AgreementPersonInfo
 from indico.modules.events.requests import RequestDefinitionBase
 from indico.modules.events.requests.models.requests import RequestState, Request
 from indico.util.decorators import classproperty
 from indico.util.i18n import _
+from indico.util.string import to_unicode
 from MaKaC.conference import SubContribution
 
 from indico_requests_audiovisual import util
@@ -79,8 +80,9 @@ class SpeakerPersonInfo(AgreementPersonInfo):
 
 
 class SpeakerReleaseAgreement(AgreementDefinitionBase):
-    name = 'webcast-recording-speaker-release'
+    name = 'cern-speaker-release'
     title = _('Speaker Release')
+    description = _('For talks to be recorded or webcast, all involved speakers need to sign the speaker release form.')
     template_name = 'agreement_form.html'
 
     @classproperty
@@ -124,7 +126,8 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
             for speaker in event.getChairList():
                 if not speaker.getEmail():
                     continue
-                yield SpeakerPersonInfo(speaker.getDirectFullNameNoTitle(), speaker.getEmail(),
+                yield SpeakerPersonInfo(to_unicode('{} {}'.format(speaker.getFirstName(), speaker.getFamilyName())),
+                                        to_unicode(speaker.getEmail()),
                                         data={'type': 'lecture_speaker', 'speaker_id': speaker.getId()})
         else:
             contribs = [x[0] for x in get_selected_contributions(req)]
@@ -132,6 +135,7 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
                 for speaker in contrib.getSpeakerList():
                     if not speaker.getEmail():
                         continue
-                    yield SpeakerPersonInfo(speaker.getDirectFullNameNoTitle(upper=False), speaker.getEmail(),
+                    yield SpeakerPersonInfo(to_unicode(speaker.getDirectFullNameNoTitle(upper=False)),
+                                            to_unicode(speaker.getEmail()),
                                             data={'type': 'contribution', 'contribution': contribution_id(contrib),
                                                   'speaker_id': speaker.getId()})

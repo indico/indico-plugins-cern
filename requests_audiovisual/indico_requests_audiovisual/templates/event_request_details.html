@@ -48,9 +48,9 @@
     {%- if req and req.state.name == 'accepted' -%}
         {% call message_box('warning') %}
             <p>
-                {%- trans -%}
-                    Please note that all speakers are required to sign the <em>Speaker Release Form</em> before the
-                    webcast or recording can be published!
+                {%- trans url=url_for('agreements.event_agreements_details', event, definition='cern-speaker-release') -%}
+                    Please note that all speakers are required to sign the <a href="{{ url }}"><em>Speaker Release Form</em></a>
+                    before the webcast or recording can be published!
                 {%- endtrans -%}
             </p>
         {% endcall %}

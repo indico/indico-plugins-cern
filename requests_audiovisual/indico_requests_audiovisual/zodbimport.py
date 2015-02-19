@@ -6,8 +6,8 @@ from contextlib import contextmanager
 
 from indico.core.config import Config
 from indico.core.db import db
+from indico.modules.events.agreements.models.agreements import Agreement, AgreementState
 from indico.modules.events.requests.models.requests import Request, RequestState
-from indico.modules.agreements.models.agreements import Agreement, AgreementState
 from indico.util.console import cformat
 from indico.util.date_time import now_utc
 from indico.util.string import is_valid_mail
