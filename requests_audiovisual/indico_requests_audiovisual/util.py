@@ -187,6 +187,6 @@ def send_agreement_ping(agreement):
     if agreement.data['type'] == 'contribution':
         contrib_id, _, subcontrib_id = agreement.data['contribution'].partition('-')
         payload['contribution_id'] = int(contrib_id)
-        if subcontrib_id is not None:
+        if subcontrib_id:
             payload['subcontribution_id'] = int(subcontrib_id)
     Client().enqueue(HTTPTask(url, {'data': json.dumps(payload)}))
