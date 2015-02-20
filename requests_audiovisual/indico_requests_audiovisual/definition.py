@@ -5,8 +5,7 @@ from markupsafe import Markup, escape
 from sqlalchemy.orm.attributes import flag_modified
 from werkzeug.exceptions import NotFound
 
-from indico.modules.events.agreements.base import AgreementDefinitionBase
-from indico.modules.events.agreements.models.agreements import AgreementPersonInfo
+from indico.modules.events.agreements import AgreementDefinitionBase, AgreementPersonInfo
 from indico.modules.events.requests import RequestDefinitionBase
 from indico.modules.events.requests.models.requests import RequestState, Request
 from indico.util.decorators import classproperty
