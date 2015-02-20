@@ -1,9 +1,9 @@
 from __future__ import unicode_literals
 
-from flask import request
 from flask_pluginengine import current_plugin
 from markupsafe import Markup, escape
 from sqlalchemy.orm.attributes import flag_modified
+from werkzeug.exceptions import NotFound
 
 from indico.modules.events.agreements.base import AgreementDefinitionBase
 from indico.modules.events.agreements.models.agreements import AgreementPersonInfo
@@ -117,6 +117,8 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
         if agreement.data['type'] == 'contribution':
             talk_type = 'contribution'
             contrib = contribution_by_id(event, agreement.data['contribution'])
+            if not contrib:
+                raise NotFound
             is_subcontrib = isinstance(contrib, SubContribution)
         elif agreement.data['type'] == 'lecture_speaker':
             talk_type = 'lecture'
@@ -143,10 +145,14 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
             info = '<a href="{}">{}</a>'.format(url_for('event.conferenceDisplay', event),
                                                 to_unicode(event.getTitle()))
         elif data['type'] == 'contribution':
-            contrib_id, _, subcontrib_id = data['contribution'].partition('-')
+            contrib_id, _unused, subcontrib_id = data['contribution'].partition('-')
             contrib = event.getContributionById(contrib_id)
+            if not contrib:
+                return ['({})'.format(_('Contribution deleted'))]
             if subcontrib_id:
                 subcontrib = contrib.getSubContributionById(subcontrib_id)
+                if not subcontrib:
+                    return ['({})'.format(_('Subcontribution deleted'))]
                 info = '<a href="{}">{}</a>'.format(url_for('event.subContributionDisplay', subcontrib),
                                                     escape(to_unicode(subcontrib.getTitle())))
             else:
