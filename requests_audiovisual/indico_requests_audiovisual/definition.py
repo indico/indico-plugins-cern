@@ -76,7 +76,7 @@ class SpeakerPersonInfo(AgreementPersonInfo):
         if self.data['type'] == 'lecture_speaker':
             return '{}:{}'.format(prefix, self.data['speaker_id'])
         elif self.data['type'] == 'contribution':
-            return '{}:{}'.format(prefix, self.data['contribution'])
+            return '{}:{}:{}'.format(prefix, self.data['contribution'], self.data['speaker_id'])
         else:
             raise ValueError('Unexpected type: {}'.format(self.data['type']))
 
