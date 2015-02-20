@@ -5,7 +5,7 @@ from markupsafe import Markup, escape
 from sqlalchemy.orm.attributes import flag_modified
 from werkzeug.exceptions import NotFound
 
-from indico.modules.events.agreements import AgreementDefinitionBase, AgreementPersonInfo
+from indico.modules.events.agreements import AgreementDefinitionBase, AgreementPersonInfo, EmailPlaceholderBase
 from indico.modules.events.requests import RequestDefinitionBase
 from indico.modules.events.requests.models.requests import RequestState, Request
 from indico.util.decorators import classproperty
@@ -81,11 +81,40 @@ class SpeakerPersonInfo(AgreementPersonInfo):
             raise ValueError('Unexpected type: {}'.format(self.data['type']))
 
 
+def _talk_info_from_agreement_data(event, data):
+    if data['type'] == 'lecture_speaker':
+        return 'lecture', url_for('event.conferenceDisplay', event), to_unicode(event.getTitle())
+    elif data['type'] != 'contribution':
+        raise ValueError('Unexpected data type: {}'.format(data['type']))
+
+    contrib_id, _unused, subcontrib_id = data['contribution'].partition('-')
+    contrib = event.getContributionById(contrib_id)
+    if not contrib:
+        raise RuntimeError(_('Contribution deleted'))
+    if not subcontrib_id:
+        return 'contribution', url_for('event.contributionDisplay', contrib), to_unicode(contrib.getTitle())
+
+    subcontrib = contrib.getSubContributionById(subcontrib_id)
+    if not subcontrib:
+        raise RuntimeError(_('Subcontribution deleted'))
+    return 'subcontribution', url_for('event.subContributionDisplay', subcontrib), to_unicode(subcontrib.getTitle())
+
+
+class TalkPlaceholder(EmailPlaceholderBase):
+    required = True
+    description = _("The title of the user's talk")
+
+    @classmethod
+    def render(cls, agreement):
+        return _talk_info_from_agreement_data(agreement.event, agreement.data)[2]
+
+
 class SpeakerReleaseAgreement(AgreementDefinitionBase):
     name = 'cern-speaker-release'
     title = _('Speaker Release')
     description = _('For talks to be recorded or webcast, all involved speakers need to sign the speaker release form.')
     template_name = 'agreement_form.html'
+    email_placeholders = {'talk_title': TalkPlaceholder}
 
     @classmethod
     def can_access_api(cls, user, event):
@@ -139,25 +168,12 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
 
     @classmethod
     def render_data(cls, event, data):
-        info = ''
-        if data['type'] == 'lecture_speaker':
-            info = '<a href="{}">{}</a>'.format(url_for('event.conferenceDisplay', event),
-                                                to_unicode(event.getTitle()))
-        elif data['type'] == 'contribution':
-            contrib_id, _unused, subcontrib_id = data['contribution'].partition('-')
-            contrib = event.getContributionById(contrib_id)
-            if not contrib:
-                return ['({})'.format(_('Contribution deleted'))]
-            if subcontrib_id:
-                subcontrib = contrib.getSubContributionById(subcontrib_id)
-                if not subcontrib:
-                    return ['({})'.format(_('Subcontribution deleted'))]
-                info = '<a href="{}">{}</a>'.format(url_for('event.subContributionDisplay', subcontrib),
-                                                    escape(to_unicode(subcontrib.getTitle())))
-            else:
-                info = '<a href="{}">{}</a>'.format(url_for('event.contributionDisplay', contrib),
-                                                    escape(to_unicode(contrib.getTitle())))
-        return [Markup(info)]
+        try:
+            type_, url, title = _talk_info_from_agreement_data(event, data)
+        except RuntimeError as e:
+            return ['({})'.format(e)]
+        return [Markup('<a href="{}">{}</a>'.format(url, escape(title)))]
+
 
     @classmethod
     def iter_people(cls, event):
