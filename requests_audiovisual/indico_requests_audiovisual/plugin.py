@@ -14,7 +14,9 @@ from indico.modules.events.requests.views import WPRequestsEventManagement
 from indico.util.i18n import _
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import PrincipalField, MultipleItemsField, EmailListField
+from indico.web.http_api import HTTPAPIHook
 
+from indico_requests_audiovisual.api import AVExportHook
 from indico_requests_audiovisual.definition import AVRequest, SpeakerReleaseAgreement
 from indico_requests_audiovisual.notifications import notify_relocated_request, notify_rescheduled_request
 from indico_requests_audiovisual.compat import compat_blueprint
@@ -80,6 +82,7 @@ class AVRequestsPlugin(IndicoPlugin):
         self.connect(signals.before_retry, self._clear_changes)
         self.template_hook('event-header', self._inject_event_header)
         self.template_hook('conference-header-subtitle', self._inject_conference_header_subtitle)
+        HTTPAPIHook.register(AVExportHook)
 
     def get_blueprints(self):
         yield IndicoPluginBlueprint('requests_audiovisual', 'indico_requests_audiovisual')

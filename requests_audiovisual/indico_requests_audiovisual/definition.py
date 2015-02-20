@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from flask import request
 from flask_pluginengine import current_plugin
 from markupsafe import Markup, escape
 from sqlalchemy.orm.attributes import flag_modified
