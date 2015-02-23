@@ -1,0 +1,5 @@
+{% extends 'events/requests/emails/rejected_to_event_managers.txt' %}
+
+{% block request_details -%}
+    Requested services: {{ req.definition.util.get_selected_services(req)|join(', ') }}
+{%- endblock %}
