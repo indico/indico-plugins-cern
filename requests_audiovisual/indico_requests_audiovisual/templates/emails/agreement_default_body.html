@@ -1,0 +1,10 @@
+{% extends 'events/agreements/emails/agreement_default_body.html' %}
+
+{% block body_text %}
+    We would like to record your upcoming talk <strong>{talk_title}</strong>
+    in the event:<br>
+    <strong>{{ event.getTitle() }}</strong><br><br>
+
+    Please sign the CERN speaker release agreement to give us permission to do so:<br>
+    {agreement_link}
+{%- endblock %}

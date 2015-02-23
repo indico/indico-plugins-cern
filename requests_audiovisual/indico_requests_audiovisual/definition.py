@@ -174,7 +174,6 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
             return ['({})'.format(e)]
         return [Markup('<a href="{}">{}</a>'.format(url, escape(title)))]
 
-
     @classmethod
     def iter_people(cls, event):
         req = Request.find_latest_for_event(event, AVRequest.name)
