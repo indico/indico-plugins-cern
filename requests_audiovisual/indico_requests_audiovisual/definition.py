@@ -8,6 +8,7 @@ from werkzeug.exceptions import NotFound
 from indico.modules.events.agreements import AgreementDefinitionBase, AgreementPersonInfo, EmailPlaceholderBase
 from indico.modules.events.requests import RequestDefinitionBase
 from indico.modules.events.requests.models.requests import RequestState, Request
+from indico.util.caching import memoize_request
 from indico.util.decorators import classproperty
 from indico.util.i18n import _
 from indico.util.string import to_unicode
@@ -134,6 +135,7 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
 
     @classproperty
     @classmethod
+    @memoize_request
     def paper_form_url(cls):
         return cls.plugin.settings.get('agreement_paper_url')
 
