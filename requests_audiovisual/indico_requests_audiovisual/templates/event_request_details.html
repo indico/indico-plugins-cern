@@ -1,11 +1,11 @@
 {% extends 'events/requests/event_request_details.html' %}
 {% from 'message_box.html' import message_box %}
-{% set has_any_contributions = definition.util.has_any_contributions(event) %}
-{% set has_capable_contributions = has_any_contributions and definition.util.has_capable_contributions(event) %}
+{% set num_capable_contributions, num_contributions = definition.util.count_capable_contributions(event) %}
+{% set num_not_capable_contributions = num_contributions - num_capable_contributions %}
 
 
 {% block content %}
-    {% if not has_any_contributions %}
+    {% if not num_contributions %}
         <div class="i-form">
             {% call message_box('warning') %}
                 {% trans -%}
@@ -14,7 +14,7 @@
                 {%- endtrans %}
             {% endcall %}
         </div>
-    {% elif not has_capable_contributions %}
+    {% elif not num_capable_contributions %}
         <div class="i-form">
             {% call message_box('warning') %}
                 <p>
@@ -35,7 +35,7 @@
             {% endcall %}
         </div>
     {% endif %}
-    {% if (has_any_contributions and (has_capable_contributions or is_manager)) or (req and req.state.name != 'withdrawn') %}
+    {% if (num_contributions and (num_capable_contributions or is_manager)) or (req and req.state.name != 'withdrawn') %}
         {{ super() }}
     {% else %}
         <a href="{{ url_for('.event_requests', event) }}" class="i-button big">{% trans %}Back{% endtrans %}</a>
@@ -61,6 +61,19 @@
                 {%- trans -%}
                     Your event has some sessions which do not contain any contributions.
                     Please note that only contributions can be webcast or recorded.
+                {%- endtrans -%}
+            </p>
+        {% endcall %}
+    {% endif %}
+    {% if num_not_capable_contributions %}
+        {% call message_box('warning') %}
+            <p>
+                {%- trans count=num_not_capable_contributions -%}
+                    There is a contribution in a room which does not have webcast/recording equipment.
+                    This contribution will not be webcast/recorded.
+                {%- pluralize -%}
+                    There are {{ count }} contributions in rooms which do not have webcast/recording equipment.
+                    These contributions will not be webcast/recorded.
                 {%- endtrans -%}
             </p>
         {% endcall %}

@@ -102,22 +102,24 @@ def get_selected_services(req):
     return [SERVICES.get(s, s) for s in req.data['services']]
 
 
-def has_capable_contributions(event):
-    """Checks if there are any contributions in AV-capable rooms"""
+def count_capable_contributions(event):
+    """Gets the total and capable-room contribution counts.
+
+    Lectures don't have any contributions, but for the sake of simplifying
+    code using this function, they are considered having one or zero capable
+    contributions.
+
+    :return: ``(capable, total)`` tuple containing the contribution counts
+    """
     if event.getType() == 'simple_event':
         av_capable_rooms = {r.name for r in get_av_capable_rooms()}
-        return event.getRoom() and event.getRoom().getName() in av_capable_rooms
+        if event.getRoom() and event.getRoom().getName() in av_capable_rooms:
+            return 1, 1
+        else:
+            return 0, 1
     else:
-        return any(capable for _, capable, _ in get_contributions(event))
-
-
-def has_any_contributions(event):
-    """Checks if there are any contributions in the event"""
-    if event.getType() == 'simple_event':
-        # a lecture is basically a contribution on its own
-        return True
-    else:
-        return bool(get_contributions(event))
+        contribs = get_contributions(event)
+        return sum(capable for _, capable, _ in contribs), len(contribs)
 
 
 def event_has_empty_sessions(event):
