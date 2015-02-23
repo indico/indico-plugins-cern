@@ -178,7 +178,7 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
     @classmethod
     def iter_people(cls, event):
         req = Request.find_latest_for_event(event, AVRequest.name)
-        if not req or req.state != RequestState.accepted:
+        if not req or req.state != RequestState.accepted or 'recording' not in req.data['services']:
             return
         if event.getType() == 'simple_event':
             for speaker in event.getChairList():
