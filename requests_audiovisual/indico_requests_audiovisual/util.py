@@ -120,6 +120,11 @@ def has_any_contributions(event):
         return bool(get_contributions(event))
 
 
+def event_has_empty_sessions(event):
+    """Checks if the event has any sessions with no contributions"""
+    return not all(ss.getContributionList() for ss in event.getSessionSlotList())
+
+
 def _get_location_tuple(obj):
     location = obj.getLocation().getName() if obj.getLocation() else None
     room = obj.getRoom().getName() if obj.getRoom() else None

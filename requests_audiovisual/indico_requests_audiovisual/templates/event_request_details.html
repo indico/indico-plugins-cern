@@ -55,6 +55,16 @@
             </p>
         {% endcall %}
     {% endif %}
+    {% if definition.util.event_has_empty_sessions(event) %}
+        {% call message_box('warning') %}
+            <p>
+                {%- trans -%}
+                    Your event has some sessions which do not contain any contributions.
+                    Please note that only contributions can be webcast or recorded.
+                {%- endtrans -%}
+            </p>
+        {% endcall %}
+    {% endif %}
 {% endblock %}
 
 
