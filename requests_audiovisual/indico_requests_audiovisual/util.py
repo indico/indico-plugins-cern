@@ -3,10 +3,6 @@ from __future__ import unicode_literals
 import json
 from itertools import chain
 
-import requests
-from requests import RequestException
-
-from indico.core.db.util import run_after_commit
 from indico.modules.rb.models.equipment import EquipmentType
 from indico.modules.rb.models.locations import Location
 from indico.modules.rb.models.rooms import Room
@@ -128,6 +124,12 @@ def count_capable_contributions(event):
 def event_has_empty_sessions(event):
     """Checks if the event has any sessions with no contributions"""
     return not all(ss.getContributionList() for ss in event.getSessionSlotList())
+
+
+def all_agreements_signed(event):
+    """Checks if all agreements have been signed"""
+    from indico_requests_audiovisual.definition import SpeakerReleaseAgreement
+    return SpeakerReleaseAgreement.get_stats_for_signed_agreements(event)[0]
 
 
 def _get_location_tuple(obj):

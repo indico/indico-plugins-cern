@@ -45,7 +45,7 @@
 
 {% block warnings %}
     {{ super() }}
-    {%- if req and req.state.name == 'accepted' and 'recording' in req.data.services -%}
+    {%- if req and req.state.name == 'accepted' and 'recording' in req.data.services and not definition.util.all_agreements_signed(event) -%}
         {% call message_box('warning') %}
             <p>
                 {%- trans url=url_for('agreements.event_agreements_details', event, definition='cern-speaker-release') -%}

@@ -15,11 +15,11 @@ from indico.util.string import to_unicode
 from indico.web.flask.util import url_for
 from MaKaC.conference import SubContribution
 
-from indico_requests_audiovisual import util
 from indico_requests_audiovisual.forms import AVRequestForm
 from indico_requests_audiovisual.util import (is_av_manager, send_webcast_ping, get_data_identifiers,
                                               get_selected_contributions, contribution_id, contribution_by_id,
-                                              send_agreement_ping)
+                                              send_agreement_ping, count_capable_contributions, get_av_capable_rooms,
+                                              event_has_empty_sessions, get_selected_services, all_agreements_signed)
 
 
 class AVRequest(RequestDefinitionBase):
@@ -27,7 +27,13 @@ class AVRequest(RequestDefinitionBase):
     title = _('Webcast / Recording')
     form = AVRequestForm
     form_defaults = {'all_contributions': True}
-    util = util  # needed for templates where we only have access to the definition
+    # needed for templates where we only have access to the definition
+    util = {'count_capable_contributions': count_capable_contributions,
+            'get_av_capable_rooms': get_av_capable_rooms,
+            'event_has_empty_sessions': event_has_empty_sessions,
+            'get_selected_contributions': get_selected_contributions,
+            'get_selected_services': get_selected_services,
+            'all_agreements_signed': all_agreements_signed}
 
     @classmethod
     def can_be_managed(cls, user):
