@@ -88,7 +88,10 @@ def get_selected_contributions(req):
     if req.event.getType() == 'simple_event':
         return []
     contributions = get_contributions(req.event)
-    if not req.data.get('all_contributions', True):
+    if req.data.get('all_contributions', True):
+        # "all contributions" includes only those in capable rooms
+        contributions = [x for x in contributions if x[1]]
+    else:
         selected = set(req.data['contributions'])
         contributions = [x for x in contributions if contribution_id(x[0]) in selected]
     return contributions
