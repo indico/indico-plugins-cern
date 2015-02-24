@@ -1,26 +1,28 @@
 from __future__ import unicode_literals
 
-from flask import request, g
-from flask_pluginengine import render_plugin_template
+from flask import request, g, session
+from flask_pluginengine import render_plugin_template, url_for_plugin
 from sqlalchemy.orm.attributes import flag_modified
 from wtforms.fields.core import BooleanField
 from wtforms.fields.html5 import URLField
 from wtforms.validators import DataRequired
 
 from indico.core import signals
-from indico.core.plugins import IndicoPlugin, IndicoPluginBlueprint
+from indico.core.plugins import IndicoPlugin
 from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.modules.events.requests.views import WPRequestsEventManagement
 from indico.util.i18n import _
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import PrincipalField, MultipleItemsField, EmailListField
 from indico.web.http_api import HTTPAPIHook
+from indico.web.menu import HeaderMenuEntry
 
 from indico_audiovisual.api import AVExportHook
+from indico_audiovisual.blueprint import blueprint
 from indico_audiovisual.definition import AVRequest, SpeakerReleaseAgreement
 from indico_audiovisual.notifications import notify_relocated_request, notify_rescheduled_request
 from indico_audiovisual.compat import compat_blueprint
-from indico_audiovisual.util import get_data_identifiers
+from indico_audiovisual.util import get_data_identifiers, is_av_manager
 
 
 class PluginSettingsForm(IndicoForm):
@@ -80,12 +82,13 @@ class AVRequestsPlugin(IndicoPlugin):
         self.connect(signals.event.subcontribution_data_changed, self._data_changed)
         self.connect(signals.after_process, self._apply_changes)
         self.connect(signals.before_retry, self._clear_changes)
+        self.connect(signals.indico_menu, self._extend_indico_menu)
         self.template_hook('event-header', self._inject_event_header)
         self.template_hook('conference-header-subtitle', self._inject_conference_header_subtitle)
         HTTPAPIHook.register(AVExportHook)
 
     def get_blueprints(self):
-        yield IndicoPluginBlueprint('audiovisual', 'indico_audiovisual')
+        yield blueprint
         yield compat_blueprint
 
     def register_assets(self):
@@ -150,3 +153,8 @@ class AVRequestsPlugin(IndicoPlugin):
         if not url:
             return
         return render_plugin_template('conference_header.html', url=url)
+
+    def _extend_indico_menu(self, sender, **kwargs):
+        if not session.user or not is_av_manager(session.user):
+            return
+        return HeaderMenuEntry(url_for_plugin('audiovisual.request_list'), _('Webcast/Recording'), _('Services'))
