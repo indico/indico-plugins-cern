@@ -14,13 +14,13 @@ from indico.util.string import is_valid_mail
 from indico.util.struct.iterables import committing_iterator
 from indico_zodbimport import Importer, convert_to_unicode, convert_principal_list, option_value
 
-from indico_requests_audiovisual.definition import AVRequest, SpeakerReleaseAgreement, SpeakerPersonInfo
-from indico_requests_audiovisual.plugin import AVRequestsPlugin
-from indico_requests_audiovisual.util import get_data_identifiers
+from indico_audiovisual.definition import AVRequest, SpeakerReleaseAgreement, SpeakerPersonInfo
+from indico_audiovisual.plugin import AVRequestsPlugin
+from indico_audiovisual.util import get_data_identifiers
 
 
 class AVRequestsImporter(Importer):
-    plugins = {'requests_audiovisual'}
+    plugins = {'audiovisual'}
 
     def has_data(self):
         return bool(Request.find(type=AVRequest.name).count())

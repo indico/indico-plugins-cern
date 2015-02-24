@@ -1,0 +1,2 @@
+graft indico_audiovisual/static
+graft indico_audiovisual/templates

@@ -16,11 +16,11 @@ from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import PrincipalField, MultipleItemsField, EmailListField
 from indico.web.http_api import HTTPAPIHook
 
-from indico_requests_audiovisual.api import AVExportHook
-from indico_requests_audiovisual.definition import AVRequest, SpeakerReleaseAgreement
-from indico_requests_audiovisual.notifications import notify_relocated_request, notify_rescheduled_request
-from indico_requests_audiovisual.compat import compat_blueprint
-from indico_requests_audiovisual.util import get_data_identifiers
+from indico_audiovisual.api import AVExportHook
+from indico_audiovisual.definition import AVRequest, SpeakerReleaseAgreement
+from indico_audiovisual.notifications import notify_relocated_request, notify_rescheduled_request
+from indico_audiovisual.compat import compat_blueprint
+from indico_audiovisual.util import get_data_identifiers
 
 
 class PluginSettingsForm(IndicoForm):
@@ -71,7 +71,7 @@ class AVRequestsPlugin(IndicoPlugin):
 
     def init(self):
         super(AVRequestsPlugin, self).init()
-        self.inject_css('requests_audiovisual_css', WPRequestsEventManagement, subclasses=False,
+        self.inject_css('audiovisual_css', WPRequestsEventManagement, subclasses=False,
                         condition=lambda: request.view_args.get('type') == AVRequest.name)
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
         self.connect(signals.agreements.get_definitions, self._get_agreement_definitions)
@@ -85,11 +85,11 @@ class AVRequestsPlugin(IndicoPlugin):
         HTTPAPIHook.register(AVExportHook)
 
     def get_blueprints(self):
-        yield IndicoPluginBlueprint('requests_audiovisual', 'indico_requests_audiovisual')
+        yield IndicoPluginBlueprint('audiovisual', 'indico_audiovisual')
         yield compat_blueprint
 
     def register_assets(self):
-        self.register_css_bundle('requests_audiovisual_css', 'css/requests_audiovisual.scss')
+        self.register_css_bundle('audiovisual_css', 'css/audiovisual.scss')
 
     def _get_event_request_definitions(self, sender, **kwargs):
         return AVRequest

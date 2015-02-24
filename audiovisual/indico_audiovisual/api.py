@@ -14,9 +14,9 @@ from indico.web.http_api import HTTPAPIHook
 from indico.web.http_api.util import get_query_parameter
 from MaKaC.conference import Conference, Contribution, SubContribution
 
-from indico_requests_audiovisual import SERVICES, SHORT_SERVICES
-from indico_requests_audiovisual.definition import AVRequest
-from indico_requests_audiovisual.util import get_selected_contributions
+from indico_audiovisual import SERVICES, SHORT_SERVICES
+from indico_audiovisual.definition import AVRequest
+from indico_audiovisual.util import get_selected_contributions
 
 
 class AVExportHook(HTTPAPIHook):

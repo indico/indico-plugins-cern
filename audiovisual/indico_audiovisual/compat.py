@@ -7,10 +7,10 @@ from indico.core.plugins import IndicoPluginBlueprint
 from indico.modules.events.agreements.models.agreements import Agreement
 from indico.web.flask.util import url_for
 
-from indico_requests_audiovisual.definition import SpeakerReleaseAgreement, AVRequest
+from indico_audiovisual.definition import SpeakerReleaseAgreement, AVRequest
 
 
-compat_blueprint = IndicoPluginBlueprint('compat_requests_audiovisual', 'indico_requests_audiovisual')
+compat_blueprint = IndicoPluginBlueprint('compat_audiovisual', 'indico_audiovisual')
 
 
 @compat_blueprint.route('/event/<int:confId>/collaboration/agreement')

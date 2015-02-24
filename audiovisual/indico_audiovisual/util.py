@@ -12,12 +12,12 @@ from indico.util.user import retrieve_principals
 from MaKaC.conference import SubContribution
 from MaKaC.webinterface.common.contribFilters import PosterFilterField
 
-from indico_requests_audiovisual import SERVICES
+from indico_audiovisual import SERVICES
 
 
 def is_av_manager(user):
     """Checks if a user is an AV manager"""
-    from indico_requests_audiovisual.plugin import AVRequestsPlugin
+    from indico_audiovisual.plugin import AVRequestsPlugin
     principals = retrieve_principals(AVRequestsPlugin.settings.get('managers'))
     return any(principal.containsUser(user) for principal in principals)
 
@@ -44,7 +44,7 @@ def get_contributions(event):
 
     :return: a list of ``(contribution, capable, custom_room)`` tuples
     """
-    from indico_requests_audiovisual.plugin import AVRequestsPlugin
+    from indico_audiovisual.plugin import AVRequestsPlugin
     not_poster = PosterFilterField(event, False, False)
     contribs = [cont for cont in event.getContributionList() if cont.startDate and not_poster.satisfies(cont)]
     if AVRequestsPlugin.settings.get('allow_subcontributions'):
@@ -128,7 +128,7 @@ def event_has_empty_sessions(event):
 
 def all_agreements_signed(event):
     """Checks if all agreements have been signed"""
-    from indico_requests_audiovisual.definition import SpeakerReleaseAgreement
+    from indico_audiovisual.definition import SpeakerReleaseAgreement
     return SpeakerReleaseAgreement.get_stats_for_signed_agreements(event)[0]
 
 
@@ -172,7 +172,7 @@ def get_data_identifiers(req):
 
 def send_webcast_ping():
     """Sends a ping notification when a webcast request changes"""
-    from indico_requests_audiovisual.plugin import AVRequestsPlugin
+    from indico_audiovisual.plugin import AVRequestsPlugin
     url = AVRequestsPlugin.settings.get('webcast_ping_url')
     if not url:
         return
@@ -182,7 +182,7 @@ def send_webcast_ping():
 
 def send_agreement_ping(agreement):
     """Sends a ping notification when a speaker release is updated"""
-    from indico_requests_audiovisual.plugin import AVRequestsPlugin
+    from indico_audiovisual.plugin import AVRequestsPlugin
     url = AVRequestsPlugin.settings.get('agreement_ping_url')
     if not url:
         return

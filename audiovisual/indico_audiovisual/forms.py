@@ -13,13 +13,13 @@ from indico.web.forms.fields import IndicoSelectMultipleCheckboxField
 from indico.util.i18n import _
 from MaKaC.conference import SubContribution
 
-from indico_requests_audiovisual import SERVICES
-from indico_requests_audiovisual.util import is_av_manager, get_contributions, contribution_id
+from indico_audiovisual import SERVICES
+from indico_audiovisual.util import is_av_manager, get_contributions, contribution_id
 
 
 class AVRequestForm(RequestFormBase):
     services = IndicoSelectMultipleCheckboxField(_('Services'), [DataRequired()], choices=SERVICES.items(),
-                                                 widget=JinjaWidget('service_type_widget.html', 'requests_audiovisual'),
+                                                 widget=JinjaWidget('service_type_widget.html', 'audiovisual'),
                                                  description=_("Please choose whether you want a webcast, recording or "
                                                                "both."))
     all_contributions = BooleanField(_('All contributions'),
@@ -28,7 +28,7 @@ class AVRequestForm(RequestFormBase):
                                                       [UsedIf(lambda form, field: not form.all_contributions.data),
                                                        DataRequired()],
                                                       widget=JinjaWidget('contribution_list_widget.html',
-                                                                         'requests_audiovisual',
+                                                                         'audiovisual',
                                                                          SubContribution=SubContribution))
     webcast_audience = SelectField(_('Webcast Audience'),
                                    description=_("Select the audience to which the webcast will be restricted"))
@@ -61,7 +61,7 @@ class AVRequestForm(RequestFormBase):
                 is_subcontrib = isinstance(contrib, SubContribution)
                 id_ = contribution_id(contrib)
                 contributions[id_] = contrib
-                line = Markup(render_template('requests_audiovisual:contribution_list_entry.html', contrib=contrib,
+                line = Markup(render_template('audiovisual:contribution_list_entry.html', contrib=contrib,
                                               is_subcontrib=is_subcontrib, capable=capable, custom_room=custom_room))
                 if not capable and not is_manager and contrib.id not in selected:
                     disabled_contribs.append((contrib, line))

@@ -15,11 +15,11 @@ from indico.util.string import to_unicode
 from indico.web.flask.util import url_for
 from MaKaC.conference import SubContribution
 
-from indico_requests_audiovisual.forms import AVRequestForm
-from indico_requests_audiovisual.util import (is_av_manager, send_webcast_ping, get_data_identifiers,
-                                              get_selected_contributions, contribution_id, contribution_by_id,
-                                              send_agreement_ping, count_capable_contributions, get_av_capable_rooms,
-                                              event_has_empty_sessions, get_selected_services, all_agreements_signed)
+from indico_audiovisual.forms import AVRequestForm
+from indico_audiovisual.util import (is_av_manager, send_webcast_ping, get_data_identifiers, get_selected_contributions,
+                                     contribution_id, contribution_by_id, send_agreement_ping,
+                                     count_capable_contributions, get_av_capable_rooms, event_has_empty_sessions,
+                                     get_selected_services, all_agreements_signed)
 
 
 class AVRequest(RequestDefinitionBase):

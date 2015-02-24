@@ -1,14 +1,14 @@
 {% extends 'events/requests/emails/base_to_request_managers.txt' %}
-{% from 'requests_audiovisual:emails/_request_details.txt' import request_details with context %}
+{% from 'audiovisual:emails/_request_details.txt' import request_details with context %}
 
 
 {% block request_subject -%}
-    Rescheduled service request
+    Relocated service request
 {%- endblock %}
 
 
 {% block request_message -%}
-    A {{ req.definition.title }} request has been rescheduled.
+    A {{ req.definition.title }} request has been relocated.
 {%- endblock %}
 
 
