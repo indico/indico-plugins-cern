@@ -37,7 +37,7 @@ class AVRequest(RequestDefinitionBase):
 
     @classmethod
     def can_be_managed(cls, user):
-        return user.isAdmin() or is_av_manager(user)
+        return is_av_manager(user)
 
     @classmethod
     def get_manager_notification_emails(cls):
