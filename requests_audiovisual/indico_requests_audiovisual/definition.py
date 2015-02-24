@@ -120,7 +120,7 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
     name = 'cern-speaker-release'
     title = _('Speaker Release')
     description = _('For talks to be recorded or webcast, all involved speakers need to sign the speaker release form.')
-    template_name = 'agreement_form.html'
+    form_template_name = 'agreement_form.html'
     email_placeholders = {'talk_title': TalkPlaceholder}
 
     @classmethod
