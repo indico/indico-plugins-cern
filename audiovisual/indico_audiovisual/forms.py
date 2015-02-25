@@ -1,13 +1,19 @@
 from __future__ import unicode_literals
 
+from datetime import date
+from datetime import timedelta
+
 from flask import session, render_template
 from flask_pluginengine import current_plugin
 from markupsafe import Markup
+from wtforms.ext.dateutil.fields import DateField
 from wtforms.fields import TextAreaField, SelectField, BooleanField
-from wtforms.validators import DataRequired
+from wtforms.fields.html5 import IntegerField
+from wtforms.validators import DataRequired, NumberRange, Optional
 
 from indico.modules.events.requests import RequestFormBase
-from indico.web.forms.validators import UsedIf
+from indico.web.forms.base import IndicoForm, generated_data
+from indico.web.forms.validators import UsedIf, Exclusive
 from indico.web.forms.widgets import JinjaWidget
 from indico.web.forms.fields import IndicoSelectMultipleCheckboxField
 from indico.util.i18n import _
@@ -67,3 +73,30 @@ class AVRequestForm(RequestFormBase):
                     disabled_contribs.append((contrib, line))
                 else:
                     choices.append((id_, line))
+
+
+class RequestListFilterForm(IndicoForm):
+    direction = SelectField(_('Sort direction'), [DataRequired()],
+                            choices=[('asc', _('Ascending')), ('desc', _('Descending'))])
+    group_by = SelectField(_('Group by'), [DataRequired()],
+                           choices=[('event_date', _('Event start date')),
+                                    ('contrib_date', _('Contribution start date'))])
+    abs_start_date = DateField(_('Start Date'), [Optional(), Exclusive('rel_start_date')],
+                               parse_kwargs={'dayfirst': True})
+    abs_end_date = DateField(_('End Date'), [Optional(), Exclusive('rel_end_date')],
+                             parse_kwargs={'dayfirst': True})
+    rel_start_date = IntegerField(_('Days in the past'), [Optional(), Exclusive('abs_start_date'), NumberRange(min=0)])
+    rel_end_date = IntegerField(_('Days in the future'), [Optional(), Exclusive('abs_end_date'), NumberRange(min=0)])
+    # TODO: status filter
+
+    @generated_data
+    def start_date(self):
+        if self.abs_start_date.data is None and self.rel_start_date.data is None:
+            return None
+        return self.abs_start_date.data or (date.today() - timedelta(days=self.rel_start_date.data))
+
+    @generated_data
+    def end_date(self):
+        if self.abs_end_date.data is None and self.rel_end_date.data is None:
+            return None
+        return self.abs_end_date.data or (date.today() + timedelta(days=self.rel_end_date.data))

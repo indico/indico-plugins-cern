@@ -3,6 +3,10 @@ from __future__ import unicode_literals
 import json
 from itertools import chain
 
+from indico.core.db import db
+from indico.core.db.sqlalchemy.util.queries import limit_groups
+from indico.modules.events.requests.models.requests import Request, RequestState
+from indico.modules.fulltextindexes.models.events import IndexedEvent
 from indico.modules.rb.models.equipment import EquipmentType
 from indico.modules.rb.models.locations import Location
 from indico.modules.rb.models.rooms import Room
@@ -204,3 +208,57 @@ def send_agreement_ping(agreement):
         if subcontrib_id:
             payload['subcontribution_id'] = int(subcontrib_id)
     Client().enqueue(HTTPTask(url, {'data': json.dumps(payload)}))
+
+
+def find_requests(talks=False, from_dt=None, to_dt=None, services=None, states=None):
+    """Finds requests matching certain criteria.
+
+    :param talks: if True, yield ``(request, contrib, start_dt)`` tuples
+                  instead of just requests, i.e. the same request may be
+                  yielded multiple times
+    :param from_dt: earliest event/contribution to include
+    :param to_dt: latest event/contribution to include
+    :param states: acceptable request states (by default anything but withdrawn)
+    :param services: set of services that must have been requested
+    """
+    from indico_audiovisual.definition import AVRequest
+    query = Request.find(Request.type == AVRequest.name)
+    if states is not None:
+        query = query.filter(Request.state.in_(states))
+    else:
+        query = query.filter(Request.state != RequestState.withdrawn)
+    if from_dt is not None:
+        query = (query.join(IndexedEvent, IndexedEvent.id == db.cast(Request.event_id, db.String))
+                 .filter(IndexedEvent.start_date >= from_dt))
+    # We only want the latest one for each event
+    query = limit_groups(query, Request, Request.event_id, Request.created_dt.desc(), 1)
+    for req in query:
+        event = req.event
+        # Skip requests which do not have the requested services or are outside the date range
+        if services and not (set(req.data['services']) & services):
+            continue
+        elif to_dt is not None and event.getStartDate() > to_dt:
+            continue
+        if not talks:
+            yield req
+            continue
+
+        # Lectures don't have contributions so we use the event info directly
+        if event.getType() == 'simple_event':
+            yield req, event, _get_start_date(event)
+            continue
+
+        contribs = [x[0] for x in get_selected_contributions(req)]
+        for contrib in contribs:
+            if from_dt and _get_start_date(contrib) < from_dt:
+                continue
+            elif to_dt and _get_start_date(contrib) > to_dt:
+                continue
+            yield req, contrib, _get_start_date(contrib)
+
+
+def _get_start_date(obj):
+    if isinstance(obj, SubContribution):
+        return obj.getContribution().getStartDate()
+    else:
+        return obj.getStartDate()

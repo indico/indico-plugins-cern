@@ -1,7 +1,45 @@
 {% extends 'admin/base.html' %}
+{% from 'forms/form_widget.html' import form_header, form_rows, form_footer  %}
 
 {% block title %}Webcast/Recording{% endblock %}
 
 {% block content %}
-    TODO
+    {{ form_header(method='get', action=url_for_plugin('.request_list')) }}
+    {{ form_rows(form) }}
+    {% call form_footer() %}
+        <input class="i-button big highlight" type="submit" value="{% trans %}Search{% endtrans %}">
+    {% endcall %}
+
+    <script>
+        (function() {
+            'use strict';
+            var mapping = {
+                '#abs_start_date': '#rel_start_date',
+                '#rel_start_date': '#abs_start_date',
+                '#abs_end_date': '#rel_end_date',
+                '#rel_end_date': '#abs_end_date'
+            };
+            $(Object.keys(mapping).join(', ')).on('input change', function() {
+                if ($(this).val()) {
+                    $(mapping['#' + this.id]).val('');
+                }
+            });
+            $('#abs_start_date, #abs_end_date').datepicker();
+        })();
+    </script>
+
+    {% if results is not none %}
+        {% if not results %}
+            {% trans %}Nothing found{% endtrans %}
+        {% else %}
+            {% for date, items in results.iteritems() %}
+                <strong>{{ date | format_date }}</strong>
+                <ul>
+                    {% for req, obj, start_time in items %}
+                        <li>{{ req }} {{ obj }} {{ start_time | format_datetime }}</li>
+                    {% endfor %}
+                </ul>
+            {% endfor %}
+        {% endif %}
+    {% endif %}
 {% endblock %}

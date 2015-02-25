@@ -4,10 +4,7 @@ from datetime import timedelta
 import icalendar
 from flask import request
 
-from indico.core.db import db
-from indico.core.db.sqlalchemy.util.queries import limit_groups
-from indico.modules.events.requests.models.requests import Request, RequestState
-from indico.modules.fulltextindexes.models.events import IndexedEvent
+from indico.modules.events.requests.models.requests import RequestState
 from indico.util.string import to_unicode
 from indico.web.flask.util import url_for
 from indico.web.http_api import HTTPAPIHook
@@ -16,7 +13,7 @@ from MaKaC.conference import Conference, Contribution, SubContribution
 
 from indico_audiovisual import SERVICES, SHORT_SERVICES
 from indico_audiovisual.definition import AVRequest
-from indico_audiovisual.util import get_selected_contributions
+from indico_audiovisual.util import find_requests
 
 
 class AVExportHook(HTTPAPIHook):
@@ -40,41 +37,10 @@ class AVExportHook(HTTPAPIHook):
         return {'ical_serializer': _ical_serialize_av}
 
     def export_webcast_recording(self, aw):
-        query = Request.find(Request.type == AVRequest.name,
-                             Request.state.in_((RequestState.accepted, RequestState.pending)))
-        if self._fromDT:
-            query = query.join(IndexedEvent, IndexedEvent.id == db.cast(Request.event_id, db.String))
-            query = query.filter(IndexedEvent.start_date >= self._fromDT)
-        # We only want the latest one for each event
-        query = limit_groups(query, Request, Request.event_id, Request.created_dt.desc(), 1)
-        for req in query:
-            event = req.event
-
-            # Skip requests which do not have the requested services or are outside the date range
-            if self._services and not (set(req.data['services']) & self._services):
-                continue
-            elif self._toDT and event.getStartDate() > self._toDT:
-                continue
-
-            # Lectures don't have contributions so we use the event info directly
-            if event.getType() == 'simple_event':
-                yield _serialize_obj(req, event, self._alarm)
-                continue
-
-            contribs = [contrib for contrib, capable, _ in get_selected_contributions(req) if capable]
-            for contrib in contribs:
-                if self._fromDT and _get_start_date(contrib) < self._fromDT:
-                    continue
-                elif self._toDT and _get_start_date(contrib) > self._toDT:
-                    continue
-                yield _serialize_obj(req, contrib, self._alarm)
-
-
-def _get_start_date(obj):
-    if isinstance(obj, SubContribution):
-        return obj.getContribution().getStartDate()
-    else:
-        return obj.getStartDate()
+        results = find_requests(talks=True, from_dt=self._fromDT, to_dt=self._toDT, services=self._services,
+                                states=(RequestState.accepted, RequestState.pending))
+        for req, contrib, _ in results:
+            yield _serialize_obj(req, contrib, self._alarm)
 
 
 def _serialize_obj(req, obj, alarm):
