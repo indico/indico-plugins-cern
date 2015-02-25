@@ -44,8 +44,7 @@ class AVExportHook(HTTPAPIHook):
                              Request.state.in_((RequestState.accepted, RequestState.pending)))
         if self._fromDT:
             query = query.join(IndexedEvent, IndexedEvent.id == db.cast(Request.event_id, db.String))
-            if self._fromDT:
-                query = query.filter(IndexedEvent.start_date >= self._fromDT)
+            query = query.filter(IndexedEvent.start_date >= self._fromDT)
         # We only want the latest one for each event
         query = limit_groups(query, Request, Request.event_id, Request.created_dt.desc(), 1)
         for req in query:
