@@ -12,6 +12,7 @@ from indico.modules.rb.models.locations import Location
 from indico.modules.rb.models.rooms import Room
 from indico.modules.scheduler import Client
 from indico.modules.scheduler.tasks import HTTPTask
+from indico.util.caching import memoize_request
 from indico.util.user import retrieve_principals
 from MaKaC.conference import SubContribution
 from MaKaC.webinterface.common.contribFilters import PosterFilterField
@@ -28,6 +29,7 @@ def is_av_manager(user):
     return any(principal.containsUser(user) for principal in principals)
 
 
+@memoize_request
 def get_av_capable_rooms():
     """Returns a list of rooms with AV equipment"""
     eq_types = EquipmentType.find_all(EquipmentType.name == 'Webcast/Recording', Location.name == 'CERN',
