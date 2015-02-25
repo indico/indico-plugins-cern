@@ -15,7 +15,7 @@ from indico.util.string import to_unicode
 from indico.web.flask.util import url_for
 from MaKaC.conference import SubContribution
 
-from indico_audiovisual.forms import AVRequestForm
+from indico_audiovisual.forms import AVRequestForm, AVRequestManagerForm
 from indico_audiovisual.util import (is_av_manager, send_webcast_ping, get_data_identifiers, get_selected_contributions,
                                      contribution_id, contribution_by_id, send_agreement_ping,
                                      count_capable_contributions, get_av_capable_rooms, event_has_empty_sessions,
@@ -26,6 +26,7 @@ class AVRequest(RequestDefinitionBase):
     name = 'webcast-recording'
     title = _('Webcast / Recording')
     form = AVRequestForm
+    manager_form = AVRequestManagerForm
     form_defaults = {'all_contributions': True}
     # needed for templates where we only have access to the definition
     util = {'count_capable_contributions': count_capable_contributions,
@@ -47,6 +48,18 @@ class AVRequest(RequestDefinitionBase):
     def get_notification_template(cls, name, **context):
         context['SubContribution'] = SubContribution
         return super(AVRequest, cls).get_notification_template(name, **context)
+
+    @classmethod
+    def render_form(cls, **kwargs):
+        kwargs['default_webcast_url'] = cls.plugin.settings.get('webcast_url')
+        return super(AVRequest, cls).render_form(**kwargs)
+
+    @classmethod
+    def create_manager_form(cls, req):
+        form = super(AVRequest, cls).create_manager_form(req)
+        if 'webcast' not in req.data['services']:
+            del form.custom_webcast_url
+        return form
 
     @classmethod
     def send(cls, req, data):
@@ -74,6 +87,12 @@ class AVRequest(RequestDefinitionBase):
         if req.state == RequestState.accepted and 'webcast' in req.data['services']:
             send_webcast_ping()
         super(AVRequest, cls).reject(req, data, user)
+
+    @classmethod
+    def manager_save(cls, req, data):
+        super(AVRequest, cls).manager_save(req, data)
+        req.data['custom_webcast_url'] = data.get('custom_webcast_url')
+        flag_modified(req, 'data')
 
 
 class SpeakerPersonInfo(AgreementPersonInfo):

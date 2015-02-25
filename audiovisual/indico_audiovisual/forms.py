@@ -8,10 +8,11 @@ from flask_pluginengine import current_plugin
 from markupsafe import Markup
 from wtforms.ext.dateutil.fields import DateField
 from wtforms.fields import TextAreaField, SelectField, BooleanField
-from wtforms.fields.html5 import IntegerField
+from wtforms.fields.html5 import IntegerField, URLField
 from wtforms.validators import DataRequired, NumberRange, Optional
 
 from indico.modules.events.requests import RequestFormBase
+from indico.modules.events.requests.base import RequestManagerForm
 from indico.modules.events.requests.models.requests import RequestState
 from indico.web.forms.base import IndicoForm, generated_data
 from indico.web.forms.validators import UsedIf, Exclusive
@@ -74,6 +75,12 @@ class AVRequestForm(RequestFormBase):
                     disabled_contribs.append((contrib, line))
                 else:
                     choices.append((id_, line))
+
+
+class AVRequestManagerForm(RequestManagerForm):
+    custom_webcast_url = URLField(_('Webcast URL'),
+                                  description=_("Custom URL to view the webcast. Can contain {event_id} which will be"
+                                                "replaced with the ID of this event."))
 
 
 class RequestListFilterForm(IndicoForm):

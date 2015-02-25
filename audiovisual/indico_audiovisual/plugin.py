@@ -136,8 +136,9 @@ class AVRequestsPlugin(IndicoPlugin):
         req = Request.find_latest_for_event(event, AVRequest.name)
         if not req or req.state != RequestState.accepted or 'webcast' not in req.data['services']:
             return None
+        url = req.data.get('custom_webcast_url') or self.settings.get('webcast_url')
         try:
-            return self.settings.get('webcast_url').format(event_id=event.id)
+            return url.format(event_id=event.id)
         except Exception:
             self.logger.exception('Could not build webcast URL')
             return None

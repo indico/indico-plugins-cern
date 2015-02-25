@@ -81,6 +81,12 @@
 {% endblock %}
 
 
+{% block manager_form %}
+    {% set widget_attrs = {'custom_webcast_url': {'placeholder': default_webcast_url}} %}
+    {{ form_rows(manager_form, skip=manager_form.action_buttons, widget_attrs=widget_attrs) }}
+{% endblock %}
+
+
 {% block scripts %}
     <script>
         $('input[name="request-services"][value="webcast"]').on('change', function() {
