@@ -31,7 +31,7 @@ def get_endpoint_status(room_name):
     return ravem_api_call('getstatus', method='GET', service_name='videoconference', where='room_name', value=room_name)
 
 
-def disconnect_endpoint(room_name, service_type):
+def disconnect_endpoint(room_name, vc_room_name, service_type):
     """Disconnects from a room using the RAVEM API.
 
     This call will disconnect from a room with either a legacy endpoint or a
@@ -50,8 +50,16 @@ def disconnect_endpoint(room_name, service_type):
     :returns: :class: requests.models.Response -- The response from the RAVEM
     API usually as a JSON (with an `error` message if the call failed.)
     """
-    return ravem_api_call('videoconference/disconnect', method='POST', where='room_name', value=room_name,
-                          type=service_type, vidyo_room_name=room_name)
+    params = {
+        'method': 'POST',
+        'where': 'room_name',
+        'value': room_name,
+        'type': service_type
+    }
+    if service_type == 'vidyo':
+        params['vidyo_room_name'] = vc_room_name
+
+    return ravem_api_call('videoconference/disconnect', **params)
 
 
 def connect_endpoint(vidyo_room_id, query):

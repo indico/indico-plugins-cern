@@ -35,10 +35,11 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
     try:
         response = request(urljoin(root_endpoint, api_endpoint), auth=HTTPDigestAuth(username, password), params=kwargs,
                            verify=False, headers=headers)
+        print response.request.url
     except Exception as error:
         RavemPlugin.logger.exception(
             "failed call: {method} {api_endpoint} with {params}: {error.message}"
-            .format(method=method.upper(), api_endpoint=api_endpoint, params=kwargs,error=error)
+            .format(method=method.upper(), api_endpoint=api_endpoint, params=kwargs, error=error)
         )
         raise
 
@@ -47,7 +48,6 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
     except HTTPError as error:
         RavemPlugin.logger.exception("{response.request.method} {response.url} failed with {error.message}"
                                      .format(response=response, error=error))
-        # raise RavemAPIException(error.message, api_endpoint, response)
         raise
 
     json_response = response.json()
@@ -60,8 +60,23 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
     return json_response
 
 
+def get_room_endpoint(endpoints):
+    if endpoints['vc_endpoint_legacy_ip']:
+        return '{prefix}{endpoints[vc_endpoint_legacy_ip]}'.format(prefix=RavemPlugin.settings.get('prefix'),
+                                                                endpoints=endpoints)
+    else:
+        return endpoints['vc_endpoint_vidyo_username']
+
+
 class RavemException(Exception):
     pass
+
+
+class RavemOperationException(RavemException):
+    def __init__(self, message, reason):
+        super(RavemOperationException, self).__init__(message)
+        self.message = message
+        self.reason = reason
 
 
 class RavemAPIException(RavemException):
