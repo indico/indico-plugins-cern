@@ -47,7 +47,8 @@ class RHRequestList(RHProtected):
             talks = form.granularity.data == 'talks'
             from_dt = as_utc(get_day_start(form.start_date.data)) if form.start_date.data else None
             to_dt = as_utc(get_day_end(form.end_date.data)) if form.end_date.data else None
-            results = find_requests(talks=talks, from_dt=from_dt, to_dt=to_dt)
+            states = {form.state.data} if form.state.data is not None else None
+            results = find_requests(talks=talks, from_dt=from_dt, to_dt=to_dt, states=states)
             if not talks:
                 results = [(req, req.event, req.event.getStartDate()) for req in results]
             results = group_list(results, lambda x: x[2].date(), itemgetter(2), sort_reverse=reverse)

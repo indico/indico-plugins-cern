@@ -12,10 +12,11 @@ from wtforms.fields.html5 import IntegerField
 from wtforms.validators import DataRequired, NumberRange, Optional
 
 from indico.modules.events.requests import RequestFormBase
+from indico.modules.events.requests.models.requests import RequestState
 from indico.web.forms.base import IndicoForm, generated_data
 from indico.web.forms.validators import UsedIf, Exclusive
 from indico.web.forms.widgets import JinjaWidget
-from indico.web.forms.fields import IndicoSelectMultipleCheckboxField
+from indico.web.forms.fields import IndicoSelectMultipleCheckboxField, IndicoEnumSelectField
 from indico.util.i18n import _
 from MaKaC.conference import SubContribution
 
@@ -80,13 +81,14 @@ class RequestListFilterForm(IndicoForm):
                             choices=[('asc', _('Ascending')), ('desc', _('Descending'))])
     granularity = SelectField(_('Granularity'), [DataRequired()],
                               choices=[('events', _('Events')), ('talks', _('Talks'))])
+    state = IndicoEnumSelectField(_('Request state'), enum=RequestState, skip={RequestState.withdrawn},
+                                  none=_('Any state'))
     abs_start_date = DateField(_('Start Date'), [Optional(), Exclusive('rel_start_date')],
                                parse_kwargs={'dayfirst': True})
     abs_end_date = DateField(_('End Date'), [Optional(), Exclusive('rel_end_date')],
                              parse_kwargs={'dayfirst': True})
     rel_start_date = IntegerField(_('Days in the past'), [Optional(), Exclusive('abs_start_date'), NumberRange(min=0)])
     rel_end_date = IntegerField(_('Days in the future'), [Optional(), Exclusive('abs_end_date'), NumberRange(min=0)])
-    # TODO: status filter
 
     @generated_data
     def start_date(self):
