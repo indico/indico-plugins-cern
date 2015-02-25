@@ -44,7 +44,7 @@ class RHRequestList(RHProtected):
         results = None
         if request.args and form.validate():
             reverse = form.direction.data == 'desc'
-            talks = form.group_by.data == 'contrib_date'
+            talks = form.granularity.data == 'talks'
             from_dt = as_utc(get_day_start(form.start_date.data)) if form.start_date.data else None
             to_dt = as_utc(get_day_end(form.end_date.data)) if form.end_date.data else None
             results = find_requests(talks=talks, from_dt=from_dt, to_dt=to_dt)

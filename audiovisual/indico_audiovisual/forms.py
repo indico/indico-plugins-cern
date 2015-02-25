@@ -78,9 +78,8 @@ class AVRequestForm(RequestFormBase):
 class RequestListFilterForm(IndicoForm):
     direction = SelectField(_('Sort direction'), [DataRequired()],
                             choices=[('asc', _('Ascending')), ('desc', _('Descending'))])
-    group_by = SelectField(_('Group by'), [DataRequired()],
-                           choices=[('event_date', _('Event start date')),
-                                    ('contrib_date', _('Contribution start date'))])
+    granularity = SelectField(_('Granularity'), [DataRequired()],
+                              choices=[('events', _('Events')), ('talks', _('Talks'))])
     abs_start_date = DateField(_('Start Date'), [Optional(), Exclusive('rel_start_date')],
                                parse_kwargs={'dayfirst': True})
     abs_end_date = DateField(_('End Date'), [Optional(), Exclusive('rel_end_date')],
