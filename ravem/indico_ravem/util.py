@@ -3,6 +3,12 @@ from requests.auth import HTTPDigestAuth
 from requests.exceptions import HTTPError
 from urlparse import urljoin
 
+from flask import request, session
+
+from indico.modules.rb.models.locations import Location
+from indico.modules.rb.models.rooms import Room
+from indico.util.user import retrieve_principal
+
 from indico_ravem.plugin import RavemPlugin
 
 
@@ -63,9 +69,40 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
 def get_room_endpoint(endpoints):
     if endpoints['vc_endpoint_legacy_ip']:
         return '{prefix}{endpoints[vc_endpoint_legacy_ip]}'.format(prefix=RavemPlugin.settings.get('prefix'),
-                                                                endpoints=endpoints)
+                                                                   endpoints=endpoints)
     else:
         return endpoints['vc_endpoint_vidyo_username']
+
+
+def can_connect_room(event_vc_room):
+    link_object = event_vc_room.link_object
+
+    # This verbosity in getting the location and room name are required as
+    # events, contributions and sessions will behave differently in what they
+    # return.
+    location = link_object.getLocation()
+    location_name = location.getName() if location else None
+    room = link_object.getRoom()
+    room_name = room.getName() if room else None
+    # No valid physical room for this vc room
+    if not location_name or not room_name:
+        return False
+
+    room = Room.find_first(Room.name == room_name, Location.name == location_name, _join=Room.location)
+
+    vc_room = event_vc_room.vc_room
+    event = event_vc_room.event
+    current_user = session.user
+
+    # No physical room or room is not Vidyo capable
+    if not room or not room.has_equipment('Vidyo'):
+        return False
+
+    return any([
+        current_user == retrieve_principal(vc_room.data.get('owner')),
+        event.canUserModify(current_user),
+        request.remote_addr == room.get_attribute_value('ip'),
+    ])
 
 
 class RavemException(Exception):

@@ -8,11 +8,11 @@ from wtforms.validators import DataRequired, NumberRange
 
 from indico.core.config import Config
 from indico.core.plugins import IndicoPlugin, PluginCategory
-from indico.modules.vc.views import WPVCManageEvent
+from indico.modules.vc.views import WPVCEventPage, WPVCManageEvent
 from indico.util.i18n import _
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import UnsafePasswordField
-
+from MaKaC.webinterface.pages.conferences import WPTPLConferenceDisplay
 
 class SettingsForm(IndicoForm):  # pragma: no cover
     api_endpoint = URLField(_('API endpoint'), [DataRequired()], filters=[lambda x: x.rstrip('/') + '/'],
@@ -22,7 +22,7 @@ class SettingsForm(IndicoForm):  # pragma: no cover
     password = UnsafePasswordField(_('Password'), [DataRequired()],
                                    description=_('The password used to connect to the RAVEM API'))
     prefix = IntegerField(_('Room IP prefix'), [NumberRange(min=0)],
-                                      description=_('IP prefix to connect a room to a Vidyo room.'))
+                          description=_('IP prefix to connect a room to a Vidyo room.'))
 
 
 class RavemPlugin(IndicoPlugin):
@@ -48,11 +48,14 @@ class RavemPlugin(IndicoPlugin):
             raise RavemException('RoomBooking is inactive.')
 
         self.template_hook('vidyo-manage-event-buttons',
-                           partial(self.inject_connect_button, 'vc_rooms_manage_button.html'))
+                           partial(self.inject_connect_button, 'ravem_button.html'))
         self.template_hook('vidyo-event-buttons',
-                           partial(self.inject_connect_button, 'vc_rooms_list_button.html'))
+                           partial(self.inject_connect_button, 'ravem_button_group.html'))
         self.template_hook('vidyo-event-timetable-buttons',
-                           partial(self.inject_connect_button, 'vc_rooms_list_button.html'))
+                           partial(self.inject_connect_button, 'ravem_button_group.html'))
+
+        self.inject_js('ravem_js', WPTPLConferenceDisplay)
+        self.inject_js('ravem_js', WPVCEventPage)
         self.inject_js('ravem_js', WPVCManageEvent)
 
     def get_blueprints(self):
@@ -63,6 +66,7 @@ class RavemPlugin(IndicoPlugin):
         self.register_js_bundle('ravem_js', 'js/ravem.js')
 
     def inject_connect_button(self, template, event_vc_room, **kwargs):
-        # TODO check if can connect room
-        return render_plugin_template(template, event_vc_room=event_vc_room, event=event_vc_room.event,
-                                      vc_room=event_vc_room.vc_room, room=event_vc_room.link_object.getRoom())
+        from indico_ravem.util import can_connect_room
+        if can_connect_room(event_vc_room):
+            return render_plugin_template(template, room_name=event_vc_room.link_object.getRoom().getName(),
+                                          event_vc_room=event_vc_room, **kwargs)
