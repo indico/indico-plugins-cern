@@ -1,0 +1,2 @@
+graft indico_ravem/static
+graft indico_ravem/templates
