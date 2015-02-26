@@ -1,7 +1,7 @@
 (function() {
     'use strict';
     var ravemButton = (function makeRavemButton() {
-        var POOLING_DELAY = 2000;  // 5 seconds
+        var POOLING_DELAY = 5000;  // milliseconds
         var states = {
             connected: {
                 icon: 'icon-no-camera',
@@ -83,29 +83,23 @@
             var name = btn.data('roomName');
 
             if (data.success) {
-                console.log('RAVEM OK');
                 var attempts = 4;
                 var timer = window.setTimeout(function assertActionSuccessful() {
-                    console.log(states.new, 'attempt', (4 - attempts));
                     if (!attempts) {
-                        console.log(states.new, 'error ->', states.error);
                         clearTimeout(timer);
                         setButtonState(btn, states.error);
                         return;
                     }
                     getRoomStatus(btn)
                         .fail(function statusUpdateErrorHandler() {
-                            console.log(states.new, 'fail -> retry');
                             attempts--;
                             timer = window.setTimeout(assertActionSuccessful, POOLING_DELAY);
                         })
                         .done(function statusUpdateHandler(status) {
                             if (!checkFn(status, btn)) {
-                                console.log(states.new, 'bad check -> retry');
                                 attempts--;
                                 timer = window.setTimeout(assertActionSuccessful, POOLING_DELAY);
                             } else {
-                                console.log(states.new, 'success -> ', states.new);
                                 clearTimeout(timer);
                                 setButtonState(btn, states.new);
                             }
@@ -240,8 +234,6 @@
                     if (!data.success) {
                         setButtonState(btn, 'errorStatus');
                     } else {
-                        console.log(data);
-                        console.log('btn for', vcRoomName, data.vc_room_name, data.connected);
                         var connected = data.connected && data.vc_room_name === vcRoomName;
                         setButtonState(btn, connected ? 'connected' : 'disconnected');
                     }
