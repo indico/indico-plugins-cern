@@ -30,10 +30,10 @@
         </td>
         <td class="request-location">
             <span class="room">
-                {{ obj.getRoom().getName() }}
+                {{ obj.getRoom().getName() if obj.getRoom() else '' }}
             </span>
             <span class="location">
-                ({{ obj.getLocation().getName() }})
+                ({{ obj.getLocation().getName() if obj.getLocation() else '' }})
             </span>
         </td>
         <td class="request-event">
