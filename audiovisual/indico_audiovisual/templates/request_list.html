@@ -1,14 +1,88 @@
-{% extends 'admin/base.html' %}
+{% extends 'overview/base.html' %}
 {% from 'forms/form_widget.html' import form_header, form_rows, form_footer  %}
+
+{% macro request_entry(req, obj, start_time) %}
+    <tr class="result-group-entry">
+        <td class="time">
+            <a class="discreet-link" href="{{ url_for('requests.event_requests_details', req) }}">
+                {{ start_time | format_time('HH:mm') }}
+            </a>
+        </td>
+        <td class="request-state">
+            {% if req.state.name == 'accepted' %}
+                {% set icon = 'icon-checkmark' %}
+            {% elif req.state.name == 'rejected' %}
+                {% set icon = 'icon-disable' %}
+            {% else %}
+                {% set icon = 'icon-time' %}
+            {% endif %}
+            <i class="{{ icon }}" title="{{ req.state.title }}"></i>
+        </td>
+        <td class="request-type">
+            <i class="icon-broadcast{% if 'webcast' in req.data['services'] %} requested{% endif %}"
+               title="{% trans %}Webcast{% endtrans %}
+                      {% if 'webcast' in req.data['services'] %}{% trans %}requested{% endtrans %}
+                      {% else %}{% trans %}not requested{% endtrans %}{% endif %}"></i>
+            <i class="icon-camera {% if 'recording' in req.data['services'] %} requested{% endif %}"
+               title="{% trans %}Recording{% endtrans %}
+                      {% if 'recording' in req.data['services'] %}{% trans %}requested{% endtrans %}
+                      {% else %}{% trans %}not requested{% endtrans %}{% endif %}"></i>
+        </td>
+        <td class="request-location">
+            <span class="room">
+                {{ obj.getRoom().getName() }}
+            </span>
+            <span class="location">
+                ({{ obj.getLocation().getName() }})
+            </span>
+        </td>
+        <td class="request-event">
+            <a class="discreet-link" href="{{ url_for('collaboration.collaborationDisplay', req.event) }}">
+                {{ req.event.getTitle() }}
+            </a>
+        </td>
+        {% if form.granularity.data == 'talks' %}
+            <td class="request-talk">
+                {{ obj.getTitle() }}
+            </td>
+        {% endif %}
+    </tr>
+{% endmacro %}
+
 
 {% block title %}Webcast/Recording{% endblock %}
 
 {% block content %}
-    {{ form_header(method='get', action=url_for_plugin('.request_list')) }}
-    {{ form_rows(form) }}
-    {% call form_footer() %}
-        <input class="i-button big highlight" type="submit" value="{% trans %}Search{% endtrans %}">
-    {% endcall %}
+    <div class="i-box-group vert">
+        <div class="i-box">
+            {{ form_header(method='get', action=url_for_plugin('.request_list')) }}
+            {{ form_rows(form) }}
+            {% call form_footer() %}
+                <input class="i-button big highlight" type="submit" value="{% trans %}Search{% endtrans %}">
+            {% endcall %}
+        </div>
+
+        {% if results is not none %}
+            <div class="i-box search-results">
+                {% if not results %}
+                    {% trans %}Nothing found{% endtrans %}
+                {% else %}
+                    <table>
+                        {% for date, items in results.iteritems() %}
+                            <tr class="result-group-title">
+                                <td colspan="{{ 7 if form.granularity.data == 'talks' else 6 }}">
+                                    {{ date | format_human_date(format='full') }}
+                                </td>
+                            </tr>
+                            {% for req, obj, start_time in items %}
+                                {{ request_entry(req, obj, start_time) }}
+                            {% endfor %}
+                        {% endfor %}
+                    </table>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
 
     <script>
         (function() {
@@ -27,19 +101,4 @@
             $('#abs_start_date, #abs_end_date').datepicker();
         })();
     </script>
-
-    {% if results is not none %}
-        {% if not results %}
-            {% trans %}Nothing found{% endtrans %}
-        {% else %}
-            {% for date, items in results.iteritems() %}
-                <strong>{{ date | format_date }}</strong>
-                <ul>
-                    {% for req, obj, start_time in items %}
-                        <li>{{ req }} {{ obj }} {{ start_time | format_datetime }}</li>
-                    {% endfor %}
-                </ul>
-            {% endfor %}
-        {% endif %}
-    {% endif %}
 {% endblock %}

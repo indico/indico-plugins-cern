@@ -22,9 +22,11 @@ from MaKaC.webinterface.wcomponents import WSimpleNavigationDrawer
 
 
 class WPAudiovisualManagers(WPJinjaMixinPlugin, WPMainBase):
+    def getCSSFiles(self):
+        return WPMainBase.getCSSFiles(self) + self._asset_env['overviews_sass'].urls()
+
     def _getNavigationDrawer(self):
         return WSimpleNavigationDrawer('Webcast/Recording', lambda: url_for_plugin('.request_list'))
 
     def _getBody(self, params):
-        # ugly :( but WPMainBase doesn't wrap the page with decent margins and a template would be overkill for this
-        return '<div class="container">{}</div>'.format(self._getPageContent(params))
+        return self._getPageContent(params)
