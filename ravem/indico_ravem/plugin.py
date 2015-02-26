@@ -1,6 +1,6 @@
 from functools import partial
 
-from flask_pluginengine import render_plugin_template
+from flask_pluginengine import depends, render_plugin_template
 from wtforms.fields import IntegerField
 from wtforms.fields.simple import StringField
 from wtforms.fields.html5 import URLField
@@ -14,6 +14,7 @@ from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import UnsafePasswordField
 from MaKaC.webinterface.pages.conferences import WPTPLConferenceDisplay
 
+
 class SettingsForm(IndicoForm):  # pragma: no cover
     api_endpoint = URLField(_('API endpoint'), [DataRequired()], filters=[lambda x: x.rstrip('/') + '/'],
                             description=_('The endpoint for the RAVEM API'))
@@ -25,6 +26,7 @@ class SettingsForm(IndicoForm):  # pragma: no cover
                           description=_('IP prefix to connect a room to a Vidyo room.'))
 
 
+@depends('vc_vidyo')
 class RavemPlugin(IndicoPlugin):
     """RAVEM
 
