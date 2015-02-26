@@ -79,6 +79,9 @@ class AVRequestsImporter(Importer):
                       False: RequestState.rejected}
         for csbm in committing_iterator(self._iter_csbms()):
             event = csbm._conf
+            if event.id not in self.zodb_root['conferences']:
+                print cformat(' - %{yellow}ignored event {} (not in event index)').format(event.id)
+                continue
             wc_ids = csbm._bookingsByType.get('WebcastRequest')
             rr_ids = csbm._bookingsByType.get('RecordingRequest')
             assert not wc_ids or len(wc_ids) == 1
