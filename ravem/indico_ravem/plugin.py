@@ -68,7 +68,7 @@ class RavemPlugin(IndicoPlugin):
         self.register_js_bundle('ravem_js', 'js/ravem.js')
 
     def inject_connect_button(self, template, event_vc_room, **kwargs):
-        from indico_ravem.util import can_connect_room
-        if can_connect_room(event_vc_room):
+        from indico_ravem.util import has_access
+        if has_access(event_vc_room):
             return render_plugin_template(template, room_name=event_vc_room.link_object.getRoom().getName(),
                                           event_vc_room=event_vc_room, **kwargs)

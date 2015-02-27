@@ -74,7 +74,7 @@ def get_room_endpoint(endpoints):
         return endpoints['vc_endpoint_vidyo_username']
 
 
-def can_connect_room(event_vc_room):
+def has_access(event_vc_room):
     link_object = event_vc_room.link_object
 
     # This verbosity in getting the location and room name are required as
