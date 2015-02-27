@@ -16,7 +16,7 @@ from indico.core.plugins import IndicoPlugin
 from indico.modules.scheduler import Client
 from indico.util.i18n import _
 from indico.web.forms.base import IndicoForm
-from indico.web.forms.fields import UnsafePasswordField
+from indico.web.forms.fields import IndicoPasswordField
 
 from indico_outlook.blueprint import blueprint
 from indico_outlook.calendar import update_calendar, OutlookTask
@@ -38,7 +38,7 @@ class SettingsForm(IndicoForm):
                            description=_("The URL of the CERN calendar service"))
     username = StringField(_('Username'), [DataRequired()],
                            description=_("The username used to authenticate with the CERN calendar service"))
-    password = UnsafePasswordField(_('Password'), [DataRequired()],
+    password = IndicoPasswordField(_('Password'), [DataRequired()], toggle=True,
                                    description=_("The password used to authenticate with the CERN calendar service"))
     status = SelectField(_('Status'), [DataRequired()], choices=_status_choices,
                          description=_("The default status of the event in the calendar"))

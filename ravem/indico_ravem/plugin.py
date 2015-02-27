@@ -11,7 +11,7 @@ from indico.core.plugins import IndicoPlugin, PluginCategory
 from indico.modules.vc.views import WPVCEventPage, WPVCManageEvent
 from indico.util.i18n import _
 from indico.web.forms.base import IndicoForm
-from indico.web.forms.fields import UnsafePasswordField
+from indico.web.forms.fields import IndicoPasswordField
 from MaKaC.webinterface.pages.conferences import WPTPLConferenceDisplay
 
 
@@ -20,7 +20,7 @@ class SettingsForm(IndicoForm):  # pragma: no cover
                             description=_('The endpoint for the RAVEM API'))
     username = StringField(_('Username'), [DataRequired()],
                            description=_('The username used to connect to the RAVEM API'))
-    password = UnsafePasswordField(_('Password'), [DataRequired()],
+    password = IndicoPasswordField(_('Password'), [DataRequired()], toggle=True,
                                    description=_('The password used to connect to the RAVEM API'))
     prefix = IntegerField(_('Room IP prefix'), [NumberRange(min=0)],
                           description=_('IP prefix to connect a room to a Vidyo room.'))

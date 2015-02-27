@@ -7,7 +7,7 @@ from wtforms.fields.html5 import URLField
 from wtforms.validators import DataRequired, URL
 
 from indico.util.i18n import _
-from indico.web.forms.fields import UnsafePasswordField
+from indico.web.forms.fields import IndicoPasswordField
 
 from indico_livesync import LiveSyncBackendBase, MARCXMLUploader
 from indico_livesync import AgentForm
@@ -17,7 +17,7 @@ class CERNAgentForm(AgentForm):
     server_url = URLField(_('URL'), [DataRequired(), URL(require_tld=False)],
                           description=_("The URL of CERNsearch's import endpoint"))
     username = StringField(_('Username'), [DataRequired()])
-    password = UnsafePasswordField(_('Password'), [DataRequired()])
+    password = IndicoPasswordField(_('Password'), [DataRequired()], toggle=True)
 
 
 class CERNUploaderError(Exception):
