@@ -23,6 +23,7 @@ from indico_audiovisual.definition import AVRequest, SpeakerReleaseAgreement
 from indico_audiovisual.notifications import notify_relocated_request, notify_rescheduled_request
 from indico_audiovisual.compat import compat_blueprint
 from indico_audiovisual.util import get_data_identifiers, is_av_manager
+from indico_audiovisual.views import WPAudiovisualManagers
 
 
 class PluginSettingsForm(IndicoForm):
@@ -73,6 +74,7 @@ class AVRequestsPlugin(IndicoPlugin):
 
     def init(self):
         super(AVRequestsPlugin, self).init()
+        self.inject_css('audiovisual_css', WPAudiovisualManagers)
         self.inject_css('audiovisual_css', WPRequestsEventManagement, subclasses=False,
                         condition=lambda: request.view_args.get('type') == AVRequest.name)
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)

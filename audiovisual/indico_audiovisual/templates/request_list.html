@@ -1,9 +1,19 @@
 {% extends 'overview/base.html' %}
-{% from 'forms/form_widget.html' import form_header, form_rows, form_footer  %}
+{% block title %}Webcast/Recording{% endblock %}
+
+{% macro result_group_title(key) %}
+    {{ key | format_human_date(format='full') | title }}
+{% endmacro %}
+
+{% macro result_group_entries(items) %}
+    {% for req, obj, start_time in items %}
+        {{ request_entry(req, obj, start_time) }}
+    {% endfor %}
+{% endmacro %}
 
 {% macro request_entry(req, obj, start_time) %}
     <tr class="result-group-entry">
-        <td class="time">
+        <td class="request-time">
             <a class="discreet-link" href="{{ url_for('requests.event_requests_details', req) }}">
                 {{ start_time | format_time('HH:mm') }}
             </a>
@@ -18,7 +28,7 @@
             {% endif %}
             <i class="{{ icon }}" title="{{ req.state.title }}"></i>
         </td>
-        <td class="request-type">
+        <td class="entry-type">
             <i class="icon-broadcast{% if 'webcast' in req.data['services'] %} requested{% endif %}"
                title="{% trans %}Webcast{% endtrans %}
                       {% if 'webcast' in req.data['services'] %}{% trans %}requested{% endtrans %}
@@ -28,7 +38,7 @@
                       {% if 'recording' in req.data['services'] %}{% trans %}requested{% endtrans %}
                       {% else %}{% trans %}not requested{% endtrans %}{% endif %}"></i>
         </td>
-        <td class="request-location">
+        <td class="entry-location">
             <span class="room">
                 {{ obj.getRoom().getName() if obj.getRoom() else '' }}
             </span>
@@ -48,57 +58,3 @@
         {% endif %}
     </tr>
 {% endmacro %}
-
-
-{% block title %}Webcast/Recording{% endblock %}
-
-{% block content %}
-    <div class="i-box-group vert">
-        <div class="i-box">
-            {{ form_header(method='get', action=url_for_plugin('.request_list')) }}
-            {{ form_rows(form) }}
-            {% call form_footer() %}
-                <input class="i-button big highlight" type="submit" value="{% trans %}Search{% endtrans %}">
-            {% endcall %}
-        </div>
-
-        {% if results is not none %}
-            <div class="i-box search-results">
-                {% if not results %}
-                    {% trans %}Nothing found{% endtrans %}
-                {% else %}
-                    <table>
-                        {% for date, items in results.iteritems() %}
-                            <tr class="result-group-title">
-                                <td colspan="{{ 7 if form.granularity.data == 'talks' else 6 }}">
-                                    {{ date | format_human_date(format='full') }}
-                                </td>
-                            </tr>
-                            {% for req, obj, start_time in items %}
-                                {{ request_entry(req, obj, start_time) }}
-                            {% endfor %}
-                        {% endfor %}
-                    </table>
-                {% endif %}
-            </div>
-        {% endif %}
-    </div>
-
-    <script>
-        (function() {
-            'use strict';
-            var mapping = {
-                '#abs_start_date': '#rel_start_date',
-                '#rel_start_date': '#abs_start_date',
-                '#abs_end_date': '#rel_end_date',
-                '#rel_end_date': '#abs_end_date'
-            };
-            $(Object.keys(mapping).join(', ')).on('input change', function() {
-                if ($(this).val()) {
-                    $(mapping['#' + this.id]).val('');
-                }
-            });
-            $('#abs_start_date, #abs_end_date').datepicker();
-        })();
-    </script>
-{% endblock %}
