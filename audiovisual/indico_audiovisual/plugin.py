@@ -9,6 +9,7 @@ from wtforms.validators import DataRequired
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
+from indico.core.config import Config
 from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.modules.events.requests.views import WPRequestsEventManagement
 from indico.util.i18n import _
@@ -16,13 +17,14 @@ from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import PrincipalField, MultipleItemsField, EmailListField
 from indico.web.http_api import HTTPAPIHook
 from indico.web.menu import HeaderMenuEntry
+from MaKaC.user import AvatarHolder
 
 from indico_audiovisual.api import AVExportHook
 from indico_audiovisual.blueprint import blueprint
 from indico_audiovisual.definition import AVRequest, SpeakerReleaseAgreement
 from indico_audiovisual.notifications import notify_relocated_request, notify_rescheduled_request
 from indico_audiovisual.compat import compat_blueprint
-from indico_audiovisual.util import get_data_identifiers, is_av_manager
+from indico_audiovisual.util import get_data_identifiers, is_av_manager, count_capable_contributions
 from indico_audiovisual.views import WPAudiovisualManagers
 
 
@@ -121,10 +123,16 @@ class AVRequestsPlugin(IndicoPlugin):
             return
         for req in g.av_request_changes:
             identifiers = get_data_identifiers(req)
-            if req.state == RequestState.accepted:
-                if identifiers['dates'] != req.data['identifiers']['dates']:
-                    notify_rescheduled_request(req)
-                if identifiers['locations'] != req.data['identifiers']['locations']:
+
+            if req.state == RequestState.accepted and identifiers['dates'] != req.data['identifiers']['dates']:
+                notify_rescheduled_request(req)
+            if identifiers['locations'] != req.data['identifiers']['locations']:
+                if (not count_capable_contributions(req.event)[0] and
+                        req.state in {RequestState.accepted, RequestState.pending}):
+                    janitor = AvatarHolder().getById(Config.getInstance().getJanitorUserId())
+                    data = dict(req.data, comment=render_plugin_template('auto_reject_no_capable_contribs.txt'))
+                    req.definition.reject(req, data, janitor)
+                elif req.state == RequestState.accepted:
                     notify_relocated_request(req)
             req.data['identifiers'] = identifiers
             flag_modified(req, 'data')
