@@ -20,11 +20,14 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
     settings of the RAVEM plugin each time.
 
     :param api_endpoint: str -- The RAVEM API endpoint to call.
-    :param \*\*kwargs: The field names and values used for the RAVEM API as
-    strings
+    :param method: str -- The HTTP method to use for the call, currently, RAVEM
+                   only supports `GET` or `POST`
+    :param **kwargs: The field names and values used for the RAVEM API as
+                     strings
 
-    :returns: :class: requests.models.Response -- The response from the RAVEM
-    API usually as a JSON (with an `error` message if the call failed.)
+    :returns: dict -- The JSON-encoded response from the RAVEM
+    :raises: HTTPError if the request returns an HTTP Error (400 or 500)
+    :raises: RavemAPIException if RAVEM returns an error message
     """
     if method.upper() == 'GET':
         request = requests.get
@@ -41,7 +44,6 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
     try:
         response = request(urljoin(root_endpoint, api_endpoint), auth=HTTPDigestAuth(username, password), params=kwargs,
                            verify=False, headers=headers)
-        print response.request.url
     except Exception as error:
         RavemPlugin.logger.exception(
             "failed call: {method} {api_endpoint} with {params}: {error.message}"

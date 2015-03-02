@@ -30,7 +30,8 @@ class SettingsForm(IndicoForm):  # pragma: no cover
 class RavemPlugin(IndicoPlugin):
     """RAVEM
 
-    Manages connections to Vidyo rooms from Indico through the RAVEM api
+    Manages connections from physical rooms to Vidyo rooms through Indico using
+    the RAVEM API
     """
     configurable = True
     strict_settings = True

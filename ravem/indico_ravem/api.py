@@ -1,54 +1,38 @@
-"""
-API calls for RAVEM. Each call returns a Response object.
-
-The following calls are available:
-get_legacy_endpoint_status --  get the status of a room with a legacy Vidyo endpoint
-get_vidyo_panorama_status --  get the status of a room with a panorama Vidyo endpoint
-connect_room -- connect to a Vidyo legacy or panorama endpoint using the RAVEM API
-disconnect_legacy_endpoint -- disconnect from a Vidyo legacy endpoint using the RAVEM API
-disconnect_vidyo_panorama -- disconnect from a Vidyo legacy endpoint using the RAVEM API
-"""
 from indico_ravem.util import ravem_api_call
 
 __all__ = ('get_endpoint_status', 'disconnect_endpoint', 'connect_endpoint')
 
 
 def get_endpoint_status(room_name):
-    """Returns the status of an endpoint.
+    """Returns the status of an physical room.
 
-    This call returns the status of a room equipped with either a legacy device
-    or a vidyo panorama endpoint depending on the type.
+    This call returns the status of a room equipped with Vidyo capable device
 
-    :param endpoint_type: IndicoEnum -- the type of endpoint, either legacy or
-    Vidyo panorama as defined in indico_ravem.util.EndpointType.
-    :param endpoint_identifier: str -- the identifier of the endpoint either the
-    room's IP for legacy endpoint or the Vidyo username for the room for Vidyo
-    panorama endpoints
+    :param room_name: str -- the name of the physical room
 
-    :returns: :class: requests.models.Response -- The response from the RAVEM
-    API usually as a JSON (with an `error` message if the call failed.)
+    :returns: dict -- the status of the room as a JSON response according to the
+              RAVEM API.
     """
     return ravem_api_call('getstatus', method='GET', service_name='videoconference', where='room_name', value=room_name)
 
 
 def disconnect_endpoint(room_name, vc_room_name, service_type):
-    """Disconnects from a room using the RAVEM API.
+    """Disconnects a physical room from a vidyo room using the RAVEM API.
 
-    This call will disconnect from a room with either a legacy endpoint or a
-    Vidyo panorama endpoint based on the Vidyo room id and a search query to
-    find the room from the Vidyo user API.
+    This call will return "OK" as a result immediately if RAVEM can (or has
+    started to) perform the operation. This does not mean the operation has
+    actually succeeded. One should pool for the status of the room afterwards
+    using the `get_endpoint_status` method after some delay to allow the
+    operation to be performed.
 
-    :param endpoint_type: IndicoEnum -- the type of endpoint, either legacy or
-    Vidyo panorama as defined in indico_ravem.util.EndpointType.
-    :param endpoint_identifier: str -- the identifier of the endpoint either the
-    room's IP for legacy endpoint or the Vidyo username for the room for Vidyo
-    panorama endpoints
+    :param room_name: str -- the name of the physical room
+    :param vc_room_name: str -- The Vidyo room name (which is recommended to
+                         disconnect the physical room from the Vidyo room in
+                         case the service type is Vidyo.)
     :param service_type: str -- The endpoint type (usually `vidyo` or `other`)
-    :param room_name: str -- The Vidyo room name (used as the query to find the
-    room)
 
-    :returns: :class: requests.models.Response -- The response from the RAVEM
-    API usually as a JSON (with an `error` message if the call failed.)
+    :returns: dict -- {'result': 'OK'} if the operation "succeeds", raises a
+              RavemAPIException otherwise.
     """
     params = {
         'method': 'POST',
@@ -63,17 +47,20 @@ def disconnect_endpoint(room_name, vc_room_name, service_type):
 
 
 def connect_endpoint(vidyo_room_id, query):
-    """Connects to a room using the RAVEM API.
+    """Connects a physical room to a Vidyo room using the RAVEM API.
 
-    This call will establish a connection to a room using a legacy or Vidyo
-    panorama endpoint based on the Vidyo room id and a search query to find the
-    room from the Vidyo user API.
+    This call will return "OK" as a result immediately if RAVEM can (or has
+    started to) perform the operation. This does not mean the operation has
+    actually succeeded. One should pool for the status of the room afterwards
+    using the `get_endpoint_status` method after some delay to allow the
+    operation to be performed..
 
     :param vidyo_room_id: str -- target Vidyo room ID
-    :param query: str -- search query to find the conference room from Vidyo
-    User API
+    :param query: str -- search query passed to RAVEM to allow it to find the
+                  physical room from Vidyo. Usually, simply the room's endpoint
+                  as specified in the room's status data.
 
-    :returns: :class: requests.models.Response -- The response from the RAVEM
-    API usually as a JSON (with an `error` message if the call failed.)
+    :returns: dict -- {'result': 'OK'} if the operation "succeeds", raises a
+              RavemAPIException otherwise.
     """
     return ravem_api_call('videoconference/connect', method='POST', vidyo_room_id=vidyo_room_id, query=query)
