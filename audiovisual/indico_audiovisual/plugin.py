@@ -13,6 +13,7 @@ from indico.core.config import Config
 from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.modules.events.requests.views import WPRequestsEventManagement
 from indico.util.i18n import _
+from indico.util.user import principals_merge_users
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import PrincipalField, MultipleItemsField, EmailListField
 from indico.web.http_api import HTTPAPIHook
@@ -87,6 +88,7 @@ class AVRequestsPlugin(IndicoPlugin):
         self.connect(signals.after_process, self._apply_changes)
         self.connect(signals.before_retry, self._clear_changes)
         self.connect(signals.indico_menu, self._extend_indico_menu)
+        self.connect(signals.merge_users, self._merge_users)
         self.template_hook('event-header', self._inject_event_header)
         self.template_hook('conference-header-subtitle', self._inject_conference_header_subtitle)
         HTTPAPIHook.register(AVExportHook)
@@ -169,3 +171,8 @@ class AVRequestsPlugin(IndicoPlugin):
         if not session.user or not is_av_manager(session.user):
             return
         return HeaderMenuEntry(url_for_plugin('audiovisual.request_list'), _('Webcast/Recording'), _('Services'))
+
+    def _merge_users(self, user, merged, **kwargs):
+        new_id = int(user.id)
+        old_id = int(merged.id)
+        self.settings.set('managers', principals_merge_users(self.settings.get('managers'), new_id, old_id))
