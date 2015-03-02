@@ -8,12 +8,13 @@ from wtforms.fields.core import StringField, BooleanField
 from wtforms.fields.html5 import URLField, EmailField
 from wtforms.validators import DataRequired
 
+from indico.core import signals
 from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.modules.payment import PaymentPluginMixin, PaymentPluginSettingsFormBase, PaymentEventSettingsFormBase
 from indico.modules.payment.util import get_registrant_params
 from indico.util.i18n import _
 from indico.util.string import remove_accents, remove_non_alpha
-from indico.util.user import retrieve_principals
+from indico.util.user import retrieve_principals, principals_merge_users
 from indico.web.flask.util import url_for
 from indico.web.forms.fields import PrincipalField, MultipleItemsField, OverrideMultipleItemsField
 
@@ -77,6 +78,7 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     def init(self):
         super(CERNPaymentPlugin, self).init()
         self.template_hook('event-manage-payment-plugin-cannot-modify', self._get_cannot_modify_message)
+        self.connect(signals.merge_users, self._merge_users)
 
     @property
     def logo_url(self):
@@ -161,3 +163,9 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         }
         form_data['SHASIGN'] = create_hash(seed, form_data)
         return form_data
+
+    def _merge_users(self, user, merged, **kwargs):
+        new_id = int(user.id)
+        old_id = int(merged.id)
+        self.settings.set('authorized_users',
+                          principals_merge_users(self.settings.get('authorized_users'), new_id, old_id))
