@@ -1,6 +1,6 @@
 import requests
 from requests.auth import HTTPDigestAuth
-from requests.exceptions import HTTPError
+from requests.exceptions import HTTPError, Timeout
 from urlparse import urljoin
 
 from flask import request, session
@@ -40,10 +40,11 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
     username = RavemPlugin.settings.get('username')
     password = RavemPlugin.settings.get('password')
     headers = {'Accept': 'application/json'}
+    timeout = RavemPlugin.settings.get('timeout') or None
 
     try:
         response = request(urljoin(root_endpoint, api_endpoint), auth=HTTPDigestAuth(username, password), params=kwargs,
-                           verify=False, headers=headers)
+                           verify=False, headers=headers, timeout=timeout)
     except Exception as error:
         RavemPlugin.logger.exception(
             "failed call: {method} {api_endpoint} with {params}: {error.message}"
@@ -55,6 +56,10 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
         response.raise_for_status()
     except HTTPError as error:
         RavemPlugin.logger.exception("{response.request.method} {response.url} failed with {error.message}"
+                                     .format(response=response, error=error))
+        raise
+    except Timeout:
+        RavemPlugin.logger.exception("{response.request.method} {response.url} timed out: {error.message}"
                                      .format(response=response, error=error))
         raise
 

@@ -1,7 +1,7 @@
 (function() {
     'use strict';
     var ravemButton = (function makeRavemButton() {
-        var POOLING_DELAY = 5000;  // milliseconds
+        var POLLING_DELAY = 5000;  // milliseconds
         var states = {
             connected: {
                 icon: 'icon-no-camera',
@@ -51,17 +51,17 @@
                 }
             },
             errorConnect: {
-                tooltip: $T("Failed to connect {0} to the Vidyo room {1}. Please wait a moment and refresh the page to try again."),
+                tooltip: $T("Failed to connect {0} to the Vidyo room {1}.<br>{2}Please wait a moment and refresh the page to try again."),
                 tooltipType: 'error',
                 icon: 'icon-warning',
             },
             errorDisconnect: {
-                tooltip: $T("Failed to disconnect {0} from the Vidyo room {1}. Please wait a moment and refresh the page to try again."),
+                tooltip: $T("Failed to disconnect {0} from the Vidyo room {1}.<br>{2}Please wait a moment and refresh the page to try again."),
                 tooltipType: 'error',
                 icon: 'icon-warning',
             },
             errorStatus: {
-                tooltip: $T("Failed to contact {0}. Please wait a moment and refresh the page to try again."),
+                tooltip: $T("Failed to contact {0}.<br>{2}Please wait a moment and refresh the page to try again."),
                 tooltipType: 'error',
                 icon: 'icon-warning',
             },
@@ -93,18 +93,22 @@
                     getRoomStatus(btn)
                         .fail(function statusUpdateErrorHandler() {
                             attempts--;
-                            timer = window.setTimeout(assertActionSuccessful, POOLING_DELAY);
+                            timer = window.setTimeout(assertActionSuccessful, POLLING_DELAY);
                         })
                         .done(function statusUpdateHandler(status) {
-                            if (!checkFn(status, btn)) {
+                            if (!status.success && attempts === 1) {  // failure on last attempt
+                                clearTimeout(timer);
+                                setButtonState(btn, states.error, status.message);
+                                return;
+                            } else if (!checkFn(status, btn)) {
                                 attempts--;
-                                timer = window.setTimeout(assertActionSuccessful, POOLING_DELAY);
+                                timer = window.setTimeout(assertActionSuccessful, POLLING_DELAY);
                             } else {
                                 clearTimeout(timer);
                                 setButtonState(btn, states.new);
                             }
                     });
-                }, POOLING_DELAY);
+                }, POLLING_DELAY);
 
             } else if (data.reason in validReasons) {
                 setButtonState(btn, states.new);
@@ -119,22 +123,17 @@
                         setButtonState(btn, states.old);
                         if (forceDisconnect) {
                             sendRequest(btn, states.wait, true).done(function(newData) {
-                                _handler(newData, btn, states, validReasons, checkFn, messages);
+                                _handler(newData, btn, states, validReasons, messages, checkFn);
                             });
                         }
                 }).open();
 
             } else {
-                new ErrorPopup(
-                    messages.error,
-                    data.message.split('\n'),
-                    $T('Please refresh the page and try again')
-                ).open();
-                setButtonState(btn, states.error);
+                setButtonState(btn, states.error, data.message);
             }
         }
 
-        function setButtonState(btn, newState) {
+        function setButtonState(btn, newState, tooltipMessage) {
             btn.data('state', newState);
 
             var name = btn.data('roomName');
@@ -145,8 +144,9 @@
             btn.html(html);
             btn.toggleClass('disabled', !states[newState].action);
 
+            tooltipMessage = tooltipMessage ? tooltipMessage + '<br>' : '';
             var qtip = {
-                content: states[newState].tooltip.format(name, vcRoomName),
+                content: states[newState].tooltip.format(name, vcRoomName, tooltipMessage),
                 position: {my: 'top center', at: 'bottom center'},
                 show: 'mouseover', hide: 'mouseout'
             };
@@ -169,13 +169,13 @@
             switch(state) {
                 case 'connected':
                     sendRequest(btn, 'waitingDisconnect')
-                        .done(function onConnect(data) {
+                        .then(function onConnect(data) {
                             states.connected.handler(data, btn);
                         });
                     break;
                 case 'disconnected':
                     sendRequest(btn, 'waitingConnect')
-                        .done(function onDisconnect(data) {
+                        .then(function onDisconnect(data) {
                             states.disconnected.handler(data, btn);
                         });
                     break;
@@ -197,9 +197,15 @@
             $.ajax({
                 type: type,
                 url: url,
-                error: function errorHandler(xhr) {
-                    handleAjaxError(xhr);
-                    deferred.reject(xhr);
+                error: function errorHandler(data) {
+                    var errMsg;
+                    try {
+                        var response = JSON.parse(data.responseText);
+                        errMsg = response.error.message;
+                    } catch(e) {
+                        errMsg = $T('unknown error');
+                    }
+                    deferred.reject({success: false, message: errMsg});
                 },
                 success: function successHandler(data) {
                     deferred.resolve(data);
@@ -216,7 +222,7 @@
                 url = build_url(url, {force: '1'});
             }
 
-            return _sendRequest(btn, 'POST', url, waitingState);
+            return _sendRequest(btn, 'POST', url, waitingState, false);
         }
 
         function getRoomStatus(btn, waitingState) {
@@ -227,12 +233,12 @@
             btn.on('click', clickHandler);
             var vcRoomName = btn.data('vcRoomName');
             getRoomStatus(btn, 'waitingStatus')
-                .fail(function errorHandler() {
-                    setButtonState(btn, 'errorStatus');
+                .fail(function errorHandler(data) {
+                    setButtonState(btn, 'errorStatus', data.message);
                 })
                 .done(function successHandler(data) {
                     if (!data.success) {
-                        setButtonState(btn, 'errorStatus');
+                        setButtonState(btn, 'errorStatus', data.message);
                     } else {
                         var connected = data.connected && data.vc_room_name === vcRoomName;
                         setButtonState(btn, connected ? 'connected' : 'disconnected');

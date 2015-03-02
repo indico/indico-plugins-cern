@@ -24,6 +24,9 @@ class SettingsForm(IndicoForm):  # pragma: no cover
                                    description=_('The password used to connect to the RAVEM API'))
     prefix = IntegerField(_('Room IP prefix'), [NumberRange(min=0)],
                           description=_('IP prefix to connect a room to a Vidyo room.'))
+    timeout = IntegerField(_('Timeout'), [NumberRange(min=0)],
+                           description=_('The amount of time in seconds to wait for RAVEM to reply '
+                                         '(0 to disable the timeout).'))
 
 
 @depends('vc_vidyo')
@@ -31,7 +34,7 @@ class RavemPlugin(IndicoPlugin):
     """RAVEM
 
     Manages connections from physical rooms to Vidyo rooms through Indico using
-    the RAVEM API
+    the RAVEM API.
     """
     configurable = True
     strict_settings = True
@@ -40,7 +43,8 @@ class RavemPlugin(IndicoPlugin):
         'api_endpoint': 'https://ravem.cern.ch/api/services',
         'username': 'ravem',
         'password': None,
-        'prefix': 21
+        'prefix': 21,
+        'timeout': 10
     }
     category = PluginCategory.videoconference
 

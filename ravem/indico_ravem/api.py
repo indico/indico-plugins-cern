@@ -21,7 +21,7 @@ def disconnect_endpoint(room_name, vc_room_name, service_type):
 
     This call will return "OK" as a result immediately if RAVEM can (or has
     started to) perform the operation. This does not mean the operation has
-    actually succeeded. One should pool for the status of the room afterwards
+    actually succeeded. One should poll for the status of the room afterwards
     using the `get_endpoint_status` method after some delay to allow the
     operation to be performed.
 
@@ -51,7 +51,7 @@ def connect_endpoint(vidyo_room_id, query):
 
     This call will return "OK" as a result immediately if RAVEM can (or has
     started to) perform the operation. This does not mean the operation has
-    actually succeeded. One should pool for the status of the room afterwards
+    actually succeeded. One should poll for the status of the room afterwards
     using the `get_endpoint_status` method after some delay to allow the
     operation to be performed..
 

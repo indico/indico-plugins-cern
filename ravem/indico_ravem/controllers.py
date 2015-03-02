@@ -45,7 +45,6 @@ class RHRavemRoomStatus(RHRavemBase):
             response = {'success': False, 'reason': err.reason, 'message': err.message}
         except RavemException as err:
             response = {'success': False, 'reason': 'operation-failed', 'message': err.message}
-
         return jsonify(response)
 
 
