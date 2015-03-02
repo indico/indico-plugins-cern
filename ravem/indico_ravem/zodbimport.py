@@ -23,8 +23,12 @@ class RavemImporter(Importer):
             'ravemUsername': 'username',
             'ravemPassword': 'password'
         }
+
         for old, new in settings_map.iteritems():
-            RavemPlugin.settings.set(new, option_value(opts[old]))
+            value = option_value(opts[old])
+            if new == 'api_endpoint':
+                value = value.rstrip('/') + '/'
+            RavemPlugin.settings.set(new, value)
 
         vidyo_opts = self.zodb_root['plugins']['Collaboration']._PluginType__plugins['Vidyo']._PluginBase__options
         RavemPlugin.settings.set('prefix', int(option_value(vidyo_opts['prefixConnect'])))
