@@ -156,12 +156,16 @@ class AVRequestsPlugin(IndicoPlugin):
             return None
 
     def _inject_event_header(self, event, **kwargs):
+        if not event.id.isdigit():
+            return
         url = self._get_event_webcast_url(event)
         if not url:
             return
         return render_plugin_template('event_header.html', url=url)
 
     def _inject_conference_header_subtitle(self, event, **kwargs):
+        if not event.id.isdigit():
+            return
         url = self._get_event_webcast_url(event)
         if not url:
             return
