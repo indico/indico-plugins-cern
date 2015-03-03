@@ -69,8 +69,11 @@ class OutlookQueueEntry(db.Model):
         :param user: the user (an `Avatar` instance)
         :param action: the action (an `OutlookAction`)
         """
-        event_id = int(event.id)
-        user_id = int(user.id)
+        try:
+            event_id = int(event.id)
+            user_id = int(user.id)
+        except ValueError:
+            return
         # We delete a possible existing item first so the new one is inserted at the end
         cls.find(event_id=event_id, user_id=user_id, action=action).delete()
         db.session.add(cls(event_id=event_id, user_id=user_id, action=action))
