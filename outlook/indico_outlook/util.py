@@ -24,7 +24,8 @@ def get_participating_users(event):
             users.add(avatar)
     if users:
         # Remove users who disabled calendar updates
-        blacklist = OutlookBlacklistUser.find_all(OutlookBlacklistUser.user_id.in_(int(u.id) for u in users))
+        blacklist = OutlookBlacklistUser.find_all(OutlookBlacklistUser.user_id.in_(
+            int(u.id) for u in users if str(u.id).isdigit()))
         blacklist = {x.user_id for x in blacklist}
         users = {u for u in users if int(u.id) not in blacklist}
     return users
