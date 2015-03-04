@@ -61,9 +61,9 @@ def get_contributions(event):
     av_capable_rooms = {r.name for r in get_av_capable_rooms()}
     event_room = event.getRoom() and event.getRoom().getName()
     return [(c,
-             (c.getLocation() and c.getLocation().getName() == 'CERN' and
-              c.getRoom() and c.getRoom().getName() in av_capable_rooms),
-             (c.getRoom().getName() if c.getRoom() and c.getRoom().getName() != event_room else None))
+             bool(c.getLocation() and c.getLocation().getName() == 'CERN' and
+                  c.getRoom() and c.getRoom().getName() in av_capable_rooms),
+             bool(c.getRoom().getName() if c.getRoom() and c.getRoom().getName() != event_room else None))
             for c in contribs]
 
 
