@@ -142,6 +142,7 @@ class AVRequestsImporter(Importer):
                       AgreementState.pending, AgreementState.rejected]
 
         unsent = 0
+        has_agreements = False
         for speaker_wrapper in csbm._speakerWrapperList:
             speaker = speaker_wrapper.speaker
             new_status = status_map[speaker_wrapper.status]
@@ -190,6 +191,11 @@ class AVRequestsImporter(Importer):
                     print cformat('     %{grey!}attachment: {} ({} bytes)').format(filename,
                                                                                    len(agreement.attachment_filename))
             db.session.add(agreement)
+            has_agreements = True
+
+        if has_agreements:
+            enabled = bool(getattr(csbm, '_notifyElectronicAgreementAnswer', True))
+            SpeakerReleaseAgreement.event_settings.set(csbm._conf, 'manager_notifications_enabled', enabled)
 
         if unsent:
             print cformat('   %{yellow}skipped {} unsent agreements').format(unsent)
