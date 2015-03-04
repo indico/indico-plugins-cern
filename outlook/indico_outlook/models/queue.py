@@ -59,7 +59,7 @@ class OutlookQueueEntry(db.Model):
 
     @return_ascii
     def __repr__(self):
-        return '<OutlookQueueEntry({}, {}, {})>'.format(self.event_id, self.user_id, OutlookAction(self.action).name)
+        return '<OutlookQueueEntry({}, {}, {}, {})>'.format(self.id, self.event_id, self.user_id, OutlookAction(self.action).name)
 
     @classmethod
     def record(cls, event, user, action):
