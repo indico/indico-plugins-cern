@@ -74,6 +74,8 @@ class OutlookQueueEntry(db.Model):
             user_id = int(user.id)
         except ValueError:
             return
+        if AvatarHolder().getById(user.id) is None:
+            return
         # We delete a possible existing item first so the new one is inserted at the end
         cls.find(event_id=event_id, user_id=user_id, action=action).delete()
         db.session.add(cls(event_id=event_id, user_id=user_id, action=action))
