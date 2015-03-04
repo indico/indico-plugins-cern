@@ -2,6 +2,7 @@
     'use strict';
     var ravemButton = (function makeRavemButton() {
         var POLLING_DELAY = 5000;  // milliseconds
+        var ATTEMPTS = 5;
         var states = {
             connected: {
                 icon: 'icon-no-camera',
@@ -83,7 +84,7 @@
             var name = btn.data('roomName');
 
             if (data.success) {
-                var attempts = 4;
+                var attempts = ATTEMPTS;
                 var timer = window.setTimeout(function assertActionSuccessful() {
                     if (!attempts) {
                         clearTimeout(timer);
@@ -110,7 +111,7 @@
                     });
                 }, POLLING_DELAY);
 
-            } else if (data.reason in validReasons) {
+            } else if (~_.indexOf(validReasons, data.reason)) {
                 setButtonState(btn, states.new);
 
             } else if (data.reason === 'connected-other') {

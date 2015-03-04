@@ -28,18 +28,24 @@ class RHRavemBase(RH):
             raise NotFound(_("Event VC Room id {id} does not match conference id {conf_id}")
                            .format(id=id_, conf_id=self._conf.id))
 
-        room = self.event_vc_room.link_object.getRoom() if self.event_vc_room.link_object else None
+        room = self.event_vc_room.link_object.rb_room if self.event_vc_room.link_object else None
         if not room:
             raise NotFound(_("Event VC Room ({id}) is not linked to an event with a valid room").format(id=id_))
-        self.room_name = room.getName()
+
+        self.room_name = room.generate_name()
+        self.room_special_name = room.name
+
         if not self.room_name:
             raise NotFound(_("Event VC Room ({id}) is not linked to an event with a valid room").format(id=id_))
+
+        if not self.room_special_name:
+            self.room_special_name = self.room_name
 
 
 class RHRavemRoomStatus(RHRavemBase):
     def _process(self):
         try:
-            response = get_room_status(self.room_name)
+            response = get_room_status(self.room_name, room_special_name=self.room_special_name)
             response['success'] = True
         except RavemOperationException as err:
             response = {'success': False, 'reason': err.reason, 'message': err.message}
@@ -52,7 +58,8 @@ class RHRavemConnectRoom(RHRavemBase):
     def _process(self):
         force = request.args.get('force') == '1'
         try:
-            connect_room(self.room_name, self.event_vc_room.vc_room, force=force)
+            connect_room(self.room_name, self.event_vc_room.vc_room, force=force,
+                         room_special_name=self.room_special_name)
         except RavemOperationException as err:
             response = {'success': False, 'reason': err.reason, 'message': err.message}
         except RavemException as err:
@@ -66,7 +73,8 @@ class RHRavemDisconnectRoom(RHRavemBase):
     def _process(self):
         force = request.args.get('force') == '1'
         try:
-            disconnect_room(self.room_name, self.event_vc_room.vc_room, force=force)
+            disconnect_room(self.room_name, self.event_vc_room.vc_room, force=force,
+                            room_special_name=self.room_special_name)
         except RavemOperationException as err:
             response = {'success': False, 'reason': err.reason, 'message': err.message}
         except RavemException as err:

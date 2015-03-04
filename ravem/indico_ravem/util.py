@@ -84,19 +84,10 @@ def get_room_endpoint(endpoints):
 def has_access(event_vc_room):
     link_object = event_vc_room.link_object
 
-    # This verbosity in getting the location and room name are required as
-    # events, contributions and sessions will behave differently in what they
-    # return.
-    location = link_object.getLocation()
-    location_name = location.getName() if location else None
-    room = link_object.getRoom()
-    room_name = room.getName() if room else None
-    # No valid physical room for this vc room
-    if not location_name or not room_name:
+    if not link_object:
         return False
 
-    room = Room.find_first(Room.name == room_name, Location.name == location_name, _join=Room.location)
-
+    room = link_object.rb_room
     vc_room = event_vc_room.vc_room
     event = event_vc_room.event
     current_user = session.user
