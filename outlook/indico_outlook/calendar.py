@@ -7,6 +7,7 @@ from pprint import pformat
 import requests
 from flask_pluginengine import current_plugin
 from requests.exceptions import Timeout, RequestException
+from werkzeug.datastructures import MultiDict
 
 from indico.core.db import db
 from indico.modules.scheduler.tasks.periodic import PeriodicUniqueTask
@@ -25,12 +26,25 @@ operation_map = {
 }
 
 
+def _latest_actions_only(items):
+    # Keeps only the most recent occurrence of each action, while preserving the order
+    used = set()
+    res = []
+    for item in reversed(items):
+        if item.action not in used:
+            res.append(item)
+            used.add(item.action)
+    return reversed(res)
+
+
 def update_calendar(logger=None):
     """Executes all pending calendar updates
 
     :param logger: the :class:`~indico.core.logger.Logger` to use; if
                    None, the plugin logger is used
     """
+    from indico_outlook.plugin import OutlookPlugin
+
     if logger is None:
         logger = current_plugin.logger
 
@@ -38,22 +52,32 @@ def update_calendar(logger=None):
         logger.error('Plugin is not configured properly')
         return
 
-    for entry in OutlookQueueEntry.find().order_by(OutlookQueueEntry.id).all():
-        if _update_calendar_entry(logger, entry):
-            db.session.delete(entry)
+    settings = OutlookPlugin.settings.get_all()
+    query = OutlookQueueEntry.find().order_by(OutlookQueueEntry.user_id, OutlookQueueEntry.id)
+    entries = MultiDict((entry.user_id, entry) for entry in query)
+    delete_ids = set()
+    try:
+        for user_id, user_entries in entries.iterlists():
+            user_entry_ids = {x.id for x in user_entries}
+            for entry in _latest_actions_only(user_entries):
+                if not _update_calendar_entry(logger, entry, settings):
+                    user_entry_ids.remove(entry.id)
+            # record all ids which didn't fail for deletion
+            delete_ids |= user_entry_ids
+    finally:
+        if delete_ids:
+            OutlookQueueEntry.find(OutlookQueueEntry.id.in_(delete_ids)).delete(synchronize_session='fetch')
             db.session.commit()
 
 
-def _update_calendar_entry(logger, entry):
+def _update_calendar_entry(logger, entry, settings):
     """Executes a single calendar update
 
     :param logger: the logger to use
     :param entry: a :class:`OutlookQueueEntry`
+    :param settings: the plugin settings
     """
-    from indico_outlook.plugin import OutlookPlugin
-
     logger.info('Processing {}'.format(entry))
-    settings = OutlookPlugin.settings.get_all()
     url = posixpath.join(settings['service_url'], operation_map[entry.action])
     event = entry.event
     user = entry.user
