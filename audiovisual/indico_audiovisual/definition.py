@@ -98,7 +98,7 @@ class AVRequest(RequestDefinitionBase):
 class SpeakerPersonInfo(AgreementPersonInfo):
     @property
     def identifier(self):
-        prefix = '{}-{}'.format(self.email, self.data['type'])
+        prefix = '{}-{}'.format(self.email or 'NOEMAIL', self.data['type'])
         if self.data['type'] == 'lecture_speaker':
             return '{}:{}'.format(prefix, self.data['speaker_id'])
         elif self.data['type'] == 'contribution':
@@ -208,18 +208,14 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
             return
         if event.getType() == 'simple_event':
             for speaker in event.getChairList():
-                if not speaker.getEmail():
-                    continue
                 yield SpeakerPersonInfo(to_unicode('{} {}'.format(speaker.getFirstName(), speaker.getFamilyName())),
-                                        to_unicode(speaker.getEmail()),
+                                        to_unicode(speaker.getEmail()) or None,
                                         data={'type': 'lecture_speaker', 'speaker_id': speaker.getId()})
         else:
             contribs = [x[0] for x in get_selected_contributions(req)]
             for contrib in contribs:
                 for speaker in contrib.getSpeakerList():
-                    if not speaker.getEmail():
-                        continue
                     yield SpeakerPersonInfo(to_unicode(speaker.getDirectFullNameNoTitle(upper=False)),
-                                            to_unicode(speaker.getEmail()),
+                                            to_unicode(speaker.getEmail()) or None,
                                             data={'type': 'contribution', 'contribution': contribution_id(contrib),
                                                   'speaker_id': speaker.getId()})
