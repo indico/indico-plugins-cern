@@ -98,7 +98,7 @@ def has_access(event_vc_room):
 
     return any([
         current_user == retrieve_principal(vc_room.data.get('owner')),
-        event.canUserModify(current_user),
+        event.canModify(current_user),
         request.remote_addr == room.get_attribute_value('ip'),
     ])
 
