@@ -141,6 +141,8 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
     description = _('For talks to be recorded or webcast, all involved speakers need to sign the speaker release form.')
     form_template_name = 'agreement_form.html'
     email_placeholders = {'talk_title': TalkPlaceholder}
+    disabled_reason = _('You cannot manage the agreement requests since there are no presenters in rooms with '
+                        'recording equipment, or the Webcast/Recording request has not been sent/accepted yet.')
 
     @classmethod
     def can_access_api(cls, user, event):
