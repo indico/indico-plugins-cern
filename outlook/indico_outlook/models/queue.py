@@ -51,7 +51,7 @@ class OutlookQueueEntry(db.Model):
 
     @property
     def event(self):
-        return ConferenceHolder().getById(str(self.event_id))
+        return ConferenceHolder().getById(str(self.event_id), True)
 
     @event.setter
     def event(self, event):
@@ -59,7 +59,8 @@ class OutlookQueueEntry(db.Model):
 
     @return_ascii
     def __repr__(self):
-        return '<OutlookQueueEntry({}, {}, {}, {})>'.format(self.id, self.event_id, self.user_id, OutlookAction(self.action).name)
+        return '<OutlookQueueEntry({}, {}, {}, {})>'.format(self.id, self.event_id, self.user_id,
+                                                            OutlookAction(self.action).name)
 
     @classmethod
     def record(cls, event, user, action):

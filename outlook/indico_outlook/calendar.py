@@ -79,16 +79,19 @@ def _update_calendar_entry(logger, entry, settings):
     """
     logger.info('Processing {}'.format(entry))
     url = posixpath.join(settings['service_url'], operation_map[entry.action])
-    event = entry.event
     user = entry.user
     email = to_unicode(user.email)
-    unique_id = '{}{}_{}'.format(settings['id_prefix'], user.id, event.id)
+    unique_id = '{}{}_{}'.format(settings['id_prefix'], user.id, entry.event_id)
 
     if OutlookBlacklistUser.find_first(user_id=int(user.id)):
         logger.debug('User {} has disabled calendar entries'.format(user.id))
         return True
 
     if entry.action in {OutlookAction.add, OutlookAction.update}:
+        event = entry.event
+        if event is None:
+            logger.debug('Ignoring {} for deleted event {}'.format(entry.action.name, entry.event_id))
+            return True
         location = strip_control_chars(event.getRoom().getName()) if event.getRoom() else ''
         description = to_unicode(strip_control_chars(event.description))
         event_url = to_unicode(event.getURL())
