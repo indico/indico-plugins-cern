@@ -126,7 +126,7 @@ class AVRequestsPlugin(IndicoPlugin):
         for req in g.av_request_changes:
             identifiers = get_data_identifiers(req)
 
-            if req.state == RequestState.accepted and identifiers['dates'] != req.data['identifiers']['dates']:
+            if req.state == RequestState.accepted and identifiers['dates'][0] != req.data['identifiers']['dates'][0]:
                 notify_rescheduled_request(req)
             if identifiers['locations'] != req.data['identifiers']['locations']:
                 if (not count_capable_contributions(req.event)[0] and
