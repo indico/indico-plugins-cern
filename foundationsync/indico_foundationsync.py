@@ -6,7 +6,6 @@ import sys
 from collections import Counter, defaultdict
 from contextlib import contextmanager
 
-import cx_Oracle
 from dateutil import rrule
 from flask_pluginengine import with_plugin_context
 from sqlalchemy.orm.exc import NoResultFound
@@ -24,6 +23,11 @@ from indico.modules.scheduler import Client
 from indico.modules.scheduler.tasks.periodic import PeriodicUniqueTask
 from indico.web.forms.base import IndicoForm
 from MaKaC.user import AvatarHolder
+
+try:
+    import cx_Oracle
+except ImportError:
+    cx_Oracle = None
 
 
 DEFAULT_VC_EQUIPMENT = {'Built-in (MCU) Bridge', 'Vidyo', 'H323 point2point', 'Audio Conference'}
@@ -328,6 +332,8 @@ class FoundationSyncTask(PeriodicUniqueTask):
         db_name = plugin.settings.get('connection_string')
         if not db_name:
             raise RuntimeError('Foundation DB connection string is not set')
+        if cx_Oracle is None:
+            raise RuntimeError('cx_Oracle is not installed')
         with plugin.plugin_context():
             FoundationSync(db_name, self.getLogger()).run_all()
 
@@ -367,4 +373,7 @@ class FoundationSyncPlugin(IndicoPlugin):
                 print 'Task created'
                 return
 
+            if cx_Oracle is None:
+                print 'cx_Oracle is not installed'
+                sys.exit(1)
             FoundationSync(db_name, self.logger).run_all(room_name)
