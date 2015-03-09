@@ -2,8 +2,6 @@
     'use strict';
     var $t = $T.domain('ravem');
     var ravemButton = (function makeRavemButton() {
-        var POLLING_DELAY = 5000;  // milliseconds
-        var ATTEMPTS = 5;
         var states = {
             connected: {
                 icon: 'icon-no-camera',
@@ -13,19 +11,24 @@
                     var name = btn.data('roomName');
                     var vcRoomName = btn.data('vcRoomName');
 
-                    var states = {
+                    var requestStates = {
                         old: 'connected',
                         new: 'disconnected',
                         error: 'errorDisconnect',
                         wait: 'waitingDisconnect'
                     };
                     var messages = {
-                        alreadyConnected: $t.gettext('Would you like to force the room {0} to disconnect?').format(name),
-                        error: $t.gettext('Failed to disconnect the room {0} from the Vidyo room').format(name, vcRoomName)
+                        alreadyConnected: $t.gettext(
+                                              'Would you like to force the room {0} to disconnect?'
+                                          ).format(name),
+                        error:  $t.gettext(
+                                    'The room {0} might already be disconnected or connected to another Vidyo room'
+                                ).format(name),
                     };
 
-                    _handler(data, btn, states, ['already-disconnected'], messages, function checkDisconnected(status, btn) {
-                        return !status.connected || status.vc_room_name !== vcRoomName;
+                    _handler(data, btn, requestStates, ['already-disconnected'], messages,
+                             function checkDisconnected(status, btn) {
+                                 return !status.connected || status.vc_room_name !== vcRoomName;
                     });
                 }
             },
@@ -36,34 +39,40 @@
                 handler: function connectHandler(data, btn) {
                     var name = btn.data('roomName');
                     var vcRoomName = btn.data('vcRoomName');
-                    var states = {
+                    var requestStates = {
                         old: 'disconnected',
                         new: 'connected',
                         error: 'errorConnect',
                         wait: 'waitingConnect'
                     };
                     var messages = {
-                        alreadyConnected: $t.gettext('Would you like to force the room {0} to connect to your Vidyo room ({1}) ?').format(name, vcRoomName),
-                        error:  $t.gettext('Failed to connect the room {0} to the Vidyo room').format(name, vcRoomName)
+                        alreadyConnected: $t.gettext(
+                            'Would you like to force the room {0} to connect to your Vidyo room ({1}) ?'
+                        ).format(name, vcRoomName),
+                        error:  $t.gettext('The room {0} might already be connected to another Vidyo room').format(name)
                     };
 
-                    _handler(data, btn, states, ['already-connected'], messages, function checkConnect(status, btn){
-                        return status.connected && status.vc_room_name === vcRoomName;
+                    _handler(data, btn, requestStates, ['already-connected'], messages,
+                             function checkConnect(status, btn){
+                                 return status.connected && status.vc_room_name === vcRoomName;
                     });
                 }
             },
             errorConnect: {
-                tooltip: $t.gettext("Failed to connect {0} to the Vidyo room {1}.<br>{2}Please wait a moment and refresh the page to try again."),
+                tooltip: $t.gettext("Unable to connect<br>{2}Please wait a moment and refresh the page to try again."),
                 tooltipType: 'error',
                 icon: 'icon-warning'
             },
             errorDisconnect: {
-                tooltip: $t.gettext("Failed to disconnect {0} from the Vidyo room {1}.<br>{2}Please wait a moment and refresh the page to try again."),
+                tooltip: $t.gettext(
+                             "Unable to disconnect<br>{2}Please wait a moment and refresh the page to try again."),
                 tooltipType: 'error',
                 icon: 'icon-warning'
             },
             errorStatus: {
-                tooltip: $t.gettext("Failed to contact {0}.<br>{2}Please wait a moment and refresh the page to try again."),
+                tooltip: $t.gettext(
+                             "Unable to contact the room.<br>{2}Please wait a moment and refresh the page to try again."
+                         ),
                 tooltipType: 'error',
                 icon: 'icon-warning'
             },
@@ -81,38 +90,41 @@
             }
         };
 
-        function _handler(data, btn, states, validReasons, messages, checkFn) {
+        function _handler(data, btn, requestStates, validReasons, messages, checkFn) {
             var name = btn.data('roomName');
 
             if (data.success) {
-                var attempts = ATTEMPTS;
+                var attempts = RavemPlugin.polling.limit;
                 var timer = window.setTimeout(function assertActionSuccessful() {
                     if (!attempts) {
-                        clearTimeout(timer);
-                        setButtonState(btn, states.error);
+                        setButtonState(btn, requestStates.error);
                         return;
                     }
                     getRoomStatus(btn)
-                        .fail(function statusUpdateErrorHandler() {
-                            attempts--;
-                            timer = window.setTimeout(assertActionSuccessful, POLLING_DELAY);
+                        .fail(function statusUpdateErrorHandler(error) {
+                            if (!--attempts) {
+                                setButtonState(btn, requestStates.error, error.message || messages.error);
+                                return;
+                            }
+
+                            timer = window.setTimeout(assertActionSuccessful, RavemPlugin.polling.interval);
                         })
                         .done(function statusUpdateHandler(status) {
-                            if (!status.success && attempts === 1) {  // failure on last attempt
-                                clearTimeout(timer);
-                                setButtonState(btn, states.error, status.message);
-                            } else if (!checkFn(status, btn)) {
-                                attempts--;
-                                timer = window.setTimeout(assertActionSuccessful, POLLING_DELAY);
+                            if (!status.success || !checkFn(status, btn)) {
+                                if (!--attempts) {
+                                    setButtonState(btn, requestStates.error, status.message || messages.error);
+                                    return;
+                                }
+
+                                timer = window.setTimeout(assertActionSuccessful, RavemPlugin.polling.interval);
                             } else {
-                                clearTimeout(timer);
-                                setButtonState(btn, states.new);
+                                setButtonState(btn, requestStates.new);
                             }
                     });
-                }, POLLING_DELAY);
+                }, RavemPlugin.polling.interval);
 
             } else if (~_.indexOf(validReasons, data.reason)) {
-                setButtonState(btn, states.new);
+                setButtonState(btn, requestStates.new);
 
             } else if (data.reason === 'connected-other') {
                 new ConfirmPopup(
@@ -121,16 +133,17 @@
                         messages.alreadyConnected
                     ].join('<br>'),
                     function forceDisconnectPopup(forceDisconnect) {
-                        setButtonState(btn, states.old);
+                        setButtonState(btn, requestStates.old);
                         if (forceDisconnect) {
-                            sendRequest(btn, states.wait, true).done(function(newData) {
-                                _handler(newData, btn, states, validReasons, messages, checkFn);
+                            sendRequest(btn, requestStates.wait, true)
+                            .always(function(newData) {
+                                _handler(newData, btn, requestStates, validReasons, messages, checkFn);
                             });
                         }
                 }).open();
 
             } else {
-                setButtonState(btn, states.error, data.message);
+                setButtonState(btn, requestStates.error, data.message);
             }
         }
 
@@ -170,13 +183,13 @@
             switch (state) {
                 case 'connected':
                     sendRequest(btn, 'waitingDisconnect')
-                        .then(function onConnect(data) {
+                        .always(function onConnect(data) {
                             states.connected.handler(data, btn);
                         });
                     break;
                 case 'disconnected':
                     sendRequest(btn, 'waitingConnect')
-                        .then(function onDisconnect(data) {
+                        .always(function onDisconnect(data) {
                             states.disconnected.handler(data, btn);
                         });
                     break;
@@ -223,7 +236,7 @@
                 url = build_url(url, {force: '1'});
             }
 
-            return _sendRequest(btn, 'POST', url, waitingState, false);
+            return _sendRequest(btn, 'POST', url, waitingState);
         }
 
         function getRoomStatus(btn, waitingState) {

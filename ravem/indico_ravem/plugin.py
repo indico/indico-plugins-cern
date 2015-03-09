@@ -26,8 +26,15 @@ class SettingsForm(IndicoForm):  # pragma: no cover
     prefix = IntegerField(_('Room IP prefix'), [NumberRange(min=0)],
                           description=_('IP prefix to connect a room to a Vidyo room.'))
     timeout = IntegerField(_('Timeout'), [NumberRange(min=0)],
-                           description=_('The amount of time in seconds to wait for RAVEM to reply '
-                                         '(0 to disable the timeout).'))
+                           description=_('The amount of time in seconds to wait for RAVEM to reply<br>'
+                                         '(0 to disable the timeout)'))
+    polling_limit = IntegerField(_('Polling limit'), [NumberRange(min=1)],
+                                 description=_('The maximum number of time Indico should poll RAVEM for the status of '
+                                               'an operation before considering it as failed<br>'
+                                               '(delete the cached var.js to take effect)'))
+    polling_interval = IntegerField(_('Polling interval'), [NumberRange(min=1000)],
+                                    description=_('The delay between two polls in ms, at least 1000 ms<br>'
+                                                  '(delete the cached var.js to take effect)'))
 
 
 @depends('vc_vidyo')
@@ -45,7 +52,9 @@ class RavemPlugin(IndicoPlugin):
         'username': 'ravem',
         'password': None,
         'prefix': 21,
-        'timeout': 10
+        'timeout': 10,
+        'polling_limit': 8,
+        'polling_interval': 4000
     }
     category = PluginCategory.videoconference
 
@@ -72,6 +81,10 @@ class RavemPlugin(IndicoPlugin):
 
     def register_assets(self):
         self.register_js_bundle('ravem_js', 'js/ravem.js')
+
+    def get_vars_js(self):
+        return {'polling': {'limit': self.settings.get('polling_limit'),
+                            'interval': self.settings.get('polling_interval')}}
 
     def inject_connect_button(self, template, event_vc_room, **kwargs):
         from indico_ravem.util import has_access

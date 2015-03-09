@@ -5,8 +5,7 @@ from urlparse import urljoin
 
 from flask import request, session
 
-from indico.modules.rb.models.locations import Location
-from indico.modules.rb.models.rooms import Room
+from indico.util.i18n import _
 from indico.util.user import retrieve_principal
 
 from indico_ravem.plugin import RavemPlugin
@@ -45,6 +44,11 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
     try:
         response = request(urljoin(root_endpoint, api_endpoint), auth=HTTPDigestAuth(username, password), params=kwargs,
                            verify=False, headers=headers, timeout=timeout)
+    except Timeout as error:
+        RavemPlugin.logger.warning("{error.request.method} {error.request.url} timed out: {error.message}"
+                                   .format(error=error))
+        # request timeout sometime has an inner timeout error as message instead of a string.
+        raise Timeout(_("Timeout while contacting the room."))
     except Exception as error:
         RavemPlugin.logger.exception(
             "failed call: {method} {api_endpoint} with {params}: {error.message}"
@@ -56,10 +60,6 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
         response.raise_for_status()
     except HTTPError as error:
         RavemPlugin.logger.exception("{response.request.method} {response.url} failed with {error.message}"
-                                     .format(response=response, error=error))
-        raise
-    except Timeout:
-        RavemPlugin.logger.exception("{response.request.method} {response.url} timed out: {error.message}"
                                      .format(response=response, error=error))
         raise
 

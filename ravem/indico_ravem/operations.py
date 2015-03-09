@@ -47,12 +47,12 @@ def connect_room(room_name, vc_room, force=False, room_special_name=None):
                 .format(room=room_special_name, status=status),
                 'connected-other'
             )
-
         disconnect_response = disconnect_endpoint(room_name, status['vc_room_name'], status['service_type'])
         if 'error' in disconnect_response:
             RavemPlugin.logger.error(
-                ("Failed to disconnect the room {room} from the Vidyo room {vc_room.name} with error: "
-                 "{response[error]}").format(room=room_special_name, vc_room=vc_room, response=disconnect_response))
+                "Failed to disconnect the room {room} from the Vidyo room {vc_room.name} with error: {response[error]}"
+                .format(room=room_special_name, vc_room=vc_room, response=disconnect_response)
+            )
             raise RavemException(
                 _("Failed to disconnect the room {room} from the Vidyo room {vc_room.name} with error:\n"
                   "{response[error]}").format(room=room_special_name, vc_room=vc_room, response=disconnect_response)
@@ -60,23 +60,24 @@ def connect_room(room_name, vc_room, force=False, room_special_name=None):
 
         # A "success" response from RAVEM doesn't mean the room is disconnected.
         # We need to poll RAVEM for the status of the room.
-        # We poll 5 times, once every 5 seconds
-        for attempt in xrange(5):
+        for attempt in xrange(RavemPlugin.settings.get('polling_limit')):
             status = get_room_status(room_name, room_special_name=room_special_name)
             if not status['connected']:
                 break
-            sleep(5)
+            sleep(RavemPlugin.settings.get('polling_interval') / 1000.0)  # ms in settings but time.sleep takes sec
         else:
             RavemPlugin.logger.error(("Failed to disconnect the room {room} from the Vidyo room {vc_room.name} "
-                                     "with an unknown error").format(room=room_special_name, vc_room=vc_room))
+                                      "with an unknown error").format(room=room_special_name, vc_room=vc_room))
             raise RavemException(_("Failed to disconnect the room {room} from the Vidyo room {vc_room.name} with "
                                  "an unknown error").format(room=room_special_name, vc_room=vc_room))
 
     response = connect_endpoint(vc_room.data['vidyo_id'], status['room_endpoint'])
 
     if 'error' in response:
-        RavemPlugin.logger.error("Failed to connect the room {room} to the Vidyo room {vc_room.name} with error: "
-                                 "{response[error]}").format(room=room_special_name, vc_room=vc_room, response=response)
+        RavemPlugin.logger.error(
+            "Failed to connect the room {room} to the Vidyo room {vc_room.name} with error: {response[error]}"
+            .format(room=room_special_name, vc_room=vc_room, response=response)
+        )
         raise RavemException(
             _("Failed to connect the room {room} to the Vidyo room {vc_room.name} with error:\n{response[error]}")
             .format(room=room_special_name, vc_room=vc_room, response=response)
@@ -115,10 +116,10 @@ def disconnect_room(room_name, vc_room, force=False, room_special_name=None):
             )
 
         RavemPlugin.logger.error(
-            ("Failed to disconnect the room {room} from the Vidyo room {vc_room.name} with error: "
-             "{response[error]}").format(room=room_special_name, vc_room=vc_room, response=response)
+            "Failed to disconnect the room {room} from the Vidyo room {vc_room.name} with error: {response[error]}"
+            .format(room=room_special_name, vc_room=vc_room, response=response)
         )
         raise RavemException(
-            _("Failed to disconnect the room {room} from the Vidyo room {vc_room.name} with error:\n"
-              "{response[error]}").format(room=room_special_name, vc_room=vc_room, response=response)
+            _("Failed to disconnect the room {room} from the Vidyo room {vc_room.name} with error:\n{response[error]}")
+            .format(room=room_special_name, vc_room=vc_room, response=response)
         )
