@@ -6,6 +6,24 @@
 {% endmacro %}
 
 {% macro result_group_entries(items) %}
+    <tr class="result-group-header">
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td>
+            <div class="title">
+                {% trans %}Event{% endtrans %}
+            </div>
+        </td>
+        {% if form.granularity.data == 'talks' %}
+            <td>
+                <div class="title">
+                    {% trans %}Talk{% endtrans %}
+                </div>
+            </td>
+        {% endif %}
+    </tr>
     {% for req, obj, start_time in items %}
         {{ request_entry(req, obj, start_time) }}
     {% endfor %}
@@ -13,7 +31,7 @@
 
 {% macro request_entry(req, obj, start_time) %}
     <tr class="result-group-entry">
-        <td class="request-time">
+        <td class="entry-time">
             <a class="discreet-link" href="{{ url_for('requests.event_requests_details', req) }}">
                 {{ start_time | format_time('HH:mm') }}
             </a>
