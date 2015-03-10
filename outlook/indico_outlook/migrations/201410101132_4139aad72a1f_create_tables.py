@@ -10,6 +10,7 @@ from alembic import op
 from sqlalchemy.sql.ddl import CreateSchema, DropSchema
 
 from indico.core.db.sqlalchemy import PyIntEnum
+from indico.core.db.sqlalchemy.util.bulk_rename import _rename_constraint
 
 from indico_outlook.models.queue import OutlookAction
 
@@ -23,15 +24,19 @@ def upgrade():
     op.create_table('outlook_queue',
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('user_id', sa.Integer(), nullable=False),
-                    sa.Column('event_id', sa.Integer(), nullable=False, index=True),
+                    sa.Column('event_id', sa.Integer(), nullable=False),
                     sa.Column('action', PyIntEnum(OutlookAction), nullable=False),
-                    sa.PrimaryKeyConstraint('id'),
+                    sa.PrimaryKeyConstraint('id', name='outlook_queue_pkey'),
                     sa.UniqueConstraint('user_id', 'event_id', 'action'),
+                    sa.Index('ix_plugin_outlook_outlook_queue_event_id', 'event_id'),
                     schema='plugin_outlook')
     op.create_table('outlook_blacklist',
                     sa.Column('user_id', sa.Integer(), autoincrement=False, nullable=False),
-                    sa.PrimaryKeyConstraint('user_id'),
+                    sa.PrimaryKeyConstraint('user_id', name='outlook_blacklist_pkey'),
                     schema='plugin_outlook')
+    # later migrations expect the old name...
+    op.execute(_rename_constraint('plugin_outlook', 'outlook_queue', 'ck_outlook_queue_valid_enum_action',
+                                  'outlook_queue_action_check'))
 
 
 def downgrade():

@@ -13,12 +13,12 @@ down_revision = '4139aad72a1f'
 
 
 def upgrade():
-    op.drop_constraint('outlook_queue_user_id_event_id_action_key', 'outlook_queue', schema='plugin_outlook')
+    op.drop_constraint('uq_outlook_queue_user_id_event_id_action', 'outlook_queue', schema='plugin_outlook')
     op.create_index('ix_user_event_action', 'outlook_queue', ['user_id', 'event_id', 'action'], unique=False,
                     schema='plugin_outlook')
 
 
 def downgrade():
     op.drop_index('ix_user_event_action', table_name='outlook_queue', schema='plugin_outlook')
-    op.create_unique_constraint('outlook_queue_user_id_event_id_action_key', 'outlook_queue',
+    op.create_unique_constraint('uq_outlook_queue_user_id_event_id_action', 'outlook_queue',
                                 ['user_id', 'event_id', 'action'], schema='plugin_outlook')
