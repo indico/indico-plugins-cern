@@ -7,7 +7,7 @@ from MaKaC.user import AvatarHolder
 
 class OutlookBlacklistUser(db.Model):
     """Users who have disabled calendar entries for events"""
-    __tablename__ = 'outlook_blacklist'
+    __tablename__ = 'blacklist'
     __table_args__ = {'schema': 'plugin_outlook'}
 
     #: ID of the user
