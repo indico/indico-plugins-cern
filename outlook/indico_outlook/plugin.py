@@ -14,10 +14,10 @@ from indico.core.db import DBMgr, db
 from indico.core.db.sqlalchemy.util.session import update_session_options
 from indico.core.plugins import IndicoPlugin
 from indico.modules.scheduler import Client
-from indico.util.i18n import _
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import IndicoPasswordField
 
+from indico_outlook import _
 from indico_outlook.blueprint import blueprint
 from indico_outlook.calendar import update_calendar, OutlookTask
 from indico_outlook.models.blacklist import OutlookBlacklistUser
