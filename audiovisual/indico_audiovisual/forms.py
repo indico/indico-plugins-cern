@@ -18,10 +18,9 @@ from indico.web.forms.base import IndicoForm, generated_data
 from indico.web.forms.validators import UsedIf, Exclusive
 from indico.web.forms.widgets import JinjaWidget
 from indico.web.forms.fields import IndicoSelectMultipleCheckboxField, IndicoEnumSelectField
-from indico.util.i18n import _
 from MaKaC.conference import SubContribution
 
-from indico_audiovisual import SERVICES
+from indico_audiovisual import SERVICES, _
 from indico_audiovisual.util import is_av_manager, get_contributions, contribution_id
 
 

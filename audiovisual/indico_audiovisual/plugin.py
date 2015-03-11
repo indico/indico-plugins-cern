@@ -12,7 +12,6 @@ from indico.core.plugins import IndicoPlugin
 from indico.core.config import Config
 from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.modules.events.requests.views import WPRequestsEventManagement
-from indico.util.i18n import _
 from indico.util.user import principals_merge_users
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import PrincipalField, MultipleItemsField, EmailListField
@@ -20,6 +19,7 @@ from indico.web.http_api import HTTPAPIHook
 from indico.web.menu import HeaderMenuEntry
 from MaKaC.user import AvatarHolder
 
+from indico_audiovisual import _
 from indico_audiovisual.api import AVExportHook
 from indico_audiovisual.blueprint import blueprint
 from indico_audiovisual.definition import AVRequest, SpeakerReleaseAgreement

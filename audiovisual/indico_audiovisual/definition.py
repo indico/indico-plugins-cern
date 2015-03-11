@@ -10,11 +10,11 @@ from indico.modules.events.requests import RequestDefinitionBase
 from indico.modules.events.requests.models.requests import RequestState, Request
 from indico.util.caching import memoize_request
 from indico.util.decorators import classproperty
-from indico.util.i18n import _
 from indico.util.string import to_unicode
 from indico.web.flask.util import url_for
 from MaKaC.conference import SubContribution
 
+from indico_audiovisual import _
 from indico_audiovisual.forms import AVRequestForm, AVRequestManagerForm
 from indico_audiovisual.util import (is_av_manager, send_webcast_ping, get_data_identifiers, get_selected_contributions,
                                      contribution_id, contribution_by_id, send_agreement_ping,
