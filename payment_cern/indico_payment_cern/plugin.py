@@ -12,12 +12,12 @@ from indico.core import signals
 from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.modules.payment import PaymentPluginMixin, PaymentPluginSettingsFormBase, PaymentEventSettingsFormBase
 from indico.modules.payment.util import get_registrant_params
-from indico.util.i18n import _
 from indico.util.string import remove_accents, remove_non_alpha
 from indico.util.user import retrieve_principals, principals_merge_users
 from indico.web.flask.util import url_for
 from indico.web.forms.fields import PrincipalField, MultipleItemsField, OverrideMultipleItemsField
 
+from indico_payment_cern import _
 from indico_payment_cern.blueprint import blueprint
 from indico_payment_cern.util import get_payment_methods, get_payment_method, create_hash
 

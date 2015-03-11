@@ -25,12 +25,12 @@ from werkzeug.exceptions import BadRequest
 
 from indico.modules.payment.models.transactions import TransactionAction, PaymentTransaction
 from indico.modules.payment.util import register_transaction, get_registrant_params
-from indico.util.i18n import _
 from indico.web.flask.util import url_for
 from MaKaC.conference import ConferenceHolder
 from MaKaC.webinterface.rh.base import RH
 from MaKaC.webinterface.rh.registrationFormDisplay import RHRegistrationFormRegistrantBase
 
+from indico_payment_cern import _
 from indico_payment_cern.util import create_hash
 
 
