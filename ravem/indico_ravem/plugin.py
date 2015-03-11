@@ -9,10 +9,11 @@ from wtforms.validators import DataRequired, NumberRange
 from indico.core.config import Config
 from indico.core.plugins import IndicoPlugin, PluginCategory
 from indico.modules.vc.views import WPVCEventPage, WPVCManageEvent
-from indico.util.i18n import _
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import IndicoPasswordField
 from MaKaC.webinterface.pages.conferences import WPTPLConferenceDisplay
+
+from indico_ravem import _
 
 
 class SettingsForm(IndicoForm):  # pragma: no cover

@@ -2,9 +2,9 @@ from flask import request, jsonify
 from werkzeug.exceptions import NotFound
 
 from indico.modules.vc.models.vc_rooms import VCRoomEventAssociation
-from indico.util.i18n import _
 from MaKaC.webinterface.rh.base import RH
 
+from indico_ravem import _
 from indico_ravem.operations import get_room_status, connect_room, disconnect_room
 from indico_ravem.util import has_access, RavemOperationException, RavemException
 

@@ -1,7 +1,6 @@
 from time import sleep
 
-from indico.util.i18n import _
-
+from indico_ravem import _
 from indico_ravem.api import get_endpoint_status, disconnect_endpoint, connect_endpoint
 from indico_ravem.plugin import RavemPlugin
 from indico_ravem.util import get_room_endpoint, RavemException, RavemOperationException
