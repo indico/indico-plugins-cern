@@ -5,10 +5,10 @@ from wtforms.fields.html5 import URLField
 from wtforms.validators import URL
 
 from indico.core.plugins import IndicoPluginBlueprint
-from indico.util.i18n import _
 from indico.web.forms.base import IndicoForm
 from indico_search import SearchPluginBase
 
+from indico_search_cern import _
 from indico_search_cern.engine import CERNSearchEngine
 
 
