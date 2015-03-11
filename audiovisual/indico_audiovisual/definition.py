@@ -138,7 +138,7 @@ class TalkPlaceholder(EmailPlaceholderBase):
 class SpeakerReleaseAgreement(AgreementDefinitionBase):
     name = 'cern-speaker-release'
     title = _('Speaker Release')
-    description = _('For talks to be recorded or webcast, all involved speakers need to sign the speaker release form.')
+    description = _('For talks to be recorded, all involved speakers need to sign the speaker release form.')
     form_template_name = 'agreement_form.html'
     email_placeholders = {'talk_title': TalkPlaceholder}
     disabled_reason = _('There are no agreements to sign. This means that either no recording request has been '
