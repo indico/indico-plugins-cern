@@ -80,6 +80,9 @@ def _update_calendar_entry(logger, entry, settings):
     logger.info('Processing {}'.format(entry))
     url = posixpath.join(settings['service_url'], operation_map[entry.action])
     user = entry.user
+    if user is None:
+        logger.debug('Ignoring {} for deleted user {}'.format(entry.action.name, entry.user_id))
+        return True
     email = to_unicode(user.email)
     unique_id = '{}{}_{}'.format(settings['id_prefix'], user.id, entry.event_id)
 
