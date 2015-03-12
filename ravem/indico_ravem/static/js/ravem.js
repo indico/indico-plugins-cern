@@ -1,12 +1,13 @@
 (function() {
     'use strict';
+    var $t = $T.domain('ravem');
     var ravemButton = (function makeRavemButton() {
         var POLLING_DELAY = 5000;  // milliseconds
         var ATTEMPTS = 5;
         var states = {
             connected: {
                 icon: 'icon-no-camera',
-                tooltip: $T('Disconnect {0} from the Vidyo room {1}'),
+                tooltip: $t.gettext('Disconnect {0} from the Vidyo room {1}'),
                 action: 'disconnect',
                 handler: function disconnectHandler(data, btn) {
                     var name = btn.data('roomName');
@@ -19,8 +20,8 @@
                         wait: 'waitingDisconnect'
                     };
                     var messages = {
-                        alreadyConnected: $T('Would you like to force the room {0} to disconnect?').format(name),
-                        error:  $T('Failed to disconnect the room {0} from the Vidyo room').format(name, vcRoomName),
+                        alreadyConnected: $t.gettext('Would you like to force the room {0} to disconnect?').format(name),
+                        error:  $t.gettext('Failed to disconnect the room {0} from the Vidyo room').format(name, vcRoomName),
                     };
 
                     _handler(data, btn, states, ['already-disconnected'], messages, function checkDisconnected(status, btn) {
@@ -30,7 +31,7 @@
             },
             disconnected: {
                 icon: 'icon-camera',
-                tooltip: $T('Connect {0} to the Vidyo room {1}'),
+                tooltip: $t.gettext('Connect {0} to the Vidyo room {1}'),
                 action: 'connect',
                 handler: function connectHandler(data, btn) {
                     var name = btn.data('roomName');
@@ -42,8 +43,8 @@
                         wait: 'waitingConnect'
                     };
                     var messages = {
-                        alreadyConnected: $T('Would you like to force the room {0} to connect to your Vidyo room ({1}) ?').format(name, vcRoomName),
-                        error:  $T('Failed to connect the room {0} to the Vidyo room').format(name, vcRoomName)
+                        alreadyConnected: $t.gettext('Would you like to force the room {0} to connect to your Vidyo room ({1}) ?').format(name, vcRoomName),
+                        error:  $t.gettext('Failed to connect the room {0} to the Vidyo room').format(name, vcRoomName)
                     };
 
                     _handler(data, btn, states, ['already-connected'], messages, function checkConnect(status, btn){
@@ -52,31 +53,31 @@
                 }
             },
             errorConnect: {
-                tooltip: $T("Failed to connect {0} to the Vidyo room {1}.<br>{2}Please wait a moment and refresh the page to try again."),
+                tooltip: $t.gettext("Failed to connect {0} to the Vidyo room {1}.<br>{2}Please wait a moment and refresh the page to try again."),
                 tooltipType: 'error',
                 icon: 'icon-warning',
             },
             errorDisconnect: {
-                tooltip: $T("Failed to disconnect {0} from the Vidyo room {1}.<br>{2}Please wait a moment and refresh the page to try again."),
+                tooltip: $t.gettext("Failed to disconnect {0} from the Vidyo room {1}.<br>{2}Please wait a moment and refresh the page to try again."),
                 tooltipType: 'error',
                 icon: 'icon-warning',
             },
             errorStatus: {
-                tooltip: $T("Failed to contact {0}.<br>{2}Please wait a moment and refresh the page to try again."),
+                tooltip: $t.gettext("Failed to contact {0}.<br>{2}Please wait a moment and refresh the page to try again."),
                 tooltipType: 'error',
                 icon: 'icon-warning',
             },
             waitingConnect: {
                 icon: 'icon-spinner',
-                tooltip: $T("Connecting {0} to the Vidyo room {1}"),
+                tooltip: $t.gettext("Connecting {0} to the Vidyo room {1}"),
             },
             waitingDisconnect: {
                 icon: 'icon-spinner',
-                tooltip: $T("Disconnecting {0} from the Vidyo room {1}"),
+                tooltip: $t.gettext("Disconnecting {0} from the Vidyo room {1}"),
             },
             waitingStatus: {
                 icon: 'icon-spinner',
-                tooltip: $T("Waiting for information about {0}"),
+                tooltip: $t.gettext("Waiting for information about {0}"),
             }
         };
 
@@ -116,7 +117,7 @@
 
             } else if (data.reason === 'connected-other') {
                 new ConfirmPopup(
-                    $T('{0} already connected').format(name), [
+                    $t.gettext('{0} already connected').format(name), [
                         data.message.replace('\n', '<br>'),
                         messages.alreadyConnected
                     ].join('<br>'),
@@ -182,9 +183,9 @@
                     break;
                 default:
                     new ErrorPopup(
-                        $T("Something went wrong."),
-                        [$T("Unknown error")],
-                        $T("Please refresh the page and try again.")
+                        $t.gettext("Something went wrong."),
+                        [$t.gettext("Unknown error")],
+                        $t.gettext("Please refresh the page and try again.")
                     ).open();
             }
         }
@@ -204,7 +205,7 @@
                         var response = JSON.parse(data.responseText);
                         errMsg = response.error.message;
                     } catch(e) {
-                        errMsg = $T('unknown error');
+                        errMsg = $t.gettext('unknown error');
                     }
                     deferred.reject({success: false, message: errMsg});
                 },
