@@ -21,7 +21,7 @@
                     };
                     var messages = {
                         alreadyConnected: $t.gettext('Would you like to force the room {0} to disconnect?').format(name),
-                        error:  $t.gettext('Failed to disconnect the room {0} from the Vidyo room').format(name, vcRoomName),
+                        error: $t.gettext('Failed to disconnect the room {0} from the Vidyo room').format(name, vcRoomName)
                     };
 
                     _handler(data, btn, states, ['already-disconnected'], messages, function checkDisconnected(status, btn) {
@@ -55,29 +55,29 @@
             errorConnect: {
                 tooltip: $t.gettext("Failed to connect {0} to the Vidyo room {1}.<br>{2}Please wait a moment and refresh the page to try again."),
                 tooltipType: 'error',
-                icon: 'icon-warning',
+                icon: 'icon-warning'
             },
             errorDisconnect: {
                 tooltip: $t.gettext("Failed to disconnect {0} from the Vidyo room {1}.<br>{2}Please wait a moment and refresh the page to try again."),
                 tooltipType: 'error',
-                icon: 'icon-warning',
+                icon: 'icon-warning'
             },
             errorStatus: {
                 tooltip: $t.gettext("Failed to contact {0}.<br>{2}Please wait a moment and refresh the page to try again."),
                 tooltipType: 'error',
-                icon: 'icon-warning',
+                icon: 'icon-warning'
             },
             waitingConnect: {
                 icon: 'icon-spinner',
-                tooltip: $t.gettext("Connecting {0} to the Vidyo room {1}"),
+                tooltip: $t.gettext("Connecting {0} to the Vidyo room {1}")
             },
             waitingDisconnect: {
                 icon: 'icon-spinner',
-                tooltip: $t.gettext("Disconnecting {0} from the Vidyo room {1}"),
+                tooltip: $t.gettext("Disconnecting {0} from the Vidyo room {1}")
             },
             waitingStatus: {
                 icon: 'icon-spinner',
-                tooltip: $t.gettext("Waiting for information about {0}"),
+                tooltip: $t.gettext("Waiting for information about {0}")
             }
         };
 
@@ -101,7 +101,6 @@
                             if (!status.success && attempts === 1) {  // failure on last attempt
                                 clearTimeout(timer);
                                 setButtonState(btn, states.error, status.message);
-                                return;
                             } else if (!checkFn(status, btn)) {
                                 attempts--;
                                 timer = window.setTimeout(assertActionSuccessful, POLLING_DELAY);
@@ -168,7 +167,7 @@
             }
 
             var state = btn.data('state');
-            switch(state) {
+            switch (state) {
                 case 'connected':
                     sendRequest(btn, 'waitingDisconnect')
                         .then(function onConnect(data) {
