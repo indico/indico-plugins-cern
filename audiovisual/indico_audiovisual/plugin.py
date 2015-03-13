@@ -12,7 +12,7 @@ from indico.core.plugins import IndicoPlugin
 from indico.core.config import Config
 from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.modules.events.requests.views import WPRequestsEventManagement
-from indico.util.user import principals_merge_users
+from indico.util.user import principals_merge_users, retrieve_principals
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import PrincipalField, MultipleItemsField, EmailListField
 from indico.web.http_api import HTTPAPIHook
@@ -83,6 +83,7 @@ class AVRequestsPlugin(IndicoPlugin):
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
         self.connect(signals.agreements.get_definitions, self._get_agreement_definitions)
         self.connect(signals.event.data_changed, self._data_changed)
+        self.connect(signals.event.core.has_read_access, self._has_read_access_event)
         self.connect(signals.event.contribution_data_changed, self._data_changed)
         self.connect(signals.event.subcontribution_data_changed, self._data_changed)
         self.connect(signals.after_process, self._apply_changes)
@@ -105,6 +106,9 @@ class AVRequestsPlugin(IndicoPlugin):
 
     def _get_agreement_definitions(self, sender, **kwargs):
         return SpeakerReleaseAgreement
+
+    def _has_read_access_event(self, sender, user, **kwargs):
+        return user is not None and (user in retrieve_principals(self.settings.get('managers')))
 
     def _data_changed(self, sender, **kwargs):
         # sender can be `Conference`, `Contribution` or `SubContribution`
