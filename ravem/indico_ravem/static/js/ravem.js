@@ -19,11 +19,10 @@
                     };
                     var messages = {
                         alreadyConnected: $t.gettext(
-                                              'Would you like to force the room {0} to disconnect?'
-                                          ).format(name),
+                            'Would you like to force the room {0} to disconnect?').format(name),
                         error:  $t.gettext(
-                                    'The room {0} might already be disconnected or connected to another Vidyo room'
-                                ).format(name),
+                            'The room {0} might already be disconnected or connected to another Vidyo room'
+                        ).format(name),
                     };
 
                     _handler(data, btn, requestStates, ['already-disconnected'], messages,
@@ -65,14 +64,13 @@
             },
             errorDisconnect: {
                 tooltip: $t.gettext(
-                             "Unable to disconnect<br>{2}Please wait a moment and refresh the page to try again."),
+                    "Unable to disconnect<br>{2}Please wait a moment and refresh the page to try again."),
                 tooltipType: 'error',
                 icon: 'icon-warning'
             },
             errorStatus: {
                 tooltip: $t.gettext(
-                             "Unable to contact the room.<br>{2}Please wait a moment and refresh the page to try again."
-                         ),
+                    "Unable to contact the room.<br>{2}Please wait a moment and refresh the page to try again."),
                 tooltipType: 'error',
                 icon: 'icon-warning'
             },
@@ -162,7 +160,12 @@
             var qtip = {
                 content: states[newState].tooltip.format(name, vcRoomName, tooltipMessage),
                 position: {my: 'top center', at: 'bottom center'},
-                show: 'mouseover', hide: 'mouseout'
+                show: 'mouseover', hide: {
+                    event: 'mouseout',
+                    leave: false,
+                    fixed: true,
+                    delay: 500
+                }
             };
             if ('tooltipType' in states[newState]) {
                 qtip.style = {classes: 'qtip-' + states[newState].tooltipType};

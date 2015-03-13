@@ -82,11 +82,11 @@ class RavemPlugin(IndicoPlugin):
     def register_assets(self):
         self.register_js_bundle('ravem_js', 'js/ravem.js')
 
-    def get_vars_js(self):
+    def get_vars_js(self):  # pragma: no cover
         return {'polling': {'limit': self.settings.get('polling_limit'),
                             'interval': self.settings.get('polling_interval')}}
 
-    def inject_connect_button(self, template, event_vc_room, **kwargs):
+    def inject_connect_button(self, template, event_vc_room, **kwargs):  # pragma: no cover
         from indico_ravem.util import has_access
         if has_access(event_vc_room):
             return render_plugin_template(template, room_name=event_vc_room.link_object.rb_room.name,
