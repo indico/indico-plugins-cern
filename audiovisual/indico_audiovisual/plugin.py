@@ -108,7 +108,7 @@ class AVRequestsPlugin(IndicoPlugin):
         return SpeakerReleaseAgreement
 
     def _has_read_access_event(self, sender, user, **kwargs):
-        return user is not None and (user in retrieve_principals(self.settings.get('managers')))
+        return user is not None and is_av_manager(user)
 
     def _data_changed(self, sender, **kwargs):
         # sender can be `Conference`, `Contribution` or `SubContribution`
