@@ -1,8 +1,10 @@
 from __future__ import unicode_literals
 
 import sys
+from operator import itemgetter
 
 from dateutil import rrule
+from flask import g
 from flask_pluginengine import with_plugin_context, render_plugin_template
 from wtforms.fields.core import SelectField, BooleanField, FloatField
 from wtforms.fields.html5 import URLField, IntegerField
@@ -22,7 +24,7 @@ from indico_outlook.blueprint import blueprint
 from indico_outlook.calendar import update_calendar, OutlookTask
 from indico_outlook.models.blacklist import OutlookBlacklistUser
 from indico_outlook.models.queue import OutlookQueueEntry, OutlookAction
-from indico_outlook.util import get_participating_users
+from indico_outlook.util import get_participating_users, latest_actions_only
 
 
 _status_choices = [('free', _('Free')),
@@ -74,6 +76,8 @@ class OutlookPlugin(IndicoPlugin):
         self.connect(signals.event.participant_changed, self.event_participation_changed)
         self.connect(signals.event.data_changed, self.event_data_changed)
         self.connect(signals.event.deleted, self.event_deleted)
+        self.connect(signals.after_process, self._apply_changes)
+        self.connect(signals.before_retry, self._clear_changes)
 
     def get_blueprints(self):
         return blueprint
@@ -109,17 +113,35 @@ class OutlookPlugin(IndicoPlugin):
         if user:
             if action == 'added':
                 self.logger.info('Participation change: adding {} in {!r}'.format(user, event))
-                OutlookQueueEntry.record(event, user, OutlookAction.add)
+                self._record_change(event, user, OutlookAction.add)
             elif action == 'removed':
                 self.logger.info('Participation change: removing {} in {!r}'.format(user, event))
-                OutlookQueueEntry.record(event, user, OutlookAction.remove)
+                self._record_change(event, user, OutlookAction.remove)
 
     def event_data_changed(self, event, attr, **kwargs):
         for user in get_participating_users(event):
             self.logger.info('Event data change ({}): updating {} in {!r}'.format(attr, user, event))
-            OutlookQueueEntry.record(event, user, OutlookAction.update)
+            self._record_change(event, user, OutlookAction.update)
 
     def event_deleted(self, event, **kwargs):
         for user in get_participating_users(event):
             self.logger.info('Event deletion: removing {} in {!r}'.format(user, event))
-            OutlookQueueEntry.record(event, user, OutlookAction.remove)
+            self._record_change(event, user, OutlookAction.remove)
+
+    def _record_change(self, event, user, action):
+        if 'outlook_changes' not in g:
+            g.outlook_changes = []
+        g.outlook_changes.append((event, user, action))
+
+    def _apply_changes(self, sender, **kwargs):
+        # we are using after_request to avoid unnecessary db deletes+inserts for the same entry since
+        # especially event_data_changes is often triggered more than once e.g. for most date changes
+        if 'outlook_changes' not in g:
+            return
+        for event, user, action in latest_actions_only(g.outlook_changes, itemgetter(2)):
+            OutlookQueueEntry.record(event, user, action)
+
+    def _clear_changes(self, sender, **kwargs):
+        if 'outlook_changes' not in g:
+            return
+        del g.outlook_changes

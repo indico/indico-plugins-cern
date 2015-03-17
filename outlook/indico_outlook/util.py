@@ -29,3 +29,15 @@ def get_participating_users(event):
         blacklist = {x.user_id for x in blacklist}
         users = {u for u in users if (not str(u.id).isdigit() or int(u.id) not in blacklist)}
     return users
+
+
+def latest_actions_only(items, action_key_func):
+    """Keeps only the most recent occurrence of each action, while preserving the order"""
+    used = set()
+    res = []
+    for item in reversed(items):
+        key = action_key_func(item)
+        if key not in used:
+            res.append(item)
+            used.add(key)
+    return reversed(res)

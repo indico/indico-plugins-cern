@@ -77,7 +77,6 @@ class OutlookQueueEntry(db.Model):
             return
         if AvatarHolder().getById(user.id) is None:
             return
-        # We delete a possible existing item first so the new one is inserted at the end
-        cls.find(event_id=event_id, user_id=user_id, action=action).delete()
+        # It would be nice to delete matching records first, but this sometimes results in very weird deadlocks
         db.session.add(cls(event_id=event_id, user_id=user_id, action=action))
         db.session.flush()

@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import posixpath
 import pytz
+from operator import attrgetter
 from pprint import pformat
 
 import requests
@@ -16,7 +17,7 @@ from indico.util.string import strip_control_chars, to_unicode
 
 from indico_outlook.models.blacklist import OutlookBlacklistUser
 from indico_outlook.models.queue import OutlookQueueEntry, OutlookAction
-from indico_outlook.util import check_config
+from indico_outlook.util import check_config, latest_actions_only
 
 
 operation_map = {
@@ -24,17 +25,6 @@ operation_map = {
     OutlookAction.update: 'UpdateExistingEventInCalendar',
     OutlookAction.remove: 'DeleteEventInCalendar'
 }
-
-
-def _latest_actions_only(items):
-    # Keeps only the most recent occurrence of each action, while preserving the order
-    used = set()
-    res = []
-    for item in reversed(items):
-        if item.action not in used:
-            res.append(item)
-            used.add(item.action)
-    return reversed(res)
 
 
 def update_calendar(logger=None):
@@ -59,14 +49,14 @@ def update_calendar(logger=None):
     try:
         for user_id, user_entries in entries.iterlists():
             user_entry_ids = {x.id for x in user_entries}
-            for entry in _latest_actions_only(user_entries):
+            for entry in latest_actions_only(user_entries, attrgetter('action')):
                 if not _update_calendar_entry(logger, entry, settings):
                     user_entry_ids.remove(entry.id)
             # record all ids which didn't fail for deletion
             delete_ids |= user_entry_ids
     finally:
         if delete_ids:
-            OutlookQueueEntry.find(OutlookQueueEntry.id.in_(delete_ids)).delete(synchronize_session='fetch')
+            OutlookQueueEntry.find(OutlookQueueEntry.id.in_(delete_ids)).delete(synchronize_session=False)
             db.session.commit()
 
 
