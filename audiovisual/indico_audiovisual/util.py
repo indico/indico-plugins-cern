@@ -178,6 +178,16 @@ def get_data_identifiers(req):
     }))
 
 
+def compare_data_identifiers(a, b):
+    """Checks if all the identifiers match, besides those that are not in both lists"""
+    a = {tuple(key): value for key, value in a}
+    b = {tuple(key): value for key, value in b}
+    matching_keys = a.viewkeys() & b.viewkeys()
+    a = {k: v for k, v in a.iteritems() if k in matching_keys}
+    b = {k: v for k, v in b.iteritems() if k in matching_keys}
+    return a == b
+
+
 def send_webcast_ping():
     """Sends a ping notification when a webcast request changes"""
     from indico_audiovisual.plugin import AVRequestsPlugin

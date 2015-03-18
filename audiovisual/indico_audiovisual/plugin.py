@@ -12,7 +12,7 @@ from indico.core.plugins import IndicoPlugin
 from indico.core.config import Config
 from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.modules.events.requests.views import WPRequestsEventManagement
-from indico.util.user import principals_merge_users, retrieve_principals
+from indico.util.user import principals_merge_users
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import PrincipalField, MultipleItemsField, EmailListField
 from indico.web.http_api import HTTPAPIHook
@@ -25,7 +25,8 @@ from indico_audiovisual.blueprint import blueprint
 from indico_audiovisual.definition import AVRequest, SpeakerReleaseAgreement
 from indico_audiovisual.notifications import notify_relocated_request, notify_rescheduled_request
 from indico_audiovisual.compat import compat_blueprint
-from indico_audiovisual.util import get_data_identifiers, is_av_manager, count_capable_contributions
+from indico_audiovisual.util import (get_data_identifiers, compare_data_identifiers, is_av_manager,
+                                     count_capable_contributions)
 from indico_audiovisual.views import WPAudiovisualManagers
 
 
@@ -132,7 +133,8 @@ class AVRequestsPlugin(IndicoPlugin):
 
             if req.state == RequestState.accepted and identifiers['dates'][0] != req.data['identifiers']['dates'][0]:
                 notify_rescheduled_request(req)
-            if identifiers['locations'] != req.data['identifiers']['locations']:
+
+            if not compare_data_identifiers(identifiers['locations'], req.data['identifiers']['locations']):
                 if (not count_capable_contributions(req.event)[0] and
                         req.state in {RequestState.accepted, RequestState.pending}):
                     janitor = AvatarHolder().getById(Config.getInstance().getJanitorUserId())
