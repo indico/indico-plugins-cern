@@ -9,6 +9,21 @@ _all__ = ('get_room_status', 'connect_room', 'disconnect_room')
 
 
 def get_room_status(room_name, room_special_name=None):
+    """Get the status of a room given its name.
+
+    :param room_name: str -- The name of the room whose status is fetched
+    :param room_special_name: str -- The prettier name of a room, used in the
+        error messages. For example "IT-Amphitheatre" for the room `31-3-004`.
+        Defaults to the room's name
+
+    :returns: dict -- the status of the room with the following information:
+        - `vc_room_name`: The name of the vc_room the room is connected to or
+        `None` if the room is not connected.
+        - `connected`: `True` if the room is connected, `False` otherwise
+        - `service_type`: The type of service, given by RAVEM. Usually '"vidyo"'
+        or `"other"`
+        - `room_endpoint`: prefixed H323 IP or Vidyo user name of the room.
+    """
     room_special_name = room_special_name or room_name
     response = get_endpoint_status(room_name)
     if 'error' in response:
@@ -32,6 +47,37 @@ def get_room_status(room_name, room_special_name=None):
 
 
 def connect_room(room_name, vc_room, force=False, room_special_name=None):
+    """Connects a room given its name with a given vc_room.
+
+    If a `RavemOperationException` is raised it is important to verify the
+    `reason` attribute of the exception.
+    If the room is already connected to the given VC room, the `reason` will be:
+    `"already-connected"`.
+    If the room is already connected to another VC room and we are not forcing
+    the connection, the `reason` will be: `"connected-other"`.
+
+    Forcing the connection (`force=True`) means disconnecting the room from the
+    VC room it is currently connected (if it is connected to a different VC room
+    than the given one) This option does not guarantee to establish the
+    connection as RAVEM might fail to disconnect the room or connect it
+    afterwards to the new VC room.
+
+    This operation will also take time as RAVEM is unable to indicate us if the
+    disconnection was successful. It is thus required to poll RAVEM. The amount
+    of polls and interval between them is defined in the settings. Note that a
+    failure to disconnect might simply be slowness in the network coupled with
+    aggressive polling settings which fail to poll the expected status in time.
+
+    :param room_name: str -- The name of the room to connect
+    :param vc_room: VCRoom -- The VC room instance to connect with the room.
+    :param force: bool -- Whether to force the connection between the room and
+        the VC room. Defaults to `False`
+    :param room_special_name: str -- The prettier name of a room, used in the
+        error messages. For example "IT-Amphitheatre" for the room `31-3-004`.
+        Defaults to the room's name
+
+    :raises: RavemOperationException, RavemException
+    """
     room_special_name = room_special_name or room_name
     status = get_room_status(room_name, room_special_name=room_special_name)
     if status['connected']:
@@ -60,11 +106,14 @@ def connect_room(room_name, vc_room, force=False, room_special_name=None):
 
         # A "success" response from RAVEM doesn't mean the room is disconnected.
         # We need to poll RAVEM for the status of the room.
+
+        # ms in settings but time.sleep takes sec
+        polling_interval = RavemPlugin.settings.get('polling_interval') / 1000.0
         for attempt in xrange(RavemPlugin.settings.get('polling_limit')):
             status = get_room_status(room_name, room_special_name=room_special_name)
             if not status['connected']:
                 break
-            sleep(RavemPlugin.settings.get('polling_interval') / 1000.0)  # ms in settings but time.sleep takes sec
+            sleep(polling_interval)
         else:
             RavemPlugin.logger.error(("Failed to disconnect the room {room} from the Vidyo room {vc_room.name} "
                                       "with an unknown error").format(room=room_special_name, vc_room=vc_room))
@@ -85,6 +134,28 @@ def connect_room(room_name, vc_room, force=False, room_special_name=None):
 
 
 def disconnect_room(room_name, vc_room, force=False, room_special_name=None):
+    """Disconnect a room given its name from a given vc_room.
+
+    If a `RavemOperationException` is raised it is important to verify the
+    `reason` attribute of the exception.
+    If the room is already disconnected, the `reason` will be:
+    `"already-disconnected"`.
+    If the room is connected to another VC room and we are not forcing
+    the disconnection, the `reason` will be: `"connected-other"`.
+
+    Forcing the disconnection (`force=True`) will force the room to disconnect
+    from the VC room it is connected to, regardless of the given VC room.
+
+    :param room_name: str -- The name of the room to disconnect
+    :param vc_room: VCRoom -- The VC room instance to disconnect from the room.
+    :param force: bool -- Whether to force the disconnection of the room.
+        Defaults to `False`
+    :param room_special_name: str -- The prettier name of a room, used in the
+        error messages. For example "IT-Amphitheatre" for the room `31-3-004`.
+        Defaults to the room's name
+
+    :raises: RavemOperationException, RavemException
+    """
     room_special_name = room_special_name or room_name
     status = get_room_status(room_name, room_special_name=room_special_name)
     if not status['connected']:

@@ -74,6 +74,11 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
 
 
 def get_room_endpoint(endpoints):
+    """Returns the proper endpoint of a room.
+
+    This will return the H323 IP endpoint, correctly formatted with the defined
+    prefix if available or the room's Vidyo user name otherwise.
+    """
     if endpoints['vc_endpoint_legacy_ip']:
         return '{prefix}{endpoints[vc_endpoint_legacy_ip]}'.format(prefix=RavemPlugin.settings.get('prefix'),
                                                                    endpoints=endpoints)
@@ -82,6 +87,16 @@ def get_room_endpoint(endpoints):
 
 
 def has_access(event_vc_room):
+    """Returns whether the current session has access to the RAVEM button.
+
+    To have access, the current user needs to be either the owner of the VC room
+    or authorised to modify the event.
+    If not the only way to have access is for the request to come from the
+    terminal located in the room concerned.
+
+    Note that if the room does not have equipment supported by Vidyo, the access
+    will always be refused regardless of the user or the origin of the request.
+    """
     link_object = event_vc_room.link_object
 
     if not link_object:
@@ -108,6 +123,15 @@ class RavemException(Exception):
 
 
 class RavemOperationException(RavemException):
+    """Indicates an operation failed and the cause of the failure is known.
+
+    Known causes of failure are for example if the room is already disconnected
+    when trying to disconnect it.
+
+    If this exception is raised, make sure to check the `reason` attribute.
+    Functions raising this exception should document the possible reasons with
+    which the exception can be raised.
+    """
     def __init__(self, message, reason):
         super(RavemOperationException, self).__init__(message)
         self.message = message
@@ -115,6 +139,11 @@ class RavemOperationException(RavemException):
 
 
 class RavemAPIException(RavemException):
+    """Indicates the RAVEM API replied with an invalid response.
+
+    In this context, by invalid response we mean a valid json response which
+    does not match the excepted format of having a `error` or `result` key.
+    """
     def __init__(self, message, endpoint, response):
         super(RavemAPIException, self).__init__(message)
         self.message = message

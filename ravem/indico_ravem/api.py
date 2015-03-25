@@ -11,7 +11,7 @@ def get_endpoint_status(room_name):
     :param room_name: str -- the name of the physical room
 
     :returns: dict -- the status of the room as a JSON response according to the
-              RAVEM API.
+        RAVEM API.
     """
     return ravem_api_call('getstatus', method='GET', service_name='videoconference', where='room_name', value=room_name)
 
@@ -27,12 +27,12 @@ def disconnect_endpoint(room_name, vc_room_name, service_type):
 
     :param room_name: str -- the name of the physical room
     :param vc_room_name: str -- The Vidyo room name (which is recommended to
-                         disconnect the physical room from the Vidyo room in
-                         case the service type is Vidyo.)
+        disconnect the physical room from the Vidyo room in case the service
+        type is Vidyo.)
     :param service_type: str -- The endpoint type (usually `vidyo` or `other`)
 
     :returns: dict -- {'result': 'OK'} if the operation "succeeds", raises a
-              RavemAPIException otherwise.
+        RavemAPIException otherwise.
     """
     params = {
         'method': 'POST',
@@ -57,8 +57,8 @@ def connect_endpoint(vidyo_room_id, query):
 
     :param vidyo_room_id: str -- target Vidyo room ID
     :param query: str -- search query passed to RAVEM to allow it to find the
-                  physical room from Vidyo. Usually, simply the room's endpoint
-                  as specified in the room's status data.
+        physical room from Vidyo. Usually, simply the room's endpoint as
+        specified in the room's status data.
 
     :returns: dict -- {'result': 'OK'} if the operation "succeeds", raises a
               RavemAPIException otherwise.

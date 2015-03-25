@@ -10,7 +10,6 @@
                 handler: function disconnectHandler(data, btn) {
                     var name = btn.data('roomName');
                     var vcRoomName = btn.data('vcRoomName');
-
                     var requestStates = {
                         old: 'connected',
                         new: 'disconnected',
@@ -26,7 +25,7 @@
                     };
 
                     _handler(data, btn, requestStates, ['already-disconnected'], messages,
-                             function checkDisconnected(status, btn) {
+                             function checkDisconnected(status) {
                                  return !status.connected || status.vc_room_name !== vcRoomName;
                     });
                 }
@@ -52,7 +51,7 @@
                     };
 
                     _handler(data, btn, requestStates, ['already-connected'], messages,
-                             function checkConnect(status, btn){
+                             function checkConnect(status){
                                  return status.connected && status.vc_room_name === vcRoomName;
                     });
                 }
@@ -88,17 +87,26 @@
             }
         };
 
+        /**
+         * Base handler to handle the result of a (connect/disconnect) request.
+         */
         function _handler(data, btn, requestStates, validReasons, messages, checkFn) {
             var name = btn.data('roomName');
 
+            // If the request appears to be successful, we now  must poll RAVEM
+            // through Indico to assert it was
             if (data.success) {
                 var attempts = RavemPlugin.polling.limit;
                 var timer = window.setTimeout(function assertActionSuccessful() {
+                    // Out of polling attempts without the expected status,
+                    // we assume the request failed.
                     if (!attempts) {
                         setButtonState(btn, requestStates.error);
                         return;
                     }
                     getRoomStatus(btn)
+                        // Failure to get the status and out of polling attempts.
+                        // we assume the request failed.
                         .fail(function statusUpdateErrorHandler(error) {
                             if (!--attempts) {
                                 setButtonState(btn, requestStates.error, error.message || messages.error);
@@ -108,31 +116,39 @@
                             timer = window.setTimeout(assertActionSuccessful, RavemPlugin.polling.interval);
                         })
                         .done(function statusUpdateHandler(status) {
-                            if (!status.success || !checkFn(status, btn)) {
+                            // Failed to get the status or the status is not what was expected
+                            if (!status.success || !checkFn(status)) {
+                                // Out of polling attempts, we assume the request failed.
                                 if (!--attempts) {
                                     setButtonState(btn, requestStates.error, status.message || messages.error);
                                     return;
                                 }
-
+                                // Try to poll again after the given interval
                                 timer = window.setTimeout(assertActionSuccessful, RavemPlugin.polling.interval);
+                            // Got the expected status, move the button to the new state
                             } else {
                                 setButtonState(btn, requestStates.new);
                             }
                     });
                 }, RavemPlugin.polling.interval);
 
+            // request failed with some reason and this reason is among the
+            // valid reasons so we mvoe the button to the new state.
             } else if (~_.indexOf(validReasons, data.reason)) {
                 setButtonState(btn, requestStates.new);
 
+            // The room is connected to another VC room, we ask the user for
+            // confirmation if he wants to reiterate the previous request and
+            // force it (force connect/force disconnect)
             } else if (data.reason === 'connected-other') {
                 new ConfirmPopup(
                     $t.gettext('{0} already connected').format(name), [
                         data.message.replace('\n', '<br>'),
                         messages.alreadyConnected
                     ].join('<br>'),
-                    function forceDisconnectPopup(forceDisconnect) {
+                    function forceRequestPopup(force) {
                         setButtonState(btn, requestStates.old);
-                        if (forceDisconnect) {
+                        if (force) {
                             sendRequest(btn, requestStates.wait, true)
                             .always(function(newData) {
                                 _handler(newData, btn, requestStates, validReasons, messages, checkFn);
@@ -145,6 +161,9 @@
             }
         }
 
+        /**
+         *  Sets a new state for the button and update its icon, label and tool tip.
+         */
         function setButtonState(btn, newState, tooltipMessage) {
             btn.data('state', newState);
 
@@ -154,7 +173,7 @@
                         '"><strong style="margin-left: 0.4em;">{0}</strong></span>'.format(name)].join('');
 
             btn.html(html);
-            btn.toggleClass('disabled', !states[newState].action);
+            btn.toggleClass('disabled', !states[newState].action); // Whether the button should be disabled
 
             tooltipMessage = tooltipMessage ? tooltipMessage + '<br>' : '';
             var qtip = {
@@ -205,6 +224,9 @@
             }
         }
 
+        /**
+         * Base function which sends an ajax request ad captures possible errors.
+         */
         function _sendRequest(btn, type, url, waitingState) {
             if (waitingState) {
                 setButtonState(btn, waitingState);
@@ -231,6 +253,10 @@
             return deferred.promise();
         }
 
+        /**
+         * Sends a POST request to Indico according to the action attached to
+         * the button's current the state.
+         */
         function sendRequest(btn, waitingState, force) {
             force = force || false;
             var state = btn.data('state');
