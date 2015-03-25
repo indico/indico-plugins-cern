@@ -105,24 +105,28 @@
                         return;
                     }
                     getRoomStatus(btn)
-                        // Failure to get the status and out of polling attempts.
-                        // we assume the request failed.
+                        // Failure when getting the status.
                         .fail(function statusUpdateErrorHandler(error) {
-                            if (!--attempts) {
+                            attempts--;
+                            // Out of polling attempts, we assume the request failed.
+                            if (!attempts) {
                                 setButtonState(btn, requestStates.error, error.message || messages.error);
                                 return;
                             }
 
+                            // Try to poll again after the given interval
                             timer = window.setTimeout(assertActionSuccessful, RavemPlugin.polling.interval);
                         })
                         .done(function statusUpdateHandler(status) {
                             // Failed to get the status or the status is not what was expected
                             if (!status.success || !checkFn(status)) {
+                                attempts--;
                                 // Out of polling attempts, we assume the request failed.
-                                if (!--attempts) {
+                                if (!attempts) {
                                     setButtonState(btn, requestStates.error, status.message || messages.error);
                                     return;
                                 }
+
                                 // Try to poll again after the given interval
                                 timer = window.setTimeout(assertActionSuccessful, RavemPlugin.polling.interval);
                             // Got the expected status, move the button to the new state
