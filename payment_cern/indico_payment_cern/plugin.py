@@ -73,7 +73,7 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
                         'payment_methods': []}
     default_event_settings = {'apply_fees': True,
                               'custom_fees': {}}
-    valid_currencies = {'CHF'}
+    valid_currencies = {'EUR', 'CHF'}
 
     def init(self):
         super(CERNPaymentPlugin, self).init()
