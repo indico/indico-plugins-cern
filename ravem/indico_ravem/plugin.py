@@ -64,11 +64,11 @@ class RavemPlugin(IndicoPlugin):
             from indico_ravem.util import RavemException
             raise RavemException('RoomBooking is inactive.')
 
-        self.template_hook('vidyo-manage-event-buttons',
+        self.template_hook('manage-event-vc-extra-buttons',
                            partial(self.inject_connect_button, 'ravem_button.html'))
-        self.template_hook('vidyo-event-buttons',
+        self.template_hook('event-vc-extra-buttons',
                            partial(self.inject_connect_button, 'ravem_button_group.html'))
-        self.template_hook('vidyo-event-timetable-buttons',
+        self.template_hook('event-timetable-vc-extra-buttons',
                            partial(self.inject_connect_button, 'ravem_button_group.html'))
 
         self.inject_js('ravem_js', WPTPLConferenceDisplay)
@@ -88,6 +88,8 @@ class RavemPlugin(IndicoPlugin):
 
     def inject_connect_button(self, template, event_vc_room, **kwargs):  # pragma: no cover
         from indico_ravem.util import has_access
-        if has_access(event_vc_room):
-            return render_plugin_template(template, room_name=event_vc_room.link_object.rb_room.name,
-                                          event_vc_room=event_vc_room, **kwargs)
+        if event_vc_room.vc_room.type != 'vidyo' or not has_access(event_vc_room):
+            return
+
+        return render_plugin_template(template, room_name=event_vc_room.link_object.rb_room.name,
+                                      event_vc_room=event_vc_room, **kwargs)
