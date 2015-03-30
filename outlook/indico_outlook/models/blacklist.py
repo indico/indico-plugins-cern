@@ -23,7 +23,7 @@ class OutlookBlacklistUser(db.Model):
 
     @user.setter
     def user(self, user):
-        self.user_id = int(user.getId())
+        self.user_id = int(user.id)
 
     @return_ascii
     def __repr__(self):

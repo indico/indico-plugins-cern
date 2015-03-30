@@ -5,7 +5,7 @@ from operator import itemgetter
 
 from dateutil import rrule
 from flask import g
-from flask_pluginengine import with_plugin_context, render_plugin_template
+from flask_pluginengine import with_plugin_context
 from wtforms.fields.core import SelectField, BooleanField, FloatField
 from wtforms.fields.html5 import URLField, IntegerField
 from wtforms.fields.simple import StringField
@@ -16,11 +16,12 @@ from indico.core.db import DBMgr, db
 from indico.core.db.sqlalchemy.util.session import update_session_options
 from indico.core.plugins import IndicoPlugin
 from indico.modules.scheduler import Client
+from indico.modules.users import ExtraUserPreferences
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import IndicoPasswordField
+from indico.web.forms.widgets import SwitchWidget
 
 from indico_outlook import _
-from indico_outlook.blueprint import blueprint
 from indico_outlook.calendar import update_calendar, OutlookTask
 from indico_outlook.models.blacklist import OutlookBlacklistUser
 from indico_outlook.models.queue import OutlookQueueEntry, OutlookAction
@@ -53,6 +54,23 @@ class SettingsForm(IndicoForm):
     timeout = FloatField(_('Request timeout'), [NumberRange(min=0.25)], description=_("Request timeout in seconds"))
 
 
+class OutlookUserPreferences(ExtraUserPreferences):
+    fields = {
+        'outlook_active': BooleanField(_('Sync with Outlook'), widget=SwitchWidget(),
+                                       description=_('Add Indico events in which I participate to my Outlook calendar'))
+    }
+
+    def load(self):
+        return {'outlook_active': not OutlookBlacklistUser.find_first(user_id=self.user.id)}
+
+    def save(self, data):
+        blacklist = OutlookBlacklistUser.find_first(user_id=self.user.id)
+        if blacklist and data['outlook_active']:
+            db.session.delete(blacklist)
+        elif not blacklist and not data['outlook_active']:
+            db.session.add(OutlookBlacklistUser(user=self.user))
+
+
 class OutlookPlugin(IndicoPlugin):
     """Outlook Integration
 
@@ -71,16 +89,13 @@ class OutlookPlugin(IndicoPlugin):
 
     def init(self):
         super(OutlookPlugin, self).init()
-        self.connect(signals.user_preferences, self.extend_user_preferences)
+        self.connect(signals.users.preferences, self.extend_user_preferences)
         self.connect(signals.event.registrant_changed, self.event_participation_changed)
         self.connect(signals.event.participant_changed, self.event_participation_changed)
         self.connect(signals.event.data_changed, self.event_data_changed)
         self.connect(signals.event.deleted, self.event_deleted)
         self.connect(signals.after_process, self._apply_changes)
         self.connect(signals.before_retry, self._clear_changes)
-
-    def get_blueprints(self):
-        return blueprint
 
     def add_cli_command(self, manager):
         @manager.option('--create-task', dest='create_task', metavar='N',
@@ -105,9 +120,7 @@ class OutlookPlugin(IndicoPlugin):
                     update_calendar()
 
     def extend_user_preferences(self, user, **kwargs):
-        active = not OutlookBlacklistUser.find_first(user_id=int(user.id))
-        content = render_plugin_template('user_prefs.html', user=user, active=active)
-        return _('Sync with my Outlook calendar'), content
+        return OutlookUserPreferences
 
     def event_participation_changed(self, event, user, action, **kwargs):
         if user:
