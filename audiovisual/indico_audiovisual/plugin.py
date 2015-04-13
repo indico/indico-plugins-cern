@@ -5,7 +5,7 @@ from flask_pluginengine import render_plugin_template, url_for_plugin
 from sqlalchemy.orm.attributes import flag_modified
 from wtforms.fields.core import BooleanField
 from wtforms.fields.html5 import URLField
-from wtforms.validators import DataRequired
+from wtforms.validators import DataRequired, ValidationError
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
@@ -20,7 +20,7 @@ from indico.web.menu import HeaderMenuEntry
 from MaKaC.user import AvatarHolder
 
 from indico_audiovisual import _
-from indico_audiovisual.api import AVExportHook
+from indico_audiovisual.api import AVExportHook, RecordingLinkAPI
 from indico_audiovisual.blueprint import blueprint
 from indico_audiovisual.definition import AVRequest, SpeakerReleaseAgreement
 from indico_audiovisual.notifications import notify_relocated_request, notify_rescheduled_request
@@ -55,6 +55,13 @@ class PluginSettingsForm(IndicoForm):
                                                 "signed."))
     agreement_paper_url = URLField(_('Agreement Paper URL'),
                                    description=_("The URL to the agreement that can be printed and signed offline."))
+    recording_cds_url = URLField(_('CDS URL'),
+                                 description=_("The URL used when creating recording links. Must contain the {cds_id} "
+                                               "placeholder."))
+
+    def validate_recording_cds_url(self, field):
+        if field.data and '{cds_id}' not in field.data:
+            raise ValidationError('{cds_id} placeholder is missing')
 
 
 class AVRequestsPlugin(IndicoPlugin):
@@ -73,7 +80,8 @@ class AVRequestsPlugin(IndicoPlugin):
                         'webcast_url': '',
                         'allow_subcontributions': False,
                         'agreement_ping_url': None,
-                        'agreement_paper_url': None}
+                        'agreement_paper_url': None,
+                        'recording_cds_url': 'https://cds.cern.ch/record/{cds_id}'}
     strict_settings = True
 
     def init(self):
@@ -94,6 +102,7 @@ class AVRequestsPlugin(IndicoPlugin):
         self.template_hook('event-header', self._inject_event_header)
         self.template_hook('conference-header-subtitle', self._inject_conference_header_subtitle)
         HTTPAPIHook.register(AVExportHook)
+        HTTPAPIHook.register(RecordingLinkAPI)
 
     def get_blueprints(self):
         yield blueprint

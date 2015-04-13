@@ -1,4 +1,6 @@
 from __future__ import unicode_literals
+
+import re
 from datetime import timedelta
 
 import icalendar
@@ -8,12 +10,100 @@ from indico.modules.events.requests.models.requests import RequestState
 from indico.util.string import to_unicode
 from indico.web.flask.util import url_for
 from indico.web.http_api import HTTPAPIHook
+from indico.web.http_api.responses import HTTPAPIError
 from indico.web.http_api.util import get_query_parameter
-from MaKaC.conference import Conference, Contribution, SubContribution
+from MaKaC.conference import Conference, Contribution, SubContribution, ConferenceHolder, Link, Material
 
 from indico_audiovisual import SERVICES, SHORT_SERVICES
 from indico_audiovisual.definition import AVRequest
 from indico_audiovisual.util import find_requests
+
+
+def parse_indico_id(indico_id):
+    event_match = re.match('(\w*\d+)$', indico_id)
+    session_match = re.match('(\w*\d+)s(\d+|s\d+)$', indico_id)
+    contrib_match = re.match('(\w*\d+)c(\d+|s\d+t\d+)$', indico_id)
+    subcontrib_match = re.match('(\w*\d+)c(\d+|s\d+t\d+)sc(\d+)$', indico_id)
+
+    if subcontrib_match:
+        event = ConferenceHolder().getById(subcontrib_match.group(1), True)
+        if not event:
+            return None
+        contrib = event.getContributionById(subcontrib_match.group(2))
+        if not contrib:
+            return None
+        return contrib.getSubContributionById(subcontrib_match.group(3))
+    elif session_match:
+        event = ConferenceHolder().getById(session_match.group(1), True)
+        if not event:
+            return None
+        return event.getSessionById(session_match.group(2))
+    elif contrib_match:
+        event = ConferenceHolder().getById(contrib_match.group(1), True)
+        if not event:
+            return None
+        return event.getContributionById(contrib_match.group(2))
+    elif event_match:
+        return ConferenceHolder().getById(event_match.group(1), True)
+    else:
+        return None
+
+
+def cds_link_exists(obj):
+    materials = obj.getAllMaterialList() or []
+    for material in materials:
+        if isinstance(material.getMainResource(), Link) and to_unicode(material.getTitle()) == 'Video in CDS':
+            return True
+    return False
+
+
+def create_link(indico_id, cds_id):
+    from indico_audiovisual.plugin import AVRequestsPlugin
+
+    obj = parse_indico_id(indico_id)
+    if obj is None:
+        return False
+    elif cds_link_exists(obj):
+        return True
+
+    url = AVRequestsPlugin.settings.get('recording_cds_url')
+    if not url:
+        return False
+
+    material = Material()
+    material.setTitle(b'Video in CDS')
+    video_link = Link()
+    video_link.setOwner(material)
+    video_link.setName(b'Video in CDS')
+    video_link.setURL(url.format(cds_id=cds_id))
+    material.addResource(video_link)
+    material.setMainResource(video_link)
+    obj.addMaterial(material)
+    return True
+
+
+class RecordingLinkAPI(HTTPAPIHook):
+    PREFIX = 'api'
+    TYPES = ('create_cds_link',)
+    RE = ''
+    GUEST_ALLOWED = False
+    VALID_FORMATS = ('json',)
+    COMMIT = True
+    HTTP_POST = True
+
+    def _hasAccess(self, aw):
+        return AVRequest.can_be_managed(aw.getUser())
+
+    def _getParams(self):
+        super(RecordingLinkAPI, self)._getParams()
+        self._indico_id = get_query_parameter(self._queryParams, ['iid', 'indicoID'])
+        self._cds_id = get_query_parameter(self._queryParams, ['cid', 'cdsID'])
+
+    def api_create_cds_link(self, aw):
+        if not self._indico_id or not self._cds_id:
+            raise HTTPAPIError('A required argument is missing.', 400)
+        success = create_link(self._indico_id, self._cds_id)
+        return {'success': success}
 
 
 class AVExportHook(HTTPAPIHook):
