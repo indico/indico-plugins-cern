@@ -36,7 +36,7 @@ class RHRequestList(RHProtected):
 
     def _checkProtection(self):
         RHProtected._checkProtection(self)
-        if self._doProcess and not is_av_manager(session.user):
+        if self._doProcess and not is_av_manager(session.avatar):
             raise AccessError
 
     def _process(self):

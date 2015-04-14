@@ -62,7 +62,7 @@ class AVRequestForm(RequestFormBase):
             choices = self.contributions.choices = []
             disabled_contribs = self.contributions._disabled_contributions = []
             contributions = self.contributions._contributions = {}
-            is_manager = is_av_manager(session.user)
+            is_manager = is_av_manager(session.avatar)
             selected = set(self.request.data.get('contributions', [])) if self.request else set()
             for contrib, capable, custom_room in get_contributions(self.event):
                 is_subcontrib = isinstance(contrib, SubContribution)

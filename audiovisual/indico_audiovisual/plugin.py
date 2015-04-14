@@ -187,7 +187,7 @@ class AVRequestsPlugin(IndicoPlugin):
         return render_plugin_template('conference_header.html', url=url)
 
     def _extend_indico_menu(self, sender, **kwargs):
-        if not session.user or not is_av_manager(session.user):
+        if not session.avatar or not is_av_manager(session.avatar):
             return
         return HeaderMenuEntry(url_for_plugin('audiovisual.request_list'), _('Webcast/Recording'), _('Services'))
 

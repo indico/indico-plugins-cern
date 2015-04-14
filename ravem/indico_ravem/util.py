@@ -105,7 +105,7 @@ def has_access(event_vc_room):
     room = link_object.rb_room
     vc_room = event_vc_room.vc_room
     event = event_vc_room.event
-    current_user = session.user
+    current_user = session.avatar
 
     # No physical room or room is not Vidyo capable
     if not room or not room.has_equipment('Vidyo'):
