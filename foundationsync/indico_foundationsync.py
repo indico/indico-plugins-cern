@@ -22,8 +22,8 @@ from indico.modules.rb.models.equipment import EquipmentType
 from indico.modules.rb.models.rooms import Room
 from indico.modules.scheduler import Client
 from indico.modules.scheduler.tasks.periodic import PeriodicUniqueTask
+from indico.modules.users.util import get_user_by_email
 from indico.web.forms.base import IndicoForm
-from MaKaC.user import AvatarHolder
 
 try:
     import cx_Oracle
@@ -82,12 +82,11 @@ class FoundationSync(object):
         if not data['email']:
             raise ValueError('Error in Foundation - No value for RESPONSIBLE_EMAIL')
 
-        avatars = AvatarHolder().match({'email': data['email']}, exact=True)
-        if len(avatars) >= 1:
-            data['owner_id'] = avatars[0].id
-        else:
-            raise ValueError('Bad RESPONSIBLE_EMAIL in Foundation - No avatar found with email {}'.format(data['email']))
+        user = get_user_by_email(data['email'], create_pending=True)
+        if not user:
+            raise ValueError('Bad RESPONSIBLE_EMAIL in Foundation - No user found with email {}'.format(data['email']))
 
+        data['owner'] = user
         data['name'] = (raw_data.get('FRIENDLY_NAME') or '').strip()
         data['capacity'] = int(raw_data['CAPACITY']) if raw_data['CAPACITY'] else None
         data['surface_area'] = int(raw_data['SURFACE']) if raw_data['SURFACE'] else None
