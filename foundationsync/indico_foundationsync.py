@@ -5,6 +5,7 @@ Synchronizes holidays, rooms and equipment with the CERN Foundation Database.
 import sys
 from collections import Counter, defaultdict
 from contextlib import contextmanager
+from logging import StreamHandler
 
 from dateutil import rrule
 from flask_pluginengine import with_plugin_context
@@ -376,4 +377,6 @@ class FoundationSyncPlugin(IndicoPlugin):
             if cx_Oracle is None:
                 print 'cx_Oracle is not installed'
                 sys.exit(1)
+            # Log to stdout
+            self.logger.addHandler(StreamHandler())
             FoundationSync(db_name, self.logger).run_all(room_name)
