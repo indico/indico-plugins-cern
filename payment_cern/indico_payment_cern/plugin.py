@@ -15,7 +15,7 @@ from indico.modules.payment.util import get_registrant_params
 from indico.util.string import remove_accents, remove_non_alpha
 from indico.util.user import retrieve_principals, principals_merge_users
 from indico.web.flask.util import url_for
-from indico.web.forms.fields import PrincipalField, MultipleItemsField, OverrideMultipleItemsField
+from indico.web.forms.fields import PrincipalListField, MultipleItemsField, OverrideMultipleItemsField
 
 from indico_payment_cern import _
 from indico_payment_cern.blueprint import blueprint
@@ -29,9 +29,9 @@ PAYMENT_METHODS_FIELDS = (('name', _("Name")),
 
 
 class PluginSettingsForm(PaymentPluginSettingsFormBase):
-    authorized_users = PrincipalField(_('Authorized users'), groups=True,
-                                      description=_('List of users/groups who are authorized to configure the CERN '
-                                                    'Payment module for any event.'))
+    authorized_users = PrincipalListField(_('Authorized users'), groups=True,
+                                          description=_('List of users/groups who are authorized to configure the CERN '
+                                                        'Payment module for any event.'))
     fp_email_address = EmailField(_('FP email adress'), [DataRequired()], description=_('Email address to contact FP.'))
     fp_department_name = StringField(_('FP department name'), [DataRequired()])
     payment_url = URLField(_('Payment URL'), [DataRequired()], description=_('URL used for the epayment'))
