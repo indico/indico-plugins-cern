@@ -88,10 +88,10 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         return blueprint
 
     def can_be_modified(self, user, event):
-        if user.isAdmin():
+        if user.is_admin:
             return True
-        authorized_users = retrieve_principals(self.settings.get('authorized_users'))
-        return any(principal.containsUser(user) for principal in authorized_users)
+        authorized_users = retrieve_principals(self.settings.get('authorized_users'), legacy=False)
+        return any(user in principal for principal in authorized_users)
 
     def _get_cannot_modify_message(self, plugin, event, **kwargs):
         if self != plugin:
