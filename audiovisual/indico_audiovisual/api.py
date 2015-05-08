@@ -92,7 +92,7 @@ class RecordingLinkAPI(HTTPAPIHook):
     HTTP_POST = True
 
     def _hasAccess(self, aw):
-        return AVRequest.can_be_managed(aw.getUser())
+        return AVRequest.can_be_managed(aw.getUser().user)
 
     def _getParams(self):
         super(RecordingLinkAPI, self)._getParams()
@@ -120,7 +120,7 @@ class AVExportHook(HTTPAPIHook):
         self._alarm = get_query_parameter(self._queryParams, ['alarms'], None, True)
 
     def _hasAccess(self, aw):
-        return AVRequest.can_be_managed(aw.getUser())
+        return AVRequest.can_be_managed(aw.getUser().user)
 
     @property
     def serializer_args(self):

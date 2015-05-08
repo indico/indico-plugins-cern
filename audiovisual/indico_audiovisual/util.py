@@ -23,10 +23,10 @@ from indico_audiovisual import SERVICES
 def is_av_manager(user):
     """Checks if a user is an AV manager"""
     from indico_audiovisual.plugin import AVRequestsPlugin
-    if user.isAdmin():
+    if user.is_admin:
         return True
-    principals = retrieve_principals(AVRequestsPlugin.settings.get('managers'))
-    return any(principal.containsUser(user) for principal in principals)
+    principals = retrieve_principals(AVRequestsPlugin.settings.get('managers'), legacy=False)
+    return any(user in principal for principal in principals)
 
 
 @memoize_request

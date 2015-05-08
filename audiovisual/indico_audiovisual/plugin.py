@@ -12,12 +12,12 @@ from indico.core.plugins import IndicoPlugin
 from indico.core.config import Config
 from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.modules.events.requests.views import WPRequestsEventManagement
+from indico.modules.users import User
 from indico.util.user import principals_merge_users
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import PrincipalField, MultipleItemsField, EmailListField
 from indico.web.http_api import HTTPAPIHook
 from indico.web.menu import HeaderMenuEntry
-from MaKaC.user import AvatarHolder
 
 from indico_audiovisual import _
 from indico_audiovisual.api import AVExportHook, RecordingLinkAPI
@@ -92,7 +92,7 @@ class AVRequestsPlugin(IndicoPlugin):
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
         self.connect(signals.agreements.get_definitions, self._get_agreement_definitions)
         self.connect(signals.event.data_changed, self._data_changed)
-        self.connect(signals.event.core.has_read_access, self._has_read_access_event)
+        self.connect(signals.event.has_read_access, self._has_read_access_event)
         self.connect(signals.event.contribution_data_changed, self._data_changed)
         self.connect(signals.event.subcontribution_data_changed, self._data_changed)
         self.connect(signals.after_process, self._apply_changes)
@@ -146,7 +146,7 @@ class AVRequestsPlugin(IndicoPlugin):
             if not compare_data_identifiers(identifiers['locations'], req.data['identifiers']['locations']):
                 if (not count_capable_contributions(req.event)[0] and
                         req.state in {RequestState.accepted, RequestState.pending}):
-                    janitor = AvatarHolder().getById(Config.getInstance().getJanitorUserId())
+                    janitor = User.get(int(Config.getInstance().getJanitorUserId()))
                     data = dict(req.data, comment=render_plugin_template('auto_reject_no_capable_contribs.txt'))
                     req.definition.reject(req, data, janitor)
                 elif req.state == RequestState.accepted:
@@ -187,7 +187,7 @@ class AVRequestsPlugin(IndicoPlugin):
         return render_plugin_template('conference_header.html', url=url)
 
     def _extend_indico_menu(self, sender, **kwargs):
-        if not session.avatar or not is_av_manager(session.avatar):
+        if not session.user or not is_av_manager(session.user):
             return
         return HeaderMenuEntry(url_for_plugin('audiovisual.request_list'), _('Webcast/Recording'), _('Services'))
 
