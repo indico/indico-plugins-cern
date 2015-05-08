@@ -240,7 +240,7 @@ def test_unlinked_event_vc_room_has_no_access():
 @pytest.mark.usefixtures('db')
 def test_unlinked_room_has_no_access(mocker):
     session = mocker.patch('indico_ravem.util.session')
-    session.avatar = 'Guinea Pig'
+    session.user = 'Guinea Pig'
 
     event_vc_room = MagicMock()
     event_vc_room.link_object.rb_room = None
@@ -251,7 +251,7 @@ def test_unlinked_room_has_no_access(mocker):
 @pytest.mark.usefixtures('db')
 def test_room_not_vidyo_capable_has_no_access(mocker):
     session = mocker.patch('indico_ravem.util.session')
-    session.avatar = 'Guinea Pig'
+    session.user = 'Guinea Pig'
 
     event_vc_room = MagicMock()
     event_vc_room.link_object.rb_room.has_equipment = MagicMock(return_value=False)
@@ -264,31 +264,29 @@ def test_room_not_vidyo_capable_has_no_access(mocker):
 @pytest.mark.usefixtures('db')
 def test_check_if_current_user_is_room_owner(mocker):
     session = mocker.patch('indico_ravem.util.session')
-    session.avatar = 'Guinea Pig'
+    session.user = 'Guinea Pig'
 
     mocker.patch('indico_ravem.util.request')
-
     retrieve_principal = mocker.patch('indico_ravem.util.retrieve_principal')
-    retrieve_principal.side_effect = lambda x: x
+    retrieve_principal.side_effect = lambda x, **kw: x
 
     event_vc_room = MagicMock()
     event_vc_room.link_object.rb_room.has_equipment = MagicMock(return_value=True)
-    event_vc_room.vc_room.data.get.return_value = session.avatar
+    event_vc_room.vc_room.data.get.return_value = session.user
     event_vc_room.event.canModify.return_value = False
 
     assert has_access(event_vc_room)
 
     event_vc_room.vc_room.data.get.assert_called_once_with('owner')
-    retrieve_principal.assert_called_once_with(event_vc_room.vc_room.data.get.return_value)
+    retrieve_principal.assert_called_once_with(event_vc_room.vc_room.data.get.return_value, allow_groups=False,
+                                               legacy=False)
 
 
 @pytest.mark.usefixtures('db')
 def test_check_if_current_user_can_modify(mocker):
     session = mocker.patch('indico_ravem.util.session')
-    session.avatar = 'Guinea Pig'
-
+    session.user = 'Guinea Pig'
     mocker.patch('indico_ravem.util.request')
-
     mocker.patch('indico_ravem.util.retrieve_principal')
 
     event_vc_room = MagicMock()
@@ -297,7 +295,7 @@ def test_check_if_current_user_can_modify(mocker):
 
     assert has_access(event_vc_room)
 
-    event_vc_room.event.canModify.assert_called_once_with(session.avatar)
+    event_vc_room.event.canModify.assert_called_once_with(session.user)
 
 
 @pytest.mark.usefixtures('db')

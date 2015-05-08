@@ -105,16 +105,16 @@ def has_access(event_vc_room):
     room = link_object.rb_room
     vc_room = event_vc_room.vc_room
     event = event_vc_room.event
-    current_user = session.avatar
+    current_user = session.user
 
     # No physical room or room is not Vidyo capable
     if not room or not room.has_equipment('Vidyo'):
         return False
 
     return any([
-        current_user == retrieve_principal(vc_room.data.get('owner')),
+        current_user == retrieve_principal(vc_room.data.get('owner'), allow_groups=False, legacy=False),
         event.canModify(current_user),
-        request.remote_addr == room.get_attribute_value('ip'),
+        request.remote_addr == room.get_attribute_value('ip')
     ])
 
 
