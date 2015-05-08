@@ -15,7 +15,6 @@ from indico.modules.scheduler.tasks.periodic import PeriodicUniqueTask
 from indico.util.date_time import format_datetime
 from indico.util.string import strip_control_chars, to_unicode
 
-from indico_outlook.models.blacklist import OutlookBlacklistUser
 from indico_outlook.models.queue import OutlookQueueEntry, OutlookAction
 from indico_outlook.util import check_config, latest_actions_only
 
@@ -67,19 +66,19 @@ def _update_calendar_entry(logger, entry, settings):
     :param entry: a :class:`OutlookQueueEntry`
     :param settings: the plugin settings
     """
+    from indico_outlook.plugin import OutlookPlugin
+
     logger.info('Processing {}'.format(entry))
     url = posixpath.join(settings['service_url'], operation_map[entry.action])
     user = entry.user
     if user is None:
         logger.debug('Ignoring {} for deleted user {}'.format(entry.action.name, entry.user_id))
         return True
-    email = to_unicode(user.email)
-    unique_id = '{}{}_{}'.format(settings['id_prefix'], user.id, entry.event_id)
-
-    if OutlookBlacklistUser.find_first(user_id=int(user.id)):
-        logger.debug('User {} has disabled calendar entries'.format(user.id))
+    elif not OutlookPlugin.user_settings.get(user, 'enabled'):
+        logger.debug('User {} has disabled calendar entries'.format(user))
         return True
 
+    unique_id = '{}{}_{}'.format(settings['id_prefix'], user.id, entry.event_id)
     if entry.action in {OutlookAction.add, OutlookAction.update}:
         event = entry.event
         if event is None:
@@ -88,7 +87,7 @@ def _update_calendar_entry(logger, entry, settings):
         location = strip_control_chars(event.getRoom().getName()) if event.getRoom() else ''
         description = to_unicode(strip_control_chars(event.description))
         event_url = to_unicode(event.getURL())
-        data = {'userEmail': email,
+        data = {'userEmail': user.email,
                 'uniqueID': unique_id,
                 'subject': to_unicode(strip_control_chars(event.title)),
                 'location': location,
@@ -99,7 +98,7 @@ def _update_calendar_entry(logger, entry, settings):
                 'isThereReminder': settings['reminder'],
                 'reminderTimeInMinutes': settings['reminder_minutes']}
     elif entry.action == OutlookAction.remove:
-        data = {'userEmail': email,
+        data = {'userEmail': user.email,
                 'uniqueID': unique_id}
     else:
         raise ValueError('Unexpected action: {}'.format(entry.action))

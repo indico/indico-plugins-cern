@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 from indico.core.db.sqlalchemy import db, PyIntEnum
 from indico.util.string import return_ascii
 from indico.util.struct.enum import IndicoEnum
-from MaKaC.user import AvatarHolder
 from MaKaC.conference import ConferenceHolder
 
 
@@ -27,6 +26,8 @@ class OutlookQueueEntry(db.Model):
     #: ID of the user
     user_id = db.Column(
         db.Integer,
+        db.ForeignKey('users.users.id'),
+        index=True,
         nullable=False
     )
     #: ID of the event
@@ -41,13 +42,15 @@ class OutlookQueueEntry(db.Model):
         nullable=False
     )
 
-    @property
-    def user(self):
-        return AvatarHolder().getById(str(self.user_id))
-
-    @user.setter
-    def user(self, user):
-        self.user_id = int(user.getId())
+    #: The user associated with the queue entry
+    user = db.relationship(
+        'User',
+        lazy=False,
+        backref=db.backref(
+            'outlook_queue',
+            lazy='dynamic'
+        )
+    )
 
     @property
     def event(self):
@@ -66,17 +69,14 @@ class OutlookQueueEntry(db.Model):
     def record(cls, event, user, action):
         """Records a new calendar action
 
-        :param event: the event (a `Conference` instance)
-        :param user: the user (an `Avatar` instance)
-        :param action: the action (an `OutlookAction`)
+        :param event: the event (a :class:`.Conference` instance)
+        :param user: the user (a :class:`.User` instance)
+        :param action: the action (an :class:`OutlookAction` member)
         """
         try:
             event_id = int(event.id)
-            user_id = int(user.id)
         except ValueError:
             return
-        if AvatarHolder().getById(user.id) is None:
-            return
         # It would be nice to delete matching records first, but this sometimes results in very weird deadlocks
-        db.session.add(cls(event_id=event_id, user_id=user_id, action=action))
+        db.session.add(cls(event_id=event_id, user_id=user.id, action=action))
         db.session.flush()

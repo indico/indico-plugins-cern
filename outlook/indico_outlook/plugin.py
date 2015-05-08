@@ -17,13 +17,13 @@ from indico.core.db.sqlalchemy.util.session import update_session_options
 from indico.core.plugins import IndicoPlugin
 from indico.modules.scheduler import Client
 from indico.modules.users import ExtraUserPreferences
+from indico.util.user import unify_user_args
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import IndicoPasswordField
 from indico.web.forms.widgets import SwitchWidget
 
 from indico_outlook import _
 from indico_outlook.calendar import update_calendar, OutlookTask
-from indico_outlook.models.blacklist import OutlookBlacklistUser
 from indico_outlook.models.queue import OutlookQueueEntry, OutlookAction
 from indico_outlook.util import get_participating_users, latest_actions_only
 
@@ -61,14 +61,10 @@ class OutlookUserPreferences(ExtraUserPreferences):
     }
 
     def load(self):
-        return {'outlook_active': not OutlookBlacklistUser.find_first(user_id=self.user.id)}
+        return {'outlook_active': OutlookPlugin.user_settings.get(self.user, 'enabled')}
 
     def save(self, data):
-        blacklist = OutlookBlacklistUser.find_first(user_id=self.user.id)
-        if blacklist and data['outlook_active']:
-            db.session.delete(blacklist)
-        elif not blacklist and not data['outlook_active']:
-            db.session.add(OutlookBlacklistUser(user=self.user))
+        OutlookPlugin.user_settings.set(self.user, 'enabled', data['outlook_active'])
 
 
 class OutlookPlugin(IndicoPlugin):
@@ -78,13 +74,20 @@ class OutlookPlugin(IndicoPlugin):
     """
     configurable = True
     settings_form = SettingsForm
+    strict_settings = True
     default_settings = {
         'debug': False,
+        'service_url': None,
+        'username': None,
+        'password': None,
         'status': 'free',
         'reminder': True,
         'reminder_minutes': 15,
-        'prefix': 'indico_',
+        'id_prefix': 'indico_',
         'timeout': 3
+    }
+    default_user_settings = {
+        'enabled': True
     }
 
     def init(self):
@@ -96,6 +99,7 @@ class OutlookPlugin(IndicoPlugin):
         self.connect(signals.event.deleted, self.event_deleted)
         self.connect(signals.after_process, self._apply_changes)
         self.connect(signals.before_retry, self._clear_changes)
+        self.connect(signals.merge_users, self._merge_users)
 
     def add_cli_command(self, manager):
         @manager.option('--create-task', dest='create_task', metavar='N',
@@ -122,6 +126,7 @@ class OutlookPlugin(IndicoPlugin):
     def extend_user_preferences(self, user, **kwargs):
         return OutlookUserPreferences
 
+    @unify_user_args
     def event_participation_changed(self, event, user, action, **kwargs):
         if user:
             if action == 'added':
@@ -158,3 +163,8 @@ class OutlookPlugin(IndicoPlugin):
         if 'outlook_changes' not in g:
             return
         del g.outlook_changes
+
+    def _merge_users(self, user, merged, **kwargs):
+        target = user.user
+        source = merged.user
+        OutlookQueueEntry.find(user_id=source.id).update({OutlookQueueEntry.user_id: target.id})

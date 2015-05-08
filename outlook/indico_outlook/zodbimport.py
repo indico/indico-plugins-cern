@@ -5,7 +5,6 @@ from indico.util.console import cformat
 from indico.util.struct.iterables import committing_iterator
 from indico_zodbimport import Importer, convert_to_unicode
 
-from indico_outlook.models.blacklist import OutlookBlacklistUser
 from indico_outlook.models.queue import OutlookQueueEntry, OutlookAction
 from indico_outlook.plugin import OutlookPlugin
 
@@ -17,7 +16,7 @@ class OutlookImporter(Importer):
         return self.check_plugin_schema('outlook')
 
     def has_data(self):
-        return OutlookQueueEntry.find().count() or OutlookBlacklistUser.find().count()
+        return OutlookQueueEntry.find().count()
 
     def migrate(self):
         # noinspection PyAttributeOutsideInit
@@ -66,4 +65,4 @@ class OutlookImporter(Importer):
     def migrate_blacklist(self):
         print cformat('%{white!}migrating blacklist')
         for uid in committing_iterator(self.outlook_root.get('avatar_plugin_disable', {}).iterkeys()):
-            db.session.add(OutlookBlacklistUser(user_id=int(uid)))
+            OutlookPlugin.user_settings.set(int(uid), 'enabled', False)

@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
 
-from indico_outlook.models.blacklist import OutlookBlacklistUser
+from sqlalchemy.orm import joinedload
+
+from indico.modules.users import UserSetting
 
 
 def check_config():
@@ -16,18 +18,18 @@ def get_participating_users(event):
     users = set()
     for participant in event.getParticipation().getParticipantList():
         avatar = participant.getAvatar()
-        if avatar and participant.getStatus() in {'added', 'accepted'}:
-            users.add(avatar)
+        if avatar and participant.getStatus() in {'added', 'accepted'} and avatar.user:
+            users.add(avatar.user)
     for registrant in event.getRegistrantsList():
         avatar = registrant.getAvatar()
-        if avatar:
-            users.add(avatar)
+        if avatar and avatar.user:
+            users.add(avatar.user)
     if users:
         # Remove users who disabled calendar updates
-        blacklist = OutlookBlacklistUser.find_all(OutlookBlacklistUser.user_id.in_(
-            int(u.id) for u in users if str(u.id).isdigit()))
-        blacklist = {x.user_id for x in blacklist}
-        users = {u for u in users if (not str(u.id).isdigit() or int(u.id) not in blacklist)}
+        query = (UserSetting.query
+                 .options(joinedload(UserSetting.user))
+                 .filter_by(module='plugin_outlook', name='enabled'))
+        users -= {x.user for x in query if not x.value}
     return users
 
 
