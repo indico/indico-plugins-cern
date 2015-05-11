@@ -99,7 +99,7 @@ class OutlookPlugin(IndicoPlugin):
         self.connect(signals.event.deleted, self.event_deleted)
         self.connect(signals.after_process, self._apply_changes)
         self.connect(signals.before_retry, self._clear_changes)
-        self.connect(signals.merge_users, self._merge_users)
+        self.connect(signals.users.merged, self._merge_users)
 
     def add_cli_command(self, manager):
         @manager.option('--create-task', dest='create_task', metavar='N',
@@ -164,7 +164,5 @@ class OutlookPlugin(IndicoPlugin):
             return
         del g.outlook_changes
 
-    def _merge_users(self, user, merged, **kwargs):
-        target = user.user
-        source = merged.user
+    def _merge_users(self, target, source, **kwargs):
         OutlookQueueEntry.find(user_id=source.id).update({OutlookQueueEntry.user_id: target.id})

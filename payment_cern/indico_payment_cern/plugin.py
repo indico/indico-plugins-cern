@@ -78,7 +78,7 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     def init(self):
         super(CERNPaymentPlugin, self).init()
         self.template_hook('event-manage-payment-plugin-cannot-modify', self._get_cannot_modify_message)
-        self.connect(signals.merge_users, self._merge_users)
+        self.connect(signals.users.merged, self._merge_users)
 
     @property
     def logo_url(self):
@@ -164,8 +164,6 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         form_data['SHASIGN'] = create_hash(seed, form_data)
         return form_data
 
-    def _merge_users(self, user, merged, **kwargs):
-        new_id = int(user.id)
-        old_id = int(merged.id)
+    def _merge_users(self, target, source, **kwargs):
         self.settings.set('authorized_users',
-                          principals_merge_users(self.settings.get('authorized_users'), new_id, old_id))
+                          principals_merge_users(self.settings.get('authorized_users'), target.id, source.id))

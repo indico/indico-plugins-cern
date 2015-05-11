@@ -98,7 +98,7 @@ class AVRequestsPlugin(IndicoPlugin):
         self.connect(signals.after_process, self._apply_changes)
         self.connect(signals.before_retry, self._clear_changes)
         self.connect(signals.indico_menu, self._extend_indico_menu)
-        self.connect(signals.merge_users, self._merge_users)
+        self.connect(signals.users.merged, self._merge_users)
         self.template_hook('event-header', self._inject_event_header)
         self.template_hook('conference-header-subtitle', self._inject_conference_header_subtitle)
         HTTPAPIHook.register(AVExportHook)
@@ -191,7 +191,5 @@ class AVRequestsPlugin(IndicoPlugin):
             return
         return HeaderMenuEntry(url_for_plugin('audiovisual.request_list'), _('Webcast/Recording'), _('Services'))
 
-    def _merge_users(self, user, merged, **kwargs):
-        new_id = int(user.id)
-        old_id = int(merged.id)
-        self.settings.set('managers', principals_merge_users(self.settings.get('managers'), new_id, old_id))
+    def _merge_users(self, target, source, **kwargs):
+        self.settings.set('managers', principals_merge_users(self.settings.get('managers'), target.id, source.id))
