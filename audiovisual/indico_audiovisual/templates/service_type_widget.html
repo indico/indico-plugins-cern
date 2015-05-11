@@ -1,17 +1,21 @@
-{% for subfield in field %}
-    <div class="i-checkbox">
-        {{ subfield() }}
-        {{ subfield.label }}
-        <i class="info-helper" title="
-            {% if subfield.data == 'webcast' -%}
-                {%- trans -%}
-                    When webcasting your event, we will provide a live stream of the event. It will not be available after the event.
-                {%- endtrans -%}
-            {%- elif subfield.data == 'recording' -%}
-                {%- trans -%}
-                    When recording your event we will archive the talks so people can view them again later, i.e. after the event has finished.
-                {%- endtrans -%}
-            {%- endif -%}
-        "></i>
-    </div>
-{% endfor %}
+{% extends 'forms/base_widget.html' %}
+
+{% block html %}
+    {% for subfield in field %}
+        <div class="i-checkbox">
+            {{ subfield() }}
+            {{ subfield.label }}
+            <i class="info-helper" title="
+                {% if subfield.data == 'webcast' -%}
+                    {%- trans -%}
+                        When webcasting your event, we will provide a live stream of the event. It will not be available after the event.
+                    {%- endtrans -%}
+                {%- elif subfield.data == 'recording' -%}
+                    {%- trans -%}
+                        When recording your event we will archive the talks so people can view them again later, i.e. after the event has finished.
+                    {%- endtrans -%}
+                {%- endif -%}
+            "></i>
+        </div>
+    {% endfor %}
+{% endblock %}
