@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='indico_foundationsync',
-    version='1.0',
+    version='1.0.1',
     url='https://gitlab.cern.ch/indico/indico-plugins-cern',
     author='Indico Team',
     author_email='indico-team@cern.ch',
@@ -11,7 +11,7 @@ setup(
     zip_safe=False,
     platforms='any',
     install_requires=[
-        'indico>=1.9.1'
+        'indico>=1.9.2'
     ],
     entry_points={'indico.plugins': {'foundationsync = indico_foundationsync:FoundationSyncPlugin'}}
 )
