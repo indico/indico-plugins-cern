@@ -13,7 +13,6 @@ from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.modules.payment import PaymentPluginMixin, PaymentPluginSettingsFormBase, PaymentEventSettingsFormBase
 from indico.modules.payment.util import get_registrant_params
 from indico.util.string import remove_accents, remove_non_alpha
-from indico.util.user import retrieve_principals, principals_merge_users
 from indico.web.flask.util import url_for
 from indico.web.forms.fields import PrincipalListField, MultipleItemsField, OverrideMultipleItemsField
 
@@ -29,7 +28,7 @@ PAYMENT_METHODS_FIELDS = (('name', _("Name")),
 
 
 class PluginSettingsForm(PaymentPluginSettingsFormBase):
-    authorized_users = PrincipalListField(_('Authorized users'), groups=True,
+    authorized_users = PrincipalListField(_('Authorized users'), groups=True, serializable=False,
                                           description=_('List of users/groups who are authorized to configure the CERN '
                                                         'Payment module for any event.'))
     fp_email_address = EmailField(_('FP email adress'), [DataRequired()], description=_('Email address to contact FP.'))
@@ -69,8 +68,8 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     settings_form = PluginSettingsForm
     event_settings_form = EventSettingsForm
     default_settings = {'method_name': 'PostFinance CERN',
-                        'authorized_users': [],
                         'payment_methods': []}
+    acl_settings = {'authorized_users'}
     default_event_settings = {'apply_fees': True,
                               'custom_fees': {}}
     valid_currencies = {'EUR', 'CHF'}
@@ -90,8 +89,7 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     def can_be_modified(self, user, event):
         if user.is_admin:
             return True
-        authorized_users = retrieve_principals(self.settings.get('authorized_users'), legacy=False)
-        return any(user in principal for principal in authorized_users)
+        return self.settings.acls.contains_user('authorized_users', user)
 
     def _get_cannot_modify_message(self, plugin, event, **kwargs):
         if self != plugin:
@@ -165,5 +163,4 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         return form_data
 
     def _merge_users(self, target, source, **kwargs):
-        self.settings.set('authorized_users',
-                          principals_merge_users(self.settings.get('authorized_users'), target.id, source.id))
+        self.settings.acls.merge_users(target, source)
