@@ -13,7 +13,6 @@ from indico.modules.rb.models.rooms import Room
 from indico.modules.scheduler import Client
 from indico.modules.scheduler.tasks import HTTPTask
 from indico.util.caching import memoize_request
-from indico.util.user import retrieve_principals
 from MaKaC.conference import SubContribution
 from MaKaC.webinterface.common.contribFilters import PosterFilterField
 
@@ -25,8 +24,7 @@ def is_av_manager(user):
     from indico_audiovisual.plugin import AVRequestsPlugin
     if user.is_admin:
         return True
-    principals = retrieve_principals(AVRequestsPlugin.settings.get('managers'), legacy=False)
-    return any(user in principal for principal in principals)
+    return AVRequestsPlugin.settings.acls.contains_user('managers', user)
 
 
 @memoize_request

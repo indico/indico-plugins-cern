@@ -13,7 +13,6 @@ from indico.core.config import Config
 from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.modules.events.requests.views import WPRequestsEventManagement
 from indico.modules.users import User
-from indico.util.user import principals_merge_users
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import PrincipalListField, MultipleItemsField, EmailListField
 from indico.web.http_api import HTTPAPIHook
@@ -31,7 +30,7 @@ from indico_audiovisual.views import WPAudiovisualManagers
 
 
 class PluginSettingsForm(IndicoForm):
-    managers = PrincipalListField(_('Managers'), groups=True,
+    managers = PrincipalListField(_('Managers'), groups=True, serializable=False,
                                   description=_('List of users who can manage recording/webcast requests.'))
     notification_emails = EmailListField(_('Notification email addresses'),
                                          description=_('Notifications about recording/webcast requests are sent to '
@@ -73,8 +72,7 @@ class AVRequestsPlugin(IndicoPlugin):
 
     configurable = True
     settings_form = PluginSettingsForm
-    default_settings = {'managers': [],
-                        'webcast_audiences': [],
+    default_settings = {'webcast_audiences': [],
                         'notification_emails': [],
                         'webcast_ping_url': None,
                         'webcast_url': '',
@@ -82,6 +80,7 @@ class AVRequestsPlugin(IndicoPlugin):
                         'agreement_ping_url': None,
                         'agreement_paper_url': None,
                         'recording_cds_url': 'https://cds.cern.ch/record/{cds_id}'}
+    acl_settings = {'managers'}
     strict_settings = True
 
     def init(self):
@@ -192,4 +191,4 @@ class AVRequestsPlugin(IndicoPlugin):
         return HeaderMenuEntry(url_for_plugin('audiovisual.request_list'), _('Webcast/Recording'), _('Services'))
 
     def _merge_users(self, target, source, **kwargs):
-        self.settings.set('managers', principals_merge_users(self.settings.get('managers'), target.id, source.id))
+        self.settings.acls.merge_users(target, source)
