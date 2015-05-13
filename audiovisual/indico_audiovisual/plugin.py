@@ -15,7 +15,7 @@ from indico.modules.events.requests.views import WPRequestsEventManagement
 from indico.modules.users import User
 from indico.util.user import principals_merge_users
 from indico.web.forms.base import IndicoForm
-from indico.web.forms.fields import PrincipalField, MultipleItemsField, EmailListField
+from indico.web.forms.fields import PrincipalListField, MultipleItemsField, EmailListField
 from indico.web.http_api import HTTPAPIHook
 from indico.web.menu import HeaderMenuEntry
 
@@ -31,8 +31,8 @@ from indico_audiovisual.views import WPAudiovisualManagers
 
 
 class PluginSettingsForm(IndicoForm):
-    managers = PrincipalField(_('Managers'), groups=True,
-                              description=_('List of users who can manage recording/webcast requests.'))
+    managers = PrincipalListField(_('Managers'), groups=True,
+                                  description=_('List of users who can manage recording/webcast requests.'))
     notification_emails = EmailListField(_('Notification email addresses'),
                                          description=_('Notifications about recording/webcast requests are sent to '
                                                        'these email addresses (one per line).'))
