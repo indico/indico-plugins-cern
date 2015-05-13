@@ -28,12 +28,6 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
     :raises: HTTPError if the request returns an HTTP Error (400 or 500)
     :raises: RavemAPIException if RAVEM returns an error message
     """
-    if method.upper() == 'GET':
-        request = requests.get
-    elif method.upper() == 'POST':
-        request = requests.post
-    else:
-        raise ValueError('Unsupported HTTP method {method}, must be GET or POST'.format(method=method))
 
     root_endpoint = RavemPlugin.settings.get('api_endpoint')
     username = RavemPlugin.settings.get('username')
@@ -42,8 +36,8 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
     timeout = RavemPlugin.settings.get('timeout') or None
 
     try:
-        response = request(urljoin(root_endpoint, api_endpoint), auth=HTTPDigestAuth(username, password), params=kwargs,
-                           verify=False, headers=headers, timeout=timeout)
+        response = requests.request(method, urljoin(root_endpoint, api_endpoint), params=kwargs, headers=headers,
+                                    auth=HTTPDigestAuth(username, password), verify=False, timeout=timeout)
     except Timeout as error:
         RavemPlugin.logger.warning("{error.request.method} {error.request.url} timed out: {error.message}"
                                    .format(error=error))

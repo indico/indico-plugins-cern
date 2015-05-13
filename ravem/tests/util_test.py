@@ -11,8 +11,23 @@ from indico_ravem.util import has_access, ravem_api_call, RavemAPIException
 
 
 @pytest.mark.usefixtures('db')
+@pytest.mark.parametrize('method', ('get', 'post'))
+def test_correct_http_method(mocker, method):
+    request = mocker.patch('indico_ravem.util.requests.request')
+    response = MagicMock()
+    response.json.return_value = {'result': 'test'}
+    response.raise_for_status.return_value = False
+    request.return_value = response
+
+    ravem_api_call('test_endpoint', method=method, param1='test1', param2='test2')
+
+    request.assert_called_once()
+    assert request.call_args[0][0] == method
+
+
+@pytest.mark.usefixtures('db')
 def test_correct_auth_method(mocker):
-    request = mocker.patch('indico_ravem.util.requests.get')
+    request = mocker.patch('indico_ravem.util.requests.request')
     response = MagicMock()
     response.json.return_value = {'result': 'test'}
     response.raise_for_status.return_value = False
@@ -33,7 +48,7 @@ def test_correct_auth_method(mocker):
     ('foo', None)
 ))
 def test_correct_auth_credentials(mocker, username, password):
-    request = mocker.patch('indico_ravem.util.requests.get')
+    request = mocker.patch('indico_ravem.util.requests.request')
     response = MagicMock()
     response.json.return_value = {'result': 'test'}
     response.raise_for_status.return_value = False
@@ -50,7 +65,7 @@ def test_correct_auth_credentials(mocker, username, password):
 
 @pytest.mark.usefixtures('db')
 def test_accepts_json(mocker):
-    request = mocker.patch('indico_ravem.util.requests.get')
+    request = mocker.patch('indico_ravem.util.requests.request')
     response = MagicMock()
     response.json.return_value = {'result': 'test'}
     response.raise_for_status.return_value = False
@@ -81,7 +96,7 @@ def test_accepts_json(mocker):
     ('http://ravem.com/api/v2/', '', 'http://ravem.com/api/v2/'),
 ))
 def test_correct_api_endpoint(mocker, root_endpoint, endpoint, expected_url):
-    request = mocker.patch('indico_ravem.util.requests.get')
+    request = mocker.patch('indico_ravem.util.requests.request')
     response = MagicMock()
     response.json.return_value = {'result': 'test'}
     response.raise_for_status.return_value = False
@@ -91,7 +106,7 @@ def test_correct_api_endpoint(mocker, root_endpoint, endpoint, expected_url):
     ravem_api_call(endpoint, param1='test1', param2='test2')
 
     assert request.assert_called_once()
-    assert request.call_args[0][0] == expected_url
+    assert request.call_args[0][1] == expected_url
 
 
 @pytest.mark.usefixtures('db')
@@ -101,7 +116,7 @@ def test_correct_api_endpoint(mocker, root_endpoint, endpoint, expected_url):
     {'p1': '1stparam', 'p2': '2ndparam'}
 ))
 def test_params_generated(mocker, params):
-    request = mocker.patch('indico_ravem.util.requests.get')
+    request = mocker.patch('indico_ravem.util.requests.request')
     response = MagicMock()
     response.json.return_value = {'result': 'test'}
     response.raise_for_status.return_value = False
@@ -114,31 +129,9 @@ def test_params_generated(mocker, params):
 
 
 @pytest.mark.usefixtures('db')
-@pytest.mark.parametrize('method', ('GET', 'POST', 'Get', 'Post', 'get', 'post'))
-def test_valid_method(mocker, method):
-    request = mocker.patch('indico_ravem.util.requests.' + method.lower())
-    response = MagicMock()
-    response.json.return_value = {'result': 'test'}
-    response.raise_for_status.return_value = False
-    request.return_value = response
-
-    ravem_api_call('test_endpoint', param1='test1', param2='test2', method=method)
-
-    assert request.assert_called_once()
-
-
-@pytest.mark.usefixtures('db')
-@pytest.mark.parametrize('method', ('put', 'PUT', 'verybad', 'VERY_BAD'))
-def test_invalid_method(method):
-    with pytest.raises(ValueError) as err_info:
-        ravem_api_call('test_endpoint', param1='test1', param2='test2', method=method)
-    assert err_info.value.message == 'Unsupported HTTP method {0}, must be GET or POST'.format(method)
-
-
-@pytest.mark.usefixtures('db')
 def test_raises_timeout(mocker):
-    request = mocker.patch('indico_ravem.util.requests.get')
-    request.side_effect = Timeout('Timout test error message', request=request)
+    request = mocker.patch('indico_ravem.util.requests.request')
+    request.side_effect = Timeout('Timeout test error message', request=request)
 
     with pytest.raises(Timeout) as excinfo:
         ravem_api_call('test_endpoint')
@@ -157,7 +150,7 @@ def test_raises_timeout(mocker):
     ('post', {'p1': '1stparam', 'p2': '2ndparam'})
 ))
 def test_unexpected_exception_is_logged(mocker, caplog, method, params):
-    request = mocker.patch('indico_ravem.util.requests.' + method.lower())
+    request = mocker.patch('indico_ravem.util.requests.request')
     request.side_effect = IndexError('this is unexpected')
 
     with pytest.raises(IndexError) as excinfo:
@@ -167,7 +160,6 @@ def test_unexpected_exception_is_logged(mocker, caplog, method, params):
     log = extract_logs(caplog, one=True, name='indico.plugin.ravem')
     assert log.message == "failed call: {0} {1} with {2}: {3}".format(method.upper(), 'test_endpoint', params,
                                                                       'this is unexpected')
-
     request.assert_called_once()
 
 
@@ -181,7 +173,7 @@ def test_unexpected_exception_is_logged(mocker, caplog, method, params):
     ('post', {'p1': '1stparam', 'p2': '2ndparam'})
 ))
 def test_http_error_is_logged(mocker, caplog, method, params):
-    request = mocker.patch('indico_ravem.util.requests.' + method.lower())
+    request = mocker.patch('indico_ravem.util.requests.request')
     request.method = method.upper()
     request.url = RavemPlugin.settings.get('api_endpoint') + 'test_endpoint'
     response = MagicMock()
@@ -203,8 +195,8 @@ def test_http_error_is_logged(mocker, caplog, method, params):
 
 @pytest.mark.usefixtures('db')
 @pytest.mark.parametrize('method', ('GET', 'POST', 'Get', 'Post', 'get', 'post'))
-def test_invalid_json_respons_is_handeled(mocker, caplog, method):
-    request = mocker.patch('indico_ravem.util.requests.' + method.lower())
+def test_invalid_json_respons_is_handled(mocker, caplog, method):
+    request = mocker.patch('indico_ravem.util.requests.request')
     request.method = method.upper()
     request.url = RavemPlugin.settings.get('api_endpoint') + 'test_endpoint'
     response = MagicMock()
