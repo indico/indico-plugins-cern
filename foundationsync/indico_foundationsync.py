@@ -7,12 +7,13 @@ from collections import Counter, defaultdict
 from contextlib import contextmanager
 from logging import StreamHandler
 
-from dateutil import rrule
+from celery.schedules import crontab
 from flask_pluginengine import with_plugin_context
 from sqlalchemy.orm.exc import NoResultFound
 from wtforms import StringField
 
-from indico.core.plugins import IndicoPlugin, plugin_engine
+from indico.core.celery import celery
+from indico.core.plugins import IndicoPlugin
 from indico.core.db import DBMgr
 from indico.core.db.sqlalchemy import db
 from indico.core.db.sqlalchemy.util.session import update_session_options
@@ -20,8 +21,6 @@ from indico.modules.rb.models.holidays import Holiday
 from indico.modules.rb.models.locations import Location
 from indico.modules.rb.models.equipment import EquipmentType
 from indico.modules.rb.models.rooms import Room
-from indico.modules.scheduler import Client
-from indico.modules.scheduler.tasks.periodic import PeriodicUniqueTask
 from indico.modules.users.util import get_user_by_email
 from indico.web.forms.base import IndicoForm
 
@@ -324,20 +323,6 @@ class FoundationSync(object):
                     raise
 
 
-class FoundationSyncTask(PeriodicUniqueTask):
-    def run(self):
-        plugin = plugin_engine.get_plugin(FoundationSyncPlugin.name)
-        if plugin is None:
-            raise RuntimeError('FoundationSync plugin is not active')
-        db_name = plugin.settings.get('connection_string')
-        if not db_name:
-            raise RuntimeError('Foundation DB connection string is not set')
-        if cx_Oracle is None:
-            raise RuntimeError('cx_Oracle is not installed')
-        with plugin.plugin_context():
-            FoundationSync(db_name, self.getLogger()).run_all()
-
-
 class SettingsForm(IndicoForm):
     connection_string = StringField('Foundation DB')
 
@@ -352,26 +337,13 @@ class FoundationSyncPlugin(IndicoPlugin):
 
     def add_cli_command(self, manager):
         @manager.option('--room', dest='room_name', help='Synchronize only a given room (e.g. 513 R-055)')
-        @manager.option('--create-task', dest='create_task', metavar='HH:MM',
-                        help='Create a daily task running FoundationSync at the specified UTC time')
         @with_plugin_context(self)
-        def foundationsync(room_name, create_task):
+        def foundationsync(room_name):
             """Synchronize holidays, rooms and equipment with the CERN Foundation Database"""
             db_name = self.settings.get('connection_string')
             if not db_name:
                 print 'Foundation DB connection string is not set'
                 sys.exit(1)
-
-            if create_task:
-                try:
-                    hour, minute = map(int, create_task.split(':'))
-                except ValueError:
-                    print 'Invalid time format, expected HH:MM'
-                    sys.exit(1)
-                with DBMgr.getInstance().global_connection(commit=True):
-                    Client().enqueue(FoundationSyncTask(rrule.DAILY, byhour=hour, byminute=minute, bysecond=0))
-                print 'Task created'
-                return
 
             if cx_Oracle is None:
                 print 'cx_Oracle is not installed'
@@ -379,3 +351,13 @@ class FoundationSyncPlugin(IndicoPlugin):
             # Log to stdout
             self.logger.addHandler(StreamHandler())
             FoundationSync(db_name, self.logger).run_all(room_name)
+
+
+@celery.periodic_task(run_every=crontab(hour='8'))
+def scheduled_update(room_name=None):
+    db_name = FoundationSyncPlugin.settings.get('connection_string')
+    if not db_name:
+        raise RuntimeError('Foundation DB connection string is not set')
+    if cx_Oracle is None:
+        raise RuntimeError('cx_Oracle is not installed')
+    FoundationSync(db_name, FoundationSyncPlugin.logger).run_all(room_name)
