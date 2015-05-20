@@ -6,12 +6,10 @@ from operator import attrgetter
 from pprint import pformat
 
 import requests
-from flask_pluginengine import current_plugin
 from requests.exceptions import Timeout, RequestException
 from werkzeug.datastructures import MultiDict
 
 from indico.core.db import db
-from indico.modules.scheduler.tasks.periodic import PeriodicUniqueTask
 from indico.util.date_time import format_datetime
 from indico.util.string import strip_control_chars, to_unicode
 
@@ -26,19 +24,12 @@ operation_map = {
 }
 
 
-def update_calendar(logger=None):
-    """Executes all pending calendar updates
-
-    :param logger: the :class:`~indico.core.logger.Logger` to use; if
-                   None, the plugin logger is used
-    """
+def update_calendar():
+    """Executes all pending calendar updates"""
     from indico_outlook.plugin import OutlookPlugin
 
-    if logger is None:
-        logger = current_plugin.logger
-
     if not check_config():
-        logger.error('Plugin is not configured properly')
+        OutlookPlugin.logger.error('Plugin is not configured properly')
         return
 
     settings = OutlookPlugin.settings.get_all()
@@ -49,7 +40,7 @@ def update_calendar(logger=None):
         for user_id, user_entries in entries.iterlists():
             user_entry_ids = {x.id for x in user_entries}
             for entry in latest_actions_only(user_entries, attrgetter('action')):
-                if not _update_calendar_entry(logger, entry, settings):
+                if not _update_calendar_entry(entry, settings):
                     user_entry_ids.remove(entry.id)
             # record all ids which didn't fail for deletion
             delete_ids |= user_entry_ids
@@ -59,14 +50,14 @@ def update_calendar(logger=None):
             db.session.commit()
 
 
-def _update_calendar_entry(logger, entry, settings):
+def _update_calendar_entry(entry, settings):
     """Executes a single calendar update
 
-    :param logger: the logger to use
     :param entry: a :class:`OutlookQueueEntry`
     :param settings: the plugin settings
     """
     from indico_outlook.plugin import OutlookPlugin
+    logger = OutlookPlugin.logger
 
     logger.info('Processing {}'.format(entry))
     url = posixpath.join(settings['service_url'], operation_map[entry.action])
@@ -124,14 +115,3 @@ def _update_calendar_entry(logger, entry, settings):
                                                                                                res.status_code,
                                                                                                res.text))
         return False
-
-
-class OutlookTask(PeriodicUniqueTask):
-    DISABLE_ZODB_HOOK = True
-
-    def run(self):
-        from indico_outlook.plugin import OutlookPlugin
-
-        plugin = OutlookPlugin.instance  # RuntimeError if not active
-        with plugin.plugin_context():
-            update_calendar(self.getLogger())

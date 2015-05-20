@@ -1,9 +1,7 @@
 from __future__ import unicode_literals
 
-import sys
 from operator import itemgetter
 
-from dateutil import rrule
 from flask import g
 from flask_pluginengine import with_plugin_context
 from wtforms.fields.core import SelectField, BooleanField, FloatField
@@ -15,7 +13,6 @@ from indico.core import signals
 from indico.core.db import DBMgr, db
 from indico.core.db.sqlalchemy.util.session import update_session_options
 from indico.core.plugins import IndicoPlugin
-from indico.modules.scheduler import Client
 from indico.modules.users import ExtraUserPreferences
 from indico.util.user import unify_user_args
 from indico.web.forms.base import IndicoForm
@@ -23,7 +20,7 @@ from indico.web.forms.fields import IndicoPasswordField
 from indico.web.forms.widgets import SwitchWidget
 
 from indico_outlook import _
-from indico_outlook.calendar import update_calendar, OutlookTask
+from indico_outlook.calendar import update_calendar
 from indico_outlook.models.queue import OutlookQueueEntry, OutlookAction
 from indico_outlook.util import get_participating_users, latest_actions_only
 
@@ -102,26 +99,13 @@ class OutlookPlugin(IndicoPlugin):
         self.connect(signals.users.merged, self._merge_users)
 
     def add_cli_command(self, manager):
-        @manager.option('--create-task', dest='create_task', metavar='N',
-                        help='Create a task updating calendar entries every N minutes')
+        @manager.command
         @with_plugin_context(self)
-        def outlook(create_task):
+        def outlook():
             """Synchronizes Outlook calendars"""
             update_session_options(db)
-            if create_task:
-                try:
-                    interval = int(create_task)
-                    if interval < 1:
-                        raise ValueError
-                except ValueError:
-                    print 'Invalid interval, must be a number >=1'
-                    sys.exit(1)
-                with DBMgr.getInstance().global_connection(commit=True):
-                    Client().enqueue(OutlookTask(rrule.MINUTELY, interval=interval))
-                print 'Task created'
-            else:
-                with DBMgr.getInstance().global_connection():
-                    update_calendar()
+            with DBMgr.getInstance().global_connection():
+                update_calendar()
 
     def extend_user_preferences(self, user, **kwargs):
         return OutlookUserPreferences
