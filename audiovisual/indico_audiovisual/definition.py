@@ -65,7 +65,7 @@ class AVRequest(RequestDefinitionBase):
     def send(cls, req, data):
         if (req.id is not None and req.state == RequestState.accepted and
                 ('webcast' in req.data['services']) != ('webcast' in data['services'])):
-            send_webcast_ping()
+            send_webcast_ping.delay()
         super(AVRequest, cls).send(req, data)
         req.data['identifiers'] = get_data_identifiers(req)
         flag_modified(req, 'data')
@@ -73,19 +73,19 @@ class AVRequest(RequestDefinitionBase):
     @classmethod
     def withdraw(cls, req, notify_event_managers=True):
         if req.state == RequestState.accepted and 'webcast' in req.data['services']:
-            send_webcast_ping()
+            send_webcast_ping.delay()
         super(AVRequest, cls).withdraw(req, notify_event_managers)
 
     @classmethod
     def accept(cls, req, data, user):
         if 'webcast' in req.data['services']:
-            send_webcast_ping()
+            send_webcast_ping.delay()
         super(AVRequest, cls).accept(req, data, user)
 
     @classmethod
     def reject(cls, req, data, user):
         if req.state == RequestState.accepted and 'webcast' in req.data['services']:
-            send_webcast_ping()
+            send_webcast_ping.delay()
         super(AVRequest, cls).reject(req, data, user)
 
     @classmethod
@@ -189,11 +189,11 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
 
     @classmethod
     def handle_accepted(cls, agreement):
-        send_agreement_ping(agreement)
+        send_agreement_ping.delay(agreement)
 
     @classmethod
     def handle_rejected(cls, agreement):
-        send_agreement_ping(agreement)
+        send_agreement_ping.delay(agreement)
 
     @classmethod
     def render_data(cls, event, data):

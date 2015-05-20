@@ -3,6 +3,9 @@ from __future__ import unicode_literals
 import json
 from itertools import chain
 
+import requests
+
+from indico.core.celery import celery
 from indico.core.db import db
 from indico.core.db.sqlalchemy.util.queries import limit_groups
 from indico.modules.events.requests.models.requests import Request, RequestState
@@ -10,8 +13,6 @@ from indico.modules.fulltextindexes.models.events import IndexedEvent
 from indico.modules.rb.models.equipment import EquipmentType
 from indico.modules.rb.models.locations import Location
 from indico.modules.rb.models.rooms import Room
-from indico.modules.scheduler import Client
-from indico.modules.scheduler.tasks import HTTPTask
 from indico.util.caching import memoize_request
 from MaKaC.conference import SubContribution
 from MaKaC.webinterface.common.contribFilters import PosterFilterField
@@ -186,6 +187,7 @@ def compare_data_identifiers(a, b):
     return a == b
 
 
+@celery.task
 def send_webcast_ping():
     """Sends a ping notification when a webcast request changes"""
     from indico_audiovisual.plugin import AVRequestsPlugin
@@ -193,9 +195,10 @@ def send_webcast_ping():
     if not url:
         return
     AVRequestsPlugin.logger.info('Sending webcast ping to {}'.format(url))
-    Client().enqueue(HTTPTask(url))
+    return requests.get(url).status_code
 
 
+@celery.task
 def send_agreement_ping(agreement):
     """Sends a ping notification when a speaker release is updated"""
     from indico_audiovisual.plugin import AVRequestsPlugin
@@ -217,7 +220,7 @@ def send_agreement_ping(agreement):
         payload['contribution_id'] = int(contrib_id)
         if subcontrib_id:
             payload['subcontribution_id'] = int(subcontrib_id)
-    Client().enqueue(HTTPTask(url, {'data': json.dumps(payload)}))
+    return requests.post(url, data={'data': json.dumps(payload)}).status_code
 
 
 def find_requests(talks=False, from_dt=None, to_dt=None, services=None, states=None):
