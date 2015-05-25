@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 from indico.core.db import db
-from indico.core.models.settings import EventSetting
+from indico.modules.events.models.settings import EventSetting
 from indico.util.console import cformat
 from indico.util.struct.iterables import committing_iterator
 from indico_zodbimport import Importer, convert_to_unicode
