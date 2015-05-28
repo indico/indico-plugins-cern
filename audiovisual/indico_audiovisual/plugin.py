@@ -122,7 +122,7 @@ class AVRequestsPlugin(IndicoPlugin):
     def _data_changed(self, sender, **kwargs):
         # sender can be `Conference`, `Contribution` or `SubContribution`
         event = sender.getConference()
-        if not event.id.isdigit():
+        if event.has_legacy_id:
             # Legacy event. Unlikely to change, but let's not break if it does.
             return
         req = Request.find_latest_for_event(event, AVRequest.name)
@@ -170,7 +170,7 @@ class AVRequestsPlugin(IndicoPlugin):
             return None
 
     def _inject_event_header(self, event, **kwargs):
-        if not event.id.isdigit():
+        if event.has_legacy_id:
             return
         url = self._get_event_webcast_url(event)
         if not url:
@@ -178,7 +178,7 @@ class AVRequestsPlugin(IndicoPlugin):
         return render_plugin_template('event_header.html', url=url)
 
     def _inject_conference_header_subtitle(self, event, **kwargs):
-        if not event.id.isdigit():
+        if event.has_legacy_id:
             return
         url = self._get_event_webcast_url(event)
         if not url:
