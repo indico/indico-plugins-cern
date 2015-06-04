@@ -48,7 +48,7 @@ class FoundationSync(object):
         self.db_name = db_name
         self._logger = logger
         try:
-            self._location = Location.find(Location.name == 'CERN').one()
+            self._location = Location.find_one(name='CERN')
         except NoResultFound:
             self._logger.exception("Synchronization failed: Location CERN not found in Indico DB")
             raise
@@ -216,7 +216,8 @@ class FoundationSync(object):
 
             room = Room.find_first(Room.building == room_data['building'],
                                    Room.floor == room_data['floor'],
-                                   Room.number == room_data['number'])
+                                   Room.number == room_data['number'],
+                                   location=self._location)
 
             # Insert new room
             if room is None:
@@ -234,7 +235,7 @@ class FoundationSync(object):
             foundation_rooms.append(room)
 
         # Deactivate rooms not found in Foundation
-        indico_rooms = Room.find(Room.name == room_name) if room_name else Room.find()
+        indico_rooms = Room.find(Room.name == room_name) if room_name else Room.find(location=self._location)
         rooms_to_deactivate = (room for room in indico_rooms if room not in foundation_rooms and room.is_active)
         for room in rooms_to_deactivate:
             room.is_active = False
