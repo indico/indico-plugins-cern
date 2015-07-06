@@ -1,0 +1,17 @@
+{% if top_level %}
+    <span class="i-button attachment icon-file-pdf pdf-pending
+                 {% if attachment.is_protected %}is-protected{% endif %}"
+          title="{% trans %}PDF conversion pending - reload the page to see if the file is ready{% endtrans %}">
+        {#--#}
+        <span class="title">{{ title }}</span>
+        {#--#}
+    </span>
+{% else %}
+    <li>
+        <a class="attachment icon-file-pdf pdf-pending {% if attachment.is_protected %}is-protected{% endif %}"
+           href="#"
+           title="{% trans %}PDF conversion pending - reload the page to see if the file is ready{% endtrans %}">
+            {{- title -}}
+        </a>
+    </li>
+{% endif %}

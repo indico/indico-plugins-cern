@@ -1,0 +1,9 @@
+@import 'base/palette';
+
+.attachment.attachment.pdf-pending, .attachment.attachment.pdf-pending:hover {
+    cursor: progress !important;
+    border-color: $indico-blue !important;
+    .title, &:before, &:link {
+        color: $indico-blue !important;
+    }
+}
