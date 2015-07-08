@@ -84,8 +84,10 @@ class ConversionPlugin(IndicoPlugin):
             return
         submit_attachment.delay(attachment)
         cache.set(unicode(attachment.id), True, info_ttl)
-        flash(_('{file} has been sent to the conversion system. The PDF file will be attached automatically once '
-                'the conversion finished.').format(file=attachment.file.filename))
+        if not g.get('attachment_conversion_msg_displayed'):
+            g.attachment_conversion_msg_displayed = True
+            flash(_('Your file(s) have been sent to the conversion system. The PDF file(s) will be attached '
+                    'automatically once the conversion finished.').format(file=attachment.file.filename))
 
     def _event_display_after_attachment(self, attachment, top_level, **kwargs):
         if attachment.type != AttachmentType.file:
