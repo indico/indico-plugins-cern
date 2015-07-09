@@ -6,13 +6,17 @@ from datetime import timedelta
 import icalendar
 from flask import request
 
+from indico.core import signals
+from indico.core.db import db
+from indico.modules.attachments.models.attachments import AttachmentType, Attachment
+from indico.modules.attachments.models.folders import AttachmentFolder
 from indico.modules.events.requests.models.requests import RequestState
 from indico.util.string import to_unicode
 from indico.web.flask.util import url_for
 from indico.web.http_api import HTTPAPIHook
 from indico.web.http_api.responses import HTTPAPIError
 from indico.web.http_api.util import get_query_parameter
-from MaKaC.conference import Conference, Contribution, SubContribution, ConferenceHolder, Link, Material
+from MaKaC.conference import Conference, Contribution, SubContribution, ConferenceHolder
 
 from indico_audiovisual import SERVICES, SHORT_SERVICES
 from indico_audiovisual.definition import AVRequest
@@ -49,36 +53,36 @@ def parse_indico_id(indico_id):
         return None
 
 
-def cds_link_exists(obj):
-    materials = obj.getAllMaterialList() or []
-    for material in materials:
-        if isinstance(material.getMainResource(), Link) and to_unicode(material.getTitle()) == 'Video in CDS':
-            return True
-    return False
+def cds_link_exists(obj, url):
+    return bool(Attachment
+                .find(~Attachment.is_deleted,
+                      ~AttachmentFolder.is_deleted,
+                      AttachmentFolder.linked_object == obj,
+                      Attachment.type == AttachmentType.link,
+                      Attachment.link_url == url,
+                      _join=AttachmentFolder)
+                .count())
 
 
-def create_link(indico_id, cds_id):
+def create_link(indico_id, cds_id, user):
     from indico_audiovisual.plugin import AVRequestsPlugin
 
     obj = parse_indico_id(indico_id)
     if obj is None:
         return False
-    elif cds_link_exists(obj):
-        return True
 
     url = AVRequestsPlugin.settings.get('recording_cds_url')
     if not url:
         return False
 
-    material = Material()
-    material.setTitle(b'Video in CDS')
-    video_link = Link()
-    video_link.setOwner(material)
-    video_link.setName(b'Video in CDS')
-    video_link.setURL(url.format(cds_id=cds_id))
-    material.addResource(video_link)
-    material.setMainResource(video_link)
-    obj.addMaterial(material)
+    url = url.format(cds_id=cds_id)
+    if cds_link_exists(obj, url):
+        return True
+
+    folder = AttachmentFolder.get_or_create_default(obj)
+    attachment = Attachment(folder=folder, user=user, title='Recording', type=AttachmentType.link, link_url=url)
+    db.session.add(attachment)
+    signals.attachments.attachment_created.send(attachment, user=user)
     return True
 
 
@@ -102,7 +106,7 @@ class RecordingLinkAPI(HTTPAPIHook):
     def api_create_cds_link(self, aw):
         if not self._indico_id or not self._cds_id:
             raise HTTPAPIError('A required argument is missing.', 400)
-        success = create_link(self._indico_id, self._cds_id)
+        success = create_link(self._indico_id, self._cds_id, aw.getUser().user)
         return {'success': success}
 
 
