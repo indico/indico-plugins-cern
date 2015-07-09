@@ -13,7 +13,7 @@ from wtforms.validators import DataRequired
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
 from indico.modules.attachments.forms import AddAttachmentFilesForm
-from indico.modules.attachments.models.attachments import AttachmentType
+from indico.modules.attachments.models.attachments import AttachmentType, Attachment
 from indico.util.date_time import now_utc
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import TextListField
@@ -54,6 +54,7 @@ class ConversionPlugin(IndicoPlugin):
         self.connect(signals.add_form_fields, self._add_form_fields, sender=AddAttachmentFilesForm)
         self.connect(signals.form_validated, self._form_validated)
         self.connect(signals.attachments.attachment_created, self._attachment_created)
+        self.connect(signals.model_committed, self._attachment_committed, sender=Attachment)
         self.template_hook('event-display-after-attachment', self._event_display_after_attachment)
         self.inject_css('conversion_css', WPTPLConferenceDisplay)
 
@@ -82,12 +83,18 @@ class ConversionPlugin(IndicoPlugin):
         ext = os.path.splitext(attachment.file.filename)[1].lstrip('.')
         if ext not in self.settings.get('valid_extensions'):
             return
-        submit_attachment.delay(attachment)
         cache.set(unicode(attachment.id), True, info_ttl)
+        if 'convert_attachments_ids' not in g:
+            g.convert_attachments_ids = set()
+        g.convert_attachments_ids.add(attachment.id)
         if not g.get('attachment_conversion_msg_displayed'):
             g.attachment_conversion_msg_displayed = True
             flash(_('Your file(s) have been sent to the conversion system. The PDF file(s) will be attached '
                     'automatically once the conversion finished.').format(file=attachment.file.filename))
+
+    def _attachment_committed(self, sender, obj, change, **kwargs):
+        if change == 'insert' and obj.id in g.get('convert_attachments_ids', {}):
+            submit_attachment.delay(obj)
 
     def _event_display_after_attachment(self, attachment, top_level, **kwargs):
         if attachment.type != AttachmentType.file:
