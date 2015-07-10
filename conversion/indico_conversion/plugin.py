@@ -31,7 +31,7 @@ info_ttl = timedelta(hours=1)
 
 class SettingsForm(IndicoForm):
     server_url = URLField(_('Server URL'), [DataRequired()],
-                          description=_("The URL to the conversion server's getSegFile.py script."))
+                          description=_("The URL to the conversion server's uploadFile.py script."))
     valid_extensions = TextListField(_('Extensions'),
                                      filters=[lambda exts: sorted({ext.lower().lstrip('.').strip() for ext in exts})],
                                      description=_('File extensions for which PDF conversion is supported. '
@@ -45,7 +45,7 @@ class ConversionPlugin(IndicoPlugin):
     """
     configurable = True
     settings_form = SettingsForm
-    default_settings = {'server_url': 'http://conversion.cern.ch/getSegFile.py',
+    default_settings = {'server_url': 'http://conversion.cern.ch/uploadFile.py',
                         'valid_extensions': ['ppt', 'doc', 'pptx', 'docx', 'odp', 'sxi']}
     strict_settings = True
 

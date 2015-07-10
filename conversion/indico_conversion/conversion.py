@@ -30,18 +30,13 @@ def submit_attachment(attachment):
         'attachment_id': attachment.id
     }
     data = {
-        # use random-ish filename because of terrible backend code which fails
-        # when two files with the same name are uploaded at the same time...
-        'filename': '{}-{}'.format(uuid.uuid4(), attachment.file.filename),
         'converter': 'pdf',
         'urlresponse': url_for_plugin('conversion.callback', _external=True),
-        'segnum': '1',
-        'lastseg': '1',
         'dirresponse': secure_serializer.dumps(payload, salt='pdf-conversion')
     }
     with attachment.file.open() as fd:
         try:
-            response = requests.post(url, data=data, files={'segfile': fd}, timeout=5)
+            response = requests.post(url, data=data, files={'uploadedfile': fd})
             response.raise_for_status()
             if 'ok' not in response.text:
                 raise requests.RequestException('Unexpected response from server: {}'.format(response.text))
