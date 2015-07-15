@@ -2,11 +2,11 @@ from __future__ import unicode_literals
 
 import base64
 import os
-import uuid
+from datetime import timedelta
 from io import BytesIO
 
 import requests
-from flask import request, jsonify
+from flask import request, jsonify, session
 from itsdangerous import BadData
 
 from indico.core import signals
@@ -15,6 +15,7 @@ from indico.core.db import db
 from indico.core.plugins import url_for_plugin
 from indico.modules.attachments.models.attachments import Attachment, AttachmentType, AttachmentFile
 from indico.util.signing import secure_serializer
+from indico.web.flask.templating import get_template_module
 from MaKaC.webinterface.rh.base import RHSimple
 
 from indico_conversion import cache
@@ -48,6 +49,7 @@ def submit_attachment(attachment):
 
 @RHSimple.wrap_function
 def conversion_finished():
+    """Callback to attach a converted file"""
     from indico_conversion.plugin import ConversionPlugin
     try:
         payload = secure_serializer.loads(request.form['directory'], salt='pdf-conversion')
@@ -71,7 +73,24 @@ def conversion_finished():
                                          content_type='application/pdf')
     pdf_attachment.file.save(data)
     db.session.add(pdf_attachment)
-    cache.delete(unicode(attachment.id))
+    cache.set(unicode(attachment.id), 'finished', timedelta(minutes=15))
     ConversionPlugin.logger.info('Added PDF attachment {} for {}'.format(pdf_attachment, attachment))
     signals.attachments.attachment_created.send(pdf_attachment, user=None)
     return jsonify(success=True)
+
+
+@RHSimple.wrap_function
+def conversion_check():
+    """Checks if all conversions have finished"""
+    ids = request.args.getlist('a')
+    results = {int(id_): cache.get(id_) for id_ in ids}
+    finished = [id_ for id_, status in results.iteritems() if status == 'finished']
+    pending = [id_ for id_, status in results.iteritems() if status == 'pending']
+    containers = {}
+    if finished:
+        tpl = get_template_module('attachments/_display.html')
+        for attachment in Attachment.find(Attachment.id.in_(finished)):
+            if not attachment.folder.can_view(session.user):
+                continue
+            containers[attachment.id] = tpl.render_attachments_folders(item=attachment.folder.linked_object)
+    return jsonify(finished=finished, pending=pending, containers=containers)

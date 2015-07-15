@@ -11,7 +11,7 @@ from wtforms.fields.html5 import URLField
 from wtforms.validators import DataRequired
 
 from indico.core import signals
-from indico.core.plugins import IndicoPlugin
+from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.modules.attachments.forms import AddAttachmentFilesForm
 from indico.modules.attachments.models.attachments import AttachmentType, Attachment
 from indico.util.date_time import now_utc
@@ -57,12 +57,17 @@ class ConversionPlugin(IndicoPlugin):
         self.connect(signals.model_committed, self._attachment_committed, sender=Attachment)
         self.template_hook('event-display-after-attachment', self._event_display_after_attachment)
         self.inject_css('conversion_css', WPTPLConferenceDisplay)
+        self.inject_js('conversion_js', WPTPLConferenceDisplay)
 
     def get_blueprints(self):
         return blueprint
 
     def register_assets(self):
         self.register_css_bundle('conversion_css', 'css/conversion.scss')
+        self.register_js_bundle('conversion_js', 'js/conversion.js')
+
+    def get_vars_js(self):
+        return {'urls': {'check': url_for_plugin('conversion.check')}}
 
     def _add_form_fields(self, form_cls, **kwargs):
         exts = ', '.join(self.settings.get('valid_extensions'))
@@ -83,10 +88,12 @@ class ConversionPlugin(IndicoPlugin):
         ext = os.path.splitext(attachment.file.filename)[1].lstrip('.')
         if ext not in self.settings.get('valid_extensions'):
             return
-        cache.set(unicode(attachment.id), True, info_ttl)
+        # Prepare for submission (after commit)
         if 'convert_attachments_ids' not in g:
             g.convert_attachments_ids = set()
         g.convert_attachments_ids.add(attachment.id)
+        # Set cache entry to show the pending attachment
+        cache.set(unicode(attachment.id), 'pending', info_ttl)
         if not g.get('attachment_conversion_msg_displayed'):
             g.attachment_conversion_msg_displayed = True
             flash(_('Your file(s) have been sent to the conversion system. The PDF file(s) will be attached '
@@ -96,12 +103,12 @@ class ConversionPlugin(IndicoPlugin):
         if change == 'insert' and obj.id in g.get('convert_attachments_ids', {}):
             submit_attachment.delay(obj)
 
-    def _event_display_after_attachment(self, attachment, top_level, **kwargs):
+    def _event_display_after_attachment(self, attachment, top_level, has_label, **kwargs):
         if attachment.type != AttachmentType.file:
             return None
         if now_utc() - attachment.file.created_dt > info_ttl:
             return None
-        if not cache.get(unicode(attachment.id)):
+        if cache.get(unicode(attachment.id)) != 'pending':
             return None
         return render_plugin_template('pdf_attachment.html', attachment=attachment, top_level=top_level,
-                                      title=get_pdf_title(attachment))
+                                      has_label=has_label, title=get_pdf_title(attachment))
