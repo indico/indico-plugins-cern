@@ -1,9 +1,39 @@
-@import 'base/palette';
+@import "base/animation";
+@import "base/palette";
 
-.attachment.attachment.pdf-pending, .attachment.attachment.pdf-pending:hover {
-    cursor: progress !important;
-    border-color: $indico-blue !important;
+.folder.folder-root > .attachment.pdf-pending {
+    border-color: $light-black !important;
+}
+
+.folder > .attachment.pdf-pending,
+.folder > .attachments > .attachment.pdf-pending {
+    background-color: lighten($gray, 10%);
+}
+
+.attachment.pdf-pending, .attachment.pdf-pending:hover {
     .title, &:before, &:link {
-        color: $indico-blue !important;
+        color: $light-black;
     }
+
+    &:before {
+        @include indico-animation(pdf-conversion-blinker, 2s, ease-in-out, infinite);
+    }
+}
+
+@keyframes pdf-conversion-blinker {
+    0% { color: $light-black; }
+    50% { color: $red; }
+    100% { color: $light-black; }
+}
+
+@-webkit-keyframes pdf-conversion-blinker {
+    0% { color: $light-black; }
+    50% { color: $red; }
+    100% { color: $light-black; }
+}
+
+@-moz-keyframes pdf-conversion-blinker {
+    0% { color: $light-black; }
+    50% { color: $red; }
+    100% { color: $light-black; }
 }
