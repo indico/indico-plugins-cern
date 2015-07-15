@@ -42,6 +42,7 @@ def submit_attachment(attachment):
             if 'ok' not in response.text:
                 raise requests.RequestException('Unexpected response from server: {}'.format(response.text))
         except requests.RequestException:
+            cache.delete(unicode(attachment.id))
             ConversionPlugin.logger.exception('Could not submit {} for PDF conversion'.format(attachment))
         else:
             ConversionPlugin.logger.info('Submitted {} for PDF conversion'.format(attachment))
