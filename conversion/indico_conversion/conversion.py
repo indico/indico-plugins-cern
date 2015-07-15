@@ -58,7 +58,7 @@ def conversion_finished():
         return jsonify(success=False)
     attachment = Attachment.get(payload['attachment_id'])
     if not attachment or attachment.is_deleted or attachment.folder.is_deleted:
-        ConversionPlugin.logger.error('Attachment has been deleted: {}'.format(attachment))
+        ConversionPlugin.logger.warning('Attachment has been deleted: {}'.format(attachment))
         return jsonify(success=True)
     elif request.form['status'] != '1':
         ConversionPlugin.logger.error('Received invalid status {} for {}'.format(request.form['status'], attachment))
