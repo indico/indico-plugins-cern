@@ -6,7 +6,7 @@ from itertools import chain
 import requests
 
 from indico.core.celery import celery
-from indico.core.db.sqlalchemy.util.queries import limit_groups
+from indico.core.db.sqlalchemy.util.queries import limit_groups, db_dates_overlap
 from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.modules.fulltextindexes.models.events import IndexedEvent
 from indico.modules.rb.models.equipment import EquipmentType
@@ -239,9 +239,15 @@ def find_requests(talks=False, from_dt=None, to_dt=None, services=None, states=N
         query = query.filter(Request.state.in_(states))
     else:
         query = query.filter(Request.state != RequestState.withdrawn)
-    if from_dt is not None:
-        query = (query.join(IndexedEvent, IndexedEvent.id == Request.event_id)
-                 .filter(IndexedEvent.start_date >= from_dt))
+    query = query.join(IndexedEvent, IndexedEvent.id == Request.event_id)
+
+    if from_dt is not None and to_dt is not None:
+        query = query.filter(db_dates_overlap(IndexedEvent, 'start_date', from_dt, 'end_date', to_dt))
+    elif from_dt is not None and to_dt is None:
+        query = query.filter(IndexedEvent.start_date >= from_dt)
+    elif from_dt is None and to_dt is not None:
+        query = query.filter(IndexedEvent.end_date <= to_dt)
+
     # We only want the latest one for each event
     query = limit_groups(query, Request, Request.event_id, Request.created_dt.desc(), 1)
     for req in query:
