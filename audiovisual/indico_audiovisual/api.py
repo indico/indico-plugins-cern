@@ -82,6 +82,7 @@ def create_link(indico_id, cds_id, user):
     folder = AttachmentFolder.get_or_create_default(obj)
     attachment = Attachment(folder=folder, user=user, title='Recording', type=AttachmentType.link, link_url=url)
     db.session.add(attachment)
+    db.session.flush()
     signals.attachments.attachment_created.send(attachment, user=user)
     return True
 
