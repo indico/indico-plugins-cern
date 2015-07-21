@@ -74,6 +74,7 @@ def conversion_finished():
                                          content_type='application/pdf')
     pdf_attachment.file.save(data)
     db.session.add(pdf_attachment)
+    db.session.flush()
     cache.set(unicode(attachment.id), 'finished', timedelta(minutes=15))
     ConversionPlugin.logger.info('Added PDF attachment {} for {}'.format(pdf_attachment, attachment))
     signals.attachments.attachment_created.send(pdf_attachment, user=None)
