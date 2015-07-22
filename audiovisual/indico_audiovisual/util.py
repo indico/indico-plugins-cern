@@ -13,6 +13,7 @@ from indico.modules.rb.models.equipment import EquipmentType
 from indico.modules.rb.models.locations import Location
 from indico.modules.rb.models.rooms import Room
 from indico.util.caching import memoize_request
+from indico.util.date_time import overlaps
 from MaKaC.conference import SubContribution
 from MaKaC.webinterface.common.contribFilters import PosterFilterField
 
@@ -242,10 +243,13 @@ def find_requests(talks=False, from_dt=None, to_dt=None, services=None, states=N
     query = query.join(IndexedEvent, IndexedEvent.id == Request.event_id)
 
     if from_dt is not None and to_dt is not None:
-        query = query.filter(db_dates_overlap(IndexedEvent, 'start_date', from_dt, 'end_date', to_dt))
-    elif from_dt is not None and to_dt is None:
+        # any event that takes place during the specified range
+        query = query.filter(db_dates_overlap(IndexedEvent, 'start_date', from_dt, 'end_date', to_dt, inclusive=True))
+    elif from_dt is not None:
+        # any event that starts on/after the specified date
         query = query.filter(IndexedEvent.start_date >= from_dt)
-    elif from_dt is None and to_dt is not None:
+    elif to_dt is not None:
+        # and event that ends on/before the specifed date
         query = query.filter(IndexedEvent.end_date <= to_dt)
 
     # We only want the latest one for each event
@@ -268,9 +272,14 @@ def find_requests(talks=False, from_dt=None, to_dt=None, services=None, states=N
 
         contribs = [x[0] for x in get_selected_contributions(req)]
         for contrib in contribs:
-            if from_dt and _get_start_date(contrib) < from_dt:
+            contrib_start = _get_start_date(contrib)
+            contrib_end = _get_end_date(contrib)
+            if from_dt is not None and to_dt is not None and not overlaps((contrib_start, contrib_end),
+                                                                          (from_dt, to_dt)):
                 continue
-            elif to_dt and _get_start_date(contrib) > to_dt:
+            elif from_dt and _get_start_date(contrib) < from_dt:
+                continue
+            elif to_dt and _get_end_date(contrib) > to_dt:
                 continue
             yield req, contrib, _get_start_date(contrib)
 
@@ -280,3 +289,10 @@ def _get_start_date(obj):
         return obj.getContribution().getStartDate()
     else:
         return obj.getStartDate()
+
+
+def _get_end_date(obj):
+    if isinstance(obj, SubContribution):
+        return obj.getContribution().getEndDate()
+    else:
+        return obj.getEndDate()
