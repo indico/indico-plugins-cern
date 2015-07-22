@@ -24,7 +24,7 @@ class RHRequestList(RHProtected):
             raise AccessError
 
     def _process(self):
-        form = RequestListFilterForm(request.args)
+        form = RequestListFilterForm(request.args, csrf_enabled=False)
         results = None
         if request.args and form.validate():
             reverse = form.direction.data == 'desc'
