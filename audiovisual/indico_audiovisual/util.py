@@ -240,7 +240,9 @@ def find_requests(talks=False, from_dt=None, to_dt=None, services=None, states=N
         query = query.filter(Request.state.in_(states))
     else:
         query = query.filter(Request.state != RequestState.withdrawn)
-    query = query.join(IndexedEvent, IndexedEvent.id == Request.event_id)
+
+    if from_dt is not None or to_dt is not None:
+        query = query.join(IndexedEvent, IndexedEvent.id == Request.event_id)
 
     if from_dt is not None and to_dt is not None:
         # any event that takes place during the specified range
