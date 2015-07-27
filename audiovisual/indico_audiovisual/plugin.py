@@ -144,7 +144,8 @@ class AVRequestsPlugin(IndicoPlugin):
 
             if not compare_data_identifiers(identifiers['locations'], req.data['identifiers']['locations']):
                 if (not count_capable_contributions(req.event)[0] and
-                        req.state in {RequestState.accepted, RequestState.pending}):
+                        req.state in {RequestState.accepted, RequestState.pending} and
+                        not is_av_manager(req.created_by_user)):
                     janitor = User.get(int(Config.getInstance().getJanitorUserId()))
                     data = dict(req.data, comment=render_plugin_template('auto_reject_no_capable_contribs.txt'))
                     req.definition.reject(req, data, janitor)
