@@ -2,4 +2,12 @@
 
 {% block request_details -%}
     Requested services: {{ req.definition.util.get_selected_services(req)|join(', ') }}
+    {%- if 'webcast' in req.data.services %}
+
+        Please note that you do not need to worry about anything technical (just make sure
+        speakers are always equipped with an open microphone) - our team will start, operate
+        and stop the webcast remotely.  In case of any problem before, during or after the
+        webcast please contact the support team by calling the helpdesk (77777) or sending
+        an email to webcast-support@cern.ch.
+    {%- endif %}
 {%- endblock %}
