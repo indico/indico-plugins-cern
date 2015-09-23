@@ -47,6 +47,7 @@ def _contrib_key(contrib):
             contrib.getTitle())
 
 
+@unify_event_args(legacy=True)
 def get_contributions(event):
     """Returns a list of contributions in rooms with AV equipment
 
@@ -110,6 +111,7 @@ def get_selected_services(req):
     return [SERVICES.get(s, s) for s in req.data['services']]
 
 
+@unify_event_args(legacy=True)
 def count_capable_contributions(event):
     """Gets the total and capable-room contribution counts.
 
@@ -130,6 +132,7 @@ def count_capable_contributions(event):
         return sum(capable for _, capable, _ in contribs), len(contribs)
 
 
+@unify_event_args(legacy=True)
 def event_has_empty_sessions(event):
     """Checks if the event has any sessions with no contributions"""
     return not all(ss.getContributionList() for ss in event.getSessionSlotList())

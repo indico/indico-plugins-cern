@@ -54,7 +54,7 @@ class AVRequestForm(RequestFormBase):
         self.webcast_audience.choices = audiences
 
     def _update_contribution_fields(self):
-        if self.event.getType() == 'simple_event':
+        if self.event.as_legacy.getType() == 'simple_event':
             # lectures don't have contributions
             del self.all_contributions
             del self.contributions
@@ -78,7 +78,7 @@ class AVRequestForm(RequestFormBase):
 
 class AVRequestManagerForm(RequestManagerForm):
     custom_webcast_url = URLField(_('Webcast URL'),
-                                  description=_("Custom URL to view the webcast. Can contain {event_id} which will be"
+                                  description=_("Custom URL to view the webcast. Can contain {event_id} which will be "
                                                 "replaced with the ID of this event."))
 
 

@@ -121,7 +121,7 @@ class AVRequestsPlugin(IndicoPlugin):
 
     def _data_changed(self, sender, **kwargs):
         # sender can be `Conference`, `Contribution` or `SubContribution`
-        event = sender.getConference()
+        event = sender.getConference().as_event
         req = Request.find_latest_for_event(event, AVRequest.name)
         if not req:
             return
@@ -168,13 +168,13 @@ class AVRequestsPlugin(IndicoPlugin):
             return None
 
     def _inject_event_header(self, event, **kwargs):
-        url = self._get_event_webcast_url(event)
+        url = self._get_event_webcast_url(event.as_event)
         if not url:
             return
         return render_plugin_template('event_header.html', url=url)
 
     def _inject_conference_header_subtitle(self, event, **kwargs):
-        url = self._get_event_webcast_url(event)
+        url = self._get_event_webcast_url(event.as_event)
         if not url:
             return
         return render_plugin_template('conference_header.html', url=url)
