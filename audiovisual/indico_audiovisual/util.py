@@ -13,6 +13,7 @@ from indico.modules.rb.models.equipment import EquipmentType
 from indico.modules.rb.models.locations import Location
 from indico.modules.rb.models.rooms import Room
 from indico.util.caching import memoize_request
+from indico.util.event import unify_event_args
 from indico.util.date_time import overlaps
 from MaKaC.conference import SubContribution
 from MaKaC.webinterface.common.contribFilters import PosterFilterField
@@ -74,6 +75,7 @@ def contribution_id(contrib_or_subcontrib):
         return unicode(contrib_or_subcontrib.id)
 
 
+@unify_event_args(legacy=True)
 def contribution_by_id(event, contrib_or_subcontrib_id):
     """Returns a contribution/subcontriution from an :func:`contribution_id`-style ID"""
     contrib_id, _, subcontrib_id = contrib_or_subcontrib_id.partition('-')

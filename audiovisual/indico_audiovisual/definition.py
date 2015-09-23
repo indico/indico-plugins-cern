@@ -109,12 +109,12 @@ class SpeakerPersonInfo(AgreementPersonInfo):
 
 def _talk_info_from_agreement_data(event, data):
     if data['type'] == 'lecture_speaker':
-        return 'lecture', url_for('event.conferenceDisplay', event), to_unicode(event.getTitle())
+        return 'lecture', url_for('event.conferenceDisplay', event), event.title
     elif data['type'] != 'contribution':
         raise ValueError('Unexpected data type: {}'.format(data['type']))
 
     contrib_id, _unused, subcontrib_id = data['contribution'].partition('-')
-    contrib = event.getContributionById(contrib_id)
+    contrib = event.as_legacy.getContributionById(contrib_id)
     if not contrib:
         raise RuntimeError(_('Contribution deleted'))
     if not subcontrib_id:
@@ -132,7 +132,7 @@ class TalkPlaceholder(EmailPlaceholderBase):
 
     @classmethod
     def render(cls, agreement):
-        return _talk_info_from_agreement_data(agreement.event, agreement.data)[2]
+        return _talk_info_from_agreement_data(agreement.event_new, agreement.data)[2]
 
 
 class SpeakerReleaseAgreement(AgreementDefinitionBase):
@@ -150,13 +150,13 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
 
     @classmethod
     def extend_api_data(cls, event, person, agreement, data):
-        data['confId'] = event.getId()
+        data['confId'] = unicode(event.id)
         data['signed'] = data['accepted']
         data['speaker'] = {'id': person.data['speaker_id'],
                            'name': person.name,
                            'email': person.email}
         if person.data['type'] == 'lecture_speaker':
-            data['contrib'] = event.getId()
+            data['contrib'] = unicode(event.id)
         elif person.data['type'] == 'contribution':
             data['contrib'] = person.data['contribution']
 
@@ -168,7 +168,7 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
 
     @classmethod
     def render_form(cls, agreement, form, **kwargs):
-        event = agreement.event
+        event = agreement.event_new
         contrib = None
         is_subcontrib = False
         if agreement.data['type'] == 'contribution':
@@ -208,8 +208,8 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
         req = Request.find_latest_for_event(event, AVRequest.name)
         if not req or req.state != RequestState.accepted or 'recording' not in req.data['services']:
             return
-        if event.getType() == 'simple_event':
-            for speaker in event.getChairList():
+        if event.as_legacy.getType() == 'simple_event':
+            for speaker in event.as_legacy.getChairList():
                 yield SpeakerPersonInfo(to_unicode('{} {}'.format(speaker.getFirstName(), speaker.getFamilyName())),
                                         to_unicode(speaker.getEmail()) or None,
                                         data={'type': 'lecture_speaker', 'speaker_id': speaker.getId()})
