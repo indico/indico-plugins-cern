@@ -14,6 +14,7 @@ from indico.core.db import DBMgr, db
 from indico.core.db.sqlalchemy.util.session import update_session_options
 from indico.core.plugins import IndicoPlugin
 from indico.modules.users import ExtraUserPreferences
+from indico.util.event import unify_event_args
 from indico.util.user import unify_user_args
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import IndicoPasswordField
@@ -111,6 +112,7 @@ class OutlookPlugin(IndicoPlugin):
         return OutlookUserPreferences
 
     @unify_user_args
+    @unify_event_args
     def event_participation_changed(self, event, user, action, **kwargs):
         if user:
             if action == 'added':
@@ -120,11 +122,13 @@ class OutlookPlugin(IndicoPlugin):
                 self.logger.info('Participation change: removing {} in {!r}'.format(user, event))
                 self._record_change(event, user, OutlookAction.remove)
 
+    @unify_event_args
     def event_data_changed(self, event, attr, **kwargs):
         for user in get_participating_users(event):
             self.logger.info('Event data change ({}): updating {} in {!r}'.format(attr, user, event))
             self._record_change(event, user, OutlookAction.update)
 
+    @unify_event_args
     def event_deleted(self, event, **kwargs):
         for user in get_participating_users(event):
             self.logger.info('Event deletion: removing {} in {!r}'.format(user, event))

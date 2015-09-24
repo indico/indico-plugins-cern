@@ -33,7 +33,9 @@ def update_calendar():
         return
 
     settings = OutlookPlugin.settings.get_all()
-    query = OutlookQueueEntry.find().order_by(OutlookQueueEntry.user_id, OutlookQueueEntry.id)
+    query = (OutlookQueueEntry
+             .find(_eager=OutlookQueueEntry.event_new)
+             .order_by(OutlookQueueEntry.user_id, OutlookQueueEntry.id))
     entries = MultiDict((entry.user_id, entry) for entry in query)
     delete_ids = set()
     try:
@@ -71,21 +73,22 @@ def _update_calendar_entry(entry, settings):
 
     unique_id = '{}{}_{}'.format(settings['id_prefix'], user.id, entry.event_id)
     if entry.action in {OutlookAction.add, OutlookAction.update}:
-        event = entry.event
-        if event is None:
+        event = entry.event_new
+        if event.is_deleted:
             logger.debug('Ignoring {} for deleted event {}'.format(entry.action.name, entry.event_id))
             return True
-        location = strip_control_chars(event.getRoom().getName()) if event.getRoom() else ''
-        description = to_unicode(strip_control_chars(event.description))
-        event_url = to_unicode(event.getURL())
+        conf = event.as_legacy
+        location = strip_control_chars(conf.getRoom().getName()) if conf.getRoom() else ''
+        description = to_unicode(strip_control_chars(conf.description))
+        event_url = to_unicode(conf.getURL())
         data = {'userEmail': user.email,
                 'uniqueID': unique_id,
-                'subject': to_unicode(strip_control_chars(event.title)),
+                'subject': strip_control_chars(event.title),
                 'location': location,
                 'body': '<a href="{}">{}</a><br><br>{}'.format(event_url, event_url, description),
                 'status': settings['status'],
-                'startDate': format_datetime(event.getStartDate(), format='MM-dd-yyyy HH:mm', timezone=pytz.utc),
-                'endDate': format_datetime(event.getEndDate(), format='MM-dd-yyyy HH:mm', timezone=pytz.utc),
+                'startDate': format_datetime(conf.getStartDate(), format='MM-dd-yyyy HH:mm', timezone=pytz.utc),
+                'endDate': format_datetime(conf.getEndDate(), format='MM-dd-yyyy HH:mm', timezone=pytz.utc),
                 'isThereReminder': settings['reminder'],
                 'reminderTimeInMinutes': settings['reminder_minutes']}
     elif entry.action == OutlookAction.remove:

@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='indico_outlook',
-    version='0.3',
+    version='0.4',
     url='https://gitlab.cern.ch/indico/indico-plugins-cern',
     author='Indico Team',
     author_email='indico-team@cern.ch',
@@ -12,7 +12,7 @@ setup(
     include_package_data=True,
     platforms='any',
     install_requires=[
-        'indico>=1.9.3'
+        'indico>=1.9.6'
     ],
     entry_points={'indico.plugins': {'outlook = indico_outlook.plugin:OutlookPlugin'},
                   'indico.zodb_importers': {'outlook = indico_outlook.zodbimport:OutlookImporter'}}

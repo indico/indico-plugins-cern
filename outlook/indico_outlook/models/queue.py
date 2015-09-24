@@ -33,6 +33,7 @@ class OutlookQueueEntry(db.Model):
     #: ID of the event
     event_id = db.Column(
         db.Integer,
+        db.ForeignKey('events.events.id'),
         index=True,
         nullable=False
     )
@@ -51,14 +52,15 @@ class OutlookQueueEntry(db.Model):
             lazy='dynamic'
         )
     )
-
-    @property
-    def event(self):
-        return ConferenceHolder().getById(str(self.event_id), True)
-
-    @event.setter
-    def event(self, event):
-        self.event_id = int(event.getId())
+    #: The Event this queue entry is associated with
+    event_new = db.relationship(
+        'Event',
+        lazy=True,
+        backref=db.backref(
+            'outlook_queue_entries',
+            lazy='dynamic'
+        )
+    )
 
     @return_ascii
     def __repr__(self):
@@ -69,14 +71,10 @@ class OutlookQueueEntry(db.Model):
     def record(cls, event, user, action):
         """Records a new calendar action
 
-        :param event: the event (a :class:`.Conference` instance)
+        :param event: the event (a :class:`.Event` instance)
         :param user: the user (a :class:`.User` instance)
         :param action: the action (an :class:`OutlookAction` member)
         """
-        try:
-            event_id = int(event.id)
-        except ValueError:
-            return
         # It would be nice to delete matching records first, but this sometimes results in very weird deadlocks
-        db.session.add(cls(event_id=event_id, user_id=user.id, action=action))
+        event.outlook_queue_entries.append(cls(user_id=user.id, action=action))
         db.session.flush()

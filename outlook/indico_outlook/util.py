@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from sqlalchemy.orm import joinedload
 
 from indico.modules.users import UserSetting
+from indico.util.event import unify_event_args
 
 
 def check_config():
@@ -13,6 +14,7 @@ def check_config():
     return all(settings[x] for x in ('service_url', 'username', 'password'))
 
 
+@unify_event_args(legacy=True)
 def get_participating_users(event):
     """Returns participating users of an event who did not disable calendar updates."""
     users = set()
