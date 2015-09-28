@@ -265,7 +265,7 @@ def test_check_if_current_user_is_room_owner(mocker):
     event_vc_room = MagicMock()
     event_vc_room.link_object.rb_room.has_equipment = MagicMock(return_value=True)
     event_vc_room.vc_room.data.get.return_value = session.user
-    event_vc_room.event.canModify.return_value = False
+    event_vc_room.event.as_event.can_manage.return_value = False
 
     assert has_access(event_vc_room)
 
@@ -283,11 +283,11 @@ def test_check_if_current_user_can_modify(mocker):
 
     event_vc_room = MagicMock()
     event_vc_room.link_object.rb_room.has_equipment = MagicMock(return_value=True)
-    event_vc_room.event.canModify.return_value = True
+    event_vc_room.event.as_event.can_manage.return_value = True
 
     assert has_access(event_vc_room)
 
-    event_vc_room.event.canModify.assert_called_once_with(session.user)
+    event_vc_room.event.as_event.can_manage.assert_called_once_with(session.user)
 
 
 @pytest.mark.usefixtures('db')
@@ -302,7 +302,7 @@ def test_check_if_request_from_room(mocker):
     event_vc_room = MagicMock()
     event_vc_room.link_object.rb_room.has_equipment = MagicMock(return_value=True)
     event_vc_room.link_object.rb_room.get_attribute_value.return_value = request.remote_addr
-    event_vc_room.event.canModify.return_value = True
+    event_vc_room.event.as_event.can_manage.return_value = True
 
     assert has_access(event_vc_room)
 
@@ -317,6 +317,6 @@ def test_check_basic_user_outside_room(mocker):
 
     event_vc_room = MagicMock()
     event_vc_room.link_object.rb_room.has_equipment = MagicMock(return_value=True)
-    event_vc_room.event.canModify.return_value = True
+    event_vc_room.event.as_event.can_manage.return_value = True
 
     assert has_access(event_vc_room)
