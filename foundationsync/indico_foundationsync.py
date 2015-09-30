@@ -231,9 +231,10 @@ class FoundationSync(object):
             room = self._update_room(room, room_data, room_attrs)
             self._logger.info("Updated room '%s' information", room_id)
 
-            foundation_rooms.append(room)
+            if room.is_reservable:
+                foundation_rooms.append(room)
 
-        # Deactivate rooms not found in Foundation
+        # Deactivate rooms not found in Foundation (or disabled/faulty)
         indico_rooms = Room.find(Room.name == room_name) if room_name else Room.find(location=self._location)
         rooms_to_deactivate = (room for room in indico_rooms if room not in foundation_rooms and room.is_active)
         for room in rooms_to_deactivate:
