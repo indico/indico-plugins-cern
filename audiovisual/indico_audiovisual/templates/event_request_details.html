@@ -78,6 +78,12 @@
             </p>
         {% endcall %}
     {% endif %}
+    <div class="weak-hidden" id="recording-protection-msg">
+        {% call message_box('info') %}
+            By default, the recording will be published on CDS with the same access restrictions as this Indico event.
+            If you wish a different protection, please contact <a href="mailto:webcast-support@cern.ch">webcast-support@cern.ch</a>.
+        {% endcall %}
+    </div>
 {% endblock %}
 
 
@@ -91,6 +97,10 @@
     <script>
         $('input[name="request-services"][value="webcast"]').on('change', function() {
             $('#form-group-request-webcast_audience').toggle(this.checked);
+        }).trigger('change');
+
+        $('input[name="request-services"][value="recording"]').on('change', function() {
+            $('#recording-protection-msg').toggle(this.checked);
         }).trigger('change');
 
         $('#request-all_contributions').on('change', function() {
