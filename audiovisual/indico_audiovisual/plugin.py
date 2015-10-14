@@ -21,7 +21,7 @@ from indico.web.menu import HeaderMenuEntry
 from indico_audiovisual import _
 from indico_audiovisual.api import AVExportHook, RecordingLinkAPI
 from indico_audiovisual.blueprint import blueprint
-from indico_audiovisual.definition import AVRequest, SpeakerReleaseAgreement
+from indico_audiovisual.definition import AVRequest, SpeakerReleaseAgreement, TalkPlaceholder
 from indico_audiovisual.notifications import notify_relocated_request, notify_rescheduled_request
 from indico_audiovisual.compat import compat_blueprint
 from indico_audiovisual.util import (get_data_identifiers, compare_data_identifiers, is_av_manager,
@@ -98,6 +98,7 @@ class AVRequestsPlugin(IndicoPlugin):
         self.connect(signals.before_retry, self._clear_changes)
         self.connect(signals.indico_menu, self._extend_indico_menu)
         self.connect(signals.users.merged, self._merge_users)
+        self.connect(signals.get_placeholders, self._get_placeholders, sender='agreement-email')
         self.template_hook('event-header', self._inject_event_header)
         self.template_hook('conference-header-subtitle', self._inject_conference_header_subtitle)
         HTTPAPIHook.register(AVExportHook)
@@ -186,3 +187,7 @@ class AVRequestsPlugin(IndicoPlugin):
 
     def _merge_users(self, target, source, **kwargs):
         self.settings.acls.merge_users(target, source)
+
+    def _get_placeholders(self, sender, definition, agreement, **kwargs):
+        if definition is SpeakerReleaseAgreement:
+            return TalkPlaceholder

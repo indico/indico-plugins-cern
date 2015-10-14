@@ -5,11 +5,12 @@ from markupsafe import Markup, escape
 from sqlalchemy.orm.attributes import flag_modified
 from werkzeug.exceptions import NotFound
 
-from indico.modules.events.agreements import AgreementDefinitionBase, AgreementPersonInfo, EmailPlaceholderBase
+from indico.modules.events.agreements import AgreementDefinitionBase, AgreementPersonInfo
 from indico.modules.events.requests import RequestDefinitionBase
 from indico.modules.events.requests.models.requests import RequestState, Request
 from indico.util.caching import memoize_request
 from indico.util.decorators import classproperty
+from indico.util.placeholders import Placeholder
 from indico.util.string import to_unicode
 from indico.web.flask.util import url_for
 from MaKaC.conference import SubContribution
@@ -126,12 +127,13 @@ def _talk_info_from_agreement_data(event, data):
     return 'subcontribution', url_for('event.subContributionDisplay', subcontrib), to_unicode(subcontrib.getTitle())
 
 
-class TalkPlaceholder(EmailPlaceholderBase):
+class TalkPlaceholder(Placeholder):
+    name = 'talk_title'
     required = True
     description = _("The title of the user's talk")
 
     @classmethod
-    def render(cls, agreement):
+    def render(cls, definition, agreement):
         return _talk_info_from_agreement_data(agreement.event_new, agreement.data)[2]
 
 
@@ -140,7 +142,6 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
     title = _('Speaker Release')
     description = _('For talks to be recorded, all involved speakers need to sign the speaker release form.')
     form_template_name = 'agreement_form.html'
-    email_placeholders = {'talk_title': TalkPlaceholder}
     disabled_reason = _('There are no agreements to sign. This means that either no recording request has been '
                         'done/accepted or there are no speakers assigned to the contributions in question.')
 
