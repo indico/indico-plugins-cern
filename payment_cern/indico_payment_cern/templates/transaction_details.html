@@ -1,7 +1,7 @@
 {% extends 'payment/transaction_details.html' %}
 {% block details %}
     <dt>{% trans %}Extra fee{% endtrans %}</dt>
-    <dd>{{ format_currency(transaction.amount|float - registrant.getTotal(), transaction.currency, locale=session.lang) }}</dd>
+    <dd>{{ format_currency(transaction.amount - transaction.registration.price, transaction.currency, locale=session.lang) }}</dd>
     <dt>{% trans %}Payment Method{% endtrans %}</dt>
     <dd>{{ transaction.data.BRAND }}</dd>
     <dt>{% trans %}Transaction ID{% endtrans %}</dt>

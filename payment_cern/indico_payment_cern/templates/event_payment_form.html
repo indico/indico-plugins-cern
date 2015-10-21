@@ -2,9 +2,9 @@ Select a PostFinance payment method to proceed with your payment.
 
 <dl class="i-data-list">
     <dt>{% trans %}First name{% endtrans %}</dt>
-    <dd>{{ registrant.getFirstName() }}</dd>
+    <dd>{{ registration.first_name }}</dd>
     <dt>{% trans %}Last name{% endtrans %}</dt>
-    <dd>{{ registrant.getFamilyName() }}</dd>
+    <dd>{{ registration.last_name }}</dd>
     <dt>{% trans %}Pay using{% endtrans %}</dt>
     <dd>
         <select id="postfinance-method">

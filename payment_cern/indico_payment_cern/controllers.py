@@ -7,25 +7,25 @@ from flask_pluginengine import current_plugin, render_plugin_template
 from markupsafe import Markup
 from werkzeug.exceptions import BadRequest
 
-from indico.modules.payment.models.transactions import TransactionAction, PaymentTransaction
-from indico.modules.payment.util import register_transaction, get_registrant_params
+from indico.modules.events.registration.controllers.display import RHRegistrationFormRegistrationBase
+from indico.modules.events.registration.models.registrations import Registration
+from indico.modules.payment.models.transactions import TransactionAction
+from indico.modules.payment.util import register_transaction
 from indico.web.flask.util import url_for
-from MaKaC.conference import ConferenceHolder
 from MaKaC.webinterface.rh.base import RH
-from MaKaC.webinterface.rh.registrationFormDisplay import RHRegistrationFormRegistrantBase
 
 from indico_payment_cern import _
 from indico_payment_cern.util import create_hash
 
 
-class RHPaymentAbortedBase(RHRegistrationFormRegistrantBase):
+class RHPaymentAbortedBase(RHRegistrationFormRegistrationBase):
     """Base class for simple payment errors which just show a message"""
     _category = 'info'
     _msg = None
 
     def _process(self):
         flash(self._msg, self._category)
-        return redirect(url_for('event.confRegistrationFormDisplay', self._conf))
+        return redirect(url_for('event_registration.display_regform', self.registration.locator.registrant))
 
 
 class RHPaymentCancel(RHPaymentAbortedBase):
@@ -42,8 +42,8 @@ class RHPaymentUncertain(RHPaymentAbortedBase):
 
     @property
     def _msg(self):
-        return Markup(render_plugin_template('payment_uncertain.html', settings=current_plugin.settings.get_all(),
-                                             registrant=self._registrant, event=self._conf))
+        return Markup(render_plugin_template('payment_uncertain.html', registration=self.registration,
+                                             settings=current_plugin.settings.get_all()))
 
 
 class PaymentSuccessMixin:
@@ -64,11 +64,11 @@ class PaymentSuccessMixin:
         amount = float(request.values['amount'])
         currency = request.values['currency']
         request_data = request.values.to_dict()
-        transaction = PaymentTransaction.find_latest_for_registrant(self.registrant)
+        transaction = self.registration.transaction
         if transaction and transaction.data == request_data:
             # Same request, e.g. because of the client-side and server-side success notification
             return
-        register_transaction(registrant=self.registrant,
+        register_transaction(registration=self.registration,
                              amount=amount,
                              currency=currency,
                              action=TransactionAction.complete,
@@ -76,43 +76,33 @@ class PaymentSuccessMixin:
                              data=request_data)
 
 
-class RHPaymentSuccess(PaymentSuccessMixin, RHRegistrationFormRegistrantBase):
+class RHPaymentSuccess(PaymentSuccessMixin, RHRegistrationFormRegistrationBase):
     """Verify and process a successful payment"""
-
-    def _checkParams(self, params):
-        RHRegistrationFormRegistrantBase._checkParams(self, params)
-        self.event = self._conf
-        self.registrant = self._registrant
 
     def _process(self):
         if not self._check_hash():
             flash('Your transaction could not be authorized.', 'error')
-            return redirect(url_for('event.confRegistrationFormDisplay', self.event, **get_registrant_params()))
-
-        self._create_transaction()
-        flash(_('Your payment request has been processed.'), 'success')
-        return redirect(url_for('event.confRegistrationFormDisplay', self.event, **get_registrant_params()))
+        else:
+            self._create_transaction()
+            flash(_('Your payment request has been processed.'), 'success')
+        return redirect(url_for('event_registration.display_regform', self.registration.locator.registrant))
 
 
 class RHPaymentSuccessBackground(PaymentSuccessMixin, RH):
     """Verify and process a successful payment (server2server notification)"""
 
     def _checkParams(self):
-        matches = re.search(r'c(\d+)r(\d+)$', request.values['orderID'])
+        matches = re.search(r'r(\d)+$', request.values['orderID'])
         if matches is None:
             raise BadRequest
-        self.event = ConferenceHolder().getById(matches.group(1), quiet=True)
-        if not self.event:
-            raise BadRequest
-        self.registrant = self.event.getRegistrantById(matches.group(2))
-        if not self.registrant:
+        self.registration = Registration.find_first(id=matches.group(1))
+        if self.registration is None:
             raise BadRequest
 
     def _process(self):
         if not self._check_hash():
             current_plugin.logger.warning('Received invalid request from postfinance: {}'.format(request.values))
             raise BadRequest
-
         self._create_transaction()
 
 

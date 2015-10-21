@@ -1,5 +1,6 @@
 from __future__ import unicode_literals, division
 
+from decimal import Decimal
 from hashlib import sha512
 
 from flask import request, session
@@ -11,7 +12,6 @@ from wtforms.validators import DataRequired
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.modules.payment import PaymentPluginMixin, PaymentPluginSettingsFormBase, PaymentEventSettingsFormBase
-from indico.modules.payment.util import get_registrant_params
 from indico.util.string import remove_accents, remove_non_alpha
 from indico.web.flask.util import url_for
 from indico.web.forms.fields import PrincipalListField, MultipleItemsField, OverrideMultipleItemsField
@@ -104,7 +104,7 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         base_amount = data['amount']
         if selected_method:
             method = get_payment_method(data['event'], selected_method)
-            modifier = 1 / (1 - method['fee'] / 100)
+            modifier = Decimal(1 / (1 - method['fee'] / 100))
             data['amount'] = base_amount * modifier
             data['fee'] = data['amount'] - base_amount
         else:
@@ -115,17 +115,18 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         data['form_data'] = self._generate_form_data(data['amount'], data)
 
     def _get_order_id(self, data):
-        registrant = data['registrant']
+        registration = data['registration']
+        payment_id = 'r{}'.format(registration.id)
         prefix = data['settings']['order_id_prefix']
-        order_id_extra_len = max(0, 30 - len(registrant.getIdPay()) + len(prefix))
-        order_id = prefix + remove_non_alpha(remove_accents(registrant.getSurName() + registrant.getFirstName()))
-        return order_id[:order_id_extra_len].upper().strip() + registrant.getIdPay()
+        order_id_extra_len = max(0, 30 - len(payment_id) + len(prefix))
+        order_id = prefix + remove_non_alpha(remove_accents(registration.last_name + registration.first_name))
+        return order_id[:order_id_extra_len].upper().strip() + payment_id
 
     def _generate_form_data(self, amount, data):
         if amount is None:
             return {}
-
-        registrant = data['registrant']
+        registration = data['registration']
+        personal_data = registration.get_personal_data()
         event = data['event']
         currency = data['currency']
         seed = data['settings']['hash_seed_{}'.format(currency.lower())]
@@ -134,7 +135,7 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         template_page = ''  # yes, apparently it's supposed to be empty..
         template_hash = sha512(seed + template_page).hexdigest()
         order_id = self._get_order_id(data)
-        parameters = get_registrant_params()
+        locator = registration.locator.uuid
 
         form_data = {
             'PSPID': shop_id,
@@ -142,23 +143,22 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             'AMOUNT': int(amount * 100),
             'CURRENCY': currency,
             'LANGUAGE': session.lang,
-            'CN': remove_accents(registrant.getFullName(title=False, firstNameFirst=True)[:35]),
-            'EMAIL': registrant.getEmail()[:50],
-            'OWNERADDRESS': registrant.getAddress()[:35],
-            'OWNERTOWN': registrant.getCity()[:25],
-            'OWNERCTY': registrant.getCountry(),
-            'OWNERTELNO': registrant.getPhone()[:30],
+            'CN': remove_accents(registration.full_name[:35]),
+            'EMAIL': registration.email[:50],
+            'OWNERADDRESS': personal_data.get('address', '')[:35],
+            'OWNERTELNO': personal_data.get('phone', '')[:30],
             'TP': template_page + '&hash=' + template_hash,
             'PM': method['type'],
             'BRAND': method['name'],
             'PARAMVAR': data['settings']['server_url_suffix'],
-            'HOMEURL': url_for('event.conferenceDisplay', event, _external=True, _secure=True),
-            'ACCEPTURL': url_for_plugin('payment_cern.success', event, _external=True, _secure=True, **parameters),
-            'CANCELURL': url_for_plugin('payment_cern.cancel', event, _external=True, _secure=True, **parameters),
-            'DECLINEURL': url_for_plugin('payment_cern.decline', event, _external=True, _secure=True, **parameters),
-            'EXCEPTIONURL': url_for_plugin('payment_cern.uncertain', event, _external=True, _secure=True, **parameters),
-            'BACKURL': url_for('payment.event_payment', event, _external=True, _secure=True, **parameters)
+            'HOMEURL': url_for('event_registration.display_regform', locator, _external=True, _secure=True),
+            'ACCEPTURL': url_for_plugin('payment_cern.success', locator, _external=True, _secure=True),
+            'CANCELURL': url_for_plugin('payment_cern.cancel', locator, _external=True, _secure=True),
+            'DECLINEURL': url_for_plugin('payment_cern.decline', locator, _external=True, _secure=True),
+            'EXCEPTIONURL': url_for_plugin('payment_cern.uncertain', locator, _external=True, _secure=True),
+            'BACKURL': url_for('payment.event_payment', locator, _external=True, _secure=True)
         }
+
         form_data['SHASIGN'] = create_hash(seed, form_data)
         return form_data
 
