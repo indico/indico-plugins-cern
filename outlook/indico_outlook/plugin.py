@@ -13,9 +13,9 @@ from indico.core import signals
 from indico.core.db import DBMgr, db
 from indico.core.db.sqlalchemy.util.session import update_session_options
 from indico.core.plugins import IndicoPlugin
+from indico.modules.events.registration.models.registrations import RegistrationState
 from indico.modules.users import ExtraUserPreferences
 from indico.util.event import unify_event_args
-from indico.util.user import unify_user_args
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import IndicoPasswordField
 from indico.web.forms.widgets import SwitchWidget
@@ -91,8 +91,8 @@ class OutlookPlugin(IndicoPlugin):
     def init(self):
         super(OutlookPlugin, self).init()
         self.connect(signals.users.preferences, self.extend_user_preferences)
-        self.connect(signals.event.registrant_changed, self.event_participation_changed)
-        self.connect(signals.event.participant_changed, self.event_participation_changed)
+        self.connect(signals.event.registration.registration_state_updated, self.event_registration_state_changed)
+        self.connect(signals.event.registration.registration_deleted, self.event_registration_deleted)
         self.connect(signals.event.data_changed, self.event_data_changed)
         self.connect(signals.event.deleted, self.event_deleted)
         self.connect(signals.after_process, self._apply_changes)
@@ -111,16 +111,17 @@ class OutlookPlugin(IndicoPlugin):
     def extend_user_preferences(self, user, **kwargs):
         return OutlookUserPreferences
 
-    @unify_user_args
-    @unify_event_args
-    def event_participation_changed(self, event, user, action, **kwargs):
-        if user:
-            if action == 'added':
-                self.logger.info('Participation change: adding {} in {!r}'.format(user, event))
-                self._record_change(event, user, OutlookAction.add)
-            elif action == 'removed':
-                self.logger.info('Participation change: removing {} in {!r}'.format(user, event))
-                self._record_change(event, user, OutlookAction.remove)
+    def event_registration_state_changed(self, registration, **kwargs):
+        if registration.user and registration.state == RegistrationState.complete:
+            event = registration.registration_form.event_new
+            self._record_change(event, registration.user, OutlookAction.add)
+            self.logger.info('Registration added: adding {} in {!r}'.format(registration.user, event))
+
+    def event_registration_deleted(self, registration, **kwargs):
+        if registration.user:
+            event = registration.registration_form.event_new
+            self._record_change(event, registration.user, OutlookAction.remove)
+            self.logger.info('Registration removed: removing {} in {!r}'.format(registration.user, event))
 
     @unify_event_args
     def event_data_changed(self, event, attr, **kwargs):

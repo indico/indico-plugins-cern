@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 from indico.core.db.sqlalchemy import db, PyIntEnum
 from indico.util.string import return_ascii
 from indico.util.struct.enum import IndicoEnum
-from MaKaC.conference import ConferenceHolder
 
 
 class OutlookAction(int, IndicoEnum):
