@@ -1,7 +1,7 @@
 {% extends 'events/agreements/agreement_form.html' %}
 
 {%- if talk_type == 'lecture' %}
-    {% set data_source = event %}
+    {% set data_source = event.as_legacy %}
 {% else %}
     {% set data_source = contrib.getContribution() if is_subcontrib else contrib %}
 {% endif -%}
