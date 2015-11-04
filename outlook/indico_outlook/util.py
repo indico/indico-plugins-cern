@@ -1,9 +1,12 @@
 from __future__ import unicode_literals
 
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import joinedload
 
+from indico.core.db import db
+from indico.modules.events.registration.models.registrations import Registration
+from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.users import UserSetting
-from indico.util.event import unify_event_args
 
 
 def check_config():
@@ -14,25 +17,24 @@ def check_config():
     return all(settings[x] for x in ('service_url', 'username', 'password'))
 
 
-@unify_event_args(legacy=True)
 def get_participating_users(event):
     """Returns participating users of an event who did not disable calendar updates."""
-    users = set()
-    for participant in event.getParticipation().getParticipantList():
-        avatar = participant.getAvatar()
-        if avatar and participant.getStatus() in {'added', 'accepted'} and avatar.user:
-            users.add(avatar.user)
-    for registrant in event.getRegistrantsList():
-        avatar = registrant.getAvatar()
-        if avatar and avatar.user:
-            users.add(avatar.user)
-    if users:
-        # Remove users who disabled calendar updates
-        query = (UserSetting.query
-                 .options(joinedload(UserSetting.user))
-                 .filter_by(module='plugin_outlook', name='enabled'))
-        users -= {x.user for x in query if not x.value}
-    return users
+    registrations = (Registration.query
+                     .filter(Registration.is_active,
+                             ~RegistrationForm.is_deleted,
+                             Registration.user_id.isnot(None),
+                             RegistrationForm.event_id == event.id)
+                     .filter(~UserSetting.query
+                             .filter(UserSetting.user_id == Registration.user_id,
+                                     UserSetting.module == 'plugin_outlook',
+                                     UserSetting.name == 'enabled',
+                                     db.func.cast(UserSetting.value, JSONB) == db.func.cast(db.func.to_json(False),
+                                                                                            JSONB))
+                             .correlate(Registration)
+                             .exists())
+                     .join(Registration.registration_form)
+                     .options(joinedload(Registration.user)))
+    return {reg.user for reg in registrations}
 
 
 def latest_actions_only(items, action_key_func):

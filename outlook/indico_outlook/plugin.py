@@ -85,7 +85,7 @@ class OutlookPlugin(IndicoPlugin):
         'timeout': 3
     }
     default_user_settings = {
-        'enabled': True
+        'enabled': True  # XXX: if the default value ever changes, adapt `get_participating_users`!
     }
 
     def init(self):
