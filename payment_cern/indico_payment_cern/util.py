@@ -4,6 +4,8 @@ from hashlib import sha512
 
 from flask_pluginengine import current_plugin
 
+from indico.util.string import remove_non_alpha, remove_accents
+
 
 def get_payment_methods(event):
     """Returns the available payment methods with the correct fees.
@@ -35,3 +37,18 @@ def create_hash(seed, form_data):
     """Creates the weird hash for postfinance"""
     data_str = seed.join('{}={}'.format(key, value) for key, value in sorted(form_data.items()) if value) + seed
     return sha512(data_str).hexdigest().upper()
+
+
+def get_order_id(registration, prefix):
+    """Generates the order ID specific to a registration.
+
+    Note: The format of the payment id in the end MUST NOT change
+    as the finance department uses it to associate payments with
+    events.  This is done manually using the event id, but any
+    change to the format of the order ID should be checked with them
+    beforehand.
+    """
+    payment_id = 'c{}r{}'.format(registration.event_id, registration.id)
+    order_id_extra_len = 30 - len(payment_id)
+    order_id = prefix + remove_non_alpha(remove_accents(registration.last_name + registration.first_name))
+    return order_id[:order_id_extra_len].upper().strip() + payment_id

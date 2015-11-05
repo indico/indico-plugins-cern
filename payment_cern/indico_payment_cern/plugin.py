@@ -18,8 +18,7 @@ from indico.web.forms.fields import PrincipalListField, MultipleItemsField, Over
 
 from indico_payment_cern import _
 from indico_payment_cern.blueprint import blueprint
-from indico_payment_cern.util import get_payment_methods, get_payment_method, create_hash
-
+from indico_payment_cern.util import get_payment_methods, get_payment_method, create_hash, get_order_id
 
 PAYMENT_METHODS_FIELDS = (('name', _("Name")),
                           ('title', _("Displayed Name")),
@@ -115,12 +114,7 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         data['form_data'] = self._generate_form_data(data['amount'], data)
 
     def _get_order_id(self, data):
-        registration = data['registration']
-        payment_id = 'r{}'.format(registration.id)
-        prefix = data['settings']['order_id_prefix']
-        order_id_extra_len = max(0, 30 - len(payment_id) + len(prefix))
-        order_id = prefix + remove_non_alpha(remove_accents(registration.last_name + registration.first_name))
-        return order_id[:order_id_extra_len].upper().strip() + payment_id
+        return get_order_id(data['registration'], data['settings']['order_id_prefix'])
 
     def _generate_form_data(self, amount, data):
         if amount is None:
