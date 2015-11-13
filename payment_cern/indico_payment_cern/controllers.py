@@ -9,8 +9,8 @@ from werkzeug.exceptions import BadRequest
 
 from indico.modules.events.registration.controllers.display import RHRegistrationFormRegistrationBase
 from indico.modules.events.registration.models.registrations import Registration
-from indico.modules.payment.models.transactions import TransactionAction
-from indico.modules.payment.util import register_transaction
+from indico.modules.events.payment.models.transactions import TransactionAction
+from indico.modules.events.payment.util import register_transaction
 from indico.web.flask.util import url_for
 from MaKaC.webinterface.rh.base import RH
 

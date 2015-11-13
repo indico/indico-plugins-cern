@@ -11,8 +11,9 @@ from wtforms.validators import DataRequired
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin, url_for_plugin
-from indico.modules.payment import PaymentPluginMixin, PaymentPluginSettingsFormBase, PaymentEventSettingsFormBase
-from indico.util.string import remove_accents, remove_non_alpha
+from indico.modules.events.payment import (PaymentPluginMixin, PaymentPluginSettingsFormBase,
+                                           PaymentEventSettingsFormBase)
+from indico.util.string import remove_accents
 from indico.web.flask.util import url_for
 from indico.web.forms.fields import PrincipalListField, MultipleItemsField, OverrideMultipleItemsField
 
