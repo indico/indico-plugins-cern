@@ -1,4 +1,4 @@
-{% extends 'payment/transaction_details.html' %}
+{% extends 'events/payment/transaction_details.html' %}
 {% block details %}
     <dt>{% trans %}Extra fee{% endtrans %}</dt>
     <dd>{{ format_currency(transaction.amount - transaction.registration.price, transaction.currency, locale=session.lang) }}</dd>
