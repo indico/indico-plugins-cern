@@ -13,6 +13,12 @@
                     recorded or webcast. Please add some contributions first.
                 {%- endtrans %}
             {% endcall %}
+            {% call message_box('highlight') %}
+                {% trans url=url_for('event_mgmt.conferenceModification', event) -%}
+                    <strong>Tip:</strong> If the event doesn't need any contributions, maybe you should
+                    <a href="{{ url }}">turn it into a lecture</a> (option <em>Event type</em>)?
+                {%- endtrans %}
+            {% endcall %}
         </div>
     {% elif not num_capable_contributions %}
         <div class="i-form">
