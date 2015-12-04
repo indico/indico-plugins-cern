@@ -6,7 +6,6 @@
             url: ConversionPlugin.urls.check,
             method: 'GET',
             data: {a: ids},
-            traditional: true,
             error: handleAjaxError,
             success: function(data) {
                 if (handleAjaxError(data)) {
