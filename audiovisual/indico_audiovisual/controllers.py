@@ -4,8 +4,8 @@ from collections import OrderedDict
 from operator import itemgetter
 
 from flask import session, request
+from werkzeug.exceptions import Forbidden
 
-from indico.core.errors import AccessError
 from indico.util.date_time import get_day_start, get_day_end, as_utc
 from indico.util.struct.iterables import group_list
 from MaKaC.webinterface.rh.base import RHProtected
@@ -21,7 +21,7 @@ class RHRequestList(RHProtected):
     def _checkProtection(self):
         RHProtected._checkProtection(self)
         if self._doProcess and not is_av_manager(session.user):
-            raise AccessError
+            raise Forbidden
 
     def _process(self):
         form = RequestListFilterForm(request.args, csrf_enabled=False)
