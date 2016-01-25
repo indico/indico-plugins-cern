@@ -135,7 +135,7 @@ class FoundationSync(object):
             if latitude and longitude and building_number:
                 coordinates[building_number] = {'latitude': latitude, 'longitude': longitude}
 
-        self._logger.info("Fetched geocoordinates for {} buildings".format(len(coordinates)))
+        self._logger.info("Fetched geocoordinates for %d buildings", len(coordinates))
         return coordinates
 
     def fetch_equipment(self, connection):
@@ -154,17 +154,16 @@ class FoundationSync(object):
                 equipment = EquipmentType(name=row['NAME'])
                 self._location.equipment_types.append(equipment)
                 counter['added'] += 1
-                self._logger.info(u"Added equipment '{}'".format(equipment))
+                self._logger.info(u"Added equipment '%s'", equipment)
             foundation_equipment_ids.append(equipment.id)
 
         vc_parent = self._location.get_equipment_by_name('Video conference')
         for equipment in EquipmentType.find(~EquipmentType.id.in_(foundation_equipment_ids),
                                             EquipmentType.parent_id != vc_parent.id):
-            self._logger.info("Mismatch: Equipment '{}' found in Indico but not in Foundation".format(equipment.name))
+            self._logger.info("Mismatch: Equipment '%s' found in Indico but not in Foundation", equipment.name)
 
         db.session.commit()
-        self._logger.info("Equipment objects summary: {} found - {} new added".format(counter['found'],
-                                                                                      counter['added']))
+        self._logger.info("Equipment objects summary: %d found - %d new added", counter['found'], counter['added'])
 
     def fetch_holidays(self, connection):
         self._logger.info("Fetching holidays...")
@@ -181,10 +180,10 @@ class FoundationSync(object):
             holiday = Holiday(date=row['HOLIDAY_DATE'].date(), name=row['COMMENTS'])
             counter['found'] += 1
             self._location.holidays.append(holiday)
-            self._logger.info(u"Added {} as a holiday ({})".format(holiday.date, holiday.name))
+            self._logger.info(u"Added %s as a holiday (%s)", holiday.date, holiday.name)
 
         db.session.commit()
-        self._logger.info("Holidays summary: {} found".format(counter['found']))
+        self._logger.info("Holidays summary: %d found", counter['found'])
 
     def fetch_rooms(self, connection, room_name=None):
         self._logger.info("Fetching room information...")
@@ -208,10 +207,10 @@ class FoundationSync(object):
             try:
                 room_data = self._parse_room_data(data, coordinates)
                 room_attrs = self._get_room_attrs(data)
-                self._logger.info("Fetched data for room with id='{}'".format(room_id))
+                self._logger.info("Fetched data for room with id='%s'", room_id)
             except ValueError as e:
                 counter['skipped'] += 1
-                self._logger.warning("Skipped room {}: {}".format(room_id, str(e)))
+                self._logger.warning("Skipped room %s: %s", room_id, e)
                 continue
 
             room = Room.find_first(Room.building == room_data['building'],
@@ -224,13 +223,13 @@ class FoundationSync(object):
                 room = Room()
                 self._location.rooms.append(room)
                 counter['inserted'] += 1
-                self._logger.info("Created new room '{}'".format(room_id))
+                self._logger.info("Created new room '%s'", room_id)
             else:
                 counter['updated'] += 1
 
             # Update room data
             room = self._update_room(room, room_data, room_attrs)
-            self._logger.info("Updated room '{}' information".format(room_id))
+            self._logger.info("Updated room '%s' information", room_id)
 
             foundation_rooms.append(room)
 
@@ -241,12 +240,12 @@ class FoundationSync(object):
             room.is_active = False
             room.is_reservable = False
             counter['deactivated'] += 1
-        self._logger.info("Deactivated {} rooms not found in Foundation".format(counter['deactivated']))
+        self._logger.info("Deactivated %d rooms not found in Foundation", counter['deactivated'])
 
         db.session.commit()
-        self._logger.info("Rooms summary: {} in Foundation - {} skipped - {} inserted - {} updated - {} deactivated"
-                          .format(counter['found'], counter['skipped'], counter['inserted'], counter['updated'],
-                                  counter['deactivated']))
+        self._logger.info("Rooms summary: %d in Foundation - %d skipped - %d inserted - %d updated - %d deactivated",
+                          counter['found'], counter['skipped'], counter['inserted'], counter['updated'],
+                          counter['deactivated'])
 
     def fetch_room_equipment(self, connection, room_name=None):
         self._logger.info("Fetching rooms equipment...")
@@ -282,33 +281,33 @@ class FoundationSync(object):
                 if not room:
                     raise ValueError('Room not found in Indico DB')
                 if not equipment:
-                    raise ValueError('Equipment {} not found in Indico DB'.format(equipment_name))
+                    raise ValueError('Equipment %s not found in Indico DB', equipment_name)
                 if not room.available_equipment.filter(EquipmentType.id == equipment.id).count():
                     room.available_equipment.append(equipment)
                     counter['added'] += 1
-                    self._logger.info("Added equipment '{}' to room '{}'".format(equipment.name, room.full_name))
+                    self._logger.info("Added equipment '%s' to room '%s'", equipment.name, room.full_name)
                     if equipment == vc_parent:
                         db_vc_equipment = set(room.available_equipment.filter(EquipmentType.parent_id == vc_parent.id))
                         missing_vc_equipment = vc_equipment - db_vc_equipment
                         for eq in missing_vc_equipment:
                             room.available_equipment.append(eq)
-                            self._logger.info("Added VC equipment '{}' to room '{}'".format(eq.name, room.full_name))
+                            self._logger.info("Added VC equipment '%s' to room '%s'", eq.name, room.full_name)
                 foundation_room_equipment[room].append(equipment.id)
             except ValueError as e:
                 counter['skipped'] += 1
-                self._logger.warning("Skipped room {}: {}".format(room_id, str(e)))
+                self._logger.warning("Skipped room %s: %s", room_id, e)
 
         for room, equipment_types in foundation_room_equipment.iteritems():
             # We handle VC subequipment like equipment that's in the foundation DB since the latter only contains "VC"
             # but no information about the actually available vc equipment...
             foundation_equipment_ids = set(equipment_types) | {eq.id for eq in vc_equipment}
             for equipment in room.available_equipment.filter(~EquipmentType.id.in_(foundation_equipment_ids)):
-                self._logger.info("Mismatch: Room {} has equipment {} in Indico DB but not in Foundation"
-                                  .format(room.full_name, equipment.name))
+                self._logger.info("Mismatch: Room %s has equipment %s in Indico DB but not in Foundation",
+                                  room.full_name, equipment.name)
 
         db.session.commit()
-        self._logger.info("Equipment associations summary: {} found - {} new added - {} skipped"
-                          .format(counter['found'], counter['added'], counter['skipped']))
+        self._logger.info("Equipment associations summary: %d found - %d new added - %d skipped",
+                          counter['found'], counter['added'], counter['skipped'])
 
     def run_all(self, room_name=None):
         with DBMgr.getInstance().global_connection():

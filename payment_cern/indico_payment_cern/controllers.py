@@ -52,7 +52,7 @@ class PaymentSuccessMixin:
             # Prevent tampering with GET/POST data. We expect only one type of arguments!
             # The signature check would fail anyway but if someone tries to be smart we'll log it here.
             current_plugin.logger.error('Received invalid request from postfinance containing GET and '
-                                        'POST data ({}, {})'.format(request.args, request.form))
+                                        'POST data (%s, %s)', request.args, request.form)
             raise BadRequest
         fields = {'AAVCheck', 'ACCEPTANCE', 'BRAND', 'CARDNO', 'CCCTY', 'CN', 'CVCCheck', 'ECI', 'ED', 'IP', 'IPCTY',
                   'NCERROR', 'PAYID', 'PM', 'STATUS', 'TRXDATE', 'VC', 'amount', 'currency', 'orderID'}
@@ -101,7 +101,7 @@ class RHPaymentSuccessBackground(PaymentSuccessMixin, RH):
 
     def _process(self):
         if not self._check_hash():
-            current_plugin.logger.warning('Received invalid request from postfinance: {}'.format(request.values))
+            current_plugin.logger.warning('Received invalid request from postfinance: %s', request.values)
             raise BadRequest
         self._create_transaction()
 

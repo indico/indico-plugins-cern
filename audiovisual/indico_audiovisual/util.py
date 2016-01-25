@@ -199,7 +199,7 @@ def send_webcast_ping():
     url = AVRequestsPlugin.settings.get('webcast_ping_url')
     if not url:
         return
-    AVRequestsPlugin.logger.info('Sending webcast ping to {}'.format(url))
+    AVRequestsPlugin.logger.info('Sending webcast ping to %s', url)
     return requests.get(url).status_code
 
 
@@ -210,7 +210,7 @@ def send_agreement_ping(agreement):
     url = AVRequestsPlugin.settings.get('agreement_ping_url')
     if not url:
         return
-    AVRequestsPlugin.logger.info('Sending agreement ping to {}'.format(url))
+    AVRequestsPlugin.logger.info('Sending agreement ping to %s', url)
     payload = {
         'event_id': agreement.event_id,
         'accepted': None if agreement.pending else agreement.accepted,

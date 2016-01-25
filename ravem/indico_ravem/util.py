@@ -39,29 +39,26 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
         response = requests.request(method, urljoin(root_endpoint, api_endpoint), params=kwargs, headers=headers,
                                     auth=HTTPDigestAuth(username, password), verify=False, timeout=timeout)
     except Timeout as error:
-        RavemPlugin.logger.warning("{error.request.method} {error.request.url} timed out: {error.message}"
-                                   .format(error=error))
+        RavemPlugin.logger.warning("%s %s timed out: %s", error.request.method, error.request.url, error.message)
         # request timeout sometime has an inner timeout error as message instead of a string.
         raise Timeout(_("Timeout while contacting the room."))
     except Exception as error:
-        RavemPlugin.logger.exception(
-            "failed call: {method} {api_endpoint} with {params}: {error.message}"
-            .format(method=method.upper(), api_endpoint=api_endpoint, params=kwargs, error=error)
-        )
+        RavemPlugin.logger.exception("failed call: %s %s with %s: %s",
+                                     method.upper(), api_endpoint, kwargs, error.message)
         raise
 
     try:
         response.raise_for_status()
     except HTTPError as error:
-        RavemPlugin.logger.exception("{response.request.method} {response.url} failed with {error.message}"
-                                     .format(response=response, error=error))
+        RavemPlugin.logger.exception("%s %s failed with %s", response.request.method, response.url, error.message)
         raise
 
     json_response = response.json()
     if 'error' not in json_response and 'result' not in json_response:
+        RavemPlugin.logger.exception('%s %s returned json without a result or error: %s',
+                                     response.request.method, response.url, json_response)
         err_msg = ("{response.request.method} {response.url} returned a json without a result or error: "
                    "{json_response}").format(response=response, json_response=json_response)
-        RavemPlugin.logger.exception(err_msg)
         raise RavemAPIException(err_msg, api_endpoint, response)
 
     return json_response

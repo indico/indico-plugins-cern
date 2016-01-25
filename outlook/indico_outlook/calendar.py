@@ -61,21 +61,21 @@ def _update_calendar_entry(entry, settings):
     from indico_outlook.plugin import OutlookPlugin
     logger = OutlookPlugin.logger
 
-    logger.info('Processing {}'.format(entry))
+    logger.info('Processing %s', entry)
     url = posixpath.join(settings['service_url'], operation_map[entry.action])
     user = entry.user
     if user is None:
-        logger.debug('Ignoring {} for deleted user {}'.format(entry.action.name, entry.user_id))
+        logger.debug('Ignoring %s for deleted user %s', entry.action.name, entry.user_id)
         return True
     elif not OutlookPlugin.user_settings.get(user, 'enabled'):
-        logger.debug('User {} has disabled calendar entries'.format(user))
+        logger.debug('User %s has disabled calendar entries', user)
         return True
 
     unique_id = '{}{}_{}'.format(settings['id_prefix'], user.id, entry.event_id)
     if entry.action in {OutlookAction.add, OutlookAction.update}:
         event = entry.event_new
         if event.is_deleted:
-            logger.debug('Ignoring {} for deleted event {}'.format(entry.action.name, entry.event_id))
+            logger.debug('Ignoring %s for deleted event %s', entry.action.name, entry.event_id)
             return True
         conf = event.as_legacy
         location = strip_control_chars(conf.getRoom().getName()) if conf.getRoom() else ''
@@ -98,7 +98,7 @@ def _update_calendar_entry(entry, settings):
         raise ValueError('Unexpected action: {}'.format(entry.action))
 
     if settings['debug']:
-        logger.debug('Calendar update request:\nURL: {}\nData: {}'.format(url, pformat(data)))
+        logger.debug('Calendar update request:\nURL: %s\nData: %s', url, pformat(data))
         return True
 
     try:
@@ -109,12 +109,11 @@ def _update_calendar_entry(entry, settings):
         logger.warning('Request timed out')
         return False
     except RequestException:
-        logger.exception('Request failed:\nURL: {}\nData: {}'.format(url, pformat(data)))
+        logger.exception('Request failed:\nURL: %s\nData: %s', url, pformat(data))
         return False
     else:
         if res.status_code == 200:
             return True
-        logger.error('Request unsuccessful:\nURL: {}\nData: {}\nCode: {}\nResponse: {}'.format(url, pformat(data),
-                                                                                               res.status_code,
-                                                                                               res.text))
+        logger.error('Request unsuccessful:\nURL: %s\nData: %s\nCode: %s\nResponse: %s',
+                     url, pformat(data), res.status_code, res.text)
         return False

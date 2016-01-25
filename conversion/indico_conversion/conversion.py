@@ -43,9 +43,9 @@ def submit_attachment(attachment):
                 raise requests.RequestException('Unexpected response from server: {}'.format(response.text))
         except requests.RequestException:
             cache.delete(unicode(attachment.id))
-            ConversionPlugin.logger.exception('Could not submit {} for PDF conversion'.format(attachment))
+            ConversionPlugin.logger.exception('Could not submit %s for PDF conversion', attachment)
         else:
-            ConversionPlugin.logger.info('Submitted {} for PDF conversion'.format(attachment))
+            ConversionPlugin.logger.info('Submitted %s for PDF conversion', attachment)
 
 
 @RHSimple.wrap_function
@@ -55,14 +55,14 @@ def conversion_finished():
     try:
         payload = secure_serializer.loads(request.form['directory'], salt='pdf-conversion')
     except BadData:
-        ConversionPlugin.logger.exception('Received invalid payload ({})'.format(request.form['directory']))
+        ConversionPlugin.logger.exception('Received invalid payload (%s)', request.form['directory'])
         return jsonify(success=False)
     attachment = Attachment.get(payload['attachment_id'])
     if not attachment or attachment.is_deleted or attachment.folder.is_deleted:
-        ConversionPlugin.logger.warning('Attachment has been deleted: {}'.format(attachment))
+        ConversionPlugin.logger.warning('Attachment has been deleted: %s', attachment)
         return jsonify(success=True)
     elif request.form['status'] != '1':
-        ConversionPlugin.logger.error('Received invalid status {} for {}'.format(request.form['status'], attachment))
+        ConversionPlugin.logger.error('Received invalid status %s for %s', request.form['status'], attachment)
         return jsonify(success=False)
     data = BytesIO(base64.decodestring(request.form['content']))
     name, ext = os.path.splitext(attachment.file.filename)
@@ -76,7 +76,7 @@ def conversion_finished():
     db.session.add(pdf_attachment)
     db.session.flush()
     cache.set(unicode(attachment.id), 'finished', timedelta(minutes=15))
-    ConversionPlugin.logger.info('Added PDF attachment {} for {}'.format(pdf_attachment, attachment))
+    ConversionPlugin.logger.info('Added PDF attachment %s for %s', pdf_attachment, attachment)
     signals.attachments.attachment_created.send(pdf_attachment, user=None)
     return jsonify(success=True)
 

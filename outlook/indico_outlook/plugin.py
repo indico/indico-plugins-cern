@@ -115,24 +115,24 @@ class OutlookPlugin(IndicoPlugin):
         if registration.user and registration.state == RegistrationState.complete:
             event = registration.registration_form.event_new
             self._record_change(event, registration.user, OutlookAction.add)
-            self.logger.info('Registration added: adding {} in {!r}'.format(registration.user, event))
+            self.logger.info('Registration added: adding %s in %r', registration.user, event)
 
     def event_registration_deleted(self, registration, **kwargs):
         if registration.user:
             event = registration.registration_form.event_new
             self._record_change(event, registration.user, OutlookAction.remove)
-            self.logger.info('Registration removed: removing {} in {!r}'.format(registration.user, event))
+            self.logger.info('Registration removed: removing %s in %r', registration.user, event)
 
     @unify_event_args
     def event_data_changed(self, event, attr, **kwargs):
         for user in get_participating_users(event):
-            self.logger.info('Event data change ({}): updating {} in {!r}'.format(attr, user, event))
+            self.logger.info('Event data change (%s): updating %s in %r', attr, user, event)
             self._record_change(event, user, OutlookAction.update)
 
     @unify_event_args
     def event_deleted(self, event, **kwargs):
         for user in get_participating_users(event):
-            self.logger.info('Event deletion: removing {} in {!r}'.format(user, event))
+            self.logger.info('Event deletion: removing %s in %r', user, event)
             self._record_change(event, user, OutlookAction.remove)
 
     def _record_change(self, event, user, action):
