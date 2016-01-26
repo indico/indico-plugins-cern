@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from collections import defaultdict
 from operator import itemgetter
 
 from flask import g
@@ -145,8 +146,12 @@ class OutlookPlugin(IndicoPlugin):
         # especially event_data_changes is often triggered more than once e.g. for most date changes
         if 'outlook_changes' not in g:
             return
-        for event, user, action in latest_actions_only(g.outlook_changes, itemgetter(2)):
-            OutlookQueueEntry.record(event, user, action)
+        user_events = defaultdict(list)
+        for event, user, action in g.outlook_changes:
+            user_events[user].append((event, action))
+        for user, data in user_events.viewitems():
+            for event, action in latest_actions_only(data, itemgetter(1)):
+                OutlookQueueEntry.record(event, user, action)
 
     def _clear_changes(self, sender, **kwargs):
         if 'outlook_changes' not in g:
