@@ -1,7 +1,7 @@
 {% if top_level %}
     <span class="i-button attachment icon-file-pdf pdf-pending
                  {% if has_label %}has-label{% endif %}
-                 {% if attachment.is_protected %}is-protected{% endif %}"
+                 {% if attachment.is_self_protected %}is-protected{% endif %}"
           data-attachment-id="{{ attachment.id }}"
           title="{% trans %}PDF conversion pending{% endtrans %}">
         {%- if not has_label -%}
@@ -10,7 +10,7 @@
     </span>
 {% else %}
     <li>
-        <a class="attachment icon-file-pdf pdf-pending {% if attachment.is_protected %}is-protected{% endif %}"
+        <a class="attachment icon-file-pdf pdf-pending {% if attachment.is_self_protected %}is-protected{% endif %}"
            href="#" data-attachment-id="{{ attachment.id }}"
            title="{% trans %}PDF conversion pending{% endtrans %}">
             {{- title -}}
