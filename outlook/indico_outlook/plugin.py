@@ -148,9 +148,9 @@ class OutlookPlugin(IndicoPlugin):
             return
         user_events = defaultdict(list)
         for event, user, action in g.outlook_changes:
-            user_events[user].append((event, action))
-        for user, data in user_events.viewitems():
-            for event, action in latest_actions_only(data, itemgetter(1)):
+            user_events[(user, event)].append(action)
+        for (user, event), data in user_events.viewitems():
+            for action in latest_actions_only(data):
                 OutlookQueueEntry.record(event, user, action)
 
     def _clear_changes(self, sender, **kwargs):
