@@ -37,13 +37,12 @@ def get_participating_users(event):
     return {reg.user for reg in registrations}
 
 
-def latest_actions_only(items, action_key_func):
+def latest_actions_only(items):
     """Keeps only the most recent occurrence of each action, while preserving the order"""
     used = set()
     res = []
     for item in reversed(items):
-        key = action_key_func(item)
-        if key not in used:
+        if item not in used:
             res.append(item)
-            used.add(key)
+            used.add(item)
     return reversed(res)

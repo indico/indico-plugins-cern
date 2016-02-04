@@ -36,16 +36,16 @@ def update_calendar():
     query = (OutlookQueueEntry
              .find(_eager=OutlookQueueEntry.event_new)
              .order_by(OutlookQueueEntry.user_id, OutlookQueueEntry.id))
-    entries = MultiDict((entry.user_id, entry) for entry in query)
+    entries = MultiDict(((entry.user_id, entry.event_id), entry) for entry in query)
     delete_ids = set()
     try:
-        for user_id, user_entries in entries.iterlists():
-            user_entry_ids = {x.id for x in user_entries}
-            for entry in latest_actions_only(user_entries, attrgetter('action')):
+        for (user_id, event_id), entry_list in entries.iterlists():
+            entry_ids = {x.id for x in entry_list}
+            for entry in latest_actions_only(entry_list):
                 if not _update_calendar_entry(entry, settings):
-                    user_entry_ids.remove(entry.id)
+                    entry_ids.remove(entry.id)
             # record all ids which didn't fail for deletion
-            delete_ids |= user_entry_ids
+            delete_ids |= entry_ids
     finally:
         if delete_ids:
             OutlookQueueEntry.find(OutlookQueueEntry.id.in_(delete_ids)).delete(synchronize_session=False)
