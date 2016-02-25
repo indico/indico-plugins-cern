@@ -35,7 +35,8 @@ class PluginSettingsForm(IndicoForm):
     notification_emails = EmailListField(_('Notification email addresses'),
                                          description=_('Notifications about recording/webcast requests are sent to '
                                                        'these email addresses (one per line).'))
-    webcast_audiences = MultipleItemsField(_('Webcast Audiences'), fields=[('audience', _('Audience'))],
+    webcast_audiences = MultipleItemsField(_('Webcast Audiences'),
+                                           fields=[{'id': 'audience', 'caption': _('Audience'), 'required': True}],
                                            unique_field='audience',
                                            description=_('List of audiences for non-public webcasts.'))
     webcast_ping_url = URLField(_('Webcast Ping URL'),

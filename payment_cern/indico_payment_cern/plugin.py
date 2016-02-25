@@ -21,10 +21,10 @@ from indico_payment_cern import _
 from indico_payment_cern.blueprint import blueprint
 from indico_payment_cern.util import get_payment_methods, get_payment_method, create_hash, get_order_id
 
-PAYMENT_METHODS_FIELDS = (('name', _("Name")),
-                          ('title', _("Displayed Name")),
-                          ('type', _("Type")),
-                          ('fee', _("Extra Fee (%)")))
+PAYMENT_METHODS_FIELDS = [{'id': 'name', 'caption': _("Name"), 'required': True},
+                          {'id': 'title', 'caption': _("Displayed Name"), 'required': True},
+                          {'id': 'type', 'caption': _("Type"), 'required': True},
+                          {'id': 'fee', 'caption': _("Extra Fee (%)"), 'required': True}]
 
 
 class PluginSettingsForm(PaymentPluginSettingsFormBase):
