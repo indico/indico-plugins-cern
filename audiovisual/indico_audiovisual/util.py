@@ -4,11 +4,12 @@ import json
 from itertools import chain
 
 import requests
+from sqlalchemy.orm import joinedload
 
 from indico.core.celery import celery
 from indico.core.db.sqlalchemy.util.queries import limit_groups, db_dates_overlap
+from indico.modules.events import Event
 from indico.modules.events.requests.models.requests import Request, RequestState
-from indico.modules.fulltextindexes.models.events import IndexedEvent
 from indico.modules.rb.models.equipment import EquipmentType
 from indico.modules.rb.models.locations import Location
 from indico.modules.rb.models.rooms import Room
@@ -240,41 +241,33 @@ def find_requests(talks=False, from_dt=None, to_dt=None, services=None, states=N
     :param services: set of services that must have been requested
     """
     from indico_audiovisual.definition import AVRequest
-    query = Request.find(Request.type == AVRequest.name)
+    query = Request.query.filter_by(type=AVRequest.name)
     if states is not None:
         query = query.filter(Request.state.in_(states))
     else:
         query = query.filter(Request.state != RequestState.withdrawn)
 
     if from_dt is not None or to_dt is not None:
-        query = query.join(IndexedEvent, IndexedEvent.id == Request.event_id)
-
-    if from_dt is not None and to_dt is not None:
-        # any event that takes place during the specified range
-        query = query.filter(db_dates_overlap(IndexedEvent, 'start_date', from_dt, 'end_date', to_dt, inclusive=True))
-    elif from_dt is not None:
-        # any event that starts on/after the specified date
-        query = query.filter(IndexedEvent.start_date >= from_dt)
-    elif to_dt is not None:
-        # and event that ends on/before the specifed date
-        query = query.filter(IndexedEvent.end_date <= to_dt)
+        query = query.join(Event).filter(Event.happens_between(from_dt, to_dt))
 
     # We only want the latest one for each event
     query = limit_groups(query, Request, Request.event_id, Request.created_dt.desc(), 1)
+    query = query.options(joinedload('event_new'))
     for req in query:
-        event = req.event
+        conf = req.event
+        event = req.event_new
         # Skip requests which do not have the requested services or are outside the date range
         if services and not (set(req.data['services']) & services):
             continue
-        elif to_dt is not None and event.getStartDate() > to_dt:
+        elif to_dt is not None and event.start_dt > to_dt:
             continue
         if not talks:
             yield req
             continue
 
         # Lectures don't have contributions so we use the event info directly
-        if event.getType() == 'simple_event':
-            yield req, event, _get_start_date(event)
+        if conf.getType() == 'simple_event':
+            yield req, conf, event.start_dt
             continue
 
         contribs = [x[0] for x in get_selected_contributions(req)]
