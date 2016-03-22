@@ -91,5 +91,5 @@ class RavemPlugin(IndicoPlugin):
         if event_vc_room.vc_room.type != 'vidyo' or not has_access(event_vc_room):
             return
 
-        return render_plugin_template(template, room_name=event_vc_room.link_object.rb_room.name,
+        return render_plugin_template(template, room_name=event_vc_room.link_object.room.name,
                                       event_vc_room=event_vc_room, **kwargs)

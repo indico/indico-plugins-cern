@@ -14,7 +14,6 @@ from indico_ravem.util import RavemException, RavemOperationException
 def event_vc_room(vc_room=None, link_object=False, conf_id=None,
                   rb_room=False, rb_room_gen_name=None, rb_room_name=None):
     event_vc_room = MagicMock()
-
     event_vc_room.vc_room = vc_room
 
     if link_object or conf_id or rb_room or rb_room_gen_name or rb_room_name:
@@ -23,25 +22,24 @@ def event_vc_room(vc_room=None, link_object=False, conf_id=None,
         event_vc_room.link_object = None
         return event_vc_room
 
-    event_vc_room.link_object.getConference.return_value = MagicMock(id=conf_id) if conf_id else None
+    event_vc_room.link_object.event_new = MagicMock(id=conf_id) if conf_id else None
 
     if rb_room or rb_room_gen_name or rb_room_name:
-        event_vc_room.link_object.rb_room = MagicMock()
+        event_vc_room.link_object.room = MagicMock()
 
-        event_vc_room.link_object.rb_room.generate_name.return_value = rb_room_gen_name
-        event_vc_room.link_object.rb_room.name = rb_room_name
+        event_vc_room.link_object.room.generate_name.return_value = rb_room_gen_name
+        event_vc_room.link_object.room.name = rb_room_name
 
     else:
-        event_vc_room.link_object.rb_room = None
+        event_vc_room.link_object.room = None
 
     return event_vc_room
 
 
 @pytest.mark.usefixtures('db', 'request_context')
-@pytest.mark.usefixtures('db', 'request_context')
 @pytest.mark.parametrize('rh_class', (RHRavemRoomStatus, RHRavemConnectRoom, RHRavemDisconnectRoom))
 def test_event_vc_room_not_found(mocker, rh_class):
-    id_ = '123456'
+    id_ = 123456
     request.view_args['event_vc_room_id'] = id_
 
     mock = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation.find_one')
@@ -56,11 +54,10 @@ def test_event_vc_room_not_found(mocker, rh_class):
 
 
 @pytest.mark.usefixtures('db', 'request_context')
-@pytest.mark.usefixtures('db', 'request_context')
 @pytest.mark.parametrize('rh_class', (RHRavemRoomStatus, RHRavemConnectRoom, RHRavemDisconnectRoom))
 def test_event_vc_room_without_link_object(mocker, rh_class):
-    id_ = '123456'
-    conf_id = '1111'
+    id_ = 123456
+    conf_id = 1111
 
     request.view_args['event_vc_room_id'] = id_
     request.view_args['confId'] = conf_id
@@ -77,11 +74,10 @@ def test_event_vc_room_without_link_object(mocker, rh_class):
 
 
 @pytest.mark.usefixtures('db', 'request_context')
-@pytest.mark.usefixtures('db', 'request_context')
 @pytest.mark.parametrize('rh_class', (RHRavemRoomStatus, RHRavemConnectRoom, RHRavemDisconnectRoom))
-def test_link_object_wihtout_conference(mocker, rh_class):
-    id_ = '123456'
-    conf_id = '1111'
+def test_link_object_without_conference(mocker, rh_class):
+    id_ = 123456
+    conf_id = 1111
 
     request.view_args['event_vc_room_id'] = id_
     request.view_args['confId'] = conf_id
@@ -94,15 +90,14 @@ def test_link_object_wihtout_conference(mocker, rh_class):
         with pytest.raises(IndicoError) as excinfo:
             rh._checkParams()
 
-    assert excinfo.value.message == "Event VC Room ({0}) does not have a conference".format(id_)
+    assert excinfo.value.message == "Event VC Room ({0}) does not have an event".format(id_)
 
 
-@pytest.mark.usefixtures('db', 'request_context')
 @pytest.mark.usefixtures('db', 'request_context')
 @pytest.mark.parametrize('rh_class', (RHRavemRoomStatus, RHRavemConnectRoom, RHRavemDisconnectRoom))
 def test_event_id_not_matching_conf_id(mocker, rh_class):
-    id_ = '123456'
-    conf_id = '1111'
+    id_ = 123456
+    conf_id = 1111
     evcr_conf_id = '2222'
 
     request.view_args['event_vc_room_id'] = id_
@@ -116,16 +111,15 @@ def test_event_id_not_matching_conf_id(mocker, rh_class):
         with pytest.raises(IndicoError) as excinfo:
             rh._checkParams()
 
-    assert excinfo.value.message == "Event VC Room ({0}) does not have a conference with the id {1}" \
+    assert excinfo.value.message == "Event VC Room ({0}) does not have an event with the id {1}" \
                                     .format(id_, evcr_conf_id)
 
 
 @pytest.mark.usefixtures('db', 'request_context')
-@pytest.mark.usefixtures('db', 'request_context')
 @pytest.mark.parametrize('rh_class', (RHRavemRoomStatus, RHRavemConnectRoom, RHRavemDisconnectRoom))
 def test_invalid_room(mocker, rh_class):
-    id_ = '123456'
-    conf_id = '1111'
+    id_ = 123456
+    conf_id = 1111
 
     request.view_args['event_vc_room_id'] = id_
     request.view_args['confId'] = conf_id
@@ -142,11 +136,10 @@ def test_invalid_room(mocker, rh_class):
 
 
 @pytest.mark.usefixtures('db', 'request_context')
-@pytest.mark.usefixtures('db', 'request_context')
 @pytest.mark.parametrize('rh_class', (RHRavemRoomStatus, RHRavemConnectRoom, RHRavemDisconnectRoom))
 def test_invalid_room_name(mocker, rh_class):
-    id_ = '123456'
-    conf_id = '1111'
+    id_ = 123456
+    conf_id = 1111
 
     request.view_args['event_vc_room_id'] = id_
     request.view_args['confId'] = conf_id
@@ -163,11 +156,10 @@ def test_invalid_room_name(mocker, rh_class):
 
 
 @pytest.mark.usefixtures('db', 'request_context')
-@pytest.mark.usefixtures('db', 'request_context')
 @pytest.mark.parametrize('rh_class', (RHRavemRoomStatus, RHRavemConnectRoom, RHRavemDisconnectRoom))
 def test_special_name_different_from_name(mocker, rh_class):
-    id_ = '123456'
-    conf_id = '1111'
+    id_ = 123456
+    conf_id = 1111
     room_name = '513-B-22'
     room_special_name = 'Personalized name'
 
@@ -187,11 +179,10 @@ def test_special_name_different_from_name(mocker, rh_class):
 
 
 @pytest.mark.usefixtures('db', 'request_context')
-@pytest.mark.usefixtures('db', 'request_context')
 @pytest.mark.parametrize('rh_class', (RHRavemRoomStatus, RHRavemConnectRoom, RHRavemDisconnectRoom))
 def test_default_special_name(mocker, rh_class):
-    id_ = '123456'
-    conf_id = '1111'
+    id_ = 123456
+    conf_id = 1111
     room_name = '513-B-22'
 
     request.view_args['event_vc_room_id'] = id_
@@ -228,8 +219,8 @@ def test_default_special_name(mocker, rh_class):
     })
 ))
 def test_operation_called_with_correct_args(mocker, rh_class, operation_name, args, kwargs, fixture):
-    id_ = '123456'
-    conf_id = '1111'
+    id_ = 123456
+    conf_id = 1111
 
     request.view_args['event_vc_room_id'] = id_
     request.view_args['confId'] = conf_id
@@ -249,7 +240,7 @@ def test_operation_called_with_correct_args(mocker, rh_class, operation_name, ar
         rh._checkParams()
         rh._process()
 
-    operation.assert_called_once()
+    assert operation.call_count == 1
     call_args = operation.call_args[0]
     call_kwargs = operation.call_args[1]
     for i, val in enumerate(fixture.get(k) for k in args):
@@ -272,8 +263,8 @@ def test_operation_called_with_correct_args(mocker, rh_class, operation_name, ar
     (RHRavemDisconnectRoom, {'name': 'disconnect_room'}),
 ))
 def test_successful_operation(mocker, rh_class, operation):
-    id_ = '123456'
-    conf_id = '1111'
+    id_ = 123456
+    conf_id = 1111
     room_name = '513-B-22'
     room_special_name = 'Personalized name'
 
@@ -303,8 +294,8 @@ def test_successful_operation(mocker, rh_class, operation):
     (RHRavemDisconnectRoom, 'disconnect_room', 'already-disconnected', 'The room is already disconnected'),
 ))
 def test_operation_exception_is_handled(mocker, rh_class, operation_name, err_reason, err_message):
-    id_ = '123456'
-    conf_id = '1111'
+    id_ = 123456
+    conf_id = 1111
 
     request.view_args['event_vc_room_id'] = id_
     request.view_args['confId'] = conf_id
@@ -335,8 +326,8 @@ def test_operation_exception_is_handled(mocker, rh_class, operation_name, err_re
     (RHRavemDisconnectRoom, 'disconnect_room', 'Well this is unexpected'),
 ))
 def test_exception_is_handled(mocker, rh_class, operation_name, err_message):
-    id_ = '123456'
-    conf_id = '1111'
+    id_ = 123456
+    conf_id = 1111
 
     request.view_args['event_vc_room_id'] = id_
     request.view_args['confId'] = conf_id

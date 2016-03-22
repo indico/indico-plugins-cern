@@ -27,16 +27,16 @@ class RHRavemBase(RH):
         if not self.event_vc_room.link_object:
             raise IndicoError(_("Event VC Room ({id}) is not linked to anything").format(id=id_))
 
-        event_id = request.view_args['confId']
-        conference = self.event_vc_room.link_object.getConference()
-        if not conference:
-            raise IndicoError(_("Event VC Room ({id}) does not have a conference").format(id=id_))
+        event_id = int(request.view_args['confId'])
+        event = self.event_vc_room.link_object.event_new
+        if not event:
+            raise IndicoError(_("Event VC Room ({id}) does not have an event").format(id=id_))
 
-        if conference.id != event_id:
-            raise IndicoError(_("Event VC Room ({id}) does not have a conference with the id {conf.id}")
-                              .format(id=id_, conf=conference))
+        if event.id != event_id:
+            raise IndicoError(_("Event VC Room ({id}) does not have an event with the id {conf.id}")
+                              .format(id=id_, conf=event))
 
-        room = self.event_vc_room.link_object.rb_room if self.event_vc_room.link_object else None
+        room = self.event_vc_room.link_object.room if self.event_vc_room.link_object else None
         if not room:
             raise IndicoError(_("Event VC Room ({id}) is not linked to an event with a room").format(id=id_))
 

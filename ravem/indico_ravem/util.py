@@ -57,7 +57,7 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
     if 'error' not in json_response and 'result' not in json_response:
         RavemPlugin.logger.exception('%s %s returned json without a result or error: %s',
                                      response.request.method, response.url, json_response)
-        err_msg = ("{response.request.method} {response.url} returned a json without a result or error: "
+        err_msg = ("{response.request.method} {response.url} returned json without a result or error: "
                    "{json_response}").format(response=response, json_response=json_response)
         raise RavemAPIException(err_msg, api_endpoint, response)
 
@@ -93,9 +93,9 @@ def has_access(event_vc_room):
     if not link_object:
         return False
 
-    room = link_object.rb_room
+    room = link_object.room
     vc_room = event_vc_room.vc_room
-    event = event_vc_room.event
+    event = event_vc_room.event_new
     current_user = session.user
 
     # No physical room or room is not Vidyo capable
@@ -104,7 +104,7 @@ def has_access(event_vc_room):
 
     return any([
         current_user == retrieve_principal(vc_room.data.get('owner'), allow_groups=False, legacy=False),
-        event.as_event.can_manage(current_user),
+        event.can_manage(current_user),
         request.remote_addr == room.get_attribute_value('ip')
     ])
 

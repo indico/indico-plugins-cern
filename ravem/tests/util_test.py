@@ -21,7 +21,7 @@ def test_correct_http_method(mocker, method):
 
     ravem_api_call('test_endpoint', method=method, param1='test1', param2='test2')
 
-    request.assert_called_once()
+    assert request.call_count == 1
     assert request.call_args[0][0] == method
 
 
@@ -35,7 +35,7 @@ def test_correct_auth_method(mocker):
 
     ravem_api_call('test_endpoint', param1='test1', param2='test2')
 
-    request.assert_called_once()
+    assert request.call_count == 1
     assert isinstance(request.call_args[1]['auth'], HTTPDigestAuth)
 
 
@@ -57,7 +57,7 @@ def test_correct_auth_credentials(mocker, username, password):
     RavemPlugin.settings.set_multi({'username': username, 'password': password})
     ravem_api_call('test_endpoint', param1='test1', param2='test2')
 
-    request.assert_called_once()
+    assert request.call_count == 1
     auth = request.call_args[1]['auth']
     assert auth.username == username
     assert auth.password == password
@@ -73,7 +73,7 @@ def test_accepts_json(mocker):
 
     ravem_api_call('test_endpoint', param1='test1', param2='test2')
 
-    request.assert_called_once()
+    assert request.call_count == 1
     assert request.call_args[1]['headers']['Accept'] == 'application/json'
 
 
@@ -105,7 +105,7 @@ def test_correct_api_endpoint(mocker, root_endpoint, endpoint, expected_url):
     RavemPlugin.settings.set('api_endpoint', root_endpoint)
     ravem_api_call(endpoint, param1='test1', param2='test2')
 
-    assert request.assert_called_once()
+    assert request.call_count == 1
     assert request.call_args[0][1] == expected_url
 
 
@@ -124,7 +124,7 @@ def test_params_generated(mocker, params):
 
     ravem_api_call('test_endpoint', **params)
 
-    assert request.assert_called_once()
+    assert request.call_count == 1
     assert request.call_args[1]['params'] == params
 
 
@@ -137,7 +137,7 @@ def test_raises_timeout(mocker):
         ravem_api_call('test_endpoint')
 
     assert excinfo.value.message == "Timeout while contacting the room."
-    request.assert_called_once()
+    assert request.call_count == 1
 
 
 @pytest.mark.usefixtures('db')
@@ -160,7 +160,7 @@ def test_unexpected_exception_is_logged(mocker, caplog, method, params):
     log = extract_logs(caplog, one=True, name='indico.plugin.ravem')
     assert log.message == "failed call: {0} {1} with {2}: {3}".format(method.upper(), 'test_endpoint', params,
                                                                       'this is unexpected')
-    request.assert_called_once()
+    assert request.call_count == 1
 
 
 @pytest.mark.usefixtures('db')
@@ -190,7 +190,7 @@ def test_http_error_is_logged(mocker, caplog, method, params):
     assert log.message == '{0} {1} failed with {2}'.format(
         method.upper(), RavemPlugin.settings.get('api_endpoint') + 'test_endpoint', 'Well this is embarrassing')
 
-    request.assert_called_once()
+    assert request.call_count == 1
 
 
 @pytest.mark.usefixtures('db')
@@ -209,7 +209,7 @@ def test_invalid_json_respons_is_handled(mocker, caplog, method):
     with pytest.raises(RavemAPIException) as excinfo:
         ravem_api_call('test_endpoint', method=method)
 
-    err_msg = '{0} {1} returned a json without a result or error: {2}'.format(
+    err_msg = '{0} {1} returned json without a result or error: {2}'.format(
         method.upper(), RavemPlugin.settings.get('api_endpoint') + 'test_endpoint', {'bad': 'json'})
     assert excinfo.value.message == err_msg
     assert excinfo.value.endpoint == 'test_endpoint'
@@ -218,7 +218,7 @@ def test_invalid_json_respons_is_handled(mocker, caplog, method):
     log = extract_logs(caplog, one=True, name='indico.plugin.ravem')
     assert log.message == err_msg
 
-    request.assert_called_once()
+    assert request.call_count == 1
 
 
 @pytest.mark.usefixtures('db')
@@ -235,7 +235,7 @@ def test_unlinked_room_has_no_access(mocker):
     session.user = 'Guinea Pig'
 
     event_vc_room = MagicMock()
-    event_vc_room.link_object.rb_room = None
+    event_vc_room.link_object.room = None
 
     assert not has_access(event_vc_room)
 
@@ -246,11 +246,11 @@ def test_room_not_vidyo_capable_has_no_access(mocker):
     session.user = 'Guinea Pig'
 
     event_vc_room = MagicMock()
-    event_vc_room.link_object.rb_room.has_equipment = MagicMock(return_value=False)
+    event_vc_room.link_object.room.has_equipment = MagicMock(return_value=False)
 
     assert not has_access(event_vc_room)
 
-    event_vc_room.link_object.rb_room.has_equipment.assert_called_once_with('Vidyo')
+    event_vc_room.link_object.room.has_equipment.assert_called_once_with('Vidyo')
 
 
 @pytest.mark.usefixtures('db')
@@ -263,9 +263,9 @@ def test_check_if_current_user_is_room_owner(mocker):
     retrieve_principal.side_effect = lambda x, **kw: x
 
     event_vc_room = MagicMock()
-    event_vc_room.link_object.rb_room.has_equipment = MagicMock(return_value=True)
+    event_vc_room.link_object.room.has_equipment = MagicMock(return_value=True)
     event_vc_room.vc_room.data.get.return_value = session.user
-    event_vc_room.event.as_event.can_manage.return_value = False
+    event_vc_room.event_new.can_manage.return_value = False
 
     assert has_access(event_vc_room)
 
@@ -282,12 +282,12 @@ def test_check_if_current_user_can_modify(mocker):
     mocker.patch('indico_ravem.util.retrieve_principal')
 
     event_vc_room = MagicMock()
-    event_vc_room.link_object.rb_room.has_equipment = MagicMock(return_value=True)
-    event_vc_room.event.as_event.can_manage.return_value = True
+    event_vc_room.link_object.room.has_equipment = MagicMock(return_value=True)
+    event_vc_room.event_new.can_manage.return_value = True
 
     assert has_access(event_vc_room)
 
-    event_vc_room.event.as_event.can_manage.assert_called_once_with(session.user)
+    event_vc_room.event_new.can_manage.assert_called_once_with(session.user)
 
 
 @pytest.mark.usefixtures('db')
@@ -300,13 +300,13 @@ def test_check_if_request_from_room(mocker):
     mocker.patch('indico_ravem.util.retrieve_principal')
 
     event_vc_room = MagicMock()
-    event_vc_room.link_object.rb_room.has_equipment = MagicMock(return_value=True)
-    event_vc_room.link_object.rb_room.get_attribute_value.return_value = request.remote_addr
-    event_vc_room.event.as_event.can_manage.return_value = True
+    event_vc_room.link_object.room.has_equipment = MagicMock(return_value=True)
+    event_vc_room.link_object.room.get_attribute_value.return_value = request.remote_addr
+    event_vc_room.event_new.can_manage.return_value = True
 
     assert has_access(event_vc_room)
 
-    event_vc_room.link_object.rb_room.get_attribute_value.assert_called_once_with('ip')
+    event_vc_room.link_object.room.get_attribute_value.assert_called_once_with('ip')
 
 
 @pytest.mark.usefixtures('db')
@@ -316,7 +316,7 @@ def test_check_basic_user_outside_room(mocker):
     mocker.patch('indico_ravem.util.retrieve_principal')
 
     event_vc_room = MagicMock()
-    event_vc_room.link_object.rb_room.has_equipment = MagicMock(return_value=True)
-    event_vc_room.event.as_event.can_manage.return_value = True
+    event_vc_room.link_object.room.has_equipment = MagicMock(return_value=True)
+    event_vc_room.event_new.can_manage.return_value = True
 
     assert has_access(event_vc_room)
