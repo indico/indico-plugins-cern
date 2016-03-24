@@ -45,9 +45,6 @@ class PluginSettingsForm(IndicoForm):
     webcast_url = URLField(_('Webcast URL'), [DataRequired()],
                            description=_("The URL to watch the webcast for an event. Can contain {event_id} which "
                                          "will be replaced with the ID of the event."))
-    agreement_ping_url = URLField(_('Agreement Ping URL'),
-                                  description=_("A ping is sent via HTTP POST to this URL whenever an agreement is "
-                                                "signed."))
     agreement_paper_url = URLField(_('Agreement Paper URL'),
                                    description=_("The URL to the agreement that can be printed and signed offline."))
     recording_cds_url = URLField(_('CDS URL'),
@@ -72,7 +69,6 @@ class AVRequestsPlugin(IndicoPlugin):
                         'notification_emails': [],
                         'webcast_ping_url': None,
                         'webcast_url': '',
-                        'agreement_ping_url': None,
                         'agreement_paper_url': None,
                         'recording_cds_url': 'https://cds.cern.ch/record/{cds_id}'}
     acl_settings = {'managers'}

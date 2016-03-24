@@ -68,7 +68,6 @@ class AVRequestsImporter(Importer):
             assert wc_form_url == rr_form_url
         if wc_ping_url and rr_ping_url:
             assert wc_ping_url == rr_ping_url
-        AVRequestsPlugin.settings.set('agreement_ping_url', wc_ping_url or rr_ping_url)
         AVRequestsPlugin.settings.set('agreement_paper_url', wc_form_url or rr_form_url)
         db.session.commit()
 

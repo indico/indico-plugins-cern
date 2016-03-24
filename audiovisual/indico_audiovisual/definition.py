@@ -18,9 +18,9 @@ from MaKaC.conference import SubContribution
 from indico_audiovisual import _
 from indico_audiovisual.forms import AVRequestForm, AVRequestManagerForm
 from indico_audiovisual.util import (is_av_manager, send_webcast_ping, get_data_identifiers, get_selected_contributions,
-                                     contribution_id, contribution_by_id, send_agreement_ping,
-                                     count_capable_contributions, get_av_capable_rooms, event_has_empty_sessions,
-                                     get_selected_services, all_agreements_signed)
+                                     contribution_id, contribution_by_id, count_capable_contributions,
+                                     get_av_capable_rooms, event_has_empty_sessions, get_selected_services,
+                                     all_agreements_signed)
 
 
 class AVRequest(RequestDefinitionBase):
@@ -187,14 +187,6 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
                        'talk_type': talk_type,
                        'event': event})
         return super(SpeakerReleaseAgreement, cls).render_form(agreement, form, **kwargs)
-
-    @classmethod
-    def handle_accepted(cls, agreement):
-        send_agreement_ping.delay(agreement)
-
-    @classmethod
-    def handle_rejected(cls, agreement):
-        send_agreement_ping.delay(agreement)
 
     @classmethod
     def render_data(cls, event, data):

@@ -203,31 +203,6 @@ def send_webcast_ping():
     return requests.get(url).status_code
 
 
-@celery.task
-def send_agreement_ping(agreement):
-    """Sends a ping notification when a speaker release is updated"""
-    from indico_audiovisual.plugin import AVRequestsPlugin
-    url = AVRequestsPlugin.settings.get('agreement_ping_url')
-    if not url:
-        return
-    AVRequestsPlugin.logger.info('Sending agreement ping to %s', url)
-    payload = {
-        'event_id': agreement.event_id,
-        'accepted': None if agreement.pending else agreement.accepted,
-        'speaker': {
-            'id': agreement.data['speaker_id'],
-            'name': agreement.person_name,
-            'email': agreement.person_email
-        }
-    }
-    if agreement.data['type'] == 'contribution':
-        contrib_id, _, subcontrib_id = agreement.data['contribution'].partition('-')
-        payload['contribution_id'] = int(contrib_id)
-        if subcontrib_id:
-            payload['subcontribution_id'] = int(subcontrib_id)
-    return requests.post(url, data={'data': json.dumps(payload)}).status_code
-
-
 def find_requests(talks=False, from_dt=None, to_dt=None, services=None, states=None):
     """Finds requests matching certain criteria.
 
