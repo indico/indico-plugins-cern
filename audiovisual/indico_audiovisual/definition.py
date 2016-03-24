@@ -151,8 +151,6 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
 
     @classmethod
     def extend_api_data(cls, event, person, agreement, data):
-        data['confId'] = unicode(event.id)
-        data['signed'] = data['accepted']
         data['speaker'] = {'id': person.data['speaker_id'],
                            'name': person.name,
                            'email': person.email}
