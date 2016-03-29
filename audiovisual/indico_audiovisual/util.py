@@ -81,20 +81,21 @@ def get_contributions(event):
 
 def contribution_id(contrib_or_subcontrib):
     """Returns an ID for the contribution/subcontribution"""
-    if isinstance(contrib_or_subcontrib, SubContribution):
-        return '{}-{}'.format(contrib_or_subcontrib.contribution.id, contrib_or_subcontrib.id)
-    else:
-        return unicode(contrib_or_subcontrib.id)
+    prefix = 'sc' if isinstance(contrib_or_subcontrib, SubContribution) else 'c'
+    return '{}:{}'.format(prefix, contrib_or_subcontrib.id)
 
 
 def contribution_by_id(event, contrib_or_subcontrib_id):
     """Returns a contribution/subcontriution from an :func:`contribution_id`-style ID"""
-    contrib_id, _, subcontrib_id = contrib_or_subcontrib_id.partition('-')
-    contrib = Contribution.query.with_parent(event).filter_by(id=int(contrib_id)).first()
-    if subcontrib_id and contrib:
-        return SubContribution.query.with_parent(contrib).filter_by(id=int(subcontrib_id)).first()
+    type_, id_ = contrib_or_subcontrib_id.split(':', 1)
+    id_ = int(id_)
+    if type_ == 'c':
+        return Contribution.query.with_parent(event).filter_by(id=id_).first()
+    elif type_ == 'sc':
+        return SubContribution.find(SubContribution.id == id_, ~SubContribution.is_deleted,
+                                    SubContribution.contribution.has(event_new=event, is_deleted=False)).first()
     else:
-        return contrib
+        raise ValueError('Invalid id type: ' + type_)
 
 
 def get_selected_contributions(req):
