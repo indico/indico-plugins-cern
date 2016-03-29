@@ -11,6 +11,7 @@ from wtforms.fields import TextAreaField, SelectField, BooleanField
 from wtforms.fields.html5 import IntegerField, URLField
 from wtforms.validators import DataRequired, NumberRange, Optional
 
+from indico.modules.events.contributions.models.subcontributions import SubContribution
 from indico.modules.events.requests import RequestFormBase
 from indico.modules.events.requests.base import RequestManagerForm
 from indico.modules.events.requests.models.requests import RequestState
@@ -18,7 +19,6 @@ from indico.web.forms.base import IndicoForm, generated_data
 from indico.web.forms.validators import UsedIf, Exclusive
 from indico.web.forms.widgets import JinjaWidget
 from indico.web.forms.fields import IndicoSelectMultipleCheckboxField, IndicoEnumSelectField
-from MaKaC.conference import SubContribution
 
 from indico_audiovisual import SERVICES, _
 from indico_audiovisual.util import is_av_manager, get_contributions, contribution_id
@@ -54,7 +54,7 @@ class AVRequestForm(RequestFormBase):
         self.webcast_audience.choices = audiences
 
     def _update_contribution_fields(self):
-        if self.event.as_legacy.getType() == 'simple_event':
+        if self.event.type == 'lecture':
             # lectures don't have contributions
             del self.all_contributions
             del self.contributions

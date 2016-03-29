@@ -1,23 +1,23 @@
 from __future__ import unicode_literals
 
 import json
-from itertools import chain
 
 import requests
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, undefer, noload
 
 from indico.core.celery import celery
-from indico.core.db.sqlalchemy.util.queries import limit_groups, db_dates_overlap
+from indico.core.db import db
+from indico.modules.events.sessions.models.blocks import SessionBlock
 from indico.modules.events import Event
+from indico.modules.events.contributions import Contribution
+from indico.modules.events.contributions.models.subcontributions import SubContribution
 from indico.modules.events.requests.models.requests import Request, RequestState
+from indico.core.db.sqlalchemy.util.queries import limit_groups
 from indico.modules.rb.models.equipment import EquipmentType
 from indico.modules.rb.models.locations import Location
 from indico.modules.rb.models.rooms import Room
 from indico.util.caching import memoize_request
-from indico.util.event import unify_event_args
 from indico.util.date_time import overlaps
-from MaKaC.conference import SubContribution
-from MaKaC.webinterface.common.contribFilters import PosterFilterField
 
 from indico_audiovisual import SERVICES
 
@@ -38,52 +38,63 @@ def get_av_capable_rooms():
     return set(Room.find_with_filters({'available_equipment': eq_types}))
 
 
+def _get_contrib(contrib_or_subcontrib):
+    return (contrib_or_subcontrib.contribution
+            if isinstance(contrib_or_subcontrib, SubContribution)
+            else contrib_or_subcontrib)
+
+
 def _contrib_key(contrib):
     # key function to sort contributions and their subcontributions properly
     is_subcontrib = isinstance(contrib, SubContribution)
-    return (contrib.getContribution().startDate,
-            contrib.getContribution().id,
+    return (_get_contrib(contrib).start_dt,
+            _get_contrib(contrib),
             is_subcontrib,
-            (contrib.getContribution().getSubContributionList().index(contrib) if is_subcontrib else None),
-            contrib.getTitle())
+            (contrib.position if is_subcontrib else None),
+            contrib.title)
 
 
-@unify_event_args(legacy=True)
 def get_contributions(event):
     """Returns a list of contributions in rooms with AV equipment
 
     :return: a list of ``(contribution, capable, custom_room)`` tuples
     """
-    from indico_audiovisual.plugin import AVRequestsPlugin
-    not_poster = PosterFilterField(event, False, False)
-    contribs = [cont for cont in event.getContributionList() if cont.startDate and not_poster.satisfies(cont)]
-    contribs.extend(list(chain.from_iterable(cont.getSubContributionList() for cont in contribs)))
-    contribs = sorted(contribs, key=_contrib_key)
-    av_capable_rooms = {r.name for r in get_av_capable_rooms()}
-    event_room = event.getRoom() and event.getRoom().getName()
+    contribs = (Contribution.query
+                .with_parent(event)
+                .filter(Contribution.is_scheduled)
+                .filter((Contribution.session == None) | Contribution.session.has(is_poster=False))  # noqa
+                .options(joinedload('timetable_entry').load_only('start_dt'),
+                         undefer('is_scheduled'))
+                .all())
+    subcontribs = (SubContribution
+                   .find(SubContribution.contribution_id.in_(c.id for c in contribs),
+                         ~SubContribution.is_deleted)
+                   .all())
+    all_contribs = sorted(contribs + subcontribs, key=_contrib_key)
+    av_capable_rooms = get_av_capable_rooms()
+    event_room = event.room
     return [(c,
-             bool(c.getLocation() and c.getLocation().getName() == 'CERN' and
-                  c.getRoom() and c.getRoom().getName() in av_capable_rooms),
-             c.getRoom().getName() if c.getRoom() and c.getRoom().getName() != event_room else None)
-            for c in contribs]
+             _get_contrib(c).room in av_capable_rooms,
+             _get_contrib(c).room_name if _get_contrib(c).room and _get_contrib(c).room != event_room else None)
+            for c in all_contribs]
 
 
 def contribution_id(contrib_or_subcontrib):
     """Returns an ID for the contribution/subcontribution"""
     if isinstance(contrib_or_subcontrib, SubContribution):
-        return '{}-{}'.format(contrib_or_subcontrib.getContribution().id, contrib_or_subcontrib.id)
+        return '{}-{}'.format(contrib_or_subcontrib.contribution.id, contrib_or_subcontrib.id)
     else:
         return unicode(contrib_or_subcontrib.id)
 
 
-@unify_event_args(legacy=True)
 def contribution_by_id(event, contrib_or_subcontrib_id):
     """Returns a contribution/subcontriution from an :func:`contribution_id`-style ID"""
     contrib_id, _, subcontrib_id = contrib_or_subcontrib_id.partition('-')
-    contrib = event.getContributionById(contrib_id)
-    if contrib and subcontrib_id:
-        contrib = contrib.getSubContributionById(subcontrib_id)
-    return contrib
+    contrib = Contribution.query.with_parent(event).filter_by(id=int(contrib_id)).first()
+    if subcontrib_id and contrib:
+        return SubContribution.query.with_parent(contrib).filter_by(id=int(subcontrib_id)).first()
+    else:
+        return contrib
 
 
 def get_selected_contributions(req):
@@ -91,9 +102,9 @@ def get_selected_contributions(req):
 
     :return: list of ``(contribution, capable, custom_room)`` tuples
     """
-    if req.event.getType() == 'simple_event':
+    if req.event_new.type == 'lecture':
         return []
-    contributions = get_contributions(req.event)
+    contributions = get_contributions(req.event_new)
     if req.data.get('all_contributions', True):
         # "all contributions" includes only those in capable rooms
         contributions = [x for x in contributions if x[1]]
@@ -111,7 +122,6 @@ def get_selected_services(req):
     return [SERVICES.get(s, s) for s in req.data['services']]
 
 
-@unify_event_args(legacy=True)
 def count_capable_contributions(event):
     """Gets the total and capable-room contribution counts.
 
@@ -121,9 +131,8 @@ def count_capable_contributions(event):
 
     :return: ``(capable, total)`` tuple containing the contribution counts
     """
-    if event.getType() == 'simple_event':
-        av_capable_rooms = {r.name for r in get_av_capable_rooms()}
-        if event.getRoom() and event.getRoom().getName() in av_capable_rooms:
+    if event.type == 'lecture':
+        if event.room in get_av_capable_rooms():
             return 1, 1
         else:
             return 0, 1
@@ -132,10 +141,13 @@ def count_capable_contributions(event):
         return sum(capable for _, capable, _ in contribs), len(contribs)
 
 
-@unify_event_args(legacy=True)
 def event_has_empty_sessions(event):
     """Checks if the event has any sessions with no contributions"""
-    return not all(ss.getContributionList() for ss in event.getSessionSlotList())
+    query = (SessionBlock.query
+             .filter(SessionBlock.session.has(event_new=event),
+                     ~SessionBlock.contributions.any())
+             .options(noload('*')))
+    return db.session.query(query.exists()).one()[0]
 
 
 def all_agreements_signed(event):
@@ -145,16 +157,15 @@ def all_agreements_signed(event):
 
 
 def _get_location_tuple(obj):
-    location = obj.getLocation().getName() if obj.getLocation() else None
-    room = obj.getRoom().getName() if obj.getRoom() else None
-    return location, room
+    obj = _get_contrib(obj)
+    return (obj.venue_name or None), (obj.room_name or None)
 
 
 def _get_date_tuple(obj):
-    if not hasattr(obj, 'getStartDate') or not hasattr(obj, 'getEndDate'):
+    if isinstance(obj, SubContribution):
         # subcontributions don't have dates
         return None
-    return obj.getStartDate().isoformat(), obj.getEndDate().isoformat()
+    return obj.start_dt.isoformat(), obj.end_dt.isoformat()
 
 
 def get_data_identifiers(req):
@@ -167,7 +178,7 @@ def get_data_identifiers(req):
 
     :return: a dict containing `dates` and `locations`
     """
-    event = req.event
+    event = req.event_new
     location_identifiers = {}
     date_identifiers = {}
     for obj in [event] + [x[0] for x in get_selected_contributions(req)]:
@@ -228,7 +239,6 @@ def find_requests(talks=False, from_dt=None, to_dt=None, services=None, states=N
     query = limit_groups(query, Request, Request.event_id, Request.created_dt.desc(), 1)
     query = query.options(joinedload('event_new'))
     for req in query:
-        conf = req.event
         event = req.event_new
         # Skip requests which do not have the requested services or are outside the date range
         if services and not (set(req.data['services']) & services):
@@ -240,8 +250,8 @@ def find_requests(talks=False, from_dt=None, to_dt=None, services=None, states=N
             continue
 
         # Lectures don't have contributions so we use the event info directly
-        if conf.getType() == 'simple_event':
-            yield req, conf, event.start_dt
+        if event.type == 'lecture':
+            yield req, event, event.start_dt
             continue
 
         contribs = [x[0] for x in get_selected_contributions(req)]
@@ -259,14 +269,8 @@ def find_requests(talks=False, from_dt=None, to_dt=None, services=None, states=N
 
 
 def _get_start_date(obj):
-    if isinstance(obj, SubContribution):
-        return obj.getContribution().getStartDate()
-    else:
-        return obj.getStartDate()
+    return _get_contrib(obj).start_dt
 
 
 def _get_end_date(obj):
-    if isinstance(obj, SubContribution):
-        return obj.getContribution().getEndDate()
-    else:
-        return obj.getEndDate()
+    return _get_contrib(obj).end_dt

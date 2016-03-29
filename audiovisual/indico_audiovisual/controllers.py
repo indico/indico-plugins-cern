@@ -34,7 +34,7 @@ class RHRequestList(RHProtected):
             states = {form.state.data} if form.state.data is not None else None
             results = find_requests(talks=talks, from_dt=from_dt, to_dt=to_dt, states=states)
             if not talks:
-                results = [(req, req.event, req.event.getStartDate()) for req in results]
+                results = [(req, req.event_new, req.event_new.start_dt) for req in results]
             results = group_list(results, lambda x: x[2].date(), itemgetter(2), sort_reverse=reverse)
             results = OrderedDict(sorted(results.viewitems(), key=itemgetter(0), reverse=reverse))
 

@@ -1,5 +1,5 @@
 {%- macro contrib_line(contrib) -%}
-    {{ contrib.startDate | format_date() }}, {{ contrib.startDate | format_time() }}
+    {{ contrib.start_dt | format_date() }}, {{ contrib.start_dt | format_time() }}
     -
     {{ contrib.duration | format_timedelta }}
     {% if custom_room %}(in {{ custom_room }}){% endif %}
@@ -13,8 +13,8 @@
 {%- endmacro -%}
 
 {% if is_subcontrib %}
-    {%- call contrib_line(contrib.getContribution()) %}
-        - {{ contrib.getTitle() }}
+    {%- call contrib_line(contrib.contribution) %}
+        - {{ contrib.title }}
     {% endcall -%}
 {% else %}
     {{ contrib_line(contrib) }}

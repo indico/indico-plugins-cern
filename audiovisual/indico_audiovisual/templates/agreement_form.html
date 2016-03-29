@@ -1,9 +1,9 @@
 {% extends 'events/agreements/agreement_form.html' %}
 
 {%- if talk_type == 'lecture' %}
-    {% set data_source = event.as_legacy %}
+    {% set data_source = event %}
 {% else %}
-    {% set data_source = contrib.getContribution() if is_subcontrib else contrib %}
+    {% set data_source = contrib.contribution if is_subcontrib else contrib %}
 {% endif -%}
 
 {% block info_more %}
@@ -22,25 +22,29 @@
                     {% if talk_type == 'lecture' %}
                         <a href="{{ url_for('event.conferenceDisplay', event) }}">{{ event.title }}</a>
                     {% else %}
-                        {% set endpoint = 'event.subContributionDisplay' if is_subcontrib else 'event.contributionDisplay' %}
-                        <a href="{{ url_for(endpoint, contrib) }}">{{ contrib.getTitle() }}</a>
+                        {#
+                        TODO: use proper urls once #2272 is merged
+                        {% set endpoint = 'contributions.subcontribution_display' if is_subcontrib else 'contributions.display_contribution' %}
+                        <a href="{{ url_for(endpoint, contrib) }}">{{ contrib.title }}</a>
+                        #}
+                        <a href="#">{{ contrib.title }}</a>
                     {% endif %}
                 </td>
             </tr>
             <tr>
                 <td>{% trans %}Scheduled on{% endtrans %}:</td>
                 <td>
-                    {{ data_source.getStartDate() | format_date }}
-                    from {{ data_source.getStartDate() | format_time('short') }}
-                    to {{ data_source.getEndDate() | format_time('short') }}
+                    {{ data_source.start_dt | format_date }}
+                    from {{ data_source.start_dt | format_time('short') }}
+                    to {{ data_source.end_dt | format_time('short') }}
                 </td>
             </tr>
             <tr>
                 <td>{% trans %}Place{% endtrans %}:</td>
                 <td>
                     {% set sep = joiner(': ') %}
-                    {% if data_source.getLocation() %}{{ data_source.getLocation().getName() }}{{ sep() }}{% endif -%}
-                    {%- if data_source.getRoom() %}{{ sep() }}{{ data_source.getRoom().getName() }}{% endif %}
+                    {% if data_source.venue_name %}{{ data_source.venue_name }}{{ sep() }}{% endif -%}
+                    {%- if data_source.room_name %}{{ sep() }}{{ data_source.room_name }}{% endif %}
                 </td>
             </tr>
         </table>

@@ -1,13 +1,13 @@
 {% macro _contribution_line(contrib, custom_room) -%}
-    {{ contrib.startDate | format_date() }}, {{ contrib.startDate | format_time() }} - {{ contrib.duration | format_timedelta }}
+    {{ contrib.start_dt | format_date() }}, {{ contrib.start_dt | format_time() }} - {{ contrib.duration | format_timedelta }}
     {%- if custom_room %} (in {{ custom_room }}){% endif %} - {{ contrib.title }}
     {%- if caller %} - {{ caller() }}{%- endif -%}
 {%- endmacro %}
 
 {% macro _contribution_or_subcontribution_line(contrib, custom_room) -%}
     {%- if contrib is instanceof SubContribution %}
-        {%- call _contribution_line(contrib.getContribution(), custom_room) -%}
-            {{ contrib.getTitle() }} ({{ contrib.duration | format_timedelta }})
+        {%- call _contribution_line(contrib.contribution, custom_room) -%}
+            {{ contrib.title }} ({{ contrib.duration | format_timedelta }})
         {%- endcall -%}
     {%- else -%}
         {{ _contribution_line(contrib, custom_room) }}
@@ -32,7 +32,7 @@
 
 
 {% macro request_details(req) -%}
-    {%- set is_lecture = req.event.getType() == 'simple_event' -%}
+    {%- set is_lecture = req.event_new.type == 'lecture' -%}
     {%- set contributions = req.definition.util.get_selected_contributions(req) -%}
     Requested services: {{ req.definition.util.get_selected_services(req)|join(', ') }}
     {%- if 'webcast' in req.data.services %}

@@ -3,16 +3,17 @@ from __future__ import unicode_literals
 from flask import request, g, session
 from flask_pluginengine import render_plugin_template, url_for_plugin
 from sqlalchemy.orm.attributes import flag_modified
-from wtforms.fields.core import BooleanField
 from wtforms.fields.html5 import URLField
 from wtforms.validators import DataRequired, ValidationError
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
 from indico.core.config import Config
+from indico.modules.events import Event
 from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.modules.events.requests.views import WPRequestsEventManagement
 from indico.modules.users import User
+from indico.util.event import unify_event_args
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import PrincipalListField, MultipleItemsField, EmailListField
 from indico.web.http_api import HTTPAPIHook
@@ -81,10 +82,12 @@ class AVRequestsPlugin(IndicoPlugin):
                         condition=lambda: request.view_args.get('type') == AVRequest.name)
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
         self.connect(signals.agreements.get_definitions, self._get_agreement_definitions)
-        self.connect(signals.event.data_changed, self._data_changed)
         self.connect(signals.event.has_read_access, self._has_read_access_event)
-        self.connect(signals.event.contribution_data_changed, self._data_changed)
-        self.connect(signals.event.subcontribution_data_changed, self._data_changed)
+        self.connect(signals.acl.can_access, self._has_read_access_event, sender=Event)
+        self.connect(signals.event.data_changed, self._data_changed)
+        self.connect(signals.event.contribution_updated, self._data_changed)
+        self.connect(signals.event.subcontribution_updated, self._data_changed)
+        self.connect(signals.event.timetable_entry_updated, self._data_changed)
         self.connect(signals.after_process, self._apply_changes)
         self.connect(signals.before_retry, self._clear_changes)
         self.connect(signals.indico_menu, self._extend_indico_menu)
@@ -111,15 +114,12 @@ class AVRequestsPlugin(IndicoPlugin):
     def _has_read_access_event(self, sender, user, **kwargs):
         return user is not None and is_av_manager(user)
 
+    @unify_event_args
     def _data_changed(self, sender, **kwargs):
-        # sender can be `Conference`, `Contribution` or `SubContribution`
-        event = sender.getConference().as_event
-        req = Request.find_latest_for_event(event, AVRequest.name)
+        req = Request.find_latest_for_event(sender.event_new, AVRequest.name)
         if not req:
             return
-        if 'av_request_changes' not in g:
-            g.av_request_changes = set()
-        g.av_request_changes.add(req)
+        g.setdefault('av_request_changes', set()).add(req)
 
     def _apply_changes(self, sender, **kwargs):
         # we are using after_request to avoid spam in case someone changes many contribution times
@@ -132,7 +132,7 @@ class AVRequestsPlugin(IndicoPlugin):
                 notify_rescheduled_request(req)
 
             if not compare_data_identifiers(identifiers['locations'], req.data['identifiers']['locations']):
-                if (not count_capable_contributions(req.event)[0] and
+                if (not count_capable_contributions(req.event_new)[0] and
                         req.state in {RequestState.accepted, RequestState.pending} and
                         not is_av_manager(req.created_by_user)):
                     janitor = User.get(int(Config.getInstance().getJanitorUserId()))
@@ -144,9 +144,7 @@ class AVRequestsPlugin(IndicoPlugin):
             flag_modified(req, 'data')
 
     def _clear_changes(self, sender, **kwargs):
-        if 'av_request_changes' not in g:
-            return
-        del g.av_request_changes
+        g.pop('av_request_changes', None)
 
     def _get_event_webcast_url(self, event):
         req = Request.find_latest_for_event(event, AVRequest.name)

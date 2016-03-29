@@ -6,14 +6,13 @@ from sqlalchemy.orm.attributes import flag_modified
 from werkzeug.exceptions import NotFound
 
 from indico.modules.events.agreements import AgreementDefinitionBase, AgreementPersonInfo
+from indico.modules.events.contributions.models.subcontributions import SubContribution
 from indico.modules.events.requests import RequestDefinitionBase
 from indico.modules.events.requests.models.requests import RequestState, Request
 from indico.util.caching import memoize_request
 from indico.util.decorators import classproperty
 from indico.util.placeholders import Placeholder
-from indico.util.string import to_unicode
 from indico.web.flask.util import url_for
-from MaKaC.conference import SubContribution
 
 from indico_audiovisual import _
 from indico_audiovisual.forms import AVRequestForm, AVRequestManagerForm
@@ -101,9 +100,9 @@ class SpeakerPersonInfo(AgreementPersonInfo):
     def identifier(self):
         prefix = '{}-{}'.format(self.email or 'NOEMAIL', self.data['type'])
         if self.data['type'] == 'lecture_speaker':
-            return '{}:{}'.format(prefix, self.data['speaker_id'])
+            return '{}:{}'.format(prefix, self.data['person_id'])
         elif self.data['type'] == 'contribution':
-            return '{}:{}:{}'.format(prefix, self.data['contribution'], self.data['speaker_id'])
+            return '{}:{}:{}'.format(prefix, self.data['contribution'], self.data['person_id'])
         else:
             raise ValueError('Unexpected type: {}'.format(self.data['type']))
 
@@ -114,17 +113,16 @@ def _talk_info_from_agreement_data(event, data):
     elif data['type'] != 'contribution':
         raise ValueError('Unexpected data type: {}'.format(data['type']))
 
-    contrib_id, _unused, subcontrib_id = data['contribution'].partition('-')
-    contrib = event.as_legacy.getContributionById(contrib_id)
-    if not contrib:
+    obj = contribution_by_id(event, data['contribution'])
+    if not obj:
         raise RuntimeError(_('Contribution deleted'))
-    if not subcontrib_id:
-        return 'contribution', url_for('event.contributionDisplay', contrib), to_unicode(contrib.getTitle())
-
-    subcontrib = contrib.getSubContributionById(subcontrib_id)
-    if not subcontrib:
-        raise RuntimeError(_('Subcontribution deleted'))
-    return 'subcontribution', url_for('event.subContributionDisplay', subcontrib), to_unicode(subcontrib.getTitle())
+    # TODO: use proper urls once #2272 is merged
+    if isinstance(obj, SubContribution):
+        return 'subcontribution', '#', obj.title
+        # return 'subcontribution', url_for('contributions.subcontribution_display', obj), obj.title
+    else:
+        return 'contribution', '#', obj.title
+        # return 'contribution', url_for('contributions.display_contribution', obj), obj.title
 
 
 class TalkPlaceholder(Placeholder):
@@ -151,7 +149,8 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
 
     @classmethod
     def extend_api_data(cls, event, person, agreement, data):
-        data['speaker'] = {'id': person.data['speaker_id'],
+        data['speaker'] = {'id': person.data['id'],
+                           'person_id': person.data['person_id'],
                            'name': person.name,
                            'email': person.email}
         if person.data['type'] == 'lecture_speaker':
@@ -199,16 +198,16 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
         req = Request.find_latest_for_event(event, AVRequest.name)
         if not req or req.state != RequestState.accepted or 'recording' not in req.data['services']:
             return
-        if event.as_legacy.getType() == 'simple_event':
-            for speaker in event.as_legacy.getChairList():
-                yield SpeakerPersonInfo(to_unicode('{} {}'.format(speaker.getFirstName(), speaker.getFamilyName())),
-                                        to_unicode(speaker.getEmail()) or None,
-                                        data={'type': 'lecture_speaker', 'speaker_id': speaker.getId()})
+        if event.type == 'lecture':
+            for link in event.person_links:
+                yield SpeakerPersonInfo(link.full_name, link.email or None,
+                                        data={'type': 'lecture_speaker', 'id': link.id, 'person_id': link.person_id})
         else:
             contribs = [x[0] for x in get_selected_contributions(req)]
             for contrib in contribs:
-                for speaker in contrib.getSpeakerList():
-                    yield SpeakerPersonInfo(to_unicode(speaker.getDirectFullNameNoTitle(upper=False)),
-                                            to_unicode(speaker.getEmail()) or None,
+                for link in contrib.person_links:
+                    if not link.is_speaker:
+                        continue
+                    yield SpeakerPersonInfo(link.full_name, link.email or None,
                                             data={'type': 'contribution', 'contribution': contribution_id(contrib),
-                                                  'speaker_id': speaker.getId()})
+                                                  'id': link.id, 'person_id': link.person_id})

@@ -5,18 +5,21 @@ from datetime import timedelta
 
 import icalendar
 from flask import request
+from sqlalchemy.orm import noload
 
 from indico.core import signals
 from indico.core.db import db
 from indico.modules.attachments.models.attachments import AttachmentType, Attachment
 from indico.modules.attachments.models.folders import AttachmentFolder
+from indico.modules.events import Event
+from indico.modules.events.contributions import Contribution
+from indico.modules.events.contributions.models.subcontributions import SubContribution
 from indico.modules.events.requests.models.requests import RequestState
-from indico.util.string import to_unicode
+from indico.modules.events.sessions.models.sessions import Session
 from indico.web.flask.util import url_for
 from indico.web.http_api import HTTPAPIHook
 from indico.web.http_api.responses import HTTPAPIError
 from indico.web.http_api.util import get_query_parameter
-from MaKaC.conference import Conference, Contribution, SubContribution, ConferenceHolder
 
 from indico_audiovisual import SERVICES, SHORT_SERVICES
 from indico_audiovisual.definition import AVRequest
@@ -24,44 +27,40 @@ from indico_audiovisual.util import find_requests
 
 
 def parse_indico_id(indico_id):
-    event_match = re.match('(\w*\d+)$', indico_id)
-    session_match = re.match('(\w*\d+)s(\d+|s\d+)$', indico_id)
-    contrib_match = re.match('(\w*\d+)c(\d+|s\d+t\d+)$', indico_id)
-    subcontrib_match = re.match('(\w*\d+)c(\d+|s\d+t\d+)sc(\d+)$', indico_id)
+    event_match = re.match('(\d+)$', indico_id)
+    session_match = re.match('(\d+)s(\d+)$', indico_id)
+    contrib_match = re.match('(\d+)c(\d+)$', indico_id)
+    subcontrib_match = re.match('(\d+)c(\d+)sc(\d+)$', indico_id)
 
     if subcontrib_match:
-        event = ConferenceHolder().getById(subcontrib_match.group(1), True)
+        event = Event.get(subcontrib_match.group(1), is_deleted=False)
         if not event:
             return None
-        contrib = event.getContributionById(subcontrib_match.group(2))
-        if not contrib:
-            return None
-        return contrib.getSubContributionById(subcontrib_match.group(3))
+        return SubContribution.find(SubContribution.id == subcontrib_match.group(3), ~SubContribution.is_deleted,
+                                    SubContribution.contribution.has(event_new=event, id=subcontrib_match.group(2),
+                                                                     is_deleted=False)).first()
     elif session_match:
-        event = ConferenceHolder().getById(session_match.group(1), True)
-        if not event:
-            return None
-        return event.getSessionById(session_match.group(2))
+        event = Event.get(session_match.group(1), is_deleted=False)
+        return Session.query.with_parent(event).filter_by(id=session_match.group(2)).first()
     elif contrib_match:
-        event = ConferenceHolder().getById(contrib_match.group(1), True)
-        if not event:
-            return None
-        return event.getContributionById(contrib_match.group(2))
+        event = Event.get(contrib_match.group(1), is_deleted=False)
+        return Contribution.query.with_parent(event).filter_by(id=contrib_match.group(2)).first()
     elif event_match:
-        return ConferenceHolder().getById(event_match.group(1), True)
+        return Event.get(event_match.group(1), is_deleted=False)
     else:
         return None
 
 
 def cds_link_exists(obj, url):
-    return bool(Attachment
-                .find(~Attachment.is_deleted,
-                      ~AttachmentFolder.is_deleted,
-                      AttachmentFolder.linked_object == obj,
-                      Attachment.type == AttachmentType.link,
-                      Attachment.link_url == url,
-                      _join=AttachmentFolder)
-                .count())
+    query = (Attachment
+             .find(~Attachment.is_deleted,
+                   ~AttachmentFolder.is_deleted,
+                   AttachmentFolder.object == obj,
+                   Attachment.type == AttachmentType.link,
+                   Attachment.link_url == url,
+                   _join=AttachmentFolder)
+             .options(noload('*')))
+    return db.session.query(query.exists()).one()[0]
 
 
 def create_link(indico_id, cds_id, user):
@@ -142,23 +141,25 @@ def _serialize_obj(req, obj, alarm):
     # Util to serialize an event, contribution or subcontribution
     # in the context of a webcast/recording request
     url = title = unique_id = None
-    date_source = obj
-    if isinstance(obj, Conference):
+    date_source = location_source = obj
+    if isinstance(obj, Event):
         url = url_for('event.conferenceDisplay', obj, _external=True)
-        title = to_unicode(obj.getTitle())
+        title = obj.title
         unique_id = 'e{}'.format(obj.id)
     elif isinstance(obj, Contribution):
-        url = url_for('event.contributionDisplay', obj, _external=True)
-        title = '{} - {}'.format(to_unicode(obj.getConference().getTitle()),
-                                 to_unicode(obj.getTitle()))
-        unique_id = 'e{}c{}'.format(obj.getConference().id, obj.id)
+        # TODO: use proper url once #2272 is merged
+        url = '#'
+        # url = url_for('contributions.display_contribution', obj, _external=True)
+        title = '{} - {}'.format(obj.event_new.title, obj.title)
+        unique_id = 'c{}'.format(obj.id)
     elif isinstance(obj, SubContribution):
-        url = url_for('event.subContributionDisplay', obj, _external=True)
-        title = '{} - {} - {}'.format(to_unicode(obj.getConference().getTitle()),
-                                      to_unicode(obj.getContribution().getTitle()),
-                                      to_unicode(obj.getTitle()))
-        unique_id = 'e{}c{}-{}'.format(obj.getConference().id, obj.getContribution().id, obj.id)
-        date_source = obj.getContribution()
+        # TODO: use proper url once #2272 is merged
+        url = '#'
+        # url = url_for('contributions.subcontribution_display', obj, _external=True)
+        title = '{} - {} - {}'.format(obj.event_new.title, obj.contribution.title, obj.title)
+        unique_id = 'sc{}'.format(obj.id)
+        date_source = obj.contribution
+        location_source = obj.contribution
 
     audience = None
     if 'webcast' in req.data['services']:
@@ -168,11 +169,11 @@ def _serialize_obj(req, obj, alarm):
         'status': 'P' if req.state == RequestState.pending else 'A',
         'services': req.data['services'],
         'event_id': req.event_id,
-        'startDate': date_source.getStartDate(),
-        'endDate': date_source.getEndDate(),
+        'startDate': date_source.start_dt,
+        'endDate': date_source.end_dt,
         'title': title,
-        'location': to_unicode(obj.getLocation().getName() if obj.getLocation() else None),
-        'room': to_unicode(obj.getRoom().getName() if obj.getRoom() else None),
+        'location': location_source.venue_name or None,
+        'room': location_source.room_name or None,
         'url': url,
         'audience': audience,
         '_ical_id': 'indico-audiovisual-{}@cern.ch'.format(unique_id)

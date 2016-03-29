@@ -58,20 +58,20 @@
         </td>
         <td class="entry-location">
             <span class="room">
-                {{ obj.getRoom().getName() if obj.getRoom() else '' }}
+                {{ obj.room_name }}
             </span>
             <span class="location">
-                ({{ obj.getLocation().getName() if obj.getLocation() else '' }})
+                ({{ obj.venue_name }})
             </span>
         </td>
         <td class="request-event">
-            <a class="discreet-link" href="{{ url_for('event.conferenceDisplay', req.event) }}">
-                {{ req.event.getTitle() }}
+            <a class="discreet-link" href="{{ url_for('event.conferenceDisplay', req.event_new) }}">
+                {{ req.event_new.title }}
             </a>
         </td>
         {% if form.granularity.data == 'talks' %}
             <td class="request-talk">
-                {{ obj.getTitle() }}
+                {{ obj.title }}
             </td>
         {% endif %}
     </tr>
