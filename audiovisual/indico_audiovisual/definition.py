@@ -98,7 +98,7 @@ class AVRequest(RequestDefinitionBase):
 class SpeakerPersonInfo(AgreementPersonInfo):
     @property
     def identifier(self):
-        prefix = '{}-{}'.format(self.email or 'NOEMAIL', self.data['type'])
+        prefix = '{}-{}'.format(self.email.lower() if self.email else 'NOEMAIL', self.data['type'])
         if self.data['type'] == 'lecture_speaker':
             return '{}:{}'.format(prefix, self.data['person_id'])
         elif self.data['type'] == 'contribution':

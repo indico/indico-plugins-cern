@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import json
 
 import requests
-from sqlalchemy.orm import joinedload, undefer, noload
+from sqlalchemy.orm import joinedload, undefer, noload, subqueryload
 
 from indico.core.celery import celery
 from indico.core.db import db
@@ -54,6 +54,7 @@ def _contrib_key(contrib):
             contrib.title)
 
 
+@memoize_request
 def get_contributions(event):
     """Returns a list of contributions in rooms with AV equipment
 
@@ -64,11 +65,14 @@ def get_contributions(event):
                 .filter(Contribution.is_scheduled)
                 .filter((Contribution.session == None) | Contribution.session.has(is_poster=False))  # noqa
                 .options(joinedload('timetable_entry').load_only('start_dt'),
+                         joinedload('session_block'),
+                         subqueryload('person_links'),
                          undefer('is_scheduled'))
                 .all())
     subcontribs = (SubContribution
                    .find(SubContribution.contribution_id.in_(c.id for c in contribs),
                          ~SubContribution.is_deleted)
+                   .options(subqueryload('person_links'))
                    .all())
     all_contribs = sorted(contribs + subcontribs, key=_contrib_key)
     av_capable_rooms = get_av_capable_rooms()
