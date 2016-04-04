@@ -10,6 +10,7 @@ from indico.core import signals
 from indico.core.plugins import IndicoPlugin
 from indico.core.config import Config
 from indico.modules.events import Event
+from indico.modules.events.contributions import Contribution
 from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.modules.events.requests.views import WPRequestsEventManagement
 from indico.modules.users import User
@@ -88,6 +89,7 @@ class AVRequestsPlugin(IndicoPlugin):
         self.connect(signals.event.contribution_updated, self._data_changed)
         self.connect(signals.event.subcontribution_updated, self._data_changed)
         self.connect(signals.event.timetable_entry_updated, self._data_changed)
+        self.connect(signals.event.times_changed, self._times_changed, sender=Contribution)
         self.connect(signals.after_process, self._apply_changes)
         self.connect(signals.before_retry, self._clear_changes)
         self.connect(signals.indico_menu, self._extend_indico_menu)
@@ -117,6 +119,12 @@ class AVRequestsPlugin(IndicoPlugin):
     @unify_event_args
     def _data_changed(self, sender, **kwargs):
         req = Request.find_latest_for_event(sender.event_new, AVRequest.name)
+        if not req:
+            return
+        g.setdefault('av_request_changes', set()).add(req)
+
+    def _times_changed(self, sender, obj, **kwargs):
+        req = Request.find_latest_for_event(obj.event_new, AVRequest.name)
         if not req:
             return
         g.setdefault('av_request_changes', set()).add(req)
