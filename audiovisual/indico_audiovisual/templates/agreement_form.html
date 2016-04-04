@@ -22,12 +22,8 @@
                     {% if talk_type == 'lecture' %}
                         <a href="{{ url_for('event.conferenceDisplay', event) }}">{{ event.title }}</a>
                     {% else %}
-                        {#
-                        TODO: use proper urls once #2272 is merged
-                        {% set endpoint = 'contributions.subcontribution_display' if is_subcontrib else 'contributions.display_contribution' %}
+                        {% set endpoint = 'contributions.display_subcontribution' if is_subcontrib else 'contributions.display_contribution' %}
                         <a href="{{ url_for(endpoint, contrib) }}">{{ contrib.title }}</a>
-                        #}
-                        <a href="#">{{ contrib.title }}</a>
                     {% endif %}
                 </td>
             </tr>

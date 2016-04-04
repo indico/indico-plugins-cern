@@ -116,13 +116,10 @@ def _talk_info_from_agreement_data(event, data):
     obj = contribution_by_id(event, data['contribution'])
     if not obj:
         raise RuntimeError(_('Contribution deleted'))
-    # TODO: use proper urls once #2272 is merged
     if isinstance(obj, SubContribution):
-        return 'subcontribution', '#', obj.title
-        # return 'subcontribution', url_for('contributions.subcontribution_display', obj), obj.title
+        return 'subcontribution', url_for('contributions.display_subcontribution', obj), obj.title
     else:
-        return 'contribution', '#', obj.title
-        # return 'contribution', url_for('contributions.display_contribution', obj), obj.title
+        return 'contribution', url_for('contributions.display_contribution', obj), obj.title
 
 
 class TalkPlaceholder(Placeholder):

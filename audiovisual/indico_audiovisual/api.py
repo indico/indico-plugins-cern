@@ -147,15 +147,11 @@ def _serialize_obj(req, obj, alarm):
         title = obj.title
         unique_id = 'e{}'.format(obj.id)
     elif isinstance(obj, Contribution):
-        # TODO: use proper url once #2272 is merged
-        url = '#'
-        # url = url_for('contributions.display_contribution', obj, _external=True)
+        url = url_for('contributions.display_contribution', obj, _external=True)
         title = '{} - {}'.format(obj.event_new.title, obj.title)
         unique_id = 'c{}'.format(obj.id)
     elif isinstance(obj, SubContribution):
-        # TODO: use proper url once #2272 is merged
-        url = '#'
-        # url = url_for('contributions.subcontribution_display', obj, _external=True)
+        url = url_for('contributions.display_subcontribution', obj, _external=True)
         title = '{} - {} - {}'.format(obj.event_new.title, obj.contribution.title, obj.title)
         unique_id = 'sc{}'.format(obj.id)
         date_source = obj.contribution
