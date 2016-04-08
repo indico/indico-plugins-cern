@@ -90,6 +90,7 @@ class AVRequestsPlugin(IndicoPlugin):
         self.connect(signals.event.subcontribution_updated, self._data_changed)
         self.connect(signals.event.timetable_entry_updated, self._data_changed)
         self.connect(signals.event.times_changed, self._times_changed, sender=Contribution)
+        self.connect(signals.event.times_changed, self._times_changed, sender=Event)
         self.connect(signals.after_process, self._apply_changes)
         self.connect(signals.before_retry, self._clear_changes)
         self.connect(signals.indico_menu, self._extend_indico_menu)
