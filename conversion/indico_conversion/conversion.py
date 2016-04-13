@@ -94,5 +94,5 @@ def conversion_check():
         for attachment in Attachment.find(Attachment.id.in_(finished)):
             if not attachment.folder.can_view(session.user):
                 continue
-            containers[attachment.id] = tpl.render_attachments_folders(item=attachment.folder.linked_object)
+            containers[attachment.id] = tpl.render_attachments_folders(item=attachment.folder.object)
     return jsonify(finished=finished, pending=pending, containers=containers)
