@@ -169,7 +169,8 @@ def _serialize_obj(req, obj, alarm):
         'endDate': date_source.end_dt,
         'title': title,
         'location': location_source.venue_name or None,
-        'room': location_source.room_name or None,
+        'room': location_source.get_room_name(full=False) or None,
+        'room_full_name': location_source.get_room_name(full=True) or None,
         'url': url,
         'audience': audience,
         '_ical_id': 'indico-audiovisual-{}@cern.ch'.format(unique_id)
@@ -194,7 +195,7 @@ def _ical_serialize_av(cal, record, now):
     event.add('url', record['url'])
     event.add('categories', 'Webcast/Recording')
     event.add('summary', _ical_summary(record))
-    location = ': '.join(filter(None, (record['location'], record['room'])))
+    location = ': '.join(filter(None, (record['location'], record['room_full_name'])))
     event.add('location', location)
     description = ['URL: {}'.format(record['url']),
                    'Services: {}'.format(', '.join(map(unicode, map(SERVICES.get, record['services']))))]
