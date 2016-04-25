@@ -40,7 +40,10 @@ class CERNUploader(MARCXMLUploader):
             raise CERNUploaderError('{} - {}'.format(response.status_code, result_text))
 
     def _get_result_text(self, result):
-        return etree.tostring(etree.fromstring(result), method="text")
+        try:
+            return etree.tostring(etree.fromstring(result), method="text")
+        except etree.XMLSyntaxError:
+            raise CERNUploaderError('Invalid XML response: {}'.format(result))
 
 
 class CERNLiveSyncBackend(LiveSyncBackendBase):
