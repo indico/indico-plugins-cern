@@ -78,7 +78,7 @@ def _update_calendar_entry(entry, settings):
             logger.debug('Ignoring %s for deleted event %s', entry.action.name, entry.event_id)
             return True
         conf = event.as_legacy
-        location = strip_control_chars(conf.getRoom().getName()) if conf.getRoom() else ''
+        location = strip_control_chars(event.room_name)
         description = to_unicode(strip_control_chars(conf.description))
         event_url = to_unicode(conf.getURL())
         data = {'userEmail': user.email,
