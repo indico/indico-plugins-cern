@@ -30,9 +30,9 @@
             <tr>
                 <td>{% trans %}Scheduled on{% endtrans %}:</td>
                 <td>
-                    {{ data_source.start_dt | format_date }}
-                    from {{ data_source.start_dt | format_time('short') }}
-                    to {{ data_source.end_dt | format_time('short') }}
+                    {{ data_source.start_dt | format_date(timezone=event.display_tzinfo) }}
+                    from {{ data_source.start_dt | format_time('short', timezone=event.display_tzinfo) }}
+                    to {{ data_source.end_dt | format_time('short', timezone=event.display_tzinfo) }}
                 </td>
             </tr>
             <tr>
