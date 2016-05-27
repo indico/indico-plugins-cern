@@ -28,7 +28,7 @@ PAYMENT_METHODS_FIELDS = [{'id': 'name', 'caption': _("Name"), 'required': True}
 
 
 class PluginSettingsForm(PaymentPluginSettingsFormBase):
-    authorized_users = PrincipalListField(_('Authorized users'), groups=True, serializable=False,
+    authorized_users = PrincipalListField(_('Authorized users'), groups=True,
                                           description=_('List of users/groups who are authorized to configure the CERN '
                                                         'Payment module for any event.'))
     fp_email_address = EmailField(_('FP email adress'), [DataRequired()], description=_('Email address to contact FP.'))
