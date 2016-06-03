@@ -115,7 +115,8 @@ class AVRequestsPlugin(IndicoPlugin):
         return SpeakerReleaseAgreement
 
     def _has_read_access_event(self, sender, user, **kwargs):
-        return user is not None and is_av_manager(user)
+        if user is not None and is_av_manager(user):
+            return True
 
     @unify_event_args
     def _data_changed(self, sender, **kwargs):
