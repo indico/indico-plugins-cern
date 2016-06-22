@@ -37,7 +37,7 @@ def submit_attachment(attachment):
     }
     with attachment.file.open() as fd:
         try:
-            response = requests.post(url, data=data, files={'uploadedfile': fd})
+            response = requests.post(url, data=data, files={'uploadedfile': fd}, verify=False)
             response.raise_for_status()
             if 'ok' not in response.text:
                 raise requests.RequestException('Unexpected response from server: {}'.format(response.text))
