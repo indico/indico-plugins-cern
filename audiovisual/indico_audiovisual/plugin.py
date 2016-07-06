@@ -85,6 +85,7 @@ class AVRequestsPlugin(IndicoPlugin):
         self.connect(signals.agreements.get_definitions, self._get_agreement_definitions)
         self.connect(signals.event.has_read_access, self._has_read_access_event)
         self.connect(signals.acl.can_access, self._has_read_access_event, sender=Event)
+        self.connect(signals.event.type_changed, self._data_changed)
         self.connect(signals.event.data_changed, self._data_changed)
         self.connect(signals.event.contribution_updated, self._data_changed)
         self.connect(signals.event.subcontribution_updated, self._data_changed)
