@@ -214,10 +214,13 @@
                         });
                     break;
                 case 'disconnected':
-                    sendRequest(btn, 'waitingConnect')
-                        .always(function onDisconnect(data) {
-                            states.disconnected.handler(data, btn);
-                        });
+                    var msg = $T.gettext('Ready to join the conference room?');
+                    confirmPrompt(msg).then(function() {
+                        sendRequest(btn, 'waitingConnect')
+                            .always(function onDisconnect(data) {
+                                states.disconnected.handler(data, btn);
+                            });
+                    });
                     break;
                 default:
                     new ErrorPopup(
