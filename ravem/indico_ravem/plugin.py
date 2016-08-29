@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from functools import partial
 
 from flask_pluginengine import depends, render_plugin_template
