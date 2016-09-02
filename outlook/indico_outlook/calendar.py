@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 import posixpath
 import pytz
-from operator import attrgetter
 from pprint import pformat
 
 import requests
@@ -14,7 +13,7 @@ from indico.util.date_time import format_datetime
 from indico.util.string import strip_control_chars, to_unicode
 
 from indico_outlook.models.queue import OutlookQueueEntry, OutlookAction
-from indico_outlook.util import check_config, latest_actions_only
+from indico_outlook.util import check_config, latest_actions_only, is_event_excluded
 
 
 operation_map = {
@@ -42,6 +41,8 @@ def update_calendar():
         for (user_id, event_id), entry_list in entries.iterlists():
             entry_ids = {x.id for x in entry_list}
             for entry in latest_actions_only(entry_list):
+                if is_event_excluded(entry.event_new):
+                    continue
                 if not _update_calendar_entry(entry, settings):
                     entry_ids.remove(entry.id)
             # record all ids which didn't fail for deletion
