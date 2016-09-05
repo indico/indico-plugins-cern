@@ -20,6 +20,7 @@ from indico.modules.users import ExtraUserPreferences
 from indico.util.event import unify_event_args
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import IndicoPasswordField, TimeDeltaField
+from indico.web.forms.validators import HiddenUnless
 from indico.web.forms.widgets import SwitchWidget
 
 from indico_outlook import _
@@ -59,14 +60,26 @@ class SettingsForm(IndicoForm):
 class OutlookUserPreferences(ExtraUserPreferences):
     fields = {
         'outlook_active': BooleanField(_('Sync with Outlook'), widget=SwitchWidget(),
-                                       description=_('Add Indico events in which I participate to my Outlook calendar'))
+                                       description=_('Add Indico events in which I participate to my Outlook '
+                                                     'calendar')),
+        'outlook_status': SelectField(_('Outlook entry status'), [HiddenUnless('extra_outlook_active',
+                                                                               preserve_data=True)],
+                                      choices=_status_choices,
+                                      description=_('The status for Outlook Calendar entries'))
     }
 
     def load(self):
-        return {'outlook_active': OutlookPlugin.user_settings.get(self.user, 'enabled')}
+        default_status = OutlookPlugin.settings.get('status')
+        return {
+            'outlook_active': OutlookPlugin.user_settings.get(self.user, 'enabled'),
+            'outlook_status': OutlookPlugin.user_settings.get(self.user, 'status', default_status)
+        }
 
     def save(self, data):
-        OutlookPlugin.user_settings.set(self.user, 'enabled', data['outlook_active'])
+        OutlookPlugin.user_settings.set_multi(self.user, {
+            'enabled': data['outlook_active'],
+            'status': data['outlook_status']
+        })
 
 
 class OutlookPlugin(IndicoPlugin):
@@ -93,7 +106,8 @@ class OutlookPlugin(IndicoPlugin):
         'max_event_duration': TimedeltaConverter
     }
     default_user_settings = {
-        'enabled': True  # XXX: if the default value ever changes, adapt `get_participating_users`!
+        'enabled': True,  # XXX: if the default value ever changes, adapt `get_participating_users`!
+        'status': None
     }
 
     def init(self):

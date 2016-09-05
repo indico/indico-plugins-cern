@@ -87,7 +87,7 @@ def _update_calendar_entry(entry, settings):
                 'subject': strip_control_chars(event.title),
                 'location': location,
                 'body': '<a href="{}">{}</a><br><br>{}'.format(event_url, event_url, description),
-                'status': settings['status'],
+                'status': OutlookPlugin.user_settings.get(user, 'status', settings['status']),
                 'startDate': format_datetime(conf.getStartDate(), format='MM-dd-yyyy HH:mm', timezone=pytz.utc),
                 'endDate': format_datetime(conf.getEndDate(), format='MM-dd-yyyy HH:mm', timezone=pytz.utc),
                 'isThereReminder': settings['reminder'],
