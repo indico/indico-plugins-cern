@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 from collections import defaultdict
-from operator import itemgetter
+from datetime import timedelta
 
 from flask import g
 from flask_pluginengine import with_plugin_context
@@ -14,17 +14,18 @@ from indico.core import signals
 from indico.core.db import DBMgr, db
 from indico.core.db.sqlalchemy.util.session import update_session_options
 from indico.core.plugins import IndicoPlugin
+from indico.core.settings.converters import TimedeltaConverter
 from indico.modules.events.registration.models.registrations import RegistrationState
 from indico.modules.users import ExtraUserPreferences
 from indico.util.event import unify_event_args
 from indico.web.forms.base import IndicoForm
-from indico.web.forms.fields import IndicoPasswordField
+from indico.web.forms.fields import IndicoPasswordField, TimeDeltaField
 from indico.web.forms.widgets import SwitchWidget
 
 from indico_outlook import _
 from indico_outlook.calendar import update_calendar
 from indico_outlook.models.queue import OutlookQueueEntry, OutlookAction
-from indico_outlook.util import get_participating_users, latest_actions_only
+from indico_outlook.util import get_participating_users, latest_actions_only, is_event_excluded
 
 
 _status_choices = [('free', _('Free')),
@@ -51,6 +52,8 @@ class SettingsForm(IndicoForm):
                             description=_("Prefix for calendar item IDs. If you change this, existing calendar entries "
                                           "cannot be deleted/updated anymore!"))
     timeout = FloatField(_('Request timeout'), [NumberRange(min=0.25)], description=_("Request timeout in seconds"))
+    max_event_duration = TimeDeltaField(_('Maximum Duration'), [DataRequired()], units=('days',),
+                                        description=_('Events lasting longer will not be sent to Exchange'))
 
 
 class OutlookUserPreferences(ExtraUserPreferences):
@@ -83,7 +86,11 @@ class OutlookPlugin(IndicoPlugin):
         'reminder': True,
         'reminder_minutes': 15,
         'id_prefix': 'indico_',
-        'timeout': 3
+        'timeout': 3,
+        'max_event_duration': timedelta(days=30)
+    }
+    settings_converters = {
+        'max_event_duration': TimedeltaConverter
     }
     default_user_settings = {
         'enabled': True  # XXX: if the default value ever changes, adapt `get_participating_users`!
@@ -137,6 +144,8 @@ class OutlookPlugin(IndicoPlugin):
             self._record_change(event, user, OutlookAction.remove)
 
     def _record_change(self, event, user, action):
+        if is_event_excluded(event):
+            return
         if 'outlook_changes' not in g:
             g.outlook_changes = []
         g.outlook_changes.append((event, user, action))

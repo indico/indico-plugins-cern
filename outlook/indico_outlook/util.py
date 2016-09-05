@@ -17,6 +17,12 @@ def check_config():
     return all(settings[x] for x in ('service_url', 'username', 'password'))
 
 
+def is_event_excluded(event):
+    """"Checks if an event is exclided from the calendar"""
+    from indico_outlook.plugin import OutlookPlugin
+    return event.duration > OutlookPlugin.settings.get('max_event_duration')
+
+
 def get_participating_users(event):
     """Returns participating users of an event who did not disable calendar updates."""
     registrations = (Registration.query
