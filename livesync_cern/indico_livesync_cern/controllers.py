@@ -22,5 +22,8 @@ class RHCategoriesJSON(RH):
             raise Unauthorized(response=response)
 
     def _process(self):
-        query = Category.query.filter_by(is_deleted=False).options(load_only('id', 'title')).all()
-        return jsonify(categories={c.id: c.title for c in query})
+        query = (Category.query
+                 .filter_by(is_deleted=False)
+                 .options(load_only('id', 'title'))
+                 .order_by(Category.id).all())
+        return jsonify(categories=[{'id': c.id, 'title': c.title} for c in query])
