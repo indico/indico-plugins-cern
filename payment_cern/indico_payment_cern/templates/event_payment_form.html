@@ -37,10 +37,12 @@ Select a PostFinance payment method to proceed with your payment.
     <dt></dt>
     <dd>
         <form action="{{ settings.payment_url }}" method="POST">
-            {% for name, value in form_data | dictsort -%}
-                <input type="hidden" name="{{ name }}" value="{{ value }}">
-            {% endfor %}
-            <input class="i-button highlight" type="submit" name="submit" value="Pay now" {%- if amount is none %} disabled{% endif %}>
+            {% if selected_method %}
+                {% for name, value in form_data | dictsort -%}
+                    <input type="hidden" name="{{ name }}" value="{{ value }}">
+                {% endfor %}
+            {% endif %}
+            <input class="i-button highlight" type="submit" name="submit" value="Pay now" {%- if not selected_method %} disabled{% endif %}>
         </form>
     </dd>
 </dl>

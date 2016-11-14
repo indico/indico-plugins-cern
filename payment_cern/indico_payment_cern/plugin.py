@@ -107,12 +107,13 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             modifier = Decimal(1 / (1 - method['fee'] / 100))
             data['amount'] = base_amount * modifier
             data['fee'] = data['amount'] - base_amount
+            data['form_data'] = self._generate_form_data(data['amount'], data)
         else:
+            data['form_data'] = None
             data['fee'] = None
             if data['event_settings']['apply_fees']:  # we don't know the final price
                 data['amount'] = None
 
-        data['form_data'] = self._generate_form_data(data['amount'], data)
 
     def _get_order_id(self, data):
         return get_order_id(data['registration'], data['settings']['order_id_prefix'])
