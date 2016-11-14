@@ -36,7 +36,7 @@ def get_payment_method(event, name):
 def create_hash(seed, form_data):
     """Creates the weird hash for postfinance"""
     data_str = seed.join('{}={}'.format(key, value) for key, value in sorted(form_data.items()) if value) + seed
-    return sha512(data_str).hexdigest().upper()
+    return sha512(data_str.encode('utf-8')).hexdigest().upper()
 
 
 def get_order_id(registration, prefix):

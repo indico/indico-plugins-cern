@@ -129,7 +129,7 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         shop_id = data['settings']['shop_id_{}'.format(currency.lower())]
         method = get_payment_method(event, data['selected_method'])
         template_page = ''  # yes, apparently it's supposed to be empty..
-        template_hash = sha512(seed + template_page).hexdigest()
+        template_hash = sha512((seed + template_page).encode('utf-8')).hexdigest()
         order_id = self._get_order_id(data)
         locator = registration.locator.uuid
 
