@@ -16,14 +16,19 @@
         window.addEventListener('message', function(e) {
             var iframe = $('#search-results');
             var data = e.data.split(';');
-            iframe.height(25 + parseInt(data[0], 10));
+            iframe.attr({
+                width: (25 + parseInt(data[1], 10)) + 'px',
+                height: (25 + parseInt(data[0], 10)) + 'px'
+            });
         }, false);
     </script>
 {% endblock %}
 
 {% block results %}
     {% if result %}
-        <iframe id="search-results" src="{{ result.iframe_url }}" frameborder="0" width="100%" height="680px"
-                style="margin-top: 0; overflow: hidden;"></iframe>
+        <div style="overflow: hidden;">
+            <iframe id="search-results" src="{{ result.iframe_url }}" frameborder="0"
+                    style="margin-top: 0;" width="100%" height="1500px"></iframe>
+        </div>
     {% endif %}
 {% endblock %}
