@@ -31,9 +31,8 @@ class CERNSearchEngine(SearchEngine):
 
     def build_url(self, **query_params):
         params = {'isFrame': unicode(int(self.use_iframe)),
-                  'isDlg': '1',
                   'autologin': unicode(int(not current_plugin.only_public)),
-                  'httpsActivation': '1'}
+                  'showRefiner': '1'}
         return '{}?{}'.format(current_plugin.settings.get('search_url'), url_encode(dict(params, **query_params)))
 
     def _make_query(self):
