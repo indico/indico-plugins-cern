@@ -10,7 +10,7 @@ from indico.modules.users import UserSetting
 
 
 def check_config():
-    """Checks if all required config options are set"""
+    """Check if all required config options are set"""
     from indico_outlook.plugin import OutlookPlugin
 
     settings = OutlookPlugin.settings.get_all()
@@ -18,13 +18,13 @@ def check_config():
 
 
 def is_event_excluded(event):
-    """"Checks if an event is exclided from the calendar"""
+    """Check if an event is excluded from the calendar"""
     from indico_outlook.plugin import OutlookPlugin
     return event.duration > OutlookPlugin.settings.get('max_event_duration')
 
 
 def get_participating_users(event):
-    """Returns participating users of an event who did not disable calendar updates."""
+    """Return participating users of an event who did not disable calendar updates."""
     registrations = (Registration.query
                      .filter(Registration.is_active,
                              ~RegistrationForm.is_deleted,
@@ -44,7 +44,7 @@ def get_participating_users(event):
 
 
 def latest_actions_only(items):
-    """Keeps only the most recent occurrence of each action, while preserving the order"""
+    """Keep only the most recent occurrence of each action, while preserving the order"""
     used = set()
     res = []
     for item in reversed(items):
