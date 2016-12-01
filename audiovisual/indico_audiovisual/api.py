@@ -60,7 +60,7 @@ def cds_link_exists(obj, url):
                    Attachment.link_url == url,
                    _join=AttachmentFolder)
              .options(noload('*')))
-    return db.session.query(query.exists()).one()[0]
+    return db.session.query(query.exists()).scalar()
 
 
 def create_link(indico_id, cds_id, user):

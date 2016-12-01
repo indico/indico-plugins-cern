@@ -148,11 +148,10 @@ def count_capable_contributions(event):
 
 def event_has_empty_sessions(event):
     """Checks if the event has any sessions with no contributions"""
-    query = (SessionBlock.query
-             .filter(SessionBlock.session.has(event_new=event),
-                     ~SessionBlock.contributions.any())
-             .options(noload('*')))
-    return db.session.query(query.exists()).one()[0]
+    return (SessionBlock.query
+            .filter(SessionBlock.session.has(event_new=event),
+                    ~SessionBlock.contributions.any())
+            .has_rows())
 
 
 def all_agreements_signed(event):
