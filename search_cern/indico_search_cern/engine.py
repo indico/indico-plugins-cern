@@ -74,7 +74,7 @@ class CERNSearchEngine(SearchEngine):
     def _make_taxonomy_query(self):
         if isinstance(self.obj, db.m.Category) and not self.obj.is_root:
             titles = '/'.join(self.obj.chain_titles[1:])
-            return "cerntaxonomy:'Indico/{}'".format(titles)
+            return 'cerntaxonomy:"Indico/{}"'.format(titles)
         elif isinstance(self.obj, db.m.Event):
             return 'EventID:{}'.format(self.obj.id)
         return ''
