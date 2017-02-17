@@ -86,7 +86,7 @@ class AVRequestsPlugin(IndicoPlugin):
         self.connect(signals.event.has_read_access, self._has_read_access_event)
         self.connect(signals.acl.can_access, self._has_read_access_event, sender=Event)
         self.connect(signals.event.type_changed, self._data_changed)
-        self.connect(signals.event.data_changed, self._data_changed)
+        self.connect(signals.event.updated, self._event_updated)
         self.connect(signals.event.contribution_updated, self._data_changed)
         self.connect(signals.event.subcontribution_updated, self._data_changed)
         self.connect(signals.event.timetable_entry_updated, self._data_changed)
@@ -119,15 +119,18 @@ class AVRequestsPlugin(IndicoPlugin):
         if user is not None and is_av_manager(user):
             return True
 
-    @unify_event_args
+    def _event_updated(self, event, changes, **kwargs):
+        if 'venue_room' in changes:
+            self._register_event_change(event)
+
     def _data_changed(self, sender, **kwargs):
-        req = Request.find_latest_for_event(sender.event_new, AVRequest.name)
-        if not req:
-            return
-        g.setdefault('av_request_changes', set()).add(req)
+        self._register_event_change(sender.event_new)
 
     def _times_changed(self, sender, obj, **kwargs):
-        req = Request.find_latest_for_event(obj.event_new, AVRequest.name)
+        self._register_event_change(obj.event_new)
+
+    def _register_event_change(self, event):
+        req = Request.find_latest_for_event(event, AVRequest.name)
         if not req:
             return
         g.setdefault('av_request_changes', set()).add(req)
