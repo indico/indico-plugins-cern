@@ -15,6 +15,7 @@ from indico.core.db import DBMgr, db
 from indico.core.db.sqlalchemy.util.session import update_session_options
 from indico.core.plugins import IndicoPlugin
 from indico.core.settings.converters import TimedeltaConverter
+from indico.modules.events import Event
 from indico.modules.events.registration.models.registrations import RegistrationState
 from indico.modules.users import ExtraUserPreferences
 from indico.util.event import unify_event_args
@@ -115,7 +116,8 @@ class OutlookPlugin(IndicoPlugin):
         self.connect(signals.users.preferences, self.extend_user_preferences)
         self.connect(signals.event.registration.registration_state_updated, self.event_registration_state_changed)
         self.connect(signals.event.registration.registration_deleted, self.event_registration_deleted)
-        self.connect(signals.event.data_changed, self.event_data_changed)
+        self.connect(signals.event.updated, self.event_updated)
+        self.connect(signals.event.times_changed, self.event_times_changed, sender=Event)
         self.connect(signals.event.deleted, self.event_deleted)
         self.connect(signals.after_process, self._apply_changes)
         self.connect(signals.before_retry, self._clear_changes)
@@ -145,10 +147,17 @@ class OutlookPlugin(IndicoPlugin):
             self._record_change(event, registration.user, OutlookAction.remove)
             self.logger.info('Registration removed: removing %s in %r', registration.user, event)
 
-    @unify_event_args
-    def event_data_changed(self, event, attr, **kwargs):
+    def event_updated(self, event, changes, **kwargs):
+        if not changes.viewkeys() & {'title', 'description', 'venue_room'}:
+            return
         for user in get_participating_users(event):
-            self.logger.info('Event data change (%s): updating %s in %r', attr, user, event)
+            self.logger.info('Event data change: updating %s in %r', user, event)
+            self._record_change(event, user, OutlookAction.update)
+
+    def event_times_changed(self, sender, obj, **kwargs):
+        event = obj
+        for user in get_participating_users(event):
+            self.logger.info('Event time change: updating %s in %r', user, event)
             self._record_change(event, user, OutlookAction.update)
 
     @unify_event_args

@@ -10,7 +10,7 @@ from werkzeug.datastructures import MultiDict
 
 from indico.core.db import db
 from indico.util.date_time import format_datetime
-from indico.util.string import strip_control_chars, to_unicode
+from indico.util.string import strip_control_chars
 
 from indico_outlook.models.queue import OutlookQueueEntry, OutlookAction
 from indico_outlook.util import check_config, latest_actions_only, is_event_excluded
@@ -78,18 +78,17 @@ def _update_calendar_entry(entry, settings):
         if event.is_deleted:
             logger.debug('Ignoring %s for deleted event %s', entry.action.name, entry.event_id)
             return True
-        conf = event.as_legacy
         location = strip_control_chars(event.room_name)
-        description = to_unicode(strip_control_chars(conf.description))
-        event_url = to_unicode(conf.getURL())
+        description = strip_control_chars(event.description)
+        event_url = event.external_url
         data = {'userEmail': user.email,
                 'uniqueID': unique_id,
                 'subject': strip_control_chars(event.title),
                 'location': location,
                 'body': '<a href="{}">{}</a><br><br>{}'.format(event_url, event_url, description),
                 'status': OutlookPlugin.user_settings.get(user, 'status', settings['status']),
-                'startDate': format_datetime(conf.getStartDate(), format='MM-dd-yyyy HH:mm', timezone=pytz.utc),
-                'endDate': format_datetime(conf.getEndDate(), format='MM-dd-yyyy HH:mm', timezone=pytz.utc),
+                'startDate': format_datetime(event.start_dt, format='MM-dd-yyyy HH:mm', timezone=pytz.utc),
+                'endDate': format_datetime(event.end_dt, format='MM-dd-yyyy HH:mm', timezone=pytz.utc),
                 'isThereReminder': settings['reminder'],
                 'reminderTimeInMinutes': settings['reminder_minutes']}
     elif entry.action == OutlookAction.remove:
