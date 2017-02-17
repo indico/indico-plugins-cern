@@ -14,9 +14,18 @@
                 {%- endtrans %}
             {% endcall %}
             {% call message_box('highlight') %}
-                {% trans url=url_for('event_mgmt.conferenceModification', event) -%}
+                {% set link_start %}
+                    <a data-href="{{ url_for('event_management.change_type', event) }}"
+                       data-method="POST"
+                       data-params='{"type": "lecture"}'
+                       data-title="{% trans %}Confirm type change{% endtrans %}"
+                       data-confirm="{% trans %}Please confirm that you want to convert this event to a lecture.{% endtrans %}"
+                       data-reload-after
+                       data-ajax>
+                {% endset %}
+                {% trans link_end='</a>'|safe -%}
                     <strong>Tip:</strong> If the event doesn't need any contributions, maybe you should
-                    <a href="{{ url }}">turn it into a lecture</a> (option <em>Event type</em>)?
+                    {{ link_start }}turn it into a lecture{{ link_end }}?
                 {%- endtrans %}
             {% endcall %}
         </div>
