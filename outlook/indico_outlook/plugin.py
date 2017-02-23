@@ -120,7 +120,6 @@ class OutlookPlugin(IndicoPlugin):
         self.connect(signals.event.times_changed, self.event_times_changed, sender=Event)
         self.connect(signals.event.deleted, self.event_deleted)
         self.connect(signals.after_process, self._apply_changes)
-        self.connect(signals.before_retry, self._clear_changes)
         self.connect(signals.users.merged, self._merge_users)
 
     def add_cli_command(self, manager):
@@ -183,11 +182,6 @@ class OutlookPlugin(IndicoPlugin):
         for (user, event), data in user_events.viewitems():
             for action in latest_actions_only(data):
                 OutlookQueueEntry.record(event, user, action)
-
-    def _clear_changes(self, sender, **kwargs):
-        if 'outlook_changes' not in g:
-            return
-        del g.outlook_changes
 
     def _merge_users(self, target, source, **kwargs):
         OutlookQueueEntry.find(user_id=source.id).update({OutlookQueueEntry.user_id: target.id})

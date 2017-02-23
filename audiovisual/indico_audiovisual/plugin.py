@@ -93,7 +93,6 @@ class AVRequestsPlugin(IndicoPlugin):
         self.connect(signals.event.times_changed, self._times_changed, sender=Contribution)
         self.connect(signals.event.times_changed, self._times_changed, sender=Event)
         self.connect(signals.after_process, self._apply_changes)
-        self.connect(signals.before_retry, self._clear_changes)
         self.connect(signals.indico_menu, self._extend_indico_menu)
         self.connect(signals.users.merged, self._merge_users)
         self.connect(signals.get_placeholders, self._get_placeholders, sender='agreement-email')
@@ -156,9 +155,6 @@ class AVRequestsPlugin(IndicoPlugin):
                     notify_relocated_request(req)
             req.data['identifiers'] = identifiers
             flag_modified(req, 'data')
-
-    def _clear_changes(self, sender, **kwargs):
-        g.pop('av_request_changes', None)
 
     def _get_event_webcast_url(self, event):
         req = Request.find_latest_for_event(event, AVRequest.name)
