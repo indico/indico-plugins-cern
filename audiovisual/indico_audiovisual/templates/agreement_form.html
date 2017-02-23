@@ -20,7 +20,7 @@
                 <td>{% trans %}Talk{% endtrans %}:</td>
                 <td>
                     {% if talk_type == 'lecture' %}
-                        <a href="{{ url_for('event.conferenceDisplay', event) }}">{{ event.title }}</a>
+                        <a href="{{ event.url }}">{{ event.title }}</a>
                     {% else %}
                         {% set endpoint = 'contributions.display_subcontribution' if is_subcontrib else 'contributions.display_contribution' %}
                         <a href="{{ url_for(endpoint, contrib) }}">{{ contrib.title }}</a>

@@ -109,7 +109,7 @@ class SpeakerPersonInfo(AgreementPersonInfo):
 
 def _talk_info_from_agreement_data(event, data):
     if data['type'] == 'lecture_speaker':
-        return 'lecture', url_for('event.conferenceDisplay', event), event.title
+        return 'lecture', event.url, event.title
     elif data['type'] != 'contribution':
         raise ValueError('Unexpected data type: {}'.format(data['type']))
 

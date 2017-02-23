@@ -65,7 +65,7 @@
             </span>
         </td>
         <td class="request-event">
-            <a class="discreet-link" href="{{ url_for('event.conferenceDisplay', req.event_new) }}">
+            <a class="discreet-link" href="{{ req.event_new.url }}">
                 {{ req.event_new.title }}
             </a>
         </td>

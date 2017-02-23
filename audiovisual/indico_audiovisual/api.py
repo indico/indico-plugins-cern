@@ -143,7 +143,7 @@ def _serialize_obj(req, obj, alarm):
     url = title = unique_id = None
     date_source = location_source = obj
     if isinstance(obj, Event):
-        url = url_for('event.conferenceDisplay', obj, _external=True)
+        url = obj.external_url
         title = obj.title
         unique_id = 'e{}'.format(obj.id)
     elif isinstance(obj, Contribution):
