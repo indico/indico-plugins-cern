@@ -11,7 +11,7 @@ from wtforms.fields.simple import StringField
 from wtforms.validators import DataRequired, NumberRange, URL
 
 from indico.core import signals
-from indico.core.db import DBMgr, db
+from indico.core.db import db
 from indico.core.db.sqlalchemy.util.session import update_session_options
 from indico.core.plugins import IndicoPlugin
 from indico.core.settings.converters import TimedeltaConverter
@@ -129,8 +129,7 @@ class OutlookPlugin(IndicoPlugin):
         def outlook():
             """Synchronizes Outlook calendars"""
             update_session_options(db)
-            with DBMgr.getInstance().global_connection():
-                update_calendar()
+            update_calendar()
 
     def extend_user_preferences(self, user, **kwargs):
         return OutlookUserPreferences

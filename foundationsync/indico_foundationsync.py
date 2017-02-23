@@ -14,7 +14,6 @@ from wtforms import StringField
 
 from indico.core.celery import celery
 from indico.core.plugins import IndicoPlugin
-from indico.core.db import DBMgr
 from indico.core.db.sqlalchemy import db
 from indico.core.db.sqlalchemy.util.session import update_session_options
 from indico.modules.rb.models.holidays import Holiday
@@ -310,17 +309,16 @@ class FoundationSync(object):
                           counter['found'], counter['added'], counter['skipped'])
 
     def run_all(self, room_name=None):
-        with DBMgr.getInstance().global_connection():
-            with self.connect_to_foundation() as connection:
-                try:
-                    self.fetch_rooms(connection, room_name)
-                    self.fetch_equipment(connection)
-                    self.fetch_room_equipment(connection, room_name)
-                    if not room_name:
-                        self.fetch_holidays(connection)
-                except Exception:
-                    self._logger.exception("Synchronization with Foundation failed")
-                    raise
+        with self.connect_to_foundation() as connection:
+            try:
+                self.fetch_rooms(connection, room_name)
+                self.fetch_equipment(connection)
+                self.fetch_room_equipment(connection, room_name)
+                if not room_name:
+                    self.fetch_holidays(connection)
+            except Exception:
+                self._logger.exception("Synchronization with Foundation failed")
+                raise
 
 
 class SettingsForm(IndicoForm):
