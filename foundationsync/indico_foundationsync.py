@@ -15,7 +15,6 @@ from wtforms import StringField
 from indico.core.celery import celery
 from indico.core.plugins import IndicoPlugin
 from indico.core.db.sqlalchemy import db
-from indico.core.db.sqlalchemy.util.session import update_session_options
 from indico.modules.rb.models.holidays import Holiday
 from indico.modules.rb.models.locations import Location
 from indico.modules.rb.models.equipment import EquipmentType
@@ -43,7 +42,6 @@ def OutputTypeHandler(cursor, name, defaultType, size, precision, scale):
 
 class FoundationSync(object):
     def __init__(self, db_name, logger):
-        update_session_options(db)
         self.db_name = db_name
         self._logger = logger
         try:
