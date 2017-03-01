@@ -3,7 +3,7 @@ from werkzeug.exceptions import NotFound
 
 from indico.core.errors import IndicoError
 from indico.modules.vc.models.vc_rooms import VCRoomEventAssociation
-from MaKaC.webinterface.rh.base import RH
+from indico.legacy.webinterface.rh.base import RH
 
 from indico_ravem import _
 from indico_ravem.operations import get_room_status, connect_room, disconnect_room

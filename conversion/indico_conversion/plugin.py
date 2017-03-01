@@ -18,7 +18,7 @@ from indico.util.date_time import now_utc
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import TextListField
 from indico.web.forms.widgets import SwitchWidget
-from MaKaC.webinterface.pages.conferences import WPTPLConferenceDisplay
+from indico.legacy.webinterface.pages.conferences import WPTPLConferenceDisplay
 
 from indico_conversion import _, cache
 from indico_conversion.blueprint import blueprint

@@ -13,7 +13,7 @@ from indico.core.plugins import IndicoPlugin, PluginCategory
 from indico.modules.vc.views import WPVCEventPage, WPVCManageEvent
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import IndicoPasswordField
-from MaKaC.webinterface.pages.conferences import WPTPLConferenceDisplay
+from indico.legacy.webinterface.pages.conferences import WPTPLConferenceDisplay
 
 from indico_ravem import _
 

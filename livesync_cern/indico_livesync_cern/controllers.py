@@ -5,7 +5,7 @@ from sqlalchemy.orm import load_only
 from werkzeug.exceptions import Unauthorized
 
 from indico.modules.categories import Category
-from MaKaC.webinterface.rh.base import RH
+from indico.legacy.webinterface.rh.base import RH
 
 
 class RHCategoriesJSON(RH):

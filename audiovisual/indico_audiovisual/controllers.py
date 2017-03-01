@@ -8,7 +8,7 @@ from werkzeug.exceptions import Forbidden
 
 from indico.util.date_time import get_day_start, get_day_end, as_utc
 from indico.util.struct.iterables import group_list
-from MaKaC.webinterface.rh.base import RHProtected
+from indico.legacy.webinterface.rh.base import RHProtected
 
 from indico_audiovisual.forms import RequestListFilterForm
 from indico_audiovisual.util import is_av_manager, find_requests

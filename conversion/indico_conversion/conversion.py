@@ -16,7 +16,7 @@ from indico.core.plugins import url_for_plugin
 from indico.modules.attachments.models.attachments import Attachment, AttachmentType, AttachmentFile
 from indico.util.signing import secure_serializer
 from indico.web.flask.templating import get_template_module
-from MaKaC.webinterface.rh.base import RHSimple
+from indico.legacy.webinterface.rh.base import RHSimple
 
 from indico_conversion import cache
 from indico_conversion.util import get_pdf_title
