@@ -4,12 +4,12 @@ from collections import defaultdict
 from datetime import timedelta
 
 from flask import g
-from flask_pluginengine import with_plugin_context
 from wtforms.fields.core import SelectField, BooleanField, FloatField
 from wtforms.fields.html5 import URLField, IntegerField
 from wtforms.fields.simple import StringField
 from wtforms.validators import DataRequired, NumberRange, URL
 
+from indico.cli.core import cli_command
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
 from indico.core.settings.converters import TimedeltaConverter
@@ -111,6 +111,7 @@ class OutlookPlugin(IndicoPlugin):
 
     def init(self):
         super(OutlookPlugin, self).init()
+        self.connect(signals.plugin.cli, self._extend_indico_cli)
         self.connect(signals.users.preferences, self.extend_user_preferences)
         self.connect(signals.event.registration.registration_state_updated, self.event_registration_state_changed)
         self.connect(signals.event.registration.registration_deleted, self.event_registration_deleted)
@@ -120,12 +121,12 @@ class OutlookPlugin(IndicoPlugin):
         self.connect(signals.after_process, self._apply_changes)
         self.connect(signals.users.merged, self._merge_users)
 
-    def add_cli_command(self, manager):
-        @manager.command
-        @with_plugin_context(self)
+    def _extend_indico_cli(self, sender, **kwargs):
+        @cli_command()
         def outlook():
-            """Synchronizes Outlook calendars"""
+            """Synchronizes Outlook calendars."""
             update_calendar()
+        return outlook
 
     def extend_user_preferences(self, user, **kwargs):
         return OutlookUserPreferences

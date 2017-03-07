@@ -7,11 +7,13 @@ from collections import Counter, defaultdict
 from contextlib import contextmanager
 from logging import StreamHandler
 
+import click
 from celery.schedules import crontab
-from flask_pluginengine import with_plugin_context
 from sqlalchemy.orm.exc import NoResultFound
 from wtforms import StringField
 
+from indico.cli.core import cli_command
+from indico.core import signals
 from indico.core.celery import celery
 from indico.core.plugins import IndicoPlugin
 from indico.core.db.sqlalchemy import db
@@ -331,9 +333,13 @@ class FoundationSyncPlugin(IndicoPlugin):
     configurable = True
     settings_form = SettingsForm
 
-    def add_cli_command(self, manager):
-        @manager.option('--room', dest='room_name', help='Synchronize only a given room (e.g. 513 R-055)')
-        @with_plugin_context(self)
+    def init(self):
+        super(FoundationSyncPlugin, self).init()
+        self.connect(signals.plugin.cli, self._extend_indico_cli)
+
+    def _extend_indico_cli(self, sender, **kwargs):
+        @cli_command()
+        @click.option('--room', 'room_name', metavar='ROOM', help="Synchronize only a given room (e.g. '513 R-055')")
         def foundationsync(room_name):
             """Synchronize holidays, rooms and equipment with the CERN Foundation Database"""
             db_name = self.settings.get('connection_string')
@@ -347,6 +353,7 @@ class FoundationSyncPlugin(IndicoPlugin):
             # Log to stdout
             self.logger.addHandler(StreamHandler())
             FoundationSync(db_name, self.logger).run_all(room_name)
+        return foundationsync
 
 
 @celery.periodic_task(run_every=crontab(minute='0', hour='8'))
