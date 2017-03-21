@@ -8,9 +8,9 @@ from indico.core.db import db
 from indico_search import SearchEngine
 
 
-FIELD_MAP = {'title': 'title',
+FIELD_MAP = {'title': 'titlereplica',
              'abstract': 'description',
-             'author': 'author',
+             'author': 'authors',
              'affiliation': 'companies',
              'keyword': 'keywords'}
 
