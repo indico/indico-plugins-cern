@@ -35,7 +35,7 @@ _status_choices = [('free', _('Free')),
 
 
 class SettingsForm(IndicoForm):
-    debug = BooleanField(_('Debug mode'),
+    debug = BooleanField(_('Debug mode'), widget=SwitchWidget(),
                          description=_("If enabled, requests are not sent to the API but logged instead"))
     service_url = URLField(_('Service URL'), [URL(require_tld=False)],
                            description=_("The URL of the CERN calendar service"))
