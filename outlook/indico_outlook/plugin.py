@@ -144,7 +144,7 @@ class OutlookPlugin(IndicoPlugin):
             self.logger.info('Registration removed: removing %s in %r', registration.user, event)
 
     def event_updated(self, event, changes, **kwargs):
-        if not changes.viewkeys() & {'title', 'description', 'venue_room'}:
+        if not changes.viewkeys() & {'title', 'description', 'location_data'}:
             return
         for user in get_participating_users(event):
             self.logger.info('Event data change: updating %s in %r', user, event)
