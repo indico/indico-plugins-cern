@@ -1,0 +1,25 @@
+{% extends 'themes_cern:cern/administrative/event.html' %}
+
+{% block header %}
+    <br>&nbsp;<br>
+    <table class="eventHeader">
+       <tr>
+           <td>
+               <img src="{{ url_for_plugin('themes_cern.static', filename='cern_logo_blue.png') }}">
+           </td>
+           <td>
+               <div class="eventHeader">
+                   CAISSE DE PENSIONS <br>
+                   <span class="CERNTitle"> CERN </span>
+                   PENSION FUND
+               </div>
+           </td>
+           <td>
+               <img src="{{ url_for_plugin('themes_cern.static', filename='eso_logo.png') }}">
+           </td>
+       </tr>
+    </table>
+    <div align="center">
+        <hr style="width: 50%">
+    </div>
+{% endblock %}

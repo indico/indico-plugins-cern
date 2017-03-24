@@ -1,0 +1,9 @@
+@import 'base/palette';
+
+$header-bg-color: #fff;
+$header-icon-color: $light-black;
+$header-text-color: #555588;
+
+@import 'themes/indico';
+
+@include header-logo('/static/plugins/themes_cern/tical_logo.png', 0 0, 200px, 230px);

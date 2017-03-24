@@ -1,0 +1,9 @@
+@import 'base/palette';
+
+$header-bg-color: #dedede;
+$header-icon-color: $light-black;
+$header-text-color: $black;
+
+@import 'themes/indico';
+
+@include header-logo('/static/plugins/themes_cern/fast_logo.png', 28px 29px, 250px, 20%);

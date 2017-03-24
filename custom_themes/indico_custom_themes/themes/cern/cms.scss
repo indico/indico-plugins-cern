@@ -1,0 +1,4 @@
+@import 'base/palette';
+@import 'themes/indico';
+
+@include header-logo('/static/plugins/themes_cern/cms_logo.png', 30px 45px);

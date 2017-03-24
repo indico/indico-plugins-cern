@@ -1,0 +1,4 @@
+graft indico_custom_themes/static
+graft indico_custom_themes/templates
+graft indico_custom_themes/themes
+recursive-include indico_custom_themes *.yaml

@@ -1,0 +1,9 @@
+@import 'base/palette';
+
+$header-bg-color: #dedede;
+$header-icon-color: $red;
+$header-text-color: $black;
+
+@import 'themes/indico';
+
+@include header-logo('/static/plugins/themes_cern/alice_logo.png');

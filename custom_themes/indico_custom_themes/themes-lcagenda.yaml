@@ -1,0 +1,5 @@
+definitions:
+  lcc:
+    <<: *standard
+    stylesheet: lcagenda/lcc.scss
+    title: LCC style

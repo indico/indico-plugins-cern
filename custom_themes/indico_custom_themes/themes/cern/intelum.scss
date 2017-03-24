@@ -1,0 +1,9 @@
+@import 'base/palette';
+
+$header-bg-color: #fff;
+$header-icon-color: $gray;
+$header-text-color: $black;
+
+@import 'themes/indico';
+
+@include header-logo('/static/plugins/themes_cern/intelum_logo.png', 25px 50px, 250px, 20%);

@@ -1,0 +1,9 @@
+@import 'base/palette';
+
+$header-bg-color: #dedede;
+$header-icon-color: $light-black;
+$header-text-color: $black;
+
+@import 'themes/indico';
+
+@include header-logo('/static/plugins/themes_cern/eurocircol_logo.png', 26px 33px, 230px, 17%);

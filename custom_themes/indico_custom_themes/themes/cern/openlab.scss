@@ -1,0 +1,19 @@
+@import 'base/palette';
+
+$header-bg-color: #006699;
+
+@import 'themes/indico';
+
+div.event-header {
+   padding-left: 150px;
+}
+
+a.logo {
+    position: absolute;
+    left: 26px;
+    top: 26px;
+    display: block;
+    width: 62px;
+    height: 81px;
+    background: #006699 url('/static/plugins/themes_cern/openlab_logo.png') left top no-repeat;
+}

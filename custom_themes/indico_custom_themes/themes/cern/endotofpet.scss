@@ -1,0 +1,9 @@
+@import 'base/palette';
+
+$header-bg-color: #fff;
+$header-icon-color: $light-black;
+$header-text-color: $black;
+
+@import 'themes/indico';
+
+@include header-logo('/static/plugins/themes_cern/endotofpet_logo.png', 0 0, 180px);

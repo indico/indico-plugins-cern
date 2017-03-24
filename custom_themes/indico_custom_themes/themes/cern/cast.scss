@@ -1,0 +1,9 @@
+@import 'base/palette';
+
+$header-bg-color: #fff;
+$header-icon-color: $light-black;
+$header-text-color: $black;
+
+@import 'themes/indico';
+
+@include header-logo('/static/plugins/themes_cern/cast_logo.png');

@@ -1,0 +1,6 @@
+@import 'base/palette';
+@import 'themes/indico';
+
+$header-bg-color: #013D7C;
+
+@include header-logo('/static/plugins/themes_cern/lhcb_logo.png', 25px 25px, 200px);

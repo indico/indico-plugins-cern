@@ -1,0 +1,8 @@
+@import 'base/palette';
+
+$header-bg-color: #1a64a0;
+
+@import 'themes/indico';
+
+@include header-logo('/static/plugins/themes_cern/egee_small.png', 15px 45px, 200px);
+

@@ -1,0 +1,9 @@
+@import 'base/palette';
+
+$header-bg-color: #fff;
+$header-icon-color: $gray;
+$header-text-color: #555588;
+
+@import 'themes/indico';
+
+@include header-logo('/static/plugins/themes_cern/picosec_banner.png', 0 0, 200px);

@@ -1,0 +1,18 @@
+{% extends 'themes_cern:cern/administrative/event.html' %}
+
+{% block header %}
+    <table class="eventHeader">
+        <tr>
+            <td>
+                <div style="float:left;">
+                    <img src="{{ url_for_plugin('themes_cern.static', filename='cern_logo_blue_small.png') }}">
+                </div>
+                <br/>
+                <div class="eventHeader">{{ category }}</div>
+            </td>
+        </tr>
+    </table>
+{% endblock %}
+
+{% block location_time %}
+{% endblock %}

@@ -1,0 +1,7 @@
+@import 'base/palette';
+
+$header-bg-color: #006699;
+
+@import 'themes/indico';
+
+@include header-logo('/static/plugins/themes_cern/crystal_clear_logo.png', 25px 25px);

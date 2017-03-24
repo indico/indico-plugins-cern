@@ -1,0 +1,191 @@
+definitions:
+  # Lectures
+  egee_lecture:
+    <<: *lecture
+    stylesheet: cern/egee.scss
+    title: EGEE lecture
+
+  picosec_endtofpet_lectures:
+    <<: *lecture
+    stylesheet: cern/picosec_endotofpet.scss
+    title: PicoSEC - EndoTOFPET US
+
+  picosec_lecture:
+    <<: *lecture
+    stylesheet: cern/picosec.scss
+    title: PicoSEC Lectures
+
+  tical-lectures:
+    <<: *lecture
+    stylesheet: cern/tical.scss
+    title: TICAL
+
+  # Meetings
+  atlas:
+    <<: *standard
+    stylesheet: cern/atlas.scss
+    title: ATLAS meeting
+
+  cms:
+    <<: *standard
+    stylesheet: cern/cms.scss
+    title: CMS meeting
+
+  alice_meeting:
+    <<: *standard
+    stylesheet: cern/alice.scss
+    title: ALICE meeting
+
+  lhcb_meeting:
+    <<: *standard
+    stylesheet: cern/lhcb.scss
+    title: LHCb meeting
+
+  cast:
+    <<: *standard
+    stylesheet: cern/cast.scss
+    title: CAST meeting
+
+  fcc:
+    <<: *standard
+    stylesheet: cern/fcc.scss
+    title: FCC
+
+  ilc:
+    <<: *standard
+    stylesheet: cern/ilc.scss
+    title: ILC style
+
+  intelum:
+    <<: *standard
+    stylesheet: cern/intelum.scss
+    title: Intelum
+
+  fast:
+    <<: *standard
+    stylesheet: cern/fast.scss
+    title: FAST meetings
+
+  EuroCirCol:
+    <<: *standard
+    stylesheet: cern/eurocirccol.scss
+    title: EuroCirCol
+
+  crystal_clear:
+    <<: *standard
+    stylesheet: cern/crystalclear.scss
+    title: Crystal Clear
+
+  egee_meeting:
+    <<: *standard
+    stylesheet: cern/egee.scss
+    title: EGEE meeting
+
+  endotofpet:
+    <<: *standard
+    event_types: [lecture, meeting]
+    stylesheet: cern/endotofpet.scss
+    title: EndoTOFPET
+
+  openlab:
+    <<: *standard
+    stylesheet: cern/openlab.scss
+    title: Openlab
+    settings:
+      logo_link: http://openlab.cern
+
+  lcg:
+    <<: *standard
+    stylesheet: cern/lcg.scss
+    title: LCG style
+
+  picosec:
+    <<: *standard
+    stylesheet: cern/picosec.scss
+    title: Picosec
+
+  picosec_endtofpet:
+    <<: *standard
+    stylesheet: cern/picosec_endotofpet.scss
+    title: PicoSEC - EndoTOFPET US
+
+  tical-meetings:
+    <<: *standard
+    stylesheet: cern/tical.scss
+    title: TICAL Meetings
+
+  totem_meeting:
+    <<: *standard
+    stylesheet: cern/totem.scss
+    title: TOTEM meeting
+
+  sa2:
+    <<: *standard
+    stylesheet: cern/staff_assoc_modern.scss
+    title: Staff Association
+
+  # Meetings - CERN Administrative
+  administrative: &administrative
+    event_types: [conference, meeting]
+    stylesheet: cern/administrative.scss
+    template: :cern/administrative/event.html
+    tt_template: :cern/administrative/timetable.html
+    title: Administrative style
+
+  administrative2:
+    <<: *administrative
+    title: Administrative style (with time)
+    settings:
+      hide_time: false
+
+  administrative4:
+    <<: *administrative
+    title: Administrative style (all material)
+    settings:
+      link_documents: false
+
+  cern_committees: &cern_committees
+    event_types: [meeting]
+    stylesheet: cern/cern_committees.scss
+    template: :cern/cern_committees.html
+    tt_template: :cern/administrative/timetable.html
+    title: CERN Committees
+    settings:
+      session_attachments: true
+      hide_time: false
+      show_numerals: false
+      print_mode: true
+
+  lhcrrb:
+    <<: *cern_committees
+    stylesheet: cern/lhc_rrb.scss
+    title: LHC RRB
+    settings:
+      session_attachments: true
+      hide_time: false
+      show_numerals: false
+
+  pf:
+    event_types: [meeting]
+    stylesheet: cern/administrative.scss
+    template: :cern/pension_fund.html
+    tt_template: :cern/administrative/timetable.html
+    title: Pension Fund
+    settings:
+      link_documents: false
+
+  sa:
+    <<: *administrative
+    settings:
+      show_notes: true
+      title_en: 'Staff Association'
+      title_fr: 'Association du Personnel'
+    title: Staff Association (administrative)
+
+  # XML
+  jacow:
+    event_types: [conference, lecture]
+    is_xml: true
+    stylesheet: null
+    template: cern/jacow.xsl
+    title: JACoW XML
