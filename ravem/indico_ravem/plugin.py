@@ -3,22 +3,24 @@ from __future__ import unicode_literals
 from functools import partial
 
 from flask_pluginengine import depends, render_plugin_template
-from wtforms.fields import IntegerField
-from wtforms.fields.simple import StringField
+from wtforms.fields import IntegerField, BooleanField
 from wtforms.fields.html5 import URLField
+from wtforms.fields.simple import StringField
 from wtforms.validators import DataRequired, NumberRange
 
 from indico.core.config import Config
 from indico.core.plugins import IndicoPlugin, PluginCategory
+from indico.legacy.webinterface.pages.conferences import WPTPLConferenceDisplay
 from indico.modules.vc.views import WPVCEventPage, WPVCManageEvent
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import IndicoPasswordField
-from indico.legacy.webinterface.pages.conferences import WPTPLConferenceDisplay
-
+from indico.web.forms.widgets import SwitchWidget
 from indico_ravem import _
 
 
 class SettingsForm(IndicoForm):  # pragma: no cover
+    debug = BooleanField(_('Debug mode'), widget=SwitchWidget(),
+                         description=_("If enabled, no actual connect/disconnect requests are sent"),)
     api_endpoint = URLField(_('API endpoint'), [DataRequired()], filters=[lambda x: x.rstrip('/') + '/'],
                             description=_('The endpoint for the RAVEM API'))
     username = StringField(_('Username'), [DataRequired()],
@@ -50,6 +52,7 @@ class RavemPlugin(IndicoPlugin):
     strict_settings = True
     settings_form = SettingsForm
     default_settings = {
+        'debug': False,
         'api_endpoint': 'https://ravem.cern.ch/api/services',
         'username': 'ravem',
         'password': None,

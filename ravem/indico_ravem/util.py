@@ -1,9 +1,10 @@
-import requests
-from requests.auth import HTTPDigestAuth
-from requests.exceptions import HTTPError, Timeout
+from pprint import pformat
 from urlparse import urljoin
 
+import requests
 from flask import request, session
+from requests.auth import HTTPDigestAuth
+from requests.exceptions import HTTPError, Timeout
 
 from indico.util.i18n import _
 from indico.util.user import retrieve_principal
@@ -34,9 +35,14 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
     password = RavemPlugin.settings.get('password')
     headers = {'Accept': 'application/json'}
     timeout = RavemPlugin.settings.get('timeout') or None
+    url = urljoin(root_endpoint, api_endpoint)
+
+    if RavemPlugin.settings.get('debug') and method != 'GET':
+        RavemPlugin.logger.debug('API call:\nURL: %s\nData: %s', url, pformat(kwargs))
+        raise RavemAPIException('Action not possible in debug mode', api_endpoint, None)
 
     try:
-        response = requests.request(method, urljoin(root_endpoint, api_endpoint), params=kwargs, headers=headers,
+        response = requests.request(method, url, params=kwargs, headers=headers,
                                     auth=HTTPDigestAuth(username, password), verify=False, timeout=timeout)
     except Timeout as error:
         RavemPlugin.logger.warning("%s %s timed out: %s", error.request.method, error.request.url, error.message)
