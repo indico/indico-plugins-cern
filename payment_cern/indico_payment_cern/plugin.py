@@ -114,7 +114,6 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             if data['event_settings']['apply_fees']:  # we don't know the final price
                 data['amount'] = None
 
-
     def _get_order_id(self, data):
         return get_order_id(data['registration'], data['settings']['order_id_prefix'])
 
@@ -147,12 +146,12 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             'PM': method['type'],
             'BRAND': method['name'],
             'PARAMVAR': data['settings']['server_url_suffix'],
-            'HOMEURL': url_for('event_registration.display_regform', locator, _external=True, _secure=True),
-            'ACCEPTURL': url_for_plugin('payment_cern.success', locator, _external=True, _secure=True),
-            'CANCELURL': url_for_plugin('payment_cern.cancel', locator, _external=True, _secure=True),
-            'DECLINEURL': url_for_plugin('payment_cern.decline', locator, _external=True, _secure=True),
-            'EXCEPTIONURL': url_for_plugin('payment_cern.uncertain', locator, _external=True, _secure=True),
-            'BACKURL': url_for('payment.event_payment', locator, _external=True, _secure=True)
+            'HOMEURL': url_for('event_registration.display_regform', locator, _external=True),
+            'ACCEPTURL': url_for_plugin('payment_cern.success', locator, _external=True),
+            'CANCELURL': url_for_plugin('payment_cern.cancel', locator, _external=True),
+            'DECLINEURL': url_for_plugin('payment_cern.decline', locator, _external=True),
+            'EXCEPTIONURL': url_for_plugin('payment_cern.uncertain', locator, _external=True),
+            'BACKURL': url_for('payment.event_payment', locator, _external=True)
         }
 
         form_data['SHASIGN'] = create_hash(seed, form_data)
