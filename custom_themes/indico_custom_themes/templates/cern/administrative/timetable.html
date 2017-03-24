@@ -4,7 +4,7 @@
 
 {% set previous_date = [] %}
 <table class="dayList">
-    {% set index = 1 %}
+    {% set index = [] %}
 
     {% for item in entries -%}
         {% set date = item.start_dt.astimezone(tz_object).date() %}
@@ -36,6 +36,9 @@
         {% set session_attachments = theme_settings.session_attachments|default(false) %}
         {% set print_mode = theme_settings.print_mode|default(false) %}
         {% set show_numerals = theme_settings.show_numerals|default(true) %}
+        {% if item.type.name != 'BREAK' %}
+            {% set __ = index.append(1) %}
+        {% endif %}
 
         {% if item.type.name == 'CONTRIBUTION' -%}
             {{ render_contribution(item.object, event, timezone=timezone,
@@ -43,7 +46,7 @@
                                    hide_time=hide_time,
                                    link_documents=link_documents,
                                    show_numerals=show_numerals,
-                                   numeral=index,
+                                   numeral=index|length,
                                    print_mode=print_mode) }}
         {%- elif item.type.name == 'SESSION_BLOCK' -%}
             {{ render_session_block(item.object, event, timezone=timezone,
@@ -56,10 +59,6 @@
         {%- elif item.type.name == 'BREAK' -%}
             {{ render_break(item.object) }}
         {%- endif %}
-
-        {% if item.type.name != 'BREAK' %}
-            {% set index = index + 1 %}
-        {% endif %}
 
         {% set __ = previous_date.append(date) %}
     {%- endfor %}
