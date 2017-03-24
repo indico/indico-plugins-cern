@@ -174,7 +174,7 @@ class AVRequestsPlugin(IndicoPlugin):
         return render_plugin_template('event_header.html', url=url)
 
     def _inject_conference_header_subtitle(self, event, **kwargs):
-        url = self._get_event_webcast_url(event.as_event)
+        url = self._get_event_webcast_url(event)
         if not url:
             return
         return render_plugin_template('conference_header.html', url=url)
