@@ -14,11 +14,11 @@ from indico.core import signals
 from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.modules.attachments.forms import AddAttachmentFilesForm
 from indico.modules.attachments.models.attachments import AttachmentType, Attachment
+from indico.modules.events.views import WPSimpleEventDisplay
 from indico.util.date_time import now_utc
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import TextListField
 from indico.web.forms.widgets import SwitchWidget
-from indico.legacy.webinterface.pages.conferences import WPTPLConferenceDisplay
 
 from indico_conversion import _, cache
 from indico_conversion.blueprint import blueprint
@@ -56,8 +56,8 @@ class ConversionPlugin(IndicoPlugin):
         self.connect(signals.attachments.attachment_created, self._attachment_created)
         self.connect(signals.model_committed, self._attachment_committed, sender=Attachment)
         self.template_hook('event-display-after-attachment', self._event_display_after_attachment)
-        self.inject_css('conversion_css', WPTPLConferenceDisplay)
-        self.inject_js('conversion_js', WPTPLConferenceDisplay)
+        self.inject_css('conversion_css', WPSimpleEventDisplay)
+        self.inject_js('conversion_js', WPSimpleEventDisplay)
 
     def get_blueprints(self):
         return blueprint

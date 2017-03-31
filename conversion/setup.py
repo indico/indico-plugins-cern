@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='indico_conversion',
-    version='0.4',
+    version='0.5',
     url='https://gitlab.cern.ch/indico/indico-plugins-cern',
     author='Indico Team',
     author_email='indico-team@cern.ch',
@@ -14,7 +14,7 @@ setup(
     include_package_data=True,
     platforms='any',
     install_requires=[
-        'indico>=1.9.4'
+        'indico>=1.9.10.dev2'
     ],
     entry_points={
         'indico.plugins': {'conversion = indico_conversion.plugin:ConversionPlugin'},

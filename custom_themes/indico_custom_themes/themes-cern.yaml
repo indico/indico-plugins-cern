@@ -181,11 +181,3 @@ definitions:
       title_en: 'Staff Association'
       title_fr: 'Association du Personnel'
     title: Staff Association (administrative)
-
-  # XML
-  jacow:
-    event_types: [conference, lecture]
-    is_xml: true
-    stylesheet: null
-    template: cern/jacow.xsl
-    title: JACoW XML

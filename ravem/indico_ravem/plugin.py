@@ -10,7 +10,7 @@ from wtforms.validators import DataRequired, NumberRange
 
 from indico.core.config import Config
 from indico.core.plugins import IndicoPlugin, PluginCategory
-from indico.legacy.webinterface.pages.conferences import WPTPLConferenceDisplay
+from indico.modules.events.views import WPSimpleEventDisplay
 from indico.modules.vc.views import WPVCEventPage, WPVCManageEvent
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import IndicoPasswordField
@@ -76,7 +76,7 @@ class RavemPlugin(IndicoPlugin):
         self.template_hook('event-timetable-vc-extra-buttons',
                            partial(self.inject_connect_button, 'ravem_button_group.html'))
 
-        self.inject_js('ravem_js', WPTPLConferenceDisplay)
+        self.inject_js('ravem_js', WPSimpleEventDisplay)
         self.inject_js('ravem_js', WPVCEventPage)
         self.inject_js('ravem_js', WPVCManageEvent)
 

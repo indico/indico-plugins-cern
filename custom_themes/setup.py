@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='indico_custom_themes',
-    version='1.0.0',
+    version='0.1.0',
     url='https://gitlab.cern.ch/indico/indico-plugins-cern',
     author='Indico Team',
     author_email='indico-team@cern.ch',
@@ -13,7 +13,7 @@ setup(
     zip_safe=False,
     include_package_data=True,
     platforms='any',
-    install_requires=['indico>=1.9.10.dev0'],
+    install_requires=['indico>=1.9.10.dev2'],
     entry_points={'indico.plugins': {'themes_cern = indico_custom_themes.plugins:CERNThemesPlugin',
                                      'themes_lcagenda = indico_custom_themes.plugins:LCAgendaThemesPlugin'}}
 )
