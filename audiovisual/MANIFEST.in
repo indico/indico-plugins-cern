@@ -2,3 +2,5 @@ graft indico_audiovisual/migrations
 graft indico_audiovisual/static
 graft indico_audiovisual/templates
 graft indico_audiovisual/translations
+
+global-exclude *.pyc __pycache__ .keep

@@ -1,3 +1,5 @@
 graft indico_outlook/migrations
 graft indico_outlook/templates
 graft indico_outlook/translations
+
+global-exclude *.pyc __pycache__ .keep
