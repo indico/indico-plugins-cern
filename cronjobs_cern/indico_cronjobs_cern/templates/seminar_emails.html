@@ -1,0 +1,12 @@
+{% extends 'emails/base.txt' %}
+{% from 'cronjobs_cern:_lists.html' import render_event_list %}
+
+{% block subject %}Seminars for the coming two weeks{% endblock %}
+
+{% block header %}{% endblock %}
+
+{% block body -%}
+    <p>Please find below the seminars for the coming two weeks:</p>
+
+    <ul>{{ render_event_list(events_by_date) }}</ul>
+{%- endblock %}
