@@ -1,0 +1,30 @@
+{% extends 'emails/base.txt' %}
+{% from 'cronjobs_cern:_lists.html' import render_event_list, render_reservation_list %}
+
+{% block subject %}Indico events requiring support for the coming two weeks{% endblock %}
+
+{% block header_recipient %}Support Team{% endblock %}
+
+{% block body -%}
+    <p>Please find below the Indico events requiring support for the coming two weeks:</p>
+
+    {% for room, events_by_date in events_by_room.iteritems() %}
+        <p>Events in {{ room.name }}:</p>
+        {{ render_event_list(events_by_date, show_location=false) }}
+    {% endfor %}
+
+    <p>Committees:</p>
+    {{ render_event_list(committees_by_date, show_location=false) }}
+
+    <p>Events in the Globe:</p>
+    <ul>
+        {% if reservations_by_date %}
+            {% for date, reservations in reservations_by_date.iteritems() %}
+                <li>{{ date }}</li>
+                <ul>{{ render_reservation_list(reservations) }}</ul>
+            {% endfor %}
+        {% else %}
+            <li>No events</li>
+        {% endif %}
+    </ul>
+{%- endblock %}

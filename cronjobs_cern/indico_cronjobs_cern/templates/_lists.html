@@ -1,0 +1,42 @@
+{% macro render_event_list(events_by_date, show_location=true) %}
+    <ul>
+        {% if events_by_date %}
+            {% for date, events in events_by_date.iteritems() %}
+                <li>
+                    <span>{{ date }}</span>
+                    <ul>
+                        {% for event in events %}
+                            <li>
+                                <span>{{ event.start_dt | format_time('HH:mm') }}</span>
+                                <span>{{ event.category.title }}</span>
+                                <a href="{{ event.url }}">
+                                    <span>{{ event.title }}</span>
+                                </a>
+                                {% if show_location %}
+                                    <span> {{ event.get_room_name(full=false) }} </span>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </li>
+            {% endfor %}
+        {% else %}
+            <li>No events</li>
+        {% endif %}
+    </ul>
+{% endmacro %}
+
+{% macro render_reservation_list(reservations) %}
+    <ul>
+        {% if reservations %}
+            {% for rsv in reservations %}
+                <li>
+                    {{ rsv.start_dt | format_time('HH:mm') }} ⟶ {{ rsv.end_dt | format_time('HH:mm') }}
+                    {{ rsv.booking_reason}} (Booked for: {{ rsv.booked_for_name }})
+                </li>
+            {% endfor %}
+        {% else %}
+            <li>No events</li>
+        {% endif %}
+    </ul>
+{% endmacro %}
