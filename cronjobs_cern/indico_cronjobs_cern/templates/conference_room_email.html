@@ -16,15 +16,17 @@
     <p>Committees:</p>
     {{ render_event_list(committees_by_date, show_location=false) }}
 
-    <p>Events in the Globe:</p>
-    <ul>
-        {% if reservations_by_date %}
-            {% for date, reservations in reservations_by_date.iteritems() %}
-                <li>{{ date }}</li>
-                <ul>{{ render_reservation_list(reservations) }}</ul>
-            {% endfor %}
-        {% else %}
-            <li>No events</li>
-        {% endif %}
-    </ul>
+    {% for room, reservations_by_date in res_events_by_room.iteritems() %}
+        <p>Events in {{ room.name }}:</p>
+        <ul>
+            {% if reservations_by_date %}
+                {% for date, reservations in reservations_by_date.iteritems() %}
+                    <li>{{ date }}</li>
+                    <ul>{{ render_reservation_list(reservations) }}</ul>
+                {% endfor %}
+            {% else %}
+                <li>No events</li>
+            {% endif %}
+        </ul>
+    {% endfor %}
 {%- endblock %}

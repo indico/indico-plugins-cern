@@ -64,7 +64,6 @@ def _send_email(recipients, template):
 @celery.periodic_task(run_every=crontab(minute='0', hour='8', day_of_week='friday'), plugin='cronjobs_cern')
 def conference_room_emails():
     start_dt, end_dt = _get_start_end_dt()
-    globe_room_id = 175
     events_by_room = {}
     for room in CERNCronjobsPlugin.settings.get('rooms'):
         query = (Event.query
@@ -74,14 +73,16 @@ def conference_room_emails():
                  .order_by(Event.start_dt))
         events_by_room[room] = _group_by_date(query)
 
-    reservations = _get_reservations_query(start_dt, end_dt, room_id=globe_room_id)
+    res_events_by_room = {}
+    for room in CERNCronjobsPlugin.settings.get('reservation_rooms'):
+        res_events_by_room[room] = _group_by_date(_get_reservations_query(start_dt, end_dt, room_id=room.id))
 
     category_ids = [int(category['id']) for category in CERNCronjobsPlugin.settings.get('categories')]
     committees = _get_category_events_query(start_dt, end_dt, category_ids)
 
     template = get_plugin_template_module('conference_room_email.html',
                                           events_by_room=events_by_room,
-                                          reservations_by_date=_group_by_date(reservations),
+                                          res_events_by_room=res_events_by_room,
                                           committees_by_date=_group_by_date(committees))
     recipients = CERNCronjobsPlugin.settings.get('conf_room_recipients')
     if recipients:
