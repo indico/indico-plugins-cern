@@ -4,13 +4,13 @@ from collections import OrderedDict
 from datetime import datetime, timedelta
 
 from celery.schedules import crontab
-from sqlalchemy import cast, Date, Time
 
 from indico.core.celery import celery
 from indico.core.notifications import make_email, send_email
 from indico.core.plugins import get_plugin_template_module
 from indico.modules.events.models.events import Event
 from indico.modules.rb.models.reservations import Reservation
+from indico.modules.rb.models.reservation_occurrences import ReservationOccurrence
 from indico.util.date_time import as_utc, format_date
 from indico.util.string import to_unicode
 
@@ -36,16 +36,16 @@ def _group_by_date(object_list):
 
 def _get_reservations_query(start_dt, end_dt, room_id=None):
     filters = [
-        ~Reservation.is_cancelled,
-        ~Reservation.is_rejected,
-        Reservation.needs_assistance,
-        cast(Reservation.start_dt, Date) <= end_dt.date(),
-        cast(Reservation.end_dt, Date) >= start_dt.date()
+        ReservationOccurrence.start_dt >= start_dt,
+        ReservationOccurrence.end_dt <= end_dt,
+        ReservationOccurrence.is_valid,
+        Reservation.is_valid,
+        Reservation.needs_assistance
     ]
     if room_id:
         filters.append(Reservation.room_id == room_id)
 
-    return Reservation.query.filter(*filters).order_by(Reservation.start_dt)
+    return Reservation.query.filter(*filters).join(ReservationOccurrence).order_by(Reservation.start_dt)
 
 
 def _get_category_events_query(start_dt, end_dt, category_ids):
@@ -92,8 +92,10 @@ def conference_room_emails():
 @celery.periodic_task(run_every=crontab(minute='0', hour='8', day_of_week='monday'), plugin='cronjobs_cern')
 def seminar_emails():
     start_dt, end_dt = _get_start_end_dt()
-    seminar_category_id = 6745
-    query = _get_category_events_query(start_dt, end_dt, seminar_category_id)
+    seminar_category = CERNCronjobsPlugin.settings.get('seminar_category')
+    if not seminar_category:
+        return
+    query = _get_category_events_query(start_dt, end_dt, seminar_category.id)
     template = get_plugin_template_module('seminar_emails.html', events_by_date=_group_by_date(query))
     recipients = CERNCronjobsPlugin.settings.get('seminar_recipients')
     if recipients:

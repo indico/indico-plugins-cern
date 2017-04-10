@@ -4,6 +4,7 @@ from wtforms import ValidationError
 
 from indico.core.plugins import IndicoPlugin
 from indico.core.settings.converters import SettingConverter
+from indico.modules.categories.fields import CategoryField
 from indico.modules.categories.models.categories import Category
 from indico.modules.rb.models.rooms import Room
 from indico.util.string import natural_sort_key
@@ -19,7 +20,7 @@ class SettingsForm(IndicoForm):
     _fieldsets = [
         ('Conference room emails', ['rooms', 'reservation_rooms', 'categories', 'conf_room_recipients']),
         ('Startup assistance emails', ['startup_assistance_recipients']),
-        ('Seminar emails', ['seminar_recipients'])
+        ('Seminar emails', ['seminar_category', 'seminar_recipients'])
     ]
 
     rooms = IndicoQuerySelectMultipleField('Rooms', get_label='full_name', collection_class=set, render_kw={'size': 20},
@@ -29,6 +30,7 @@ class SettingsForm(IndicoForm):
     categories = MultipleItemsField('Categories', fields=[{'id': 'id', 'caption': 'Category ID', 'required': True}])
     conf_room_recipients = EmailListField('Recipients')
     startup_assistance_recipients = EmailListField('Recipients')
+    seminar_category = CategoryField('Seminars category')
     seminar_recipients = EmailListField('Recipients')
 
     def __init__(self, *args, **kwargs):
@@ -54,6 +56,18 @@ class RoomConverter(SettingConverter):
         return Room.query.filter(Room.id.in_(value)).all()
 
 
+class CategoryConverter(SettingConverter):
+    """Convert a category object to category ID and backwards."""
+
+    @staticmethod
+    def from_python(value):
+        return value.id
+
+    @staticmethod
+    def to_python(value):
+        return Category.get_one(value)
+
+
 class CERNCronjobsPlugin(IndicoPlugin):
     """CERN cronjobs
 
@@ -65,12 +79,14 @@ class CERNCronjobsPlugin(IndicoPlugin):
     settings_form = SettingsForm
     settings_converters = {
         'rooms': RoomConverter,
-        'reservation_rooms': RoomConverter
+        'reservation_rooms': RoomConverter,
+        'seminar_category': CategoryConverter
     }
     default_settings = {
         'rooms': set(),
         'reservation_rooms': set(),
         'categories': set(),
+        'seminar_category': None,
         'conf_room_recipients': set(),
         'startup_assistance_recipients': set(),
         'seminar_recipients': set()
