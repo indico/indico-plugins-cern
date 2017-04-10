@@ -11,7 +11,7 @@ setup(
     include_package_data=True,
     platforms='any',
     install_requires=[
-        'indico>=1.9.10.dev2'
+        'indico>=1.9.10'
     ],
     entry_points={'indico.plugins': {'ravem = indico_ravem.plugin:RavemPlugin'},
                   'indico.zodb_importers': {'ravem = indico_ravem.zodbimport:RavemImporter'}}

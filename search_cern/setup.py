@@ -15,7 +15,7 @@ setup(
     include_package_data=True,
     platforms='any',
     install_requires=[
-        'indico>=1.9.1',
+        'indico>=1.9.10',
         'indico_search'
     ],
     entry_points={'indico.plugins': {'search_cern = indico_search_cern.plugin:CERNSearchPlugin'},

@@ -12,7 +12,7 @@ setup(
     include_package_data=True,
     platforms='any',
     install_requires=[
-        'indico>=1.9.6'
+        'indico>=1.9.10'
     ],
     entry_points={'indico.plugins': {'outlook = indico_outlook.plugin:OutlookPlugin'},
                   'indico.zodb_importers': {'outlook = indico_outlook.zodbimport:OutlookImporter'}}

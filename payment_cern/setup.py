@@ -14,7 +14,7 @@ setup(
     include_package_data=True,
     platforms='any',
     install_requires=[
-        'indico>=1.9.3'
+        'indico>=1.9.10'
     ],
     entry_points={'indico.plugins': {'payment_cern = indico_payment_cern.plugin:CERNPaymentPlugin'},
                   'indico.zodb_importers': {'payment_cern = indico_payment_cern.zodbimport:CERNPaymentImporter'}}

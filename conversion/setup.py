@@ -14,7 +14,7 @@ setup(
     include_package_data=True,
     platforms='any',
     install_requires=[
-        'indico>=1.9.10.dev2'
+        'indico>=1.9.10'
     ],
     entry_points={
         'indico.plugins': {'conversion = indico_conversion.plugin:ConversionPlugin'},
