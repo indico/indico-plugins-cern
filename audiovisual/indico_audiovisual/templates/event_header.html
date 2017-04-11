@@ -1,20 +1,18 @@
-<tr>
-    <td class="leftCol">{% trans %}Webcast{% endtrans %}</td>
-    <td>
-        <div>
-            <div class="event-service-row">
-                <div class="event-service-row-collapsed clearfix">
-                    <div class="event-service-info left">
-                        <i class="icon-camera"></i>
-                        <span class="event-service-title">{% trans %}There is a live webcast for this event{% endtrans %}</span>
-                    </div>
-                    <div class="event-service-toolbar toolbar right">
-                        <div class="group">
-                            <a class="i-button i-button-small event-service-right-button highlight join-button" href="{{ url }}"><strong>{% trans %}Watch{% endtrans %}</strong></a>
-                        </div>
+<div class="event-details-row">
+    <div class="event-details-label align-top">{% trans %}Webcast{% endtrans %}</div>
+    <div class="event-details-content">
+        <div class="event-service-row">
+            <div class="event-service-row-collapsed clearfix">
+                <div class="event-service-info left">
+                    <i class="icon-camera"></i>
+                    <span class="event-service-title">{% trans %}There is a live webcast for this event{% endtrans %}</span>
+                </div>
+                <div class="event-service-toolbar toolbar right">
+                    <div class="group">
+                        <a class="i-button i-button-small event-service-right-button highlight join-button" href="{{ url }}"><strong>{% trans %}Watch{% endtrans %}</strong></a>
                     </div>
                 </div>
             </div>
         </div>
-    </td>
-</tr>
+    </div>
+</div>
