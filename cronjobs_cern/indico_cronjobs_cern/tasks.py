@@ -92,10 +92,11 @@ def conference_room_emails():
 @celery.periodic_task(run_every=crontab(minute='0', hour='8', day_of_week='monday'), plugin='cronjobs_cern')
 def seminar_emails():
     start_dt, end_dt = _get_start_end_dt()
-    seminar_category = CERNCronjobsPlugin.settings.get('seminar_category')
-    if not seminar_category:
+    seminar_categories = CERNCronjobsPlugin.settings.get('seminar_categories')
+    if not seminar_categories:
         return
-    query = _get_category_events_query(start_dt, end_dt, seminar_category.id)
+    category_ids = [int(category['id']) for category in seminar_categories]
+    query = _get_category_events_query(start_dt, end_dt, category_ids)
     template = get_plugin_template_module('seminar_emails.html', events_by_date=_group_by_date(query))
     recipients = CERNCronjobsPlugin.settings.get('seminar_recipients')
     if recipients:
