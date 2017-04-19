@@ -65,8 +65,7 @@ class FoundationSync(object):
             raise
 
     def _get_room_attrs(self, raw_data):
-        return {'manager-group': raw_data.get('EMAIL_LIST'),
-                'allowed-booking-group': raw_data.get('BOOKING_EMAIL_LIST')}
+        return {'manager-group': raw_data.get('EMAIL_LIST')}
 
     def _parse_room_data(self, raw_data, coordinates):
         data = {}
