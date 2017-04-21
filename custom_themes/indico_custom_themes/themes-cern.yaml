@@ -1,126 +1,134 @@
 definitions:
+  # Intermediate classes
+  lecture_themes_cern: &lecture_themes_cern
+    <<: *lecture
+    user_visible: false
+  standard_themes_cern: &standard_themes_cern
+    <<: *standard
+    user_visible: false
+
   # Lectures
   egee_lecture:
-    <<: *lecture
+    <<: *lecture_themes_cern
     stylesheet: cern/egee.scss
     title: EGEE lecture
 
   picosec_endtofpet_lectures:
-    <<: *lecture
+    <<: *lecture_themes_cern
     stylesheet: cern/picosec_endotofpet.scss
     title: PicoSEC - EndoTOFPET US
 
   picosec_lecture:
-    <<: *lecture
+    <<: *lecture_themes_cern
     stylesheet: cern/picosec.scss
     title: PicoSEC Lectures
 
   tical-lectures:
-    <<: *lecture
+    <<: *lecture_themes_cern
     stylesheet: cern/tical.scss
     title: TICAL
 
   # Meetings
   atlas:
-    <<: *standard
+    <<: *standard_themes_cern
     stylesheet: cern/atlas.scss
     title: ATLAS meeting
 
   cms:
-    <<: *standard
+    <<: *standard_themes_cern
     stylesheet: cern/cms.scss
     title: CMS meeting
 
   alice_meeting:
-    <<: *standard
+    <<: *standard_themes_cern
     stylesheet: cern/alice.scss
     title: ALICE meeting
 
   lhcb_meeting:
-    <<: *standard
+    <<: *standard_themes_cern
     stylesheet: cern/lhcb.scss
     title: LHCb meeting
 
   cast:
-    <<: *standard
+    <<: *standard_themes_cern
     stylesheet: cern/cast.scss
     title: CAST meeting
 
   fcc:
-    <<: *standard
+    <<: *standard_themes_cern
     stylesheet: cern/fcc.scss
     title: FCC
 
   ilc:
-    <<: *standard
+    <<: *standard_themes_cern
     stylesheet: cern/ilc.scss
     title: ILC style
 
   intelum:
-    <<: *standard
+    <<: *standard_themes_cern
     stylesheet: cern/intelum.scss
     title: Intelum
 
   fast:
-    <<: *standard
+    <<: *standard_themes_cern
     stylesheet: cern/fast.scss
     title: FAST meetings
 
   EuroCirCol:
-    <<: *standard
+    <<: *standard_themes_cern
     stylesheet: cern/eurocirccol.scss
     title: EuroCirCol
 
   crystal_clear:
-    <<: *standard
+    <<: *standard_themes_cern
     stylesheet: cern/crystalclear.scss
     title: Crystal Clear
 
   egee_meeting:
-    <<: *standard
+    <<: *standard_themes_cern
     stylesheet: cern/egee.scss
     title: EGEE meeting
 
   endotofpet:
-    <<: *standard
+    <<: *standard_themes_cern
     event_types: [lecture, meeting]
     stylesheet: cern/endotofpet.scss
     title: EndoTOFPET
 
   openlab:
-    <<: *standard
+    <<: *standard_themes_cern
     stylesheet: cern/openlab.scss
     title: Openlab
     settings:
       logo_link: http://openlab.cern
 
   lcg:
-    <<: *standard
+    <<: *standard_themes_cern
     stylesheet: cern/lcg.scss
     title: LCG style
 
   picosec:
-    <<: *standard
+    <<: *standard_themes_cern
     stylesheet: cern/picosec.scss
     title: Picosec
 
   picosec_endtofpet:
-    <<: *standard
+    <<: *standard_themes_cern
     stylesheet: cern/picosec_endotofpet.scss
     title: PicoSEC - EndoTOFPET US
 
   tical-meetings:
-    <<: *standard
+    <<: *standard_themes_cern
     stylesheet: cern/tical.scss
     title: TICAL Meetings
 
   totem_meeting:
-    <<: *standard
+    <<: *standard_themes_cern
     stylesheet: cern/totem.scss
     title: TOTEM meeting
 
   sa2:
-    <<: *standard
+    <<: *standard_themes_cern
     stylesheet: cern/staff_assoc_modern.scss
     title: Staff Association
 
