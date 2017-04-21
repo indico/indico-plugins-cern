@@ -166,6 +166,7 @@ definitions:
 
   lhcrrb:
     <<: *cern_committees
+    event_types: [conference, meeting]
     stylesheet: cern/lhc_rrb.scss
     title: LHC RRB
     settings:
