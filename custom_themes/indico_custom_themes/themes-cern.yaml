@@ -1,4 +1,4 @@
-definitions:
+_:
   # Intermediate classes
   lecture_themes_cern: &lecture_themes_cern
     <<: *lecture
@@ -7,6 +7,8 @@ definitions:
     <<: *standard
     user_visible: false
 
+
+definitions:
   # Lectures
   egee_lecture:
     <<: *lecture_themes_cern
