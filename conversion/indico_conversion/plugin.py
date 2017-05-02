@@ -30,6 +30,9 @@ info_ttl = timedelta(hours=1)
 
 
 class SettingsForm(IndicoForm):
+    maintenance = BooleanField(_('Maintenance'), widget=SwitchWidget(),
+                               description=_('Temporarily disable submitting files. The tasks will be kept and once '
+                                             'this setting is disabled the files will be submitted.'))
     server_url = URLField(_('Server URL'), [DataRequired()],
                           description=_("The URL to the conversion server's uploadFile.py script."))
     valid_extensions = TextListField(_('Extensions'),
@@ -45,7 +48,8 @@ class ConversionPlugin(IndicoPlugin):
     """
     configurable = True
     settings_form = SettingsForm
-    default_settings = {'server_url': 'http://conversion.cern.ch/uploadFile.py',
+    default_settings = {'maintenance': False,
+                        'server_url': 'http://conversion.cern.ch/uploadFile.py',
                         'valid_extensions': ['ppt', 'doc', 'pptx', 'docx', 'odp', 'sxi']}
     strict_settings = True
 

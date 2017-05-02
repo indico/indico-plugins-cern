@@ -22,10 +22,12 @@ from indico_conversion import cache
 from indico_conversion.util import get_pdf_title
 
 
-@celery.task
-def submit_attachment(attachment):
+@celery.task(bind=True, max_retries=None)
+def submit_attachment(task, attachment):
     """Sends an attachment's file to the conversion service"""
     from indico_conversion.plugin import ConversionPlugin
+    if ConversionPlugin.settings.get('maintenance'):
+        task.retry(countdown=900)
     url = ConversionPlugin.settings.get('server_url')
     payload = {
         'attachment_id': attachment.id
