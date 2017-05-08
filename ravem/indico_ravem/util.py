@@ -1,3 +1,4 @@
+import re
 from pprint import pformat
 from urlparse import urljoin
 
@@ -83,7 +84,7 @@ def get_room_endpoint(endpoints):
         return endpoints['vc_endpoint_vidyo_username']
 
 
-def has_access(event_vc_room):
+def has_access(event_vc_room, _split_re=re.compile(r'[\s,;]+')):
     """Returns whether the current session has access to the RAVEM button.
 
     To have access, the current user needs to be either the owner of the VC room
@@ -108,10 +109,11 @@ def has_access(event_vc_room):
     if not room or not room.has_equipment('Vidyo'):
         return False
 
+    ips = set(filter(None, (x.strip() for x in _split_re.split(room.get_attribute_value('ip', '')))))
     return any([
         current_user == retrieve_principal(vc_room.data.get('owner'), allow_groups=False, legacy=False),
         event.can_manage(current_user),
-        request.remote_addr == room.get_attribute_value('ip')
+        request.remote_addr in ips
     ])
 
 

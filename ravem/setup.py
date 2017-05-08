@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='indico_ravem',
-    version='0.3',
+    version='0.3.1',
     url='https://gitlab.cern.ch/indico/indico-plugins-cern',
     author='Indico Team',
     author_email='indico-team@cern.ch',
