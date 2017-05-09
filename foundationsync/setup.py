@@ -9,7 +9,6 @@ setup(
     author_email='indico-team@cern.ch',
     py_modules=('indico_foundationsync',),
     zip_safe=False,
-    platforms='any',
     install_requires=[
         'indico>=1.9.10',
         'cx_Oracle',

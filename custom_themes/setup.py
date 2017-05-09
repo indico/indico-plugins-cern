@@ -12,7 +12,6 @@ setup(
     packages=find_packages(),
     zip_safe=False,
     include_package_data=True,
-    platforms='any',
     install_requires=['indico>=1.9.10'],
     entry_points={'indico.plugins': {'themes_cern = indico_custom_themes.plugins:CERNThemesPlugin',
                                      'themes_lcagenda = indico_custom_themes.plugins:LCAgendaThemesPlugin'}}

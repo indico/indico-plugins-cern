@@ -10,7 +10,6 @@ setup(
     packages=find_packages(),
     zip_safe=False,
     include_package_data=True,
-    platforms='any',
     install_requires=[
         'indico>=1.9.10'
     ],
