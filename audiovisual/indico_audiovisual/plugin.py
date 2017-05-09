@@ -8,13 +8,11 @@ from wtforms.validators import DataRequired, ValidationError
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
-from indico.core.config import Config
 from indico.modules.events import Event
 from indico.modules.events.contributions import Contribution
 from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.modules.events.requests.views import WPRequestsEventManagement
 from indico.modules.users import User
-from indico.util.event import unify_event_args
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import PrincipalListField, MultipleItemsField, EmailListField
 from indico.web.http_api import HTTPAPIHook
@@ -148,7 +146,7 @@ class AVRequestsPlugin(IndicoPlugin):
                 if (not count_capable_contributions(req.event_new)[0] and
                         req.state in {RequestState.accepted, RequestState.pending} and
                         not is_av_manager(req.created_by_user)):
-                    janitor = User.get(int(Config.getInstance().getJanitorUserId()))
+                    janitor = User.get_system_user()
                     data = dict(req.data, comment=render_plugin_template('auto_reject_no_capable_contribs.txt'))
                     req.definition.reject(req, data, janitor)
                 elif req.state == RequestState.accepted:
