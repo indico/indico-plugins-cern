@@ -1,5 +1,6 @@
 from __future__ import unicode_literals, division
 
+import re
 from decimal import Decimal
 from hashlib import sha512
 
@@ -132,6 +133,7 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         order_id = self._get_order_id(data)
         locator = registration.locator.uuid
 
+        address = re.sub(r'(\r?\n)+', ', ', personal_data.get('address', ''))
         form_data = {
             'PSPID': shop_id,
             'ORDERID': order_id,
@@ -140,7 +142,7 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             'LANGUAGE': session.lang,
             'CN': remove_accents(registration.full_name[:35]),
             'EMAIL': registration.email[:50],
-            'OWNERADDRESS': personal_data.get('address', '')[:35],
+            'OWNERADDRESS': address[:35],
             'OWNERTELNO': personal_data.get('phone', '')[:30],
             'TP': template_page + '&hash=' + template_hash,
             'PM': method['type'],
