@@ -13,7 +13,7 @@ setup(
     zip_safe=False,
     include_package_data=True,
     install_requires=[
-        'indico>=1.9.11.dev0'
+        'indico>=1.9.11.dev1'
     ],
     entry_points={
         'indico.plugins': {'audiovisual = indico_audiovisual.plugin:AVRequestsPlugin'},
