@@ -16,14 +16,14 @@ from indico.modules.users import User
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import PrincipalListField, MultipleItemsField, EmailListField
 from indico.web.http_api import HTTPAPIHook
-from indico.web.menu import HeaderMenuEntry
+from indico.web.menu import TopMenuItem
 
 from indico_audiovisual import _
 from indico_audiovisual.api import AVExportHook, RecordingLinkAPI
 from indico_audiovisual.blueprint import blueprint
+from indico_audiovisual.compat import compat_blueprint
 from indico_audiovisual.definition import AVRequest, SpeakerReleaseAgreement, TalkPlaceholder
 from indico_audiovisual.notifications import notify_relocated_request, notify_rescheduled_request
-from indico_audiovisual.compat import compat_blueprint
 from indico_audiovisual.util import (get_data_identifiers, compare_data_identifiers, is_av_manager,
                                      count_capable_contributions)
 from indico_audiovisual.views import WPAudiovisualManagers
@@ -91,7 +91,7 @@ class AVRequestsPlugin(IndicoPlugin):
         self.connect(signals.event.times_changed, self._times_changed, sender=Contribution)
         self.connect(signals.event.times_changed, self._times_changed, sender=Event)
         self.connect(signals.after_process, self._apply_changes)
-        self.connect(signals.indico_menu, self._extend_indico_menu)
+        self.connect(signals.menu.items, self._extend_top_menu, sender='top-menu')
         self.connect(signals.users.merged, self._merge_users)
         self.connect(signals.get_placeholders, self._get_placeholders, sender='agreement-email')
         self.template_hook('event-header', self._inject_event_header)
@@ -177,10 +177,11 @@ class AVRequestsPlugin(IndicoPlugin):
             return
         return render_plugin_template('conference_header.html', url=url)
 
-    def _extend_indico_menu(self, sender, **kwargs):
+    def _extend_top_menu(self, sender, **kwargs):
         if not session.user or not is_av_manager(session.user):
             return
-        return HeaderMenuEntry(url_for_plugin('audiovisual.request_list'), _('Webcast/Recording'), _('Services'))
+        return TopMenuItem('services-cern-audiovisual', _('Webcast/Recording'),
+                           url_for_plugin('audiovisual.request_list'), section='services')
 
     def _merge_users(self, target, source, **kwargs):
         self.settings.acls.merge_users(target, source)
