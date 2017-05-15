@@ -80,7 +80,7 @@
                 <span class="notes">{{ event.note.html | safe }}</span>
             {% endif %}
 
-            <div class="event-body">
+            <div class="event-body {{ 'event-locked' if event.is_locked }}">
                 {{ template_hook('meeting-body', event=event) }}
             </div>
         </td>

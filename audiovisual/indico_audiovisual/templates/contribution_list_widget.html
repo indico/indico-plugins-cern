@@ -2,13 +2,13 @@
 
 {%- macro edit_link(contrib) -%}
     {% if contrib is instanceof SubContribution %}
-        <a href="#" class="icon-edit edit-link"
+        <a href="#" class="icon-edit edit-link hide-if-locked"
            title="{% trans %}Edit this subcontribution{% endtrans %}"
            data-href="{{ url_for('contributions.manage_edit_subcontrib', contrib) }}"
            data-title="{% trans title=contrib.title %}Edit subcontribution '{{ title }}'{% endtrans %}"
            data-ajax-dialog></a>
     {% else %}
-        <a href="#" class="icon-edit edit-link"
+        <a href="#" class="icon-edit edit-link hide-if-locked"
            title="{% trans %}Edit this contribution{% endtrans %}"
            data-href="{{ url_for('contributions.manage_update_contrib', contrib) }}"
            data-title="{% trans title=contrib.title %}Edit contribution '{{ title }}'{% endtrans %}"
