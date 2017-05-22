@@ -13,8 +13,6 @@ __all__ = ('RHRavemRoomStatus', 'RHRavemConnectRoom', 'RHRavemDisconnectRoom')
 
 
 class RHRavemBase(RH):
-    CSRF_ENABLED = True
-
     def _checkProtection(self):
         if not has_access(self.event_vc_room):
             raise RavemException(_("Not authorized to access the room with RAVEM"))
