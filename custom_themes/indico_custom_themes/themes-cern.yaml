@@ -81,6 +81,11 @@ definitions:
     stylesheet: cern/eurocirccol.scss
     title: EuroCirCol
 
+  EASITrain:
+    <<: *standard_themes_cern
+    stylesheet: cern/easitrain.scss
+    title: EASITrain
+
   crystal_clear:
     <<: *standard_themes_cern
     stylesheet: cern/crystalclear.scss

@@ -1,0 +1,9 @@
+@import 'base/palette';
+
+$header-bg-color: $light-gray;
+$header-icon-color: $light-black;
+$header-text-color: $black;
+
+@import 'themes/indico';
+
+@include header-logo('/static/plugins/themes_cern/easitrain_logo.png', 26px 23px, 230px, 17%);
