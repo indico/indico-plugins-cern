@@ -50,9 +50,9 @@ class AVRequest(RequestDefinitionBase):
         return super(AVRequest, cls).get_notification_template(name, **context)
 
     @classmethod
-    def render_form(cls, **kwargs):
+    def render_form(cls, event, **kwargs):
         kwargs['default_webcast_url'] = cls.plugin.settings.get('webcast_url')
-        return super(AVRequest, cls).render_form(**kwargs)
+        return super(AVRequest, cls).render_form(event, **kwargs)
 
     @classmethod
     def create_manager_form(cls, req):
