@@ -1,7 +1,5 @@
 from __future__ import unicode_literals
 
-from indico_cern_access.models.access_requests import AccessRequestState
-from indico_cern_access.models.regform_access_requests import RegformAccessRequest
 from wtforms.validators import DataRequired
 
 from indico.modules.events.requests import RequestFormBase
@@ -31,6 +29,7 @@ class IndicoAccessField(JSONField):
                     'allow_unpaid': int(regform.access_request.allow_unpaid)
                 }
                 result['regforms'].append(regform_data)
+            result['regforms'].sort(key=lambda x: x['regform_id'])
         return result
 
 

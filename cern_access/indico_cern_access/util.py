@@ -1,24 +1,25 @@
 from __future__ import unicode_literals
 
+import hashlib
 import json
 import random
 import string
-import requests
-import hashlib
 
-from indico.util.string import remove_accents, unicode_to_ascii
+import requests
 from sqlalchemy.orm import joinedload
+
 from indico.core.db import db
-from indico.modules.events.requests.models.requests import RequestState
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.registration.models.registrations import Registration, RegistrationState
+from indico.modules.events.requests.models.requests import RequestState
+from indico.util.string import remove_accents, unicode_to_ascii
 
-from indico_cern_access.models.access_requests import AccessRequestState, AccessRequest
+from indico_cern_access.models.access_requests import AccessRequest, AccessRequestState
 from indico_cern_access.models.regform_access_requests import RegformAccessRequest
 
 
-def get_access_request(registartion_id):
-    return AccessRequest.query.get(registartion_id)
+def get_access_request(registration_id):
+    return AccessRequest.query.get(registration_id)
 
 
 def get_regforms_with_access_data(event):
@@ -73,7 +74,6 @@ def send_adams_post_request(event, registration=None, registrations=None, update
         data[registration.id] = parse_post_registration_data(registration, event, update=update)
     headers = {'content-type': 'Application/JSON'}
     json_data = json.dumps([data[key] for key in data])
-    print json.loads(json_data)
     from indico_cern_access.plugin import CernAccessPlugin
     r = requests.post(CernAccessPlugin.settings.get('adams_url'), data=json_data, headers=headers)
     if r.status_code == requests.codes.ok:

@@ -1,12 +1,11 @@
 from __future__ import unicode_literals
 
-
 from indico.modules.events.requests import RequestDefinitionBase
-from indico.modules.events.requests.models.requests import RequestState, Request
+from indico.modules.events.requests.models.requests import RequestState
 
 from indico_cern_access import _
 from indico_cern_access.forms import CernAccessForm
-from indico_cern_access.util import withdraw_access_request, update_access_request
+from indico_cern_access.util import update_access_request, withdraw_access_request
 
 
 class CernAccessRequest(RequestDefinitionBase):

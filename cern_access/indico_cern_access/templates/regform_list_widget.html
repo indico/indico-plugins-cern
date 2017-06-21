@@ -1,31 +1,28 @@
 {% extends 'forms/base_widget.html' %}
 {% block html %}
-{% set payment_enabled_count = field.event_regforms | selectattr("base_price", "greaterthan", 0.00) | list | length %}
     <input type="hidden" id="{{ field.id }}" name="{{ field.name }}" value="{{ field._value() | tojson | forceescape }}"><br>
     <div class="page-content">
         <table id="regforms-list" class="i-table-widget">
             <thead>
                 <tr>
                     <th>Registration form</th>
-                    {% if payment_enabled_count > 0 %}
-                        <th>Allow unpaid</th>
-                    {% endif %}
-                    <th></th>
+                    <th>Allow unpaid</th>
+                    <th>Include</th>
                 </tr>
             </thead>
             <tbody>
                  {% for regform in field.event_regforms %}
                     <tr>
                         <td> {{ regform.title }}</td>
-                        {% if payment_enabled_count > 0 %}
                             <td>
                                 {% if regform.base_price > 0.00 %}
                                     <input type="checkbox" id="allow_unpaid_{{ regform.id }}" name="allow_unpaid" value="{{ regform.id }}"
                                         {% if regform.access_request and regform.access_request.allow_unpaid %} checked
-                                        {% elif not regform.access_request %} disabled="disabled" {% endif %}><br>
+                                        {% elif not regform.access_request %} disabled {% endif %}><br>
+                                {% else %}
+                                    <input type="checkbox" title="This registration form doesn't require payment" disabled><br>
                                 {% endif %}
                             </td>
-                        {% endif %}
                         <td><label class="switch">
                         <input type="checkbox" class="switch-input" id="{{ regform.id }}" name="{{ regform.title }}" value="{{ regform.id }}"
                                {% if regform.access_request %} checked {% endif %}>
@@ -39,20 +36,23 @@
     </div>
     <script>
         var hiddenData =  JSON.parse($("input[name='{{ field.name }}']").val());
+
         $('.switch-input').on('change', function() {
             var regform_id = parseInt($(this).val());
             if ($(this).is(':checked')) {
                 var regform_info = {
-                    regform_id: regform_id,
-                    allow_unpaid: 0
+                    allow_unpaid: 0,
+                    regform_id: regform_id
                 };
                 allow_unpaid = $("#allow_unpaid_" + regform_id);
                 allow_unpaid.prop("disabled", false);
                 hiddenData.regforms.push(regform_info);
+                hiddenData.regforms.sort(SortById);
             } else {
-                for (var i = 0; i < hiddenData.regforms.length; i++) {55
+                for (var i = 0; i < hiddenData.regforms.length; i++) {
                     if (hiddenData.regforms[i].regform_id === regform_id) {
                         hiddenData.regforms.splice(i, 1);
+                        hiddenData.regforms.sort(SortById);
                         allow_unpaid = $("#allow_unpaid_" + regform_id);
                         allow_unpaid.prop("disabled", true);
                         allow_unpaid.prop("checked", false);
@@ -60,7 +60,6 @@
                 }
             }
             $("input[name='{{ field.name }}']").val(JSON.stringify(hiddenData));
-            console.log(JSON.stringify(hiddenData));
         });
 
         $("input[name='allow_unpaid']").on('change', function(){
@@ -79,7 +78,12 @@
                 }
             }
             $("input[name='{{ field.name }}']").val(JSON.stringify(hiddenData));
-            console.log(JSON.stringify(hiddenData));
         });
+
+        function SortById(a, b){
+            var aId = a.regform_id;
+            var bId = b.regform_id;
+            return ((aId < bId) ? -1 : ((aId > bId) ? 1 : 0));
+}
      </script>
 {% endblock %}

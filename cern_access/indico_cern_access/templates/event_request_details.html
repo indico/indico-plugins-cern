@@ -1,5 +1,8 @@
 {% extends 'events/requests/event_request_details.html' %}
 {% from 'message_box.html' import message_box %}
-
-{% block custom %}
+{% block description %}
+    <div class="text-important">
+        By sending this request you are giving registered users access to CERN.
+        Please note that after the request is accepted participants of the event will be able to enter CERN by presenting a vaild ticket.
+    </div>
 {% endblock %}
