@@ -16,8 +16,8 @@ class CernAccessRequest(RequestDefinitionBase):
     modifiable = True
 
     @classmethod
-    def render_form(cls, **kwargs):
-        return super(CernAccessRequest, cls).render_form(**kwargs)
+    def render_form(cls, event, **kwargs):
+        return super(CernAccessRequest, cls).render_form(event, **kwargs)
 
     @classmethod
     def can_be_managed(cls, user):

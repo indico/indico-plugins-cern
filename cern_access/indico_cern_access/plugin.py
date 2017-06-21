@@ -102,7 +102,7 @@ class CernAccessPlugin(IndicoPlugin):
             db.session.delete(registration_form.access_request)
             delete_registrations(access_requestes)
 
-    def _event_deleted(self, event):
+    def _event_deleted(self, event, user):
         access_requestes = get_requested_accesses(event_id=event.id)
         form_access_requests = get_requested_forms(event)
         deleted = send_adams_delete_request(access_requests=access_requestes)
