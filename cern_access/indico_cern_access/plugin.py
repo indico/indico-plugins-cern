@@ -1,11 +1,10 @@
 from __future__ import unicode_literals
 
-from wtforms import StringField
+from indico.modules.events.requests.views import WPRequestsEventManagement
 from wtforms.fields.html5 import URLField
 from wtforms.validators import DataRequired
 
 from indico.core import signals
-from indico.core.db import db
 from indico.core.plugins import IndicoPlugin
 from indico.modules.events import Event
 from indico.modules.events.registration.models.registrations import RegistrationState
@@ -13,31 +12,32 @@ from indico.web.forms.base import IndicoForm
 
 from indico_cern_access import _
 from indico_cern_access.blueprint import blueprint
-from indico_cern_access.definition import CernAccessRequest
-from indico_cern_access.models.access_requests import AccessRequest
-from indico_cern_access.models.regform_access_requests import RegformAccessRequest
-from indico_cern_access.util import (delete_registrations, get_access_request, get_requested_accesses,
-                                     get_requested_forms, get_requested_registrations, send_adams_delete_request,
-                                     send_adams_post_request, update_registrations)
+from indico_cern_access.definition import CERNAccessRequestDefinition
+from indico_cern_access.models.access_requests import CERNAccessRequestState
+from indico_cern_access.util import (withdraw_access_requests,
+                                     get_requested_forms, send_adams_delete_request,
+                                     send_adams_post_request, update_access_requests, create_access_request,
+                                     get_registrations)
 
 
 class PluginSettingsForm(IndicoForm):
-    adams_url = URLField(_('ADAMS URL'), [DataRequired()], description=_("The URL to ADAMS requests"))
-    id_prefix = StringField(_('Service prefix'), [DataRequired()], description=_('Service prefix for ADAMS request id'))
+    adams_url = URLField(_('ADaMS URL'), [DataRequired()], description=_("The URL of the ADaMS REST API"))
 
 
-class CernAccessPlugin(IndicoPlugin):
+class CERNAccessPlugin(IndicoPlugin):
     """CERN Access Request
 
-    Provides a service request where event managers can ask for CERN access for participants of the event.
+    Provides a service request through which event managers can ask for
+    access to the CERN site for the participants of the event
     """
+
     settings_form = PluginSettingsForm
     configurable = True
-    default_settings = {'adams_url': 'https://oraweb.cern.ch/ords/devdb11/adams3/api/bookings/',
-                        'id_prefix': 'in'}
+    default_settings = {'adams_url': 'https://oraweb.cern.ch/ords/devdb11/adams3/api/bookings/'}
 
     def init(self):
-        super(CernAccessPlugin, self).init()
+        super(CERNAccessPlugin, self).init()
+        self.inject_js('cern_access_js', WPRequestsEventManagement)
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
         self.connect(signals.event.registration_deleted, self._registration_deleted)
         self.connect(signals.event.registration_state_updated, self._registration_state_changed)
@@ -47,77 +47,68 @@ class CernAccessPlugin(IndicoPlugin):
         self.connect(signals.event.deleted, self._event_deleted)
 
     def get_blueprints(self):
-        yield blueprint
+        return blueprint
+
+    def register_assets(self):
+        self.register_js_bundle('cern_access_js', 'js/cern_access.js')
 
     def _get_event_request_definitions(self, sender, **kwargs):
-        return CernAccessRequest
+        return CERNAccessRequestDefinition
 
     def _registration_deleted(self, registration, **kwargs):
-        request = get_access_request(registration.id)
-        if request:
-            send_adams_delete_request(registration=registration)
-            access_request = get_access_request(registration.id)
-            db.session.delete(access_request)
-            db.session.flush()
+        if registration.cern_access_request:
+            send_adams_delete_request([registration])
+            registration.cern_access_request.request_state = CERNAccessRequestState.withdrawn
 
     def _registration_state_changed(self, registration, **kwargs):
-        if registration.registration_form.access_request:
-            if registration.state == RegistrationState.complete:
-                if not registration.access_request:
-                    event = Event.query.get(registration.event_id)
-                    state, data = send_adams_post_request(event, registration=registration)
-                    access_request = AccessRequest(registration_id=registration.id,
-                                                   request_state=state,
-                                                   reservation_code=data[registration.id]["$rc"])
-                    db.session.add(access_request)
-                    db.session.flush()
-            elif registration.state == RegistrationState.unpaid:
-                regform = RegformAccessRequest.query.get(registration.registration_form.id)
-                if regform.allow_unpaid and not registration.access_request:
-                        state, data = send_adams_post_request(registration.event_new, registration=registration)
-                        access_request = AccessRequest(registration_id=registration.id,
-                                                       request_state=state,
-                                                       reservation_code=data[registration.id]["$rc"])
-                        db.session.add(access_request)
-                        db.session.flush()
-                elif not regform.allow_unpaid and registration.access_request:
-                        send_adams_delete_request(registration=registration)
-                        db.session.delete(registration.access_request)
-                        db.session.flush()
-            elif RegistrationState.registration.access_request:
-                    send_adams_delete_request(registration=registration)
-                    db.session.delete(registration.access_request)
-                    db.session.flush()
+        access_request_regform = registration.registration_form.cern_access_request
+        is_form_requested = access_request_regform and access_request_regform.is_active
+        is_registration_requested = registration.cern_access_request and registration.cern_access_request.is_active
+        if not is_form_requested:
+            return
+        if registration.state == RegistrationState.complete:
+            if not is_registration_requested:
+                event = registration.registration_form.event_new
+                state, data = send_adams_post_request(event, [registration])
+                create_access_request(registration, state, data[registration.id]["$rc"])
+        elif registration.state == RegistrationState.unpaid:
+            if access_request_regform.allow_unpaid and not is_registration_requested:
+                state, data = send_adams_post_request(registration.event_new, [registration])
+                create_access_request(registration, state, data[registration.id]["$rc"])
+            elif not access_request_regform.allow_unpaid and is_registration_requested:
+                send_adams_delete_request([registration])
+                registration.cern_access_request.request_state = CERNAccessRequestState.withdrawn
+        elif is_registration_requested:
+            send_adams_delete_request([registration])
+            registration.cern_access_request.request_state = CERNAccessRequestState.withdrawn
 
     def _event_time_changed(self, event, obj, **kwargs):
-        registrations = get_requested_registrations(obj)
+        registrations = get_registrations(event=obj, requested=True)
         if registrations:
-            state, _ = send_adams_post_request(event=obj, registrations=registrations, update=True)
-            update_registrations(registrations, state)
+            state, _ = send_adams_post_request(obj, registrations, update=True)
+            update_access_requests(registrations, state)
 
     def _registration_form_deleted(self, registration_form):
-        if registration_form.access_request:
-            access_requestes = get_requested_accesses(regform_id=registration_form.id)
-            if access_requestes:
-                deleted = send_adams_delete_request(access_requests=access_requestes)
+        if registration_form.cern_access_request and registration_form.cern_access_request.is_active:
+            registrations = get_registrations(registration_form.event_new, regform=registration_form, requested=True)
+            if registrations:
+                deleted = send_adams_delete_request(registrations)
                 if deleted:
-                    delete_registrations(access_requestes)
-            db.session.delete(registration_form.access_request)
+                    withdraw_access_requests(registrations)
+            registration_form.cern_access_request.request_state = CERNAccessRequestState.withdrawn
 
     def _event_deleted(self, event, user):
-        form_access_requests = get_requested_forms(event)
-        if form_access_requests:
-            access_requestes = get_requested_accesses(event_id=event.id)
-            if access_requestes:
-                deleted = send_adams_delete_request(access_requests=access_requestes)
+        access_requests_forms = get_requested_forms(event)
+        if access_requests_forms:
+            requested_registrations = get_registrations(event=event, requested=True)
+            if requested_registrations:
+                deleted = send_adams_delete_request(requested_registrations)
                 if deleted:
-                    delete_registrations(access_requestes)
-            for form in form_access_requests:
-                db.session.delete(form)
+                    withdraw_access_requests(requested_registrations)
+            for form in access_requests_forms:
+                form.cern_access_request.request_state = CERNAccessRequestState.withdrawn
 
     def _registration_modified(self, registration, change):
-        access_request = get_access_request(registration.id)
-        if access_request and ('first_name' in change.keys() or 'last_name' in change.keys()):
-            state, _ = send_adams_post_request(registration.event_new, registration=registration, update=True)
-            access_request.state = state
-            db.session.flush()
+        if registration.cern_access_request and ('first_name' in change.keys() or 'last_name' in change.keys()):
+            state, _ = send_adams_post_request(registration.event_new, [registration], update=True)
+            registration.cern_access_request.request_state = state

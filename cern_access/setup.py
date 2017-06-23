@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 
 setup(
-    name='indico cern_access',
+    name='indico_cern_access',
     version='0.1',
     url='https://gitlab.cern.ch/indico/indico-plugins-cern',
     author='Indico Team',
@@ -14,9 +14,9 @@ setup(
     include_package_data=True,
     platforms='any',
     install_requires=[
-        'indico>=1.9.10'
+        'indico>=1.9.11.dev4'
     ],
     entry_points={
-        'indico.plugins': {'cern_access = indico_cern_access.plugin:CernAccessPlugin'}
+        'indico.plugins': {'cern_access = indico_cern_access.plugin:CERNAccessPlugin'}
     }
 )

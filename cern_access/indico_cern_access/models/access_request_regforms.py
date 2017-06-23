@@ -1,46 +1,40 @@
 from __future__ import unicode_literals
 
 from indico.core.db.sqlalchemy import db, PyIntEnum
-from indico.util.struct.enum import RichIntEnum
-
-from indico_cern_access import _
+from indico_cern_access.models.access_requests import CERNAccessRequestState
+from sqlalchemy import Boolean
 from sqlalchemy.ext.hybrid import hybrid_property
 
 
-class CERNAccessRequestState(RichIntEnum):
-    __titles__ = [_('Not requested'), _('Accepted'), _('Rejected'), _('Withdrawn')]
-    not_requested = 0
-    accepted = 1
-    rejected = 2
-    withdrawn = 3
-
-
-class CERNAccessRequest(db.Model):
-    __tablename__ = 'access_requests'
+class CERNAccessRequestRegForm(db.Model):
+    __tablename__ = 'access_request_regforms'
     __table_args__ = {'schema': 'plugin_cern_access'}
 
-    registration_id = db.Column(
-        db.ForeignKey('event_registration.registrations.id'),
+    form_id = db.Column(
+        db.ForeignKey('event_registration.forms.id'),
         primary_key=True
     )
-
     request_state = db.Column(
         PyIntEnum(CERNAccessRequestState),
         nullable=False,
         default=CERNAccessRequestState.not_requested
     )
-
-    reservation_code = db.Column(
-        db.String,
-        nullable=False
+    allow_unpaid = db.Column(
+        Boolean,
+        nullable=False,
+        default=False
     )
 
-    registration = db.relationship(
-        'Registration',
+    registration_form = db.relationship(
+        'RegistrationForm',
         uselist=False,
         lazy=False,
         backref=db.backref('cern_access_request', uselist=False))
 
     @hybrid_property
+    def is_active(self):
+        return self.request_state != CERNAccessRequestState.withdrawn
+
+    @is_active.expression
     def is_active(self):
         return self.request_state != CERNAccessRequestState.withdrawn

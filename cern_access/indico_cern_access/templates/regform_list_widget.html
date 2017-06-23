@@ -1,89 +1,40 @@
 {% extends 'forms/base_widget.html' %}
 {% block html %}
-    <input type="hidden" id="{{ field.id }}" name="{{ field.name }}" value="{{ field._value() | tojson | forceescape }}"><br>
+    <input type="hidden" id="{{ field.id }}" name="{{ field.name }}" value="{{ field._value() | tojson | forceescape }}">
     <div class="page-content">
         <table id="regforms-list" class="i-table-widget">
             <thead>
                 <tr>
-                    <th>Registration form</th>
-                    <th>Allow unpaid</th>
-                    <th>Include</th>
+                    <th>{% trans %}Registration form {% endtrans %}</th>
+                    <th>{% trans %}Allow unpaid{% endtrans %}</th>
+                    <th>{% trans %}Include{% endtrans %}</th>
+                    <th>{% trans %}Status{% endtrans %}</th>
                 </tr>
             </thead>
             <tbody>
                  {% for regform in field.event_regforms %}
+                 {% set is_requested = regform.cern_access_request and regform.cern_access_request.is_active %}
                     <tr>
                         <td> {{ regform.title }}</td>
                             <td>
-                                {% if regform.base_price > 0.00 %}
+                                {% if regform.base_price %}
                                     <input type="checkbox" id="allow_unpaid_{{ regform.id }}" name="allow_unpaid" value="{{ regform.id }}"
-                                        {% if regform.access_request and regform.access_request.allow_unpaid %} checked
-                                        {% elif not regform.access_request %} disabled {% endif %}><br>
+                                        {% if is_requested and regform.cern_access_request.allow_unpaid %} checked
+                                        {% elif not is_requested %} disabled {% endif %}><br>
                                 {% else %}
                                     <input type="checkbox" title="This registration form doesn't require payment" disabled><br>
                                 {% endif %}
                             </td>
                         <td><label class="switch">
                         <input type="checkbox" class="switch-input" id="{{ regform.id }}" name="{{ regform.title }}" value="{{ regform.id }}"
-                               {% if regform.access_request %} checked {% endif %}>
+                               {% if is_requested %} checked {% endif %}>
                         <span class="switch-label" data-on="Yes" data-off="No"></span>
                         <span class="switch-handle"></span>
                     </label></td>
+                        <td></td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-    <script>
-        var hiddenData =  JSON.parse($("input[name='{{ field.name }}']").val());
-
-        $('.switch-input').on('change', function() {
-            var regform_id = parseInt($(this).val());
-            if ($(this).is(':checked')) {
-                var regform_info = {
-                    allow_unpaid: 0,
-                    regform_id: regform_id
-                };
-                allow_unpaid = $("#allow_unpaid_" + regform_id);
-                allow_unpaid.prop("disabled", false);
-                hiddenData.regforms.push(regform_info);
-                hiddenData.regforms.sort(SortById);
-            } else {
-                for (var i = 0; i < hiddenData.regforms.length; i++) {
-                    if (hiddenData.regforms[i].regform_id === regform_id) {
-                        hiddenData.regforms.splice(i, 1);
-                        hiddenData.regforms.sort(SortById);
-                        allow_unpaid = $("#allow_unpaid_" + regform_id);
-                        allow_unpaid.prop("disabled", true);
-                        allow_unpaid.prop("checked", false);
-                    }
-                }
-            }
-            $("input[name='{{ field.name }}']").val(JSON.stringify(hiddenData));
-        });
-
-        $("input[name='allow_unpaid']").on('change', function(){
-            var regform_id = parseInt($(this).val());
-            if ($(this).is(':checked')){
-                for (var i=0;i<hiddenData.regforms.length;i++){
-                    if (hiddenData.regforms[i].regform_id === regform_id){
-                        hiddenData.regforms[i].allow_unpaid = 1;
-                    }
-                }
-            } else {
-                for (var i=0;i<hiddenData.regforms.length;i++){
-                    if (hiddenData.regforms[i].regform_id === regform_id){
-                        hiddenData.regforms[i].allow_unpaid = 0;
-                    }
-                }
-            }
-            $("input[name='{{ field.name }}']").val(JSON.stringify(hiddenData));
-        });
-
-        function SortById(a, b){
-            var aId = a.regform_id;
-            var bId = b.regform_id;
-            return ((aId < bId) ? -1 : ((aId > bId) ? 1 : 0));
-}
-     </script>
 {% endblock %}
