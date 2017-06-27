@@ -89,7 +89,7 @@ class RHConversionFinished(RH):
 class RHConversionCheck(RH):
     """Checks if all conversions have finished"""
 
-    def _process():
+    def _process(self):
         ids = request.args.getlist('a')
         results = {int(id_): cache.get(id_) for id_ in ids}
         finished = [id_ for id_, status in results.iteritems() if status == 'finished']
