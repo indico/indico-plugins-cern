@@ -331,6 +331,7 @@ class FoundationSyncPlugin(IndicoPlugin):
     """
     configurable = True
     settings_form = SettingsForm
+    default_settings = {'connection_string': ''}
 
     def init(self):
         super(FoundationSyncPlugin, self).init()

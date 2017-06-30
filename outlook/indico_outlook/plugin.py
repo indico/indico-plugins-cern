@@ -88,7 +88,6 @@ class OutlookPlugin(IndicoPlugin):
     """
     configurable = True
     settings_form = SettingsForm
-    strict_settings = True
     default_settings = {
         'debug': False,
         'service_url': None,

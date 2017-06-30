@@ -72,7 +72,6 @@ class AVRequestsPlugin(IndicoPlugin):
                         'agreement_paper_url': None,
                         'recording_cds_url': 'https://cds.cern.ch/record/{cds_id}'}
     acl_settings = {'managers'}
-    strict_settings = True
 
     def init(self):
         super(AVRequestsPlugin, self).init()

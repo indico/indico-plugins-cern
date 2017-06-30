@@ -49,7 +49,6 @@ class RavemPlugin(IndicoPlugin):
     the RAVEM API.
     """
     configurable = True
-    strict_settings = True
     settings_form = SettingsForm
     default_settings = {
         'debug': False,

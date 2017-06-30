@@ -51,7 +51,6 @@ class ConversionPlugin(IndicoPlugin):
     default_settings = {'maintenance': False,
                         'server_url': 'http://conversion.cern.ch/uploadFile.py',
                         'valid_extensions': ['ppt', 'doc', 'pptx', 'docx', 'odp', 'sxi']}
-    strict_settings = True
 
     def init(self):
         super(ConversionPlugin, self).init()

@@ -15,7 +15,6 @@ class CERNLiveSyncPlugin(LiveSyncPluginBase):
 
     configurable = True
     settings_form = SettingsForm
-    strict_settings = True
     default_settings = {'username': 'cernsearch', 'password': ''}
     backend_classes = {'cernsearch': CERNLiveSyncBackend}
 

@@ -68,10 +68,23 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     configurable = True
     settings_form = PluginSettingsForm
     event_settings_form = EventSettingsForm
-    default_settings = {'method_name': 'PostFinance CERN',
+    default_settings = {'method_name': 'Credit Card',
+                        'fp_email_address': '',
+                        'fp_department_name': '',
+                        'payment_url': '',
+                        'shop_id_chf': '',
+                        'shop_id_eur': '',
+                        'hash_seed_chf': '',
+                        'hash_seed_eur': '',
+                        'hash_seed_out_chf': '',
+                        'hash_seed_out_eur': '',
+                        'server_url_suffix': '',
+                        'order_id_prefix': '',
                         'payment_methods': []}
     acl_settings = {'authorized_users'}
-    default_event_settings = {'apply_fees': True,
+    default_event_settings = {'enabled': False,
+                              'method_name': None,
+                              'apply_fees': True,
                               'custom_fees': {}}
     valid_currencies = {'EUR', 'CHF'}
 

@@ -63,7 +63,6 @@ class CERNCronjobsPlugin(IndicoPlugin):
     require startup assistance, etc.
     """
     configurable = True
-    strict_settings = True
     settings_form = SettingsForm
     settings_converters = {
         'rooms': RoomConverter,
