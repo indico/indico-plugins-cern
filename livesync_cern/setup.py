@@ -1,11 +1,11 @@
 from __future__ import unicode_literals
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 
 setup(
     name='indico_livesync_cern',
-    version='0.1',
+    version='1.0.dev0',
     url='https://gitlab.cern.ch/indico/indico-plugins-cern',
     author='Indico Team',
     author_email='indico-team@cern.ch',
@@ -13,8 +13,10 @@ setup(
     zip_safe=False,
     include_package_data=True,
     install_requires=[
-        'indico>=1.9.10',
-        'indico_livesync'
+        'indico>=2.0.dev0',
+        'indico_livesync>=1.0.dev0'
     ],
-    entry_points={'indico.plugins': {'livesync_cern = indico_livesync_cern.plugin:CERNLiveSyncPlugin'}}
+    entry_points={
+        'indico.plugins': {'livesync_cern = indico_livesync_cern.plugin:CERNLiveSyncPlugin'}
+    }
 )
