@@ -17,6 +17,5 @@ setup(
     ],
     entry_points={
         'indico.plugins': {'ravem = indico_ravem.plugin:RavemPlugin'},
-        'indico.zodb_importers': {'ravem = indico_ravem.zodbimport:RavemImporter'}
     }
 )

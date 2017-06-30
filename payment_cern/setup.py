@@ -17,6 +17,5 @@ setup(
     ],
     entry_points={
         'indico.plugins': {'payment_cern = indico_payment_cern.plugin:CERNPaymentPlugin'},
-        'indico.zodb_importers': {'payment_cern = indico_payment_cern.zodbimport:CERNPaymentImporter'}
     }
 )

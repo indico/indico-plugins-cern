@@ -17,6 +17,5 @@ setup(
     ],
     entry_points={
         'indico.plugins': {'outlook = indico_outlook.plugin:OutlookPlugin'},
-        'indico.zodb_importers': {'outlook = indico_outlook.zodbimport:OutlookImporter'}
     }
 )

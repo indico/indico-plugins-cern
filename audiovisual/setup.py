@@ -17,6 +17,5 @@ setup(
     ],
     entry_points={
         'indico.plugins': {'audiovisual = indico_audiovisual.plugin:AVRequestsPlugin'},
-        'indico.zodb_importers': {'audiovisual = indico_audiovisual.zodbimport:AVRequestsImporter'}
     }
 )

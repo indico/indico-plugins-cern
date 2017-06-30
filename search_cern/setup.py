@@ -18,6 +18,5 @@ setup(
     ],
     entry_points={
         'indico.plugins': {'search_cern = indico_search_cern.plugin:CERNSearchPlugin'},
-        'indico.zodb_importers': {'search_cern = indico_search_cern.zodbimport:CERNSearchImporter'}
     }
 )
