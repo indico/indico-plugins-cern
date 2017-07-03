@@ -14,7 +14,7 @@ from indico.core import signals
 from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.modules.events.payment import (PaymentPluginMixin, PaymentPluginSettingsFormBase,
                                            PaymentEventSettingsFormBase)
-from indico.util.string import remove_accents
+from indico.util.string import remove_accents, unicode_to_ascii
 from indico.web.flask.util import url_for
 from indico.web.forms.fields import PrincipalListField, MultipleItemsField, OverrideMultipleItemsField
 
@@ -153,7 +153,7 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             'AMOUNT': int(amount * 100),
             'CURRENCY': currency,
             'LANGUAGE': session.lang,
-            'CN': remove_accents(registration.full_name[:35]),
+            'CN': unicode_to_ascii(remove_accents(registration.full_name[:35], False)),
             'EMAIL': registration.email[:50],
             'OWNERADDRESS': address[:35],
             'OWNERTELNO': personal_data.get('phone', '')[:30],
