@@ -73,6 +73,7 @@ def build_access_request_data(registration, event, update=False):
         reservation_code = get_random_reservation_code()
     data.update({'$id': generate_access_id(registration.id),
                  '$rc': reservation_code,
+                 '$gn': event.title,
                  '$fn': unicode_to_ascii(remove_accents(registration.first_name)),
                  '$ln': unicode_to_ascii(remove_accents(registration.last_name)),
                  '$sd': event.start_dt.strftime('%Y-%m-%dT%H:%M'),
