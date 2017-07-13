@@ -12,7 +12,7 @@ setup(
     py_modules=('indico_burotel',),
     zip_safe=False,
     install_requires=[
-        'indico>=1.9.11.dev11'
+        'indico>=2.0.dev0'
     ],
     entry_points={
         'indico.plugins': {'burotel = indico_burotel:BurotelPlugin'}
