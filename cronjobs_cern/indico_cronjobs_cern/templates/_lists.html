@@ -32,7 +32,8 @@
             {% for rsv in reservations %}
                 <li>
                     {{ rsv.start_dt | format_time('HH:mm') }} ⟶ {{ rsv.end_dt | format_time('HH:mm') }}
-                    {{ rsv.booking_reason}} (Booked for: {{ rsv.booked_for_name }})
+                    <a href="{{ rsv.details_url }}">{{ rsv.booking_reason }}</a>
+                    (Booked for: {{ rsv.booked_for_name }})
                 </li>
             {% endfor %}
         {% else %}

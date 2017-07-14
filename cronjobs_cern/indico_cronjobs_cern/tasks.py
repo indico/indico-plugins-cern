@@ -1,26 +1,28 @@
 from __future__ import unicode_literals
 
 from collections import OrderedDict
-from datetime import datetime, timedelta
+from datetime import date, datetime, time, timedelta
 
 from celery.schedules import crontab
 
 from indico.core.celery import celery
+from indico.core.db import db
 from indico.core.notifications import make_email, send_email
 from indico.core.plugins import get_plugin_template_module
 from indico.modules.events.models.events import Event
-from indico.modules.rb.models.reservations import Reservation
 from indico.modules.rb.models.reservation_occurrences import ReservationOccurrence
+from indico.modules.rb.models.reservations import Reservation
 from indico.util.date_time import as_utc, format_date
 from indico.util.string import to_unicode
 
 from indico_cronjobs_cern.plugin import CERNCronjobsPlugin
 
 
-def _get_start_end_dt():
-    start_dt = as_utc(datetime.today() + timedelta(days=(7 - int(datetime.today().strftime('%w')))))
-    end_dt = as_utc(start_dt + timedelta(days=14))
-    return start_dt, end_dt
+def _get_start_end_date():
+    today = date.today()
+    start_date = today + timedelta(days=(7 - int(today.strftime('%w'))))
+    end_date = start_date + timedelta(days=14)
+    return start_date, end_date
 
 
 def _group_by_date(object_list):
@@ -34,10 +36,9 @@ def _group_by_date(object_list):
     return objects_grouped_by_date
 
 
-def _get_reservations_query(start_dt, end_dt, room_id=None):
+def _get_reservations_query(date_filter, room_id=None):
     filters = [
-        ReservationOccurrence.start_dt >= start_dt,
-        ReservationOccurrence.end_dt <= end_dt,
+        date_filter,
         ReservationOccurrence.is_valid,
         Reservation.is_valid,
         Reservation.needs_assistance
@@ -63,7 +64,11 @@ def _send_email(recipients, template):
 
 @celery.periodic_task(run_every=crontab(minute='0', hour='8', day_of_week='friday'), plugin='cronjobs_cern')
 def conference_room_emails():
-    start_dt, end_dt = _get_start_end_dt()
+    start_date, end_date = _get_start_end_date()
+    date_filter = db.and_(db.cast(Reservation.start_dt, db.Date) >= start_date,
+                          db.cast(Reservation.start_dt, db.Date) <= end_date)
+    start_dt = as_utc(datetime.combine(start_date, time()))
+    end_dt = as_utc(datetime.combine(end_date, time()))
     events_by_room = {}
     for room in CERNCronjobsPlugin.settings.get('rooms'):
         query = (Event.query
@@ -75,7 +80,7 @@ def conference_room_emails():
 
     res_events_by_room = {}
     for room in CERNCronjobsPlugin.settings.get('reservation_rooms'):
-        res_events_by_room[room] = _group_by_date(_get_reservations_query(start_dt, end_dt, room_id=room.id))
+        res_events_by_room[room] = _group_by_date(_get_reservations_query(date_filter, room_id=room.id))
 
     category_ids = [int(category['id']) for category in CERNCronjobsPlugin.settings.get('categories')]
     committees = _get_category_events_query(start_dt, end_dt, category_ids)
@@ -91,7 +96,9 @@ def conference_room_emails():
 
 @celery.periodic_task(run_every=crontab(minute='0', hour='8', day_of_week='monday'), plugin='cronjobs_cern')
 def seminar_emails():
-    start_dt, end_dt = _get_start_end_dt()
+    start_date, end_date = _get_start_end_date()
+    start_dt = as_utc(datetime.combine(start_date, time()))
+    end_dt = as_utc(datetime.combine(end_date, time()))
     seminar_categories = CERNCronjobsPlugin.settings.get('seminar_categories')
     if not seminar_categories:
         return
@@ -105,8 +112,7 @@ def seminar_emails():
 
 @celery.periodic_task(run_every=crontab(minute='0', hour='6'), plugin='cronjobs_cern')
 def startup_assistance_emails():
-    start_end_dt = as_utc(datetime.today())
-    reservations = _get_reservations_query(start_end_dt, start_end_dt)
+    reservations = _get_reservations_query(db.cast(Reservation.start_dt, db.Date) == date.today())
     reservations_by_room = OrderedDict()
     for reservation in reservations:
         if reservation.room in reservations_by_room:

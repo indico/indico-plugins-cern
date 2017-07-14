@@ -1,4 +1,4 @@
-{% extends 'emails/base.txt' %}
+{% extends 'emails/base.html' %}
 {% from 'cronjobs_cern:_lists.html' import render_event_list, render_reservation_list %}
 
 {% block subject %}Indico events requiring support for the coming two weeks{% endblock %}
