@@ -1,9 +1,11 @@
 from __future__ import unicode_literals
 
-from indico.core.db.sqlalchemy import db, PyIntEnum
-from indico_cern_access.models.access_requests import CERNAccessRequestState
 from sqlalchemy import Boolean
 from sqlalchemy.ext.hybrid import hybrid_property
+
+from indico.core.db.sqlalchemy import PyIntEnum, db
+
+from indico_cern_access.models.access_requests import CERNAccessRequestState
 
 
 class CERNAccessRequestRegForm(db.Model):
@@ -32,9 +34,5 @@ class CERNAccessRequestRegForm(db.Model):
         backref=db.backref('cern_access_request', uselist=False))
 
     @hybrid_property
-    def is_active(self):
-        return self.request_state != CERNAccessRequestState.withdrawn
-
-    @is_active.expression
     def is_active(self):
         return self.request_state != CERNAccessRequestState.withdrawn

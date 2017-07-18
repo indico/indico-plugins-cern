@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-from indico.modules.events.requests.views import WPRequestsEventManagement
 from wtforms.fields.html5 import URLField
 from wtforms.validators import DataRequired
 
@@ -8,16 +7,16 @@ from indico.core import signals
 from indico.core.plugins import IndicoPlugin
 from indico.modules.events import Event
 from indico.modules.events.registration.models.registrations import RegistrationState
+from indico.modules.events.requests.views import WPRequestsEventManagement
 from indico.web.forms.base import IndicoForm
 
 from indico_cern_access import _
 from indico_cern_access.blueprint import blueprint
 from indico_cern_access.definition import CERNAccessRequestDefinition
 from indico_cern_access.models.access_requests import CERNAccessRequestState
-from indico_cern_access.util import (withdraw_access_requests,
-                                     get_requested_forms, send_adams_delete_request,
-                                     send_adams_post_request, update_access_requests, create_access_request,
-                                     get_registrations)
+from indico_cern_access.util import (create_access_request, get_registrations, get_requested_forms,
+                                     send_adams_delete_request, send_adams_post_request, update_access_requests,
+                                     withdraw_access_requests)
 
 
 class PluginSettingsForm(IndicoForm):
@@ -47,7 +46,7 @@ class CERNAccessPlugin(IndicoPlugin):
         self.connect(signals.event.deleted, self._event_deleted)
 
     def get_blueprints(self):
-        return blueprint
+        yield blueprint
 
     def register_assets(self):
         self.register_js_bundle('cern_access_js', 'js/cern_access.js')

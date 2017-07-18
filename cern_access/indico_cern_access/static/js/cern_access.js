@@ -24,7 +24,7 @@
                     }
                 }
             }
-            hiddenData.regforms.sort(sortByNameId);
+            hiddenData.regforms.sort(sortById);
             $valueField.val(JSON.stringify(hiddenData));
         });
 
@@ -48,12 +48,9 @@
         });
      });
 
-    function sortByNameId(a, b){
-        // var aTitle = a.title.toLowerCase();
-        // var bTitle = b.title.toLowerCase();
+    function sortById(a, b){
         var aId = a.regform_id;
         var bId = b.regform_id;
-        // return ((aTitle < bTitle) ? -1 : ((aTitle > bTitle) ? 1 : ((aId < bId) ? -1 : ((aId > bId) ? 1 : 0))));
         return ((aId < bId) ? -1 : ((aId > bId) ? 1 : 0));
     }
 })();

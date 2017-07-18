@@ -1,0 +1,58 @@
+{% set registrations = regform.active_registrations|sort(attribute='id') %}
+{% set rejected_count = registrations | rejectattr('cern_access_request.request_state', 'equalto', state.accepted) | list | length %}
+<div style="min-width: 800px; margin-bottom:10px">
+    <div class="title">
+        <div class="text">
+            <h2>
+               CERN access requests state for {{ regform.title }}
+            </h2>
+        </div>
+    </div>
+
+    {% if registrations %}
+        <table class="i-table-widget">
+            <tbody>
+                {% for registration in registrations %}
+                {% set request_state = registration.cern_access_request.request_state %}
+                    <tr id="registration-{{ registration.id }}">
+                        <td class="i-table">
+                            #{{ registration.friendly_id }}
+                        </td>
+                        <td class="i-table">
+                                {{- registration.display_full_name -}}
+                        </td>
+                        <td class="i-table">
+                            {% if request_state == state.accepted %}
+                                <span class="i-label accept right" >
+                                    {% trans %}access granted{% endtrans %}
+                                </span>
+                            {% else %}
+                                <span class="i-label danger right">
+                                    {% trans %}no access{% endtrans %}
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="info-message-box">
+            <div class="message-box-content">
+                <span class="icon"></span>
+                <div class="message-text">There are no registrations yet</div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% if rejected_count %}
+    <div class="danger-message-box">
+        <div class="message-box-content">
+            <span class="icon"></span>
+            <div class="message-text">
+                There are participants without granted access to CERN. Check again later or contact support
+            </div>
+        </div>
+    </div>
+{% endif %}
+

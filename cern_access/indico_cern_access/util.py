@@ -4,9 +4,11 @@ import hashlib
 import json
 import random
 import string
-import requests
-from indico.core.db import db
 
+import requests
+from pytz import timezone
+
+from indico.core.db import db
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.registration.models.registrations import Registration, RegistrationState
 from indico.modules.events.requests.models.requests import RequestState
@@ -66,6 +68,7 @@ def generate_access_id(registration_id):
 
 
 def build_access_request_data(registration, event, update=False):
+    tz = timezone('Europe/Zurich')
     data = {}
     if update:
         reservation_code = registration.cern_access_request.reservation_code
@@ -76,8 +79,8 @@ def build_access_request_data(registration, event, update=False):
                  '$gn': event.title,
                  '$fn': unicode_to_ascii(remove_accents(registration.first_name)),
                  '$ln': unicode_to_ascii(remove_accents(registration.last_name)),
-                 '$sd': event.start_dt.strftime('%Y-%m-%dT%H:%M'),
-                 '$ed': event.end_dt.strftime('%Y-%m-%dT%H:%M')})
+                 '$sd': event.start_dt.astimezone(tz).strftime('%Y-%m-%dT%H:%M'),
+                 '$ed': event.end_dt.astimezone(tz).strftime('%Y-%m-%dT%H:%M')})
     checksum = ';;'.join('{}:{}'.format(key, value) for key, value in sorted(data.viewitems()))
     signature = hashlib.sha256(checksum).hexdigest()
     data.update({'$si': signature})

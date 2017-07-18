@@ -1,40 +1,76 @@
 {% extends 'forms/base_widget.html' %}
+{% set requested_regforms_count = field.event_regforms | selectattr('cern_access_request.is_active') | list | length %}
 {% block html %}
     <input type="hidden" id="{{ field.id }}" name="{{ field.name }}" value="{{ field._value() | tojson | forceescape }}">
     <div class="page-content">
-        <table id="regforms-list" class="i-table-widget">
-            <thead>
+        {% if field.event_regforms %}
+            <table id="regforms-list" class="i-table-widget">
+                <thead>
                 <tr>
                     <th>{% trans %}Registration form {% endtrans %}</th>
                     <th>{% trans %}Allow unpaid{% endtrans %}</th>
                     <th>{% trans %}Include{% endtrans %}</th>
-                    <th>{% trans %}Status{% endtrans %}</th>
+                    {% if requested_regforms_count %}
+                        <th>{% trans %}Status{% endtrans %}</th>
+                        <th></th>
+                    {% endif %}
                 </tr>
-            </thead>
-            <tbody>
-                 {% for regform in field.event_regforms %}
-                 {% set is_requested = regform.cern_access_request and regform.cern_access_request.is_active %}
+                </thead>
+                <tbody>
+                {% for regform in field.event_regforms %}
+                    {% set is_requested = regform.cern_access_request and regform.cern_access_request.is_active %}
                     <tr>
-                        <td> {{ regform.title }}</td>
+                        <td>{{ regform.title }}</td>
+                        <td>
+                            {% if regform.base_price %}
+                                <input type="checkbox" id="allow_unpaid_{{ regform.id }}" name="allow_unpaid"
+                                       value="{{ regform.id }}"
+                                       {% if is_requested and regform.cern_access_request.allow_unpaid %} checked
+                                       {% elif not is_requested %} disabled {% endif %}><br>
+                            {% else %}
+                                <input type="checkbox" title="This registration form doesn't require payment" disabled><br>
+                            {% endif %}
+                        </td>
+                        <td><label class="switch">
+                            <input type="checkbox" class="switch-input" id="{{ regform.id }}" name="{{ regform.title }}"
+                                   value="{{ regform.id }}"
+                                   {% if is_requested %} checked {% endif %}>
+                            <span class="switch-label" data-on="Yes" data-off="No"></span>
+                            <span class="switch-handle"></span>
+                        </label></td>
+                        {% if requested_regforms_count %}
                             <td>
-                                {% if regform.base_price %}
-                                    <input type="checkbox" id="allow_unpaid_{{ regform.id }}" name="allow_unpaid" value="{{ regform.id }}"
-                                        {% if is_requested and regform.cern_access_request.allow_unpaid %} checked
-                                        {% elif not is_requested %} disabled {% endif %}><br>
-                                {% else %}
-                                    <input type="checkbox" title="This registration form doesn't require payment" disabled><br>
+                                {% if is_requested %}
+                                    {% set rejected_registrations = regform.active_registrations|rejectattr('cern_access_request.request_state', 'equalto', field.state.accepted) | list | length %}
+                                    {% if rejected_registrations %}
+                                        <button class="i-button borderless text-color icon-warning danger"></button>
+                                    {% else %}
+                                        <button class="i-button borderless text-color icon-checkmark accept"></button>
+                                    {% endif %}
                                 {% endif %}
                             </td>
-                        <td><label class="switch">
-                        <input type="checkbox" class="switch-input" id="{{ regform.id }}" name="{{ regform.title }}" value="{{ regform.id }}"
-                               {% if is_requested %} checked {% endif %}>
-                        <span class="switch-label" data-on="Yes" data-off="No"></span>
-                        <span class="switch-handle"></span>
-                    </label></td>
-                        <td></td>
+                            <td>
+                                {% if is_requested %}
+                                    <button class="i-button"
+                                            data-href="{{ url_for('plugin_cern_access.access_requests_details', regform) }}"
+                                            data-title="{% trans %}Access requests details{% endtrans %}"
+                                            data-ajax-dialog>
+                                        {% trans %}See details{% endtrans %}
+                                    </button>
+                                {% endif %}
+                            </td>
+                        {% endif %}
                     </tr>
                 {% endfor %}
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        {% else %}
+            <div class="info-message-box">
+                <div class="message-box-content">
+                    <span class="icon"></span>
+                    <div class="message-text">There are no registration forms for this event</div>
+                </div>
+            </div>
+        {% endif %}
     </div>
 {% endblock %}

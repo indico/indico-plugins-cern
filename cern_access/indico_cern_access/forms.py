@@ -1,13 +1,14 @@
 from __future__ import unicode_literals
 
-from indico.modules.events.registration.models.forms import RegistrationForm
 from wtforms.validators import DataRequired
 
+from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.requests import RequestFormBase
 from indico.web.forms.fields import JSONField
 from indico.web.forms.widgets import JinjaWidget
 
 from indico_cern_access import _
+from indico_cern_access.models.access_requests import CERNAccessRequestState
 
 
 class CERNAccessField(JSONField):
@@ -21,10 +22,14 @@ class CERNAccessField(JSONField):
                 .order_by(RegistrationForm.title, RegistrationForm.id)
                 .all())
 
+    @property
+    def state(self):
+        return CERNAccessRequestState
+
     def _value(self):
         regforms = []
 
-        for regform in self.event_regforms:
+        for regform in sorted(self.event_regforms, key=lambda regform: regform.id):
             if regform.cern_access_request and regform.cern_access_request.is_active:
                 regform_data = {
                     'regform_id': regform.id,
