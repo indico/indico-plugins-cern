@@ -183,3 +183,8 @@ def create_access_request_regform(regform, state, allow_unpaid):
     else:
         regform.cern_access_request = CERNAccessRequestRegForm(request_state=state,
                                                                allow_unpaid=allow_unpaid)
+
+
+def is_authorized_user(user):
+    from indico_cern_access.plugin import CERNAccessPlugin
+    return CERNAccessPlugin.settings.acls.contains_user('authorized_users', user)

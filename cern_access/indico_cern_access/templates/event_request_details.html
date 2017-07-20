@@ -1,8 +1,25 @@
 {% extends 'events/requests/event_request_details.html' %}
 {% from 'message_box.html' import message_box %}
 {% block description %}
-    <div class="text-important">
-        By sending this request you are giving registered users access to CERN.
-        Please note that after the request is accepted participants of the event will be able to enter CERN by presenting a valid ticket.
-    </div>
+    {% if can_send_request %}
+        <div class="text-important">
+            {% trans -%}
+                By sending this request you are giving registered users access to CERN.
+                Please note that after the request is accepted participants of the event will be able to enter CERN by presenting a valid ticket.
+            {%- endtrans %}
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% if can_send_request %}
+        {{ super() }}
+    {% else %}
+        {% call message_box('warning') %}
+            {% trans -%}
+                Unfortunately you are not allowed to send CERN access requests.
+            {%- endtrans %}
+        {% endcall %}
+        <a href="{{ url_for('.event_requests', event) }}" class="i-button big">{% trans %}Back{% endtrans %}</a>
+    {% endif %}
 {% endblock %}

@@ -9,6 +9,7 @@ from indico.modules.events import Event
 from indico.modules.events.registration.models.registrations import RegistrationState
 from indico.modules.events.requests.views import WPRequestsEventManagement
 from indico.web.forms.base import IndicoForm
+from indico.web.forms.fields import PrincipalListField
 
 from indico_cern_access import _
 from indico_cern_access.blueprint import blueprint
@@ -21,6 +22,8 @@ from indico_cern_access.util import (create_access_request, get_event_registrati
 
 class PluginSettingsForm(IndicoForm):
     adams_url = URLField(_('ADaMS URL'), [DataRequired()], description=_("The URL of the ADaMS REST API"))
+    authorized_users = PrincipalListField(_('Authorized_users'), groups=True,
+                                          description=_('List of users/groups who can send requests'))
 
 
 class CERNAccessPlugin(IndicoPlugin):
@@ -33,6 +36,7 @@ class CERNAccessPlugin(IndicoPlugin):
     settings_form = PluginSettingsForm
     configurable = True
     default_settings = {'adams_url': 'https://oraweb.cern.ch/ords/devdb11/adams3/api/bookings/'}
+    acl_settings = {'authorized_users'}
 
     def init(self):
         super(CERNAccessPlugin, self).init()

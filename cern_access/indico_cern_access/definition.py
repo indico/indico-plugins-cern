@@ -1,10 +1,13 @@
 from __future__ import unicode_literals
 
+from flask import session
+from werkzeug.exceptions import Forbidden
+
 from indico.modules.events.requests import RequestDefinitionBase
 
 from indico_cern_access import _
 from indico_cern_access.forms import CERNAccessForm
-from indico_cern_access.util import update_access_request, withdraw_event_access_request
+from indico_cern_access.util import update_access_request, withdraw_event_access_request, is_authorized_user
 
 
 class CERNAccessRequestDefinition(RequestDefinitionBase):
@@ -14,6 +17,7 @@ class CERNAccessRequestDefinition(RequestDefinitionBase):
 
     @classmethod
     def render_form(cls, event, **kwargs):
+        kwargs['can_send_request'] = is_authorized_user(session.user)
         return super(CERNAccessRequestDefinition, cls).render_form(event, **kwargs)
 
     @classmethod
@@ -22,10 +26,14 @@ class CERNAccessRequestDefinition(RequestDefinitionBase):
 
     @classmethod
     def send(cls, req, data):
+        if not is_authorized_user(session.user):
+            raise Forbidden()
         super(CERNAccessRequestDefinition, cls).send(req, data)
         req.state = update_access_request(req)
 
     @classmethod
     def withdraw(cls, req, notify_event_managers=False):
+        if not is_authorized_user(session.user):
+            raise Forbidden()
         super(CERNAccessRequestDefinition, cls).withdraw(req, notify_event_managers)
         withdraw_event_access_request(req)
