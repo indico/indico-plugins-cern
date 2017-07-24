@@ -21,11 +21,11 @@ from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAcc
 def get_requested_forms(event):
     return (RegistrationForm.query.with_parent(event)
             .join(CERNAccessRequestRegForm)
-            .filter(RegistrationForm.cern_access_request, CERNAccessRequestRegForm.is_active)
+            .filter(CERNAccessRequestRegForm.is_active)
             .all())
 
 
-def get_registrations(event, regform=None, allow_unpaid=False, only_unpaid=False, requested=False):
+def get_event_registrations(event, regform=None, allow_unpaid=False, only_unpaid=False, requested=False):
     query = Registration.query.with_parent(event)
     if regform:
         query = query.filter(Registration.registration_form_id == regform.id)
@@ -35,7 +35,7 @@ def get_registrations(event, regform=None, allow_unpaid=False, only_unpaid=False
     elif only_unpaid:
         query = query.filter(Registration.state == RegistrationState.unpaid)
     elif requested:
-        query = query.join(CERNAccessRequest).filter(Registration.cern_access_request, CERNAccessRequest.is_active)
+        query = query.join(CERNAccessRequest).filter(CERNAccessRequest.is_active)
     else:
         query = query.filter(Registration.state == RegistrationState.complete)
     return query.all()
@@ -103,7 +103,7 @@ def update_access_request(req):
     for regform_id in requested_forms_ids - existing_forms_ids:
         allow_unpaid = allow_unpaid_info[regform_id]
         regform = event_regforms[regform_id]
-        registrations = get_registrations(event, regform=regform, allow_unpaid=allow_unpaid)
+        registrations = get_event_registrations(event, regform=regform, allow_unpaid=allow_unpaid)
 
         state, data = send_adams_post_request(event, registrations)
         create_access_request_regform(regform, state, allow_unpaid)
@@ -116,12 +116,12 @@ def update_access_request(req):
         if allow_unpaid != regform.cern_access_request.allow_unpaid:
             if allow_unpaid is True:
                 regform.cern_access_request.allow_unpaid = allow_unpaid
-                registrations = get_registrations(event, regform=regform, only_unpaid=True)
+                registrations = get_event_registrations(event, regform=regform, only_unpaid=True)
                 state, data = send_adams_post_request(event, registrations)
                 add_access_requests(registrations, data, state)
             else:
                 regform.cern_access_request.allow_unpaid = allow_unpaid
-                registrations = get_registrations(event, regform=regform, only_unpaid=True, requested=True)
+                registrations = get_event_registrations(event, regform=regform, only_unpaid=True, requested=True)
                 deleted = send_adams_delete_request(registrations)
                 if deleted:
                     withdraw_access_requests(registrations)
@@ -129,7 +129,7 @@ def update_access_request(req):
     # delete requests
     for regform_id in existing_forms_ids - requested_forms_ids:
         regform = event_regforms[regform_id]
-        registrations = get_registrations(event, regform=regform, requested=True)
+        registrations = get_event_registrations(event, regform=regform, requested=True)
         deleted = send_adams_delete_request(registrations)
         if deleted:
             regform.cern_access_request.request_state = CERNAccessRequestState.withdrawn
@@ -155,7 +155,7 @@ def withdraw_access_requests(registrations):
 
 def withdraw_event_access_request(req):
     requested_forms = get_requested_forms(req.event_new)
-    requested_registrations = get_registrations(req.event_new, requested=True)
+    requested_registrations = get_event_registrations(req.event_new, requested=True)
     deleted = send_adams_delete_request(requested_registrations)
     if deleted:
         for regform in requested_forms:

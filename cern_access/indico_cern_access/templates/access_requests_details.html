@@ -1,4 +1,4 @@
-{% set registrations = regform.active_registrations|sort(attribute='id') %}
+{% set registrations = regform.active_registrations | rejectattr('cern_access_request.request_state', 'equalto', state.withdrawn) | list | sort(attribute='id') %}
 {% set rejected_count = registrations | rejectattr('cern_access_request.request_state', 'equalto', state.accepted) | list | length %}
 <div style="min-width: 800px; margin-bottom:10px">
     <div class="title">

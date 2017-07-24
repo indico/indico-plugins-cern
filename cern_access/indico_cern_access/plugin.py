@@ -14,7 +14,7 @@ from indico_cern_access import _
 from indico_cern_access.blueprint import blueprint
 from indico_cern_access.definition import CERNAccessRequestDefinition
 from indico_cern_access.models.access_requests import CERNAccessRequestState
-from indico_cern_access.util import (create_access_request, get_registrations, get_requested_forms,
+from indico_cern_access.util import (create_access_request, get_event_registrations, get_requested_forms,
                                      send_adams_delete_request, send_adams_post_request, update_access_requests,
                                      withdraw_access_requests)
 
@@ -82,14 +82,14 @@ class CERNAccessPlugin(IndicoPlugin):
             registration.cern_access_request.request_state = CERNAccessRequestState.withdrawn
 
     def _event_time_changed(self, event, obj, **kwargs):
-        registrations = get_registrations(event=obj, requested=True)
+        registrations = get_event_registrations(event=obj, requested=True)
         if registrations:
             state, _ = send_adams_post_request(obj, registrations, update=True)
             update_access_requests(registrations, state)
 
     def _registration_form_deleted(self, registration_form):
         if registration_form.cern_access_request and registration_form.cern_access_request.is_active:
-            registrations = get_registrations(registration_form.event_new, regform=registration_form, requested=True)
+            registrations = get_event_registrations(registration_form.event_new, regform=registration_form, requested=True)
             if registrations:
                 deleted = send_adams_delete_request(registrations)
                 if deleted:
@@ -99,7 +99,7 @@ class CERNAccessPlugin(IndicoPlugin):
     def _event_deleted(self, event, user):
         access_requests_forms = get_requested_forms(event)
         if access_requests_forms:
-            requested_registrations = get_registrations(event=event, requested=True)
+            requested_registrations = get_event_registrations(event=event, requested=True)
             if requested_registrations:
                 deleted = send_adams_delete_request(requested_registrations)
                 if deleted:

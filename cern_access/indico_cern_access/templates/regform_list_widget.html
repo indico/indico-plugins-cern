@@ -41,7 +41,7 @@
                         {% if requested_regforms_count %}
                             <td>
                                 {% if is_requested %}
-                                    {% set rejected_registrations = regform.active_registrations|rejectattr('cern_access_request.request_state', 'equalto', field.state.accepted) | list | length %}
+                                    {% set rejected_registrations = regform.active_registrations|rejectattr('cern_access_request.request_state', 'equalto', field.state.accepted) | rejectattr('cern_access_request.request_state', 'equalto', field.state.withdrawn) | list | length %}
                                     {% if rejected_registrations %}
                                         <button class="i-button borderless text-color icon-warning danger"></button>
                                     {% else %}
