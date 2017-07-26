@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from wtforms import PasswordField, StringField
 from wtforms.fields.html5 import URLField
 from wtforms.validators import DataRequired
 
@@ -24,6 +25,10 @@ class PluginSettingsForm(IndicoForm):
     adams_url = URLField(_('ADaMS URL'), [DataRequired()], description=_("The URL of the ADaMS REST API"))
     authorized_users = PrincipalListField(_('Authorized_users'), groups=True,
                                           description=_('List of users/groups who can send requests'))
+    login = StringField(_('Login'), [DataRequired()],
+                        description=_('The login used to authenticate with ADaMS service'))
+    password = PasswordField(_('Password'), [DataRequired()],
+                             description=_('The password used to authenticate with ADaMS service'))
 
 
 class CERNAccessPlugin(IndicoPlugin):
@@ -35,7 +40,9 @@ class CERNAccessPlugin(IndicoPlugin):
 
     settings_form = PluginSettingsForm
     configurable = True
-    default_settings = {'adams_url': 'https://oraweb.cern.ch/ords/devdb11/adams3/api/bookings/'}
+    default_settings = {'adams_url': 'https://oraweb.cern.ch/ords/devdb11/adams3/api/bookings/',
+                        'login': 'indicoprod',
+                        'password': ''}
     acl_settings = {'authorized_users'}
 
     def init(self):

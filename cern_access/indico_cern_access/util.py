@@ -49,8 +49,9 @@ def send_adams_post_request(event, registrations, update=False):
     data = {registration.id: build_access_request_data(registration, event, update=update)
             for registration in registrations}
     headers = {'content-type': 'Application/JSON'}
+    auth = (CERNAccessPlugin.settings.get('login'), CERNAccessPlugin.settings.get('password'))
     json_data = json.dumps([data[key] for key in data])
-    r = requests.post(CERNAccessPlugin.settings.get('adams_url'), data=json_data, headers=headers)
+    r = requests.post(CERNAccessPlugin.settings.get('adams_url'), data=json_data, headers=headers, auth=auth)
     return ((CERNAccessRequestState.accepted, data)
             if r.status_code == requests.codes.ok
             else (CERNAccessRequestState.rejected, data))
@@ -61,8 +62,9 @@ def send_adams_delete_request(registrations):
 
     data = [generate_access_id(registration.id) for registration in registrations]
     headers = {'Content-Type': 'application/json'}
+    auth = (CERNAccessPlugin.settings.get('login'), CERNAccessPlugin.settings.get('password'))
     data = json.dumps(data)
-    r = requests.delete(CERNAccessPlugin.settings.get('adams_url'), data=data, headers=headers)
+    r = requests.delete(CERNAccessPlugin.settings.get('adams_url'), data=data, headers=headers, auth=auth)
     return True if r.status_code == requests.codes.ok else False
 
 
