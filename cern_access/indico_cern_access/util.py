@@ -6,13 +6,16 @@ import random
 import string
 
 import requests
+from flask import session
 from pytz import timezone
 
 from indico.core.db import db
+from indico.core.notifications import make_email, send_email
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.registration.models.registrations import Registration, RegistrationState
 from indico.modules.events.requests.models.requests import RequestState
 from indico.util.string import remove_accents, unicode_to_ascii
+from indico.web.flask.templating import get_template_module
 
 from indico_cern_access.models.access_request_regforms import CERNAccessRequestRegForm
 from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState
@@ -125,6 +128,7 @@ def update_access_request(req):
                 deleted = send_adams_delete_request(registrations)
                 if deleted:
                     withdraw_access_requests(registrations)
+                    notify_access_withdrawn(registrations)
 
     # delete requests
     for regform_id in existing_forms_ids - requested_forms_ids:
@@ -134,6 +138,7 @@ def update_access_request(req):
         if deleted:
             regform.cern_access_request.request_state = CERNAccessRequestState.withdrawn
             withdraw_access_requests(registrations)
+            notify_access_withdrawn(registrations)
 
     return RequestState.accepted
 
@@ -161,6 +166,7 @@ def withdraw_event_access_request(req):
         for regform in requested_forms:
             regform.cern_access_request.request_state = CERNAccessRequestState.withdrawn
         withdraw_access_requests(requested_registrations)
+        notify_access_withdrawn(requested_registrations)
 
 
 def get_random_reservation_code():
@@ -188,3 +194,12 @@ def create_access_request_regform(regform, state, allow_unpaid):
 def is_authorized_user(user):
     from indico_cern_access.plugin import CERNAccessPlugin
     return CERNAccessPlugin.settings.acls.contains_user('authorized_users', user)
+
+
+def notify_access_withdrawn(registrations):
+    for registration in registrations:
+        template = get_template_module('cern_access:email.html', registration=registration)
+        from_address = registration.registration_form.sender_address
+        email = make_email(to_list=registration.email, from_address=from_address,
+                           template=template, html=True)
+        send_email(email, event=registration.registration_form.event_new, module='Registration', user=session.user)

@@ -16,8 +16,8 @@ from indico_cern_access.blueprint import blueprint
 from indico_cern_access.definition import CERNAccessRequestDefinition
 from indico_cern_access.models.access_requests import CERNAccessRequestState
 from indico_cern_access.util import (create_access_request, get_event_registrations, get_requested_forms,
-                                     send_adams_delete_request, send_adams_post_request, update_access_requests,
-                                     withdraw_access_requests)
+                                     notify_access_withdrawn, send_adams_delete_request, send_adams_post_request,
+                                     update_access_requests, withdraw_access_requests)
 
 
 class PluginSettingsForm(IndicoForm):
@@ -98,6 +98,7 @@ class CERNAccessPlugin(IndicoPlugin):
                 deleted = send_adams_delete_request(registrations)
                 if deleted:
                     withdraw_access_requests(registrations)
+                    notify_access_withdrawn(registrations)
             registration_form.cern_access_request.request_state = CERNAccessRequestState.withdrawn
 
     def _event_deleted(self, event, user):
@@ -108,6 +109,7 @@ class CERNAccessPlugin(IndicoPlugin):
                 deleted = send_adams_delete_request(requested_registrations)
                 if deleted:
                     withdraw_access_requests(requested_registrations)
+                    notify_access_withdrawn(requested_registrations)
             for form in access_requests_forms:
                 form.cern_access_request.request_state = CERNAccessRequestState.withdrawn
 

@@ -6,14 +6,14 @@ from celery.schedules import crontab
 from indico.core.celery import celery
 from indico.core.db import db
 from indico.modules.events.registration.models.registrations import Registration
-
 from indico.util import json
+
 from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState
 from indico_cern_access.plugin import CERNAccessPlugin
-from indico_cern_access.util import build_access_request_data, add_access_requests
+from indico_cern_access.util import add_access_requests, build_access_request_data
 
 
-@celery.periodic_task(run_every=crontab(minute='0', hour='8'), plugin='cern_access')
+@celery.periodic_task(run_every=crontab(minute=0, hour='*/1'), plugin='cern_access')
 def resend_access_requests():
     registrations = (Registration.query
                      .join(CERNAccessRequest)
