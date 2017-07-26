@@ -55,6 +55,7 @@ class CERNAccessPlugin(IndicoPlugin):
         self.connect(signals.event.registration_personal_data_modified, self._registration_modified)
         self.connect(signals.event.registration_form_deleted, self._registration_form_deleted)
         self.connect(signals.event.deleted, self._event_deleted)
+        self.connect(signals.event.updated, self._event_title_changed)
 
     def get_blueprints(self):
         yield blueprint
@@ -124,3 +125,11 @@ class CERNAccessPlugin(IndicoPlugin):
         if registration.cern_access_request and ('first_name' in change.keys() or 'last_name' in change.keys()):
             state, _ = send_adams_post_request(registration.event_new, [registration], update=True)
             registration.cern_access_request.request_state = state
+
+    def _event_title_changed(self, event, changes, **kwargs):
+        if 'title' not in changes:
+            return
+        requested_registrations = get_event_registrations(event=event, requested=True)
+        if requested_registrations:
+            state, _ = send_adams_post_request(event, requested_registrations, update=True)
+            update_access_requests(requested_registrations, state)

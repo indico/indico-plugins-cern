@@ -151,8 +151,8 @@ def add_access_requests(registrations, data, state):
 
 
 def update_access_requests(registrations, state):
-    for access_request in registrations:
-        access_request.request_state = state
+    for registration in registrations:
+        registration.cern_access_request.request_state = state
 
 
 def withdraw_access_requests(registrations):
