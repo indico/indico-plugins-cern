@@ -74,11 +74,11 @@ class RHConversionFinished(RH):
         pdf_attachment = Attachment(folder=attachment.folder, user=attachment.user, title=title,
                                     description=attachment.description, type=AttachmentType.file,
                                     protection_mode=attachment.protection_mode, acl=attachment.acl)
+        # TODO: remove first case when Conversion Server is fully on new version
         if 'content' in request.form:
-            ConversionPlugin.logger.debug('file sent withing a x-www-form-urlencoded section')
+            # handling of legacy API
             data = BytesIO(base64.decodestring(request.form['content']))
         else:
-            ConversionPlugin.logger.debug('file sent within a multiform form-data')
             filepdf = request.files['content']
             data = filepdf.stream.read()
         pdf_attachment.file = AttachmentFile(user=attachment.file.user, filename='{}.pdf'.format(name),
