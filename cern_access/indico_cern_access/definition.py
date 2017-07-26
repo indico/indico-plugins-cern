@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from flask import session
+from indico.core.db import db
 from werkzeug.exceptions import Forbidden
 
 from indico.modules.events.requests import RequestDefinitionBase
@@ -26,14 +27,18 @@ class CERNAccessRequestDefinition(RequestDefinitionBase):
 
     @classmethod
     def send(cls, req, data):
-        if not is_authorized_user(session.user):
+        with db.session.no_autoflush:
+            is_authorized = is_authorized_user(session.user)
+        if not is_authorized:
             raise Forbidden()
         super(CERNAccessRequestDefinition, cls).send(req, data)
         req.state = update_access_request(req)
 
     @classmethod
     def withdraw(cls, req, notify_event_managers=False):
-        if not is_authorized_user(session.user):
+        with db.session.no_autoflush:
+            is_authorized = is_authorized_user(session.user)
+        if not is_authorized:
             raise Forbidden()
         super(CERNAccessRequestDefinition, cls).withdraw(req, notify_event_managers)
         withdraw_event_access_request(req)
