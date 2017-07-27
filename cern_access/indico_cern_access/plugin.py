@@ -29,6 +29,8 @@ class PluginSettingsForm(IndicoForm):
                         description=_('The login used to authenticate with ADaMS service'))
     password = PasswordField(_('Password'), [DataRequired()],
                              description=_('The password used to authenticate with ADaMS service'))
+    secret_key = StringField(_('Secret key'), [DataRequired()],
+                             description=_('Secret key to sign requests to ADaMS API'))
 
 
 class CERNAccessPlugin(IndicoPlugin):
@@ -42,7 +44,8 @@ class CERNAccessPlugin(IndicoPlugin):
     configurable = True
     default_settings = {'adams_url': 'https://oraweb.cern.ch/ords/devdb11/adams3/api/bookings/',
                         'login': 'indicoprod',
-                        'password': ''}
+                        'password': '',
+                        'secret_key': ''}
     acl_settings = {'authorized_users'}
 
     def init(self):

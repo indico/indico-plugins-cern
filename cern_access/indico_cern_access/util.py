@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import hashlib
+import hmac
 import json
 import random
 import string
@@ -73,6 +74,8 @@ def generate_access_id(registration_id):
 
 
 def build_access_request_data(registration, event, update=False):
+    from indico_cern_access.plugin import CERNAccessPlugin
+
     tz = timezone('Europe/Zurich')
     data = {}
     if update:
@@ -87,8 +90,8 @@ def build_access_request_data(registration, event, update=False):
                  '$sd': event.start_dt.astimezone(tz).strftime('%Y-%m-%dT%H:%M'),
                  '$ed': event.end_dt.astimezone(tz).strftime('%Y-%m-%dT%H:%M')})
     checksum = ';;'.join('{}:{}'.format(key, value) for key, value in sorted(data.viewitems()))
-    signature = hashlib.sha256(checksum).hexdigest()
-    data.update({'$si': signature})
+    signature = hmac.new(str(CERNAccessPlugin.settings.get('secret_key')), checksum, hashlib.sha256)
+    data.update({'$si': signature.hexdigest()})
     return data
 
 
