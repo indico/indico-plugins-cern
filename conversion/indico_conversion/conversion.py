@@ -69,12 +69,18 @@ class RHConversionFinished(RH):
         elif request.form['status'] != '1':
             ConversionPlugin.logger.error('Received invalid status %s for %s', request.form['status'], attachment)
             return jsonify(success=False)
-        data = BytesIO(base64.decodestring(request.form['content']))
         name, ext = os.path.splitext(attachment.file.filename)
         title = get_pdf_title(attachment)
         pdf_attachment = Attachment(folder=attachment.folder, user=attachment.user, title=title,
                                     description=attachment.description, type=AttachmentType.file,
                                     protection_mode=attachment.protection_mode, acl=attachment.acl)
+        # TODO: remove first case when Conversion Server is fully on new version
+        if 'content' in request.form:
+            # handling of legacy API
+            data = BytesIO(base64.decodestring(request.form['content']))
+        else:
+            filepdf = request.files['content']
+            data = filepdf.stream.read()
         pdf_attachment.file = AttachmentFile(user=attachment.file.user, filename='{}.pdf'.format(name),
                                              content_type='application/pdf')
         pdf_attachment.file.save(data)
