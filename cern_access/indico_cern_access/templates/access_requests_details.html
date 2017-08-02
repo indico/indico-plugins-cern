@@ -1,14 +1,11 @@
 {% set registrations = regform.active_registrations | rejectattr('cern_access_request.request_state', 'equalto', state.withdrawn) | list | sort(attribute='id') %}
 {% set rejected_count = registrations | rejectattr('cern_access_request.request_state', 'equalto', state.accepted) | list | length %}
-<div style="min-width: 800px; margin-bottom:10px">
+<div id='accesses-list'>
     <div class="title">
         <div class="text">
-            <h2>
-               CERN access requests state for {{ regform.title }}
-            </h2>
+            <h2>{% trans %}CERN access requests state for{% endtrans %} {{ regform.title }}</h2>
         </div>
     </div>
-
     {% if registrations %}
         <table class="i-table-widget">
             <tbody>
@@ -19,7 +16,7 @@
                             #{{ registration.friendly_id }}
                         </td>
                         <td class="i-table">
-                                {{- registration.display_full_name -}}
+                            {{- registration.display_full_name -}}
                         </td>
                         <td class="i-table">
                             {% if request_state == state.accepted %}
@@ -40,7 +37,7 @@
         <div class="info-message-box">
             <div class="message-box-content">
                 <span class="icon"></span>
-                <div class="message-text">There are no registrations yet</div>
+                <div class="message-text">{% trans %}There are no registrations yet{% endtrans %}</div>
             </div>
         </div>
     {% endif %}
@@ -50,7 +47,7 @@
         <div class="message-box-content">
             <span class="icon"></span>
             <div class="message-text">
-                There are participants without granted access to CERN. Check again later or contact support
+                {% trans %}There are participants without granted access to CERN. Check again later or contact support{% endtrans %}
             </div>
         </div>
     </div>

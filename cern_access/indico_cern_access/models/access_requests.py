@@ -1,10 +1,11 @@
 from __future__ import unicode_literals
 
-from indico.core.db.sqlalchemy import db, PyIntEnum
+from sqlalchemy.ext.hybrid import hybrid_property
+
+from indico.core.db.sqlalchemy import PyIntEnum, db
 from indico.util.struct.enum import RichIntEnum
 
 from indico_cern_access import _
-from sqlalchemy.ext.hybrid import hybrid_property
 
 
 class CERNAccessRequestState(RichIntEnum):
@@ -39,7 +40,10 @@ class CERNAccessRequest(db.Model):
         'Registration',
         uselist=False,
         lazy=False,
-        backref=db.backref('cern_access_request', uselist=False))
+        backref=db.backref(
+            'cern_access_request',
+            uselist=False)
+    )
 
     @hybrid_property
     def is_active(self):

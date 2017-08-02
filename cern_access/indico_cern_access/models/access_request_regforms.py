@@ -31,7 +31,10 @@ class CERNAccessRequestRegForm(db.Model):
         'RegistrationForm',
         uselist=False,
         lazy=False,
-        backref=db.backref('cern_access_request', uselist=False))
+        backref=db.backref(
+            'cern_access_request',
+            uselist=False)
+    )
 
     @hybrid_property
     def is_active(self):

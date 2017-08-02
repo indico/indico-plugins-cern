@@ -19,10 +19,12 @@ from indico_cern_access.models.access_requests import CERNAccessRequestState
 from indico_cern_access.util import (create_access_request, get_event_registrations, get_requested_forms,
                                      notify_access_withdrawn, send_adams_delete_request, send_adams_post_request,
                                      update_access_requests, withdraw_access_requests)
+from indico_cern_access.views import WPAccessRequestDetails
 
 
 class PluginSettingsForm(IndicoForm):
-    adams_url = URLField(_('ADaMS URL'), [DataRequired()], description=_("The URL of the ADaMS REST API"))
+    adams_url = URLField(_('ADaMS URL'), [DataRequired()],
+                         description=_('The URL of the ADaMS REST API'))
     authorized_users = PrincipalListField(_('Authorized_users'), groups=True,
                                           description=_('List of users/groups who can send requests'))
     login = StringField(_('Login'), [DataRequired()],
@@ -51,6 +53,7 @@ class CERNAccessPlugin(IndicoPlugin):
     def init(self):
         super(CERNAccessPlugin, self).init()
         self.inject_js('cern_access_js', WPRequestsEventManagement)
+        self.inject_css('cern_access_css', WPRequestsEventManagement)
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
         self.connect(signals.event.registration_deleted, self._registration_deleted)
         self.connect(signals.event.registration_state_updated, self._registration_state_changed)
@@ -65,6 +68,7 @@ class CERNAccessPlugin(IndicoPlugin):
 
     def register_assets(self):
         self.register_js_bundle('cern_access_js', 'js/cern_access.js')
+        self.register_css_bundle('cern_access_css', 'css/cern_access.scss')
 
     def _get_event_request_definitions(self, sender, **kwargs):
         return CERNAccessRequestDefinition

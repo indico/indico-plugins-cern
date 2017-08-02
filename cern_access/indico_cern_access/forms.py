@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+from operator import attrgetter
+
 from wtforms.validators import DataRequired
 
 from indico.modules.events.registration.models.forms import RegistrationForm
@@ -29,7 +31,7 @@ class CERNAccessField(JSONField):
     def _value(self):
         regforms = []
 
-        for regform in sorted(self.event_regforms, key=lambda regform: regform.id):
+        for regform in sorted(self.event_regforms, key=attrgetter('id')):
             if regform.cern_access_request and regform.cern_access_request.is_active:
                 regform_data = {
                     'regform_id': regform.id,
