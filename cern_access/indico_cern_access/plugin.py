@@ -1,12 +1,14 @@
 from __future__ import unicode_literals
 
-from flask import flash, request
+from flask import request
+from werkzeug.exceptions import Forbidden
 from wtforms import StringField
 from wtforms.fields.html5 import URLField
 from wtforms.validators import DataRequired
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
+from indico.modules.designer.models.templates import DesignerTemplate
 from indico.modules.events import Event
 from indico.modules.events.registration.forms import TicketsForm
 from indico.modules.events.registration.models.forms import RegistrationForm
@@ -49,7 +51,8 @@ class CERNAccessPlugin(IndicoPlugin):
     default_settings = {'adams_url': 'https://oraweb.cern.ch/ords/devdb11/adams3/api/bookings/',
                         'login': 'indicoprod',
                         'password': '',
-                        'secret_key': ''}
+                        'secret_key': '',
+                        'access_ticket_template_id': '4391'}
     acl_settings = {'authorized_users'}
 
     def init(self):
@@ -66,6 +69,8 @@ class CERNAccessPlugin(IndicoPlugin):
         self.connect(signals.event.updated, self._event_title_changed)
         self.connect(signals.event.is_ticketing_handled, self._is_ticketing_handled)
         self.connect(signals.form_validated, self._form_validated)
+        self.connect(signals.event.designer.print_badge_template, self._print_badge_template)
+
 
     def get_blueprints(self):
         yield blueprint
@@ -158,7 +163,25 @@ class CERNAccessPlugin(IndicoPlugin):
         if not isinstance(form, TicketsForm):
             return
         regform = RegistrationForm.get_one(request.view_args['reg_form_id'])
+        access_tpl = DesignerTemplate.get_one(self.settings.get('access_ticket_template_id'))
+        ticket_template = DesignerTemplate.get_one(form.ticket_template_id.data)
         if regform.cern_access_request and regform.cern_access_request.is_active and form.tickets_enabled.data is False:
             error = 'Access to CERN is requested for participants registered with this form, ticketing must be enabled'
             form.tickets_enabled.errors.append(error)
             return False
+        if ticket_template == access_tpl or ticket_template.backside_template == access_tpl:
+            if (not regform.cern_access_request or regform.cern_access_request and
+                    regform.cern_access_request.request_state != CERNAccessRequestState.accepted):
+                form.ticket_template_id.errors.append(_('Selected template can only be used with an '
+                                                        'accepted CERN access request'))
+                return False
+
+    def _print_badge_template(self, template, **kwargs):
+        access_tpl = DesignerTemplate.get_one(self.settings.get('access_ticket_template_id'))
+        regform = kwargs.get('regform')
+        if template == access_tpl or template.backside_template == access_tpl:
+            if (not regform.cern_access_request or
+                    regform.cern_access_request and
+                    regform.cern_access_request.request_state != CERNAccessRequestState.accepted):
+                raise Forbidden('This badge cannot be printed because it uses the CERN access ticket '
+                                'template without an accepted CERN access request')

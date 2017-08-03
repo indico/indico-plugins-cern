@@ -12,6 +12,7 @@ from pytz import timezone
 
 from indico.core.db import db
 from indico.core.notifications import make_email, send_email
+from indico.modules.designer.models.templates import DesignerTemplate
 from indico.modules.events.registration.controllers.management.tickets import generate_ticket
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.registration.models.registrations import Registration, RegistrationState
@@ -170,12 +171,16 @@ def withdraw_access_requests(registrations):
 
 
 def withdraw_event_access_request(req):
+    from indico_cern_access.plugin import CERNAccessPlugin
     requested_forms = get_requested_forms(req.event_new)
     requested_registrations = get_event_registrations(req.event_new, requested=True)
     deleted = send_adams_delete_request(requested_registrations)
     if deleted:
+        access_tpl = DesignerTemplate.get_one(CERNAccessPlugin.settings.get('access_ticket_template_id'))
         for regform in requested_forms:
             regform.cern_access_request.request_state = CERNAccessRequestState.withdrawn
+            if regform.ticket_template == access_tpl:
+                regform.ticket_template = None
         withdraw_access_requests(requested_registrations)
         notify_access_withdrawn(requested_registrations)
 
