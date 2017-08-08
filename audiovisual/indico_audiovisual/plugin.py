@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from flask import request, g, session
+from flask import g, request, session
 from flask_pluginengine import render_plugin_template, url_for_plugin
 from sqlalchemy.orm.attributes import flag_modified
 from wtforms.fields.html5 import URLField
@@ -14,7 +14,7 @@ from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.modules.events.requests.views import WPRequestsEventManagement
 from indico.modules.users import User
 from indico.web.forms.base import IndicoForm
-from indico.web.forms.fields import PrincipalListField, MultipleItemsField, EmailListField
+from indico.web.forms.fields import EmailListField, MultipleItemsField, PrincipalListField
 from indico.web.http_api import HTTPAPIHook
 from indico.web.menu import TopMenuItem
 
@@ -24,8 +24,8 @@ from indico_audiovisual.blueprint import blueprint
 from indico_audiovisual.compat import compat_blueprint
 from indico_audiovisual.definition import AVRequest, SpeakerReleaseAgreement, TalkPlaceholder
 from indico_audiovisual.notifications import notify_relocated_request, notify_rescheduled_request
-from indico_audiovisual.util import (get_data_identifiers, compare_data_identifiers, is_av_manager,
-                                     count_capable_contributions)
+from indico_audiovisual.util import (compare_data_identifiers, count_capable_contributions, get_data_identifiers,
+                                     is_av_manager)
 from indico_audiovisual.views import WPAudiovisualManagers
 
 
@@ -80,8 +80,7 @@ class AVRequestsPlugin(IndicoPlugin):
                         condition=lambda: request.view_args.get('type') == AVRequest.name)
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
         self.connect(signals.agreements.get_definitions, self._get_agreement_definitions)
-        self.connect(signals.event.has_read_access, self._has_read_access_event)
-        self.connect(signals.acl.can_access, self._has_read_access_event, sender=Event)
+        self.connect(signals.acl.can_access, self._can_access_event, sender=Event)
         self.connect(signals.event.type_changed, self._data_changed)
         self.connect(signals.event.updated, self._event_updated)
         self.connect(signals.event.contribution_updated, self._data_changed)
@@ -111,7 +110,7 @@ class AVRequestsPlugin(IndicoPlugin):
     def _get_agreement_definitions(self, sender, **kwargs):
         return SpeakerReleaseAgreement
 
-    def _has_read_access_event(self, sender, user, **kwargs):
+    def _can_access_event(self, sender, user, **kwargs):
         if user is not None and is_av_manager(user):
             return True
 
