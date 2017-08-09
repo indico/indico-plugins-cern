@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from flask import request
+from pytz import timezone
 from werkzeug.exceptions import Forbidden
 from wtforms import StringField
 from wtforms.fields.html5 import URLField
@@ -14,6 +15,7 @@ from indico.modules.events.registration.forms import TicketsForm
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.registration.models.registrations import RegistrationState
 from indico.modules.events.requests.views import WPRequestsEventManagement
+from indico.util.string import remove_accents, unicode_to_ascii
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import IndicoPasswordField, PrincipalListField
 
@@ -21,9 +23,10 @@ from indico_cern_access import _
 from indico_cern_access.blueprint import blueprint
 from indico_cern_access.definition import CERNAccessRequestDefinition
 from indico_cern_access.models.access_requests import CERNAccessRequestState
-from indico_cern_access.util import (create_access_request, get_event_registrations, get_requested_forms,
-                                     notify_access_withdrawn, send_adams_delete_request, send_adams_post_request,
-                                     send_tickets, update_access_requests, withdraw_access_requests)
+from indico_cern_access.util import (create_access_request, generate_access_id, get_event_registrations,
+                                     get_random_reservation_code, get_requested_forms, notify_access_withdrawn,
+                                     send_adams_delete_request, send_adams_post_request, send_tickets,
+                                     update_access_requests, withdraw_access_requests)
 
 
 class PluginSettingsForm(IndicoForm):
@@ -70,6 +73,7 @@ class CERNAccessPlugin(IndicoPlugin):
         self.connect(signals.event.is_ticketing_handled, self._is_ticketing_handled)
         self.connect(signals.form_validated, self._form_validated)
         self.connect(signals.event.designer.print_badge_template, self._print_badge_template)
+        self.connect(signals.event.registration.generate_ticket_qr_code, self._generate_ticket_qr_code)
 
 
     def get_blueprints(self):
@@ -185,3 +189,16 @@ class CERNAccessPlugin(IndicoPlugin):
                     regform.cern_access_request.request_state != CERNAccessRequestState.accepted):
                 raise Forbidden('This badge cannot be printed because it uses the CERN access ticket '
                                 'template without an accepted CERN access request')
+
+    def _generate_ticket_qr_code(self, registration, ticket_data, **kwargs):
+        event = registration.event_new
+        tz = timezone('Europe/Zurich')
+        ticket_data.update({
+            '$id': generate_access_id(registration.id),
+            '$rc': get_random_reservation_code(),
+            '$gn': event.title,
+            '$fn': unicode_to_ascii(remove_accents(registration.first_name)),
+            '$ln': unicode_to_ascii(remove_accents(registration.last_name)),
+            '$sd': event.start_dt.astimezone(tz).strftime('%Y-%m-%dT%H:%M'),
+            '$ed': event.end_dt.astimezone(tz).strftime('%Y-%m-%dT%H:%M')
+        })
