@@ -12,6 +12,7 @@ from pytz import timezone
 
 from indico.core.db import db
 from indico.core.notifications import make_email, send_email
+from indico.modules.events.registration.controllers.management.tickets import generate_ticket
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.registration.models.registrations import Registration, RegistrationState
 from indico.modules.events.requests.models.requests import RequestState
@@ -30,7 +31,7 @@ def get_requested_forms(event):
 
 
 def get_event_registrations(event, regform=None, allow_unpaid=False, only_unpaid=False, requested=False):
-    query = Registration.query.with_parent(event)
+    query = Registration.query.with_parent(event).filter(Registration.is_active)
     if regform:
         query = query.filter(Registration.registration_form_id == regform.id)
     if allow_unpaid:
@@ -115,7 +116,10 @@ def update_access_request(req):
 
         state, data = send_adams_post_request(event, registrations)
         create_access_request_regform(regform, state, allow_unpaid)
+        enable_ticketing(regform)
         add_access_requests(registrations, data, state)
+        if state == CERNAccessRequestState.accepted and regform.ticket_on_email:
+            send_tickets(registrations)
 
     # update requests
     for regform_id in set.intersection(requested_forms_ids, existing_forms_ids):
@@ -127,6 +131,8 @@ def update_access_request(req):
                 registrations = get_event_registrations(event, regform=regform, only_unpaid=True)
                 state, data = send_adams_post_request(event, registrations)
                 add_access_requests(registrations, data, state)
+                if state == CERNAccessRequestState.accepted and regform.ticket_on_email:
+                    send_tickets(registrations)
             else:
                 regform.cern_access_request.allow_unpaid = allow_unpaid
                 registrations = get_event_registrations(event, regform=regform, only_unpaid=True, requested=True)
@@ -203,8 +209,30 @@ def is_authorized_user(user):
 
 def notify_access_withdrawn(registrations):
     for registration in registrations:
-        template = get_template_module('cern_access:email.html', registration=registration)
+        template = get_template_module('cern_access:request_withdrawn_email.html', registration=registration)
         from_address = registration.registration_form.sender_address
         email = make_email(to_list=registration.email, from_address=from_address,
                            template=template, html=True)
         send_email(email, event=registration.registration_form.event_new, module='Registration', user=session.user)
+
+
+def send_tickets(registrations):
+    for registration in registrations:
+        template = get_template_module('cern_access:ticket_email.html', registration=registration)
+        from_address = registration.registration_form.sender_address
+        attachments = [{
+            'name': 'Ticket.pdf',
+            'binary': generate_ticket(registration).getvalue()
+        }]
+        email = make_email(to_list=registration.email, from_address=from_address,
+                           template=template, html=True, attachments=attachments)
+        send_email(email, event=registration.registration_form.event_new, module='Registration',
+                   user=session.user)
+
+
+def enable_ticketing(regform):
+    if not regform.tickets_enabled:
+        regform.tickets_enabled = True
+        regform.tickets_on_email = True
+        regform.ticket_on_event_page = True
+        regform.ticket_on_summary_page = True

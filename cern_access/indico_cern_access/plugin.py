@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from wtforms import PasswordField, StringField
+from wtforms import StringField
 from wtforms.fields.html5 import URLField
 from wtforms.validators import DataRequired
 
@@ -10,7 +10,7 @@ from indico.modules.events import Event
 from indico.modules.events.registration.models.registrations import RegistrationState
 from indico.modules.events.requests.views import WPRequestsEventManagement
 from indico.web.forms.base import IndicoForm
-from indico.web.forms.fields import PrincipalListField
+from indico.web.forms.fields import IndicoPasswordField, PrincipalListField
 
 from indico_cern_access import _
 from indico_cern_access.blueprint import blueprint
@@ -18,8 +18,7 @@ from indico_cern_access.definition import CERNAccessRequestDefinition
 from indico_cern_access.models.access_requests import CERNAccessRequestState
 from indico_cern_access.util import (create_access_request, get_event_registrations, get_requested_forms,
                                      notify_access_withdrawn, send_adams_delete_request, send_adams_post_request,
-                                     update_access_requests, withdraw_access_requests)
-from indico_cern_access.views import WPAccessRequestDetails
+                                     send_tickets, update_access_requests, withdraw_access_requests)
 
 
 class PluginSettingsForm(IndicoForm):
@@ -29,8 +28,8 @@ class PluginSettingsForm(IndicoForm):
                                           description=_('List of users/groups who can send requests'))
     login = StringField(_('Login'), [DataRequired()],
                         description=_('The login used to authenticate with ADaMS service'))
-    password = PasswordField(_('Password'), [DataRequired()],
-                             description=_('The password used to authenticate with ADaMS service'))
+    password = IndicoPasswordField(_('Password'), [DataRequired()],
+                                   description=_('The password used to authenticate with ADaMS service'))
     secret_key = StringField(_('Secret key'), [DataRequired()],
                              description=_('Secret key to sign requests to ADaMS API'))
 
@@ -62,6 +61,7 @@ class CERNAccessPlugin(IndicoPlugin):
         self.connect(signals.event.registration_form_deleted, self._registration_form_deleted)
         self.connect(signals.event.deleted, self._event_deleted)
         self.connect(signals.event.updated, self._event_title_changed)
+        self.connect(signals.event.is_ticketing_handled, self._is_ticketing_handled)
 
     def get_blueprints(self):
         yield blueprint
@@ -89,10 +89,14 @@ class CERNAccessPlugin(IndicoPlugin):
                 event = registration.registration_form.event_new
                 state, data = send_adams_post_request(event, [registration])
                 create_access_request(registration, state, data[registration.id]["$rc"])
+                if state == CERNAccessRequestState.accepted:
+                    send_tickets([registration])
         elif registration.state == RegistrationState.unpaid:
             if access_request_regform.allow_unpaid and not is_registration_requested:
                 state, data = send_adams_post_request(registration.event_new, [registration])
                 create_access_request(registration, state, data[registration.id]["$rc"])
+                if state == CERNAccessRequestState.accepted:
+                    send_tickets([registration])
             elif not access_request_regform.allow_unpaid and is_registration_requested:
                 send_adams_delete_request([registration])
                 registration.cern_access_request.request_state = CERNAccessRequestState.withdrawn
@@ -140,3 +144,8 @@ class CERNAccessPlugin(IndicoPlugin):
         if requested_registrations:
             state, _ = send_adams_post_request(event, requested_registrations, update=True)
             update_access_requests(requested_registrations, state)
+
+    def _is_ticketing_handled(self, regform):
+        if regform.cern_access_request and regform.cern_access_request.is_active:
+            return True
+        return False
