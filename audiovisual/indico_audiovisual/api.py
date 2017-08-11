@@ -37,7 +37,7 @@ def parse_indico_id(indico_id):
         if not event:
             return None
         return SubContribution.find(SubContribution.id == subcontrib_match.group(3), ~SubContribution.is_deleted,
-                                    SubContribution.contribution.has(event_new=event, id=subcontrib_match.group(2),
+                                    SubContribution.contribution.has(event=event, id=subcontrib_match.group(2),
                                                                      is_deleted=False)).first()
     elif session_match:
         event = Event.get(session_match.group(1), is_deleted=False)
@@ -148,11 +148,11 @@ def _serialize_obj(req, obj, alarm):
         unique_id = 'e{}'.format(obj.id)
     elif isinstance(obj, Contribution):
         url = url_for('contributions.display_contribution', obj, _external=True)
-        title = '{} - {}'.format(obj.event_new.title, obj.title)
+        title = '{} - {}'.format(obj.event.title, obj.title)
         unique_id = 'c{}'.format(obj.id)
     elif isinstance(obj, SubContribution):
         url = url_for('contributions.display_subcontribution', obj, _external=True)
-        title = '{} - {} - {}'.format(obj.event_new.title, obj.contribution.title, obj.title)
+        title = '{} - {} - {}'.format(obj.event.title, obj.contribution.title, obj.title)
         unique_id = 'sc{}'.format(obj.id)
         date_source = obj.contribution
         location_source = obj.contribution

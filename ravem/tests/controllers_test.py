@@ -22,7 +22,7 @@ def event_vc_room(vc_room=None, link_object=False, conf_id=None,
         event_vc_room.link_object = None
         return event_vc_room
 
-    event_vc_room.link_object.event_new = MagicMock(id=conf_id) if conf_id else None
+    event_vc_room.link_object.event = MagicMock(id=conf_id) if conf_id else None
 
     if rb_room or rb_room_gen_name or rb_room_name:
         event_vc_room.link_object.room = MagicMock()

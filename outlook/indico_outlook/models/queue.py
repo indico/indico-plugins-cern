@@ -52,7 +52,7 @@ class OutlookQueueEntry(db.Model):
         )
     )
     #: The Event this queue entry is associated with
-    event_new = db.relationship(
+    event = db.relationship(
         'Event',
         lazy=True,
         backref=db.backref(

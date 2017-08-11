@@ -97,7 +97,7 @@ def contribution_by_id(event, contrib_or_subcontrib_id):
         return Contribution.query.with_parent(event).filter_by(id=id_).first()
     elif type_ == 'sc':
         return SubContribution.find(SubContribution.id == id_, ~SubContribution.is_deleted,
-                                    SubContribution.contribution.has(event_new=event, is_deleted=False)).first()
+                                    SubContribution.contribution.has(event=event, is_deleted=False)).first()
     else:
         raise ValueError('Invalid id type: ' + type_)
 
@@ -107,9 +107,9 @@ def get_selected_contributions(req):
 
     :return: list of ``(contribution, capable, custom_room)`` tuples
     """
-    if req.event_new.type == 'lecture':
+    if req.event.type == 'lecture':
         return []
-    contributions = get_contributions(req.event_new)
+    contributions = get_contributions(req.event)
     if req.data.get('all_contributions', True):
         # "all contributions" includes only those in capable rooms
         contributions = [x for x in contributions if x[1]]
@@ -149,7 +149,7 @@ def count_capable_contributions(event):
 def event_has_empty_sessions(event):
     """Checks if the event has any sessions with no contributions"""
     return (SessionBlock.query
-            .filter(SessionBlock.session.has(event_new=event),
+            .filter(SessionBlock.session.has(event=event),
                     ~SessionBlock.contributions.any())
             .has_rows())
 
@@ -182,7 +182,7 @@ def get_data_identifiers(req):
 
     :return: a dict containing `dates` and `locations`
     """
-    event = req.event_new
+    event = req.event
     location_identifiers = {}
     date_identifiers = {}
     for obj in [event] + [x[0] for x in get_selected_contributions(req)]:
@@ -241,9 +241,9 @@ def find_requests(talks=False, from_dt=None, to_dt=None, services=None, states=N
 
     # We only want the latest one for each event
     query = limit_groups(query, Request, Request.event_id, Request.created_dt.desc(), 1)
-    query = query.options(joinedload('event_new'))
+    query = query.options(joinedload('event'))
     for req in query:
-        event = req.event_new
+        event = req.event
         # Skip requests which do not have the requested services or are outside the date range
         if services and not (set(req.data['services']) & services):
             continue

@@ -119,10 +119,10 @@ class AVRequestsPlugin(IndicoPlugin):
             self._register_event_change(event)
 
     def _data_changed(self, sender, **kwargs):
-        self._register_event_change(sender.event_new)
+        self._register_event_change(sender.event)
 
     def _times_changed(self, sender, obj, **kwargs):
-        self._register_event_change(obj.event_new)
+        self._register_event_change(obj.event)
 
     def _register_event_change(self, event):
         req = Request.find_latest_for_event(event, AVRequest.name)
@@ -141,7 +141,7 @@ class AVRequestsPlugin(IndicoPlugin):
                 notify_rescheduled_request(req)
 
             if not compare_data_identifiers(identifiers['locations'], req.data['identifiers']['locations']):
-                if (not count_capable_contributions(req.event_new)[0] and
+                if (not count_capable_contributions(req.event)[0] and
                         req.state in {RequestState.accepted, RequestState.pending} and
                         not is_av_manager(req.created_by_user)):
                     janitor = User.get_system_user()

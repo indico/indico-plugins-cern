@@ -129,7 +129,7 @@ class TalkPlaceholder(Placeholder):
 
     @classmethod
     def render(cls, definition, agreement):
-        return _talk_info_from_agreement_data(agreement.event_new, agreement.data)[2]
+        return _talk_info_from_agreement_data(agreement.event, agreement.data)[2]
 
 
 class SpeakerReleaseAgreement(AgreementDefinitionBase):
@@ -163,7 +163,7 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
 
     @classmethod
     def render_form(cls, agreement, form, **kwargs):
-        event = agreement.event_new
+        event = agreement.event
         contrib = None
         is_subcontrib = False
         if agreement.data['type'] == 'contribution':
@@ -202,7 +202,9 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
         else:
             contribs = [x[0] for x in get_selected_contributions(req)]
             for contrib in contribs:
+                print contrib, contrib.person_links
                 for link in contrib.person_links:
+                    print link, link.is_speaker
                     if not link.is_speaker:
                         continue
                     yield SpeakerPersonInfo(link.full_name, link.email or None,

@@ -2,8 +2,8 @@
     <a href="#" class="i-button js-ravem-button{% if small %} i-button-small{% endif %}"
        data-room-name="{{ room_name }}"
        data-vc-room-name="{{ event_vc_room.vc_room.name }}"
-       data-status-url="{{ url_for_plugin('ravem.room_status', event_vc_room.event_new, event_vc_room_id=event_vc_room.id) }}"
-       data-connect-url="{{ url_for_plugin('ravem.connect_room', event_vc_room.event_new, event_vc_room_id=event_vc_room.id) }}"
-       data-disconnect-url="{{ url_for_plugin('ravem.disconnect_room', event_vc_room.event_new, event_vc_room_id=event_vc_room.id) }}">
+       data-status-url="{{ url_for_plugin('ravem.room_status', event_vc_room.event, event_vc_room_id=event_vc_room.id) }}"
+       data-connect-url="{{ url_for_plugin('ravem.connect_room', event_vc_room.event, event_vc_room_id=event_vc_room.id) }}"
+       data-disconnect-url="{{ url_for_plugin('ravem.disconnect_room', event_vc_room.event, event_vc_room_id=event_vc_room.id) }}">
     </a>
 {%- endmacro %}

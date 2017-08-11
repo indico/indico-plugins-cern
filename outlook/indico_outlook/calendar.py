@@ -33,7 +33,7 @@ def update_calendar():
 
     settings = OutlookPlugin.settings.get_all()
     query = (OutlookQueueEntry
-             .find(_eager=OutlookQueueEntry.event_new)
+             .find(_eager=OutlookQueueEntry.event)
              .order_by(OutlookQueueEntry.user_id, OutlookQueueEntry.id))
     entries = MultiDict(((entry.user_id, entry.event_id), entry) for entry in query)
     delete_ids = set()
@@ -41,7 +41,7 @@ def update_calendar():
         for (user_id, event_id), entry_list in entries.iterlists():
             entry_ids = {x.id for x in entry_list}
             for entry in latest_actions_only(entry_list):
-                if is_event_excluded(entry.event_new):
+                if is_event_excluded(entry.event):
                     continue
                 if not _update_calendar_entry(entry, settings):
                     entry_ids.remove(entry.id)
@@ -74,7 +74,7 @@ def _update_calendar_entry(entry, settings):
 
     unique_id = '{}{}_{}'.format(settings['id_prefix'], user.id, entry.event_id)
     if entry.action in {OutlookAction.add, OutlookAction.update}:
-        event = entry.event_new
+        event = entry.event
         if event.is_deleted:
             logger.debug('Ignoring %s for deleted event %s', entry.action.name, entry.event_id)
             return True

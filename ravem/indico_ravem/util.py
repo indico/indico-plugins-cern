@@ -102,7 +102,7 @@ def has_access(event_vc_room, _split_re=re.compile(r'[\s,;]+')):
 
     room = link_object.room
     vc_room = event_vc_room.vc_room
-    event = event_vc_room.event_new
+    event = event_vc_room.event
     current_user = session.user
 
     # No physical room or room is not Vidyo capable
