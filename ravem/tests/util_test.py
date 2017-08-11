@@ -257,13 +257,14 @@ def test_room_not_vidyo_capable_has_no_access(mocker):
 def test_check_if_current_user_is_room_owner(mocker):
     session = mocker.patch('indico_ravem.util.session')
     session.user = 'Guinea Pig'
-
-    mocker.patch('indico_ravem.util.request')
+    request = mocker.patch('indico_ravem.util.request')
+    request.remote_addr = '111.222.123.123'
     retrieve_principal = mocker.patch('indico_ravem.util.retrieve_principal')
     retrieve_principal.side_effect = lambda x, **kw: x
 
     event_vc_room = MagicMock()
     event_vc_room.link_object.room.has_equipment = MagicMock(return_value=True)
+    event_vc_room.link_object.room.get_attribute_value.return_value = request.remote_addr
     event_vc_room.vc_room.data.get.return_value = session.user
     event_vc_room.event_new.can_manage.return_value = False
 
@@ -276,14 +277,16 @@ def test_check_if_current_user_is_room_owner(mocker):
 
 @pytest.mark.usefixtures('db')
 def test_check_if_current_user_can_modify(mocker):
+    request = mocker.patch('indico_ravem.util.request')
+    request.remote_addr = '111.222.123.123'
     session = mocker.patch('indico_ravem.util.session')
     session.user = 'Guinea Pig'
-    mocker.patch('indico_ravem.util.request')
     mocker.patch('indico_ravem.util.retrieve_principal')
 
     event_vc_room = MagicMock()
     event_vc_room.link_object.room.has_equipment = MagicMock(return_value=True)
     event_vc_room.event_new.can_manage.return_value = True
+    event_vc_room.link_object.room.get_attribute_value.return_value = request.remote_addr
 
     assert has_access(event_vc_room)
 
@@ -293,11 +296,9 @@ def test_check_if_current_user_can_modify(mocker):
 @pytest.mark.usefixtures('db')
 def test_check_if_request_from_room(mocker):
     mocker.patch('indico_ravem.util.session')
-
+    mocker.patch('indico_ravem.util.retrieve_principal')
     request = mocker.patch('indico_ravem.util.request')
     request.remote_addr = '111.222.123.123'
-
-    mocker.patch('indico_ravem.util.retrieve_principal')
 
     event_vc_room = MagicMock()
     event_vc_room.link_object.room.has_equipment = MagicMock(return_value=True)
@@ -306,17 +307,19 @@ def test_check_if_request_from_room(mocker):
 
     assert has_access(event_vc_room)
 
-    event_vc_room.link_object.room.get_attribute_value.assert_called_once_with('ip')
+    event_vc_room.link_object.room.get_attribute_value.assert_called_once_with('ip', '')
 
 
 @pytest.mark.usefixtures('db')
 def test_check_basic_user_outside_room(mocker):
     mocker.patch('indico_ravem.util.session')
-    mocker.patch('indico_ravem.util.request')
     mocker.patch('indico_ravem.util.retrieve_principal')
+    request = mocker.patch('indico_ravem.util.request')
+    request.remote_addr = '111.222.123.123'
 
     event_vc_room = MagicMock()
     event_vc_room.link_object.room.has_equipment = MagicMock(return_value=True)
     event_vc_room.event_new.can_manage.return_value = True
+    event_vc_room.link_object.room.get_attribute_value.return_value = request.remote_addr
 
     assert has_access(event_vc_room)
