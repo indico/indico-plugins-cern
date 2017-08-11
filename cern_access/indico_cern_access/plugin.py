@@ -4,11 +4,14 @@ from flask import request
 from pytz import timezone
 from werkzeug.exceptions import Forbidden
 from wtforms import StringField
+from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from wtforms.fields.html5 import URLField
 from wtforms.validators import DataRequired
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
+from indico.core.settings.converters import SettingConverter
+from indico.modules.designer import TemplateType
 from indico.modules.designer.models.templates import DesignerTemplate
 from indico.modules.events import Event
 from indico.modules.events.registration.forms import TicketsForm
@@ -40,6 +43,27 @@ class PluginSettingsForm(IndicoForm):
                                    description=_('The password used to authenticate with ADaMS service'))
     secret_key = StringField(_('Secret key'), [DataRequired()],
                              description=_('Secret key to sign requests to ADaMS API'))
+    access_ticket_template_id = QuerySelectField(_("Access ticket template"), allow_blank=True,
+                                                 blank_text=_("No access ticket selected"), get_label='title',
+                                                 description=_("Ticket template allowing access to CERN"))
+
+    def __init__(self, *args, **kwargs):
+        super(PluginSettingsForm, self).__init__(*args, **kwargs)
+        self.access_ticket_template_id.query = (DesignerTemplate.query
+                                                .filter(DesignerTemplate.category_id == 0,
+                                                        DesignerTemplate.type == TemplateType.badge))
+
+
+class DesignerTemplateConverter(SettingConverter):
+    """Convert a DesignerTemplate object to ID and backwards."""
+
+    @staticmethod
+    def from_python(value):
+        return value.id
+
+    @staticmethod
+    def to_python(value):
+        return DesignerTemplate.get(value)
 
 
 class CERNAccessPlugin(IndicoPlugin):
@@ -55,7 +79,10 @@ class CERNAccessPlugin(IndicoPlugin):
                         'login': 'indicoprod',
                         'password': '',
                         'secret_key': '',
-                        'access_ticket_template_id': '4391'}
+                        'access_ticket_template_id': None}
+    settings_converters = {
+        'access_ticket_template_id': DesignerTemplateConverter
+    }
     acl_settings = {'authorized_users'}
 
     def init(self):
@@ -167,12 +194,14 @@ class CERNAccessPlugin(IndicoPlugin):
         if not isinstance(form, TicketsForm):
             return
         regform = RegistrationForm.get_one(request.view_args['reg_form_id'])
-        access_tpl = DesignerTemplate.get_one(self.settings.get('access_ticket_template_id'))
-        ticket_template = DesignerTemplate.get_one(form.ticket_template_id.data)
         if regform.cern_access_request and regform.cern_access_request.is_active and form.tickets_enabled.data is False:
             error = 'Access to CERN is requested for participants registered with this form, ticketing must be enabled'
             form.tickets_enabled.errors.append(error)
             return False
+        access_tpl = self.settings.get('access_ticket_template_id')
+        ticket_template = DesignerTemplate.get_one(form.ticket_template_id.data)
+        if not access_tpl:
+            return
         if ticket_template == access_tpl or ticket_template.backside_template == access_tpl:
             if (not regform.cern_access_request or regform.cern_access_request and
                     regform.cern_access_request.request_state != CERNAccessRequestState.accepted):
@@ -181,7 +210,9 @@ class CERNAccessPlugin(IndicoPlugin):
                 return False
 
     def _print_badge_template(self, template, **kwargs):
-        access_tpl = DesignerTemplate.get_one(self.settings.get('access_ticket_template_id'))
+        access_tpl = self.settings.get('access_ticket_template_id')
+        if not access_tpl:
+            return
         regform = kwargs.get('regform')
         if template == access_tpl or template.backside_template == access_tpl:
             if (not regform.cern_access_request or
