@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from flask import flash, request
 from wtforms import StringField
 from wtforms.fields.html5 import URLField
 from wtforms.validators import DataRequired
@@ -7,6 +8,8 @@ from wtforms.validators import DataRequired
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
 from indico.modules.events import Event
+from indico.modules.events.registration.forms import TicketsForm
+from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.registration.models.registrations import RegistrationState
 from indico.modules.events.requests.views import WPRequestsEventManagement
 from indico.web.forms.base import IndicoForm
@@ -62,6 +65,7 @@ class CERNAccessPlugin(IndicoPlugin):
         self.connect(signals.event.deleted, self._event_deleted)
         self.connect(signals.event.updated, self._event_title_changed)
         self.connect(signals.event.is_ticketing_handled, self._is_ticketing_handled)
+        self.connect(signals.form_validated, self._form_validated)
 
     def get_blueprints(self):
         yield blueprint
@@ -149,3 +153,12 @@ class CERNAccessPlugin(IndicoPlugin):
         if regform.cern_access_request and regform.cern_access_request.is_active:
             return True
         return False
+
+    def _form_validated(self, form, **kwargs):
+        if not isinstance(form, TicketsForm):
+            return
+        regform = RegistrationForm.get_one(request.view_args['reg_form_id'])
+        if regform.cern_access_request and regform.cern_access_request.is_active and form.tickets_enabled.data is False:
+            error = 'Access to CERN is requested for participants registered with this form, ticketing must be enabled'
+            form.tickets_enabled.errors.append(error)
+            return False
