@@ -15,6 +15,7 @@ from indico_cern_access.util import add_access_requests, build_access_request_da
 
 @celery.periodic_task(run_every=crontab(minute=0, hour='*/1'), plugin='cern_access')
 def resend_failed_access_requests():
+    """Runs every hour and resends requests to ADaMS for every requested registration that didn't obtain access"""
     registrations = (Registration.query
                      .join(CERNAccessRequest)
                      .filter(Registration.cern_access_request,
