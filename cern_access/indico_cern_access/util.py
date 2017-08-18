@@ -11,11 +11,13 @@ from flask import session
 from pytz import timezone
 
 from indico.core.db import db
+from indico.core.errors import IndicoError
 from indico.core.notifications import make_email, send_email
 from indico.modules.designer.models.templates import DesignerTemplate
 from indico.modules.events.registration.controllers.management.tickets import generate_ticket
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.registration.models.registrations import Registration, RegistrationState
+from indico.modules.events.requests.exceptions import RequestModuleError
 from indico.modules.events.requests.models.requests import RequestState
 from indico.util.string import remove_accents, unicode_to_ascii
 from indico.web.flask.templating import get_template_module
@@ -131,13 +133,15 @@ def update_access_request(req):
         allow_unpaid = allow_unpaid_info[regform_id]
         regform = event_regforms[regform_id]
         registrations = get_event_registrations(event, regform=regform, allow_unpaid=allow_unpaid)
-
         state, data = send_adams_post_request(event, registrations)
-        create_access_request_regform(regform, state, allow_unpaid)
-        enable_ticketing(regform)
-        add_access_requests(registrations, data, state)
-        if state == CERNAccessRequestState.accepted and regform.ticket_on_email:
-            send_tickets(registrations)
+        if state == CERNAccessRequestState.accepted:
+            create_access_request_regform(regform, state, allow_unpaid)
+            enable_ticketing(regform)
+            add_access_requests(registrations, data, state)
+            if regform.ticket_on_email:
+                send_tickets(registrations)
+        else:
+            raise RequestModuleError()
 
     # update requests
     for regform_id in set.intersection(requested_forms_ids, existing_forms_ids):
@@ -145,19 +149,24 @@ def update_access_request(req):
         regform = event_regforms[regform_id]
         if allow_unpaid != regform.cern_access_request.allow_unpaid:
             if allow_unpaid is True:
-                regform.cern_access_request.allow_unpaid = allow_unpaid
                 registrations = get_event_registrations(event, regform=regform, only_unpaid=True)
                 state, data = send_adams_post_request(event, registrations)
-                add_access_requests(registrations, data, state)
-                if state == CERNAccessRequestState.accepted and regform.ticket_on_email:
-                    send_tickets(registrations)
+                if state == CERNAccessRequestState.accepted:
+                    regform.cern_access_request.allow_unpaid = allow_unpaid
+                    add_access_requests(registrations, data, state)
+                    if regform.ticket_on_email:
+                        send_tickets(registrations)
+                else:
+                    raise RequestModuleError()
             else:
-                regform.cern_access_request.allow_unpaid = allow_unpaid
                 registrations = get_event_registrations(event, regform=regform, only_unpaid=True, requested=True)
                 deleted = send_adams_delete_request(registrations)
                 if deleted:
+                    regform.cern_access_request.allow_unpaid = allow_unpaid
                     withdraw_access_requests(registrations)
                     notify_access_withdrawn(registrations)
+                else:
+                    raise RequestModuleError()
 
     # delete requests
     for regform_id in existing_forms_ids - requested_forms_ids:
@@ -168,8 +177,8 @@ def update_access_request(req):
             regform.cern_access_request.request_state = CERNAccessRequestState.withdrawn
             withdraw_access_requests(registrations)
             notify_access_withdrawn(registrations)
-
-    return RequestState.accepted
+        else:
+            raise RequestModuleError()
 
 
 def add_access_requests(registrations, data, state):
@@ -204,6 +213,8 @@ def withdraw_event_access_request(req):
                 regform.ticket_template = None
         withdraw_access_requests(requested_registrations)
         notify_access_withdrawn(requested_registrations)
+    else:
+        raise RequestModuleError()
 
 
 def get_random_reservation_code():

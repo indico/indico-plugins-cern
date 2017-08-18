@@ -130,13 +130,13 @@ class CERNAccessPlugin(IndicoPlugin):
                 event = registration.registration_form.event_new
                 state, data = send_adams_post_request(event, [registration])
                 create_access_request(registration, state, data[registration.id]["$rc"])
-                if state == CERNAccessRequestState.accepted:
+                if state == CERNAccessRequestState.accepted and registration.registration_form.ticket_on_email:
                     send_tickets([registration])
         elif registration.state == RegistrationState.unpaid:
             if access_request_regform.allow_unpaid and not is_registration_requested:
                 state, data = send_adams_post_request(registration.event_new, [registration])
                 create_access_request(registration, state, data[registration.id]["$rc"])
-                if state == CERNAccessRequestState.accepted:
+                if state == CERNAccessRequestState.accepted and registration.registration_form.ticket_on_email:
                     send_tickets([registration])
             elif not access_request_regform.allow_unpaid and is_registration_requested:
                 send_adams_delete_request([registration])
@@ -150,7 +150,8 @@ class CERNAccessPlugin(IndicoPlugin):
         registrations = get_event_registrations(event=obj, requested=True)
         if registrations:
             state, _ = send_adams_post_request(obj, registrations, update=True)
-            update_access_requests(registrations, state)
+            if state == CERNAccessRequestState.accepted:
+                update_access_requests(registrations, state)
 
     def _registration_form_deleted(self, registration_form):
         """Withdraws CERN access request for deleted registration form and corresponding registrations"""
@@ -180,7 +181,8 @@ class CERNAccessPlugin(IndicoPlugin):
         """If name of registration changed, updates the ADaMS CERN access request"""
         if registration.cern_access_request and ('first_name' in change.keys() or 'last_name' in change.keys()):
             state, _ = send_adams_post_request(registration.event_new, [registration], update=True)
-            registration.cern_access_request.request_state = state
+            if state == CERNAccessRequestState.accepted:
+                registration.cern_access_request.request_state = state
 
     def _event_title_changed(self, event, changes, **kwargs):
         """Updates event name in the ADaMS CERN access request"""
@@ -189,7 +191,8 @@ class CERNAccessPlugin(IndicoPlugin):
         requested_registrations = get_event_registrations(event=event, requested=True)
         if requested_registrations:
             state, _ = send_adams_post_request(event, requested_registrations, update=True)
-            update_access_requests(requested_registrations, state)
+            if state == CERNAccessRequestState.accepted:
+                update_access_requests(requested_registrations, state)
 
     def _is_ticketing_handled(self, regform):
         """Checks if a registration form has requested access to CERN, if so the plugin will handle tickets mailing """
@@ -199,7 +202,7 @@ class CERNAccessPlugin(IndicoPlugin):
 
     def _form_validated(self, form, **kwargs):
         """Forbids to disable the tickets when access to CERN is requested and
-         to use CERN access ticket template with regforms with not accepted CERN access request
+         to use CERN access ticket template with regforms without accepted CERN access request
         """
         if not isinstance(form, TicketsForm):
             return
