@@ -206,7 +206,7 @@ def withdraw_event_access_request(req):
     requested_registrations = get_event_registrations(req.event_new, requested=True)
     deleted = send_adams_delete_request(requested_registrations)
     if deleted:
-        access_tpl = DesignerTemplate.get_one(CERNAccessPlugin.settings.get('access_ticket_template_id'))
+        access_tpl = CERNAccessPlugin.settings.get('access_ticket_template_id')
         for regform in requested_forms:
             regform.cern_access_request.request_state = CERNAccessRequestState.withdrawn
             if regform.ticket_template == access_tpl:
