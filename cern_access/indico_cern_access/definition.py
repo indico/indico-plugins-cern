@@ -13,7 +13,7 @@ from indico_cern_access.util import is_authorized_user, update_access_request, w
 
 class CERNAccessRequestDefinition(RequestDefinitionBase):
     name = 'cern_access'
-    title = _('CERN access')
+    title = _('Access to CERN site')
     form = CERNAccessForm
 
     @classmethod
