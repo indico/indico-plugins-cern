@@ -11,14 +11,11 @@ from flask import session
 from pytz import timezone
 
 from indico.core.db import db
-from indico.core.errors import IndicoError
 from indico.core.notifications import make_email, send_email
-from indico.modules.designer.models.templates import DesignerTemplate
 from indico.modules.events.registration.controllers.management.tickets import generate_ticket
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.registration.models.registrations import Registration, RegistrationState
 from indico.modules.events.requests.exceptions import RequestModuleError
-from indico.modules.events.requests.models.requests import RequestState
 from indico.util.string import remove_accents, unicode_to_ascii
 from indico.web.flask.templating import get_template_module
 
@@ -175,10 +172,18 @@ def update_access_request(req):
         deleted = send_adams_delete_request(registrations)
         if deleted:
             regform.cern_access_request.request_state = CERNAccessRequestState.withdrawn
+            check_if_access_template_used(regform)
             withdraw_access_requests(registrations)
             notify_access_withdrawn(registrations)
         else:
             raise RequestModuleError()
+
+
+def check_if_access_template_used(regform):
+    from indico_cern_access.plugin import CERNAccessPlugin
+    access_tpl = CERNAccessPlugin.settings.get('access_ticket_template_id')
+    if regform.ticket_template == access_tpl:
+        regform.ticket_template = None
 
 
 def add_access_requests(registrations, data, state):
@@ -201,16 +206,13 @@ def withdraw_access_requests(registrations):
 
 def withdraw_event_access_request(req):
     """Withdraws all CERN access requests of an event"""
-    from indico_cern_access.plugin import CERNAccessPlugin
     requested_forms = get_requested_forms(req.event_new)
     requested_registrations = get_event_registrations(req.event_new, requested=True)
     deleted = send_adams_delete_request(requested_registrations)
     if deleted:
-        access_tpl = CERNAccessPlugin.settings.get('access_ticket_template_id')
         for regform in requested_forms:
             regform.cern_access_request.request_state = CERNAccessRequestState.withdrawn
-            if regform.ticket_template == access_tpl:
-                regform.ticket_template = None
+            check_if_access_template_used(regform)
         withdraw_access_requests(requested_registrations)
         notify_access_withdrawn(requested_registrations)
     else:
@@ -234,6 +236,10 @@ def create_access_request(registration, state, reservation_code):
 
 def create_access_request_regform(regform, state, allow_unpaid):
     """Creates CERN access request object for registration form"""
+    from indico_cern_access.plugin import CERNAccessPlugin
+    access_tpl = CERNAccessPlugin.settings.get('access_ticket_template_id')
+    if state == CERNAccessRequestState.accepted and access_tpl:
+        regform.ticket_template = access_tpl
     if regform.cern_access_request:
         regform.cern_access_request.request_state = state
         regform.cern_access_request.allow_unpaid = allow_unpaid
