@@ -240,7 +240,7 @@ class CERNAccessPlugin(IndicoPlugin):
         ticket_data.update({
             '$id': generate_access_id(registration.id),
             '$rc': get_random_reservation_code(),
-            '$gn': event.title,
+            '$gn': unicode_to_ascii(remove_accents(event.title)),
             '$fn': unicode_to_ascii(remove_accents(registration.first_name)),
             '$ln': unicode_to_ascii(remove_accents(registration.last_name)),
             '$sd': event.start_dt.astimezone(tz).strftime('%Y-%m-%dT%H:%M'),
