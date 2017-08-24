@@ -1,35 +1,32 @@
 {% extends 'events/requests/event_request_details.html' %}
 {% from 'message_box.html' import message_box %}
-{% block description %}
-    {% if can_send_request %}
-        <div class="warning-message-box">
-	        <div class="message-box-content">
-		        <span class="icon"></span>
-		        <div class="message-text">
-                    {% trans -%}
-                    By sending this request you are giving event participants access to CERN.
-                    Please note that after the request is accepted they will be able to enter CERN
-                    by presenting a valid ticket.</br>
-                    <b>Before sending the request please make sure that the event is in its final form.</b>
-                    Event participants will receive a ticket to access CERN site
-                    just after the request is accepted and their registration is complete.
-                    If you change:
-                    <ul><b>
-                        <li>starting or ending time of the event</li>
-                        <li>title of the event</li>
-                        <li>registration details of participants</li>
-                    </b></ul>
-                    the updated ticket won't be sent automatically.
-                    However the old ticket will be still valid.
-                    {%- endtrans %}
-                </div>
-	        </div>
-        </div>
-    {% endif %}
-{% endblock %}
-
 {% block content %}
     {% if can_send_request %}
+        {% if can_send_request %}
+            <div class="warning-message-box">
+                <div class="message-box-content">
+                    <span class="icon"></span>
+                    <div class="message-text">
+                        {% trans -%}
+                            By sending this request you are giving event participants access to CERN.
+                            Please note that after the request is accepted they will be able to enter CERN
+                            by presenting a valid ticket.</br>
+                            <b>Before sending the request please make sure that the event is in its final form.</b>
+                            Event participants will receive a ticket to access CERN site
+                            just after the request is accepted and their registration is complete.
+                            If you change:
+                            <ul><b>
+                                <li>starting or ending time of the event</li>
+                                <li>title of the event</li>
+                                <li>registration details of participants</li>
+                            </b></ul>
+                            the updated ticket won't be sent automatically.
+                            However the old ticket will be still valid.
+                        {%- endtrans %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
         {{ super() }}
     {% else %}
         {% call message_box('warning') %}

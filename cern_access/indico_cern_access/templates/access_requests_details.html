@@ -1,16 +1,33 @@
-{% set registrations = regform.active_registrations | rejectattr('cern_access_request.request_state', 'equalto', state.withdrawn) | list | sort(attribute='id') %}
-{% set rejected_count = registrations | rejectattr('cern_access_request.request_state', 'equalto', state.accepted) | list | length %}
+{% set registrations = regform.active_registrations | list | sort(attribute='id') %}
 <div id='accesses-list'>
     <div class="title">
         <div class="text">
             <h2>{% trans %}CERN access requests state for{% endtrans %} {{ regform.title }}</h2>
         </div>
     </div>
+    {% if error_count %}
+        <div class="danger-message-box">
+            <div class="message-box-content">
+                <span class="icon"></span>
+                <div class="message-text">
+                    {% trans %}There are participants without granted access to CERN site due to an error. Check again later or contact support{% endtrans %}
+                </div>
+            </div>
+        </div>
+    {% elif warning_count %}
+        <div class="warning-message-box">
+            <div class="message-box-content">
+                <span class="icon"></span>
+                <div class="message-text">
+                    {% trans %}There are participants without granted access to CERN site because their registration process is not compete (e.g. not approved, awaiting payment){% endtrans %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
     {% if registrations %}
         <table class="i-table-widget">
             <tbody>
                 {% for registration in registrations %}
-                {% set request_state = registration.cern_access_request.request_state %}
                     <tr id="registration-{{ registration.id }}">
                         <td class="i-table">
                             #{{ registration.friendly_id }}
@@ -19,14 +36,36 @@
                             {{- registration.display_full_name -}}
                         </td>
                         <td class="i-table">
-                            {% if request_state == state.accepted %}
-                                <span class="i-label accept right" >
-                                    {% trans %}access granted{% endtrans %}
-                                </span>
+                            {% if registration.cern_access_request and registration.cern_access_request.is_active %}
+                                {% if registration.cern_access_request.request_state == access_state.accepted %}
+                                    <span class="i-label accept right" >
+                                        {% trans %}access granted{% endtrans %}
+                                    </span>
+                                {% else %}
+                                     <span class="i-label danger right" >
+                                        {% trans %}error{% endtrans %}
+                                     </span>
+                                {% endif %}
                             {% else %}
-                                <span class="i-label danger right">
-                                    {% trans %}no access{% endtrans %}
-                                </span>
+                                {% if registration.state == registration_state.complete %}
+                                     <span class="i-label danger right">
+                                        {% trans %}error{% endtrans %}
+                                     </span>
+                                {% elif registration.state == registration_state.unpaid %}
+                                    {% if regform.allow_unpaid %}
+                                        <span class="i-label danger right">
+                                            {% trans %}error{% endtrans %}
+                                        </span>
+                                    {% else %}
+                                        <span class="i-label warning right">
+                                            {% trans %}awaiting payment{% endtrans %}
+                                        </span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="i-label highlight right">
+                                        {% trans %}registration pending{% endtrans %}
+                                    </span>
+                                {% endif %}
                             {% endif %}
                         </td>
                     </tr>
@@ -42,14 +81,5 @@
         </div>
     {% endif %}
 </div>
-{% if rejected_count %}
-    <div class="danger-message-box">
-        <div class="message-box-content">
-            <span class="icon"></span>
-            <div class="message-text">
-                {% trans %}There are participants without granted access to CERN. Check again later or contact support{% endtrans %}
-            </div>
-        </div>
-    </div>
-{% endif %}
+
 

@@ -6,15 +6,18 @@
         {% if field.event_regforms %}
             <table id="regforms-list" class="i-table-widget">
                 <thead>
-                <tr>
-                    <th>{% trans %}Registration form {% endtrans %}</th>
-                    <th>{% trans %}Allow unpaid{% endtrans %}</th>
-                    <th>{% trans %}Include{% endtrans %}</th>
-                    {% if requested_regforms_count %}
-                        <th>{% trans %}Status{% endtrans %}</th>
-                        <th></th>
-                    {% endif %}
-                </tr>
+                    <tr>
+                        <th>{% trans %}Registration form {% endtrans %}</th>
+                        <th>
+                            {% trans %}Allow unpaid{% endtrans %}
+                            <span class="icon-info" title="Check if you want to give access to participants that didn't pay yet (applies to registration forms with payment enabled)"></span>
+                        </th>
+                        <th>{% trans %}Include{% endtrans %}</th>
+                        {% if requested_regforms_count %}
+                            <th>{% trans %}Status{% endtrans %}</th>
+                            <th></th>
+                        {% endif %}
+                    </tr>
                 </thead>
                 <tbody>
                 {% for regform in field.event_regforms %}
@@ -31,21 +34,26 @@
                                 <input type="checkbox" title="This registration form doesn't require payment" disabled><br>
                             {% endif %}
                         </td>
-                        <td><label class="switch">
-                            <input type="checkbox" class="switch-input" id="{{ regform.id }}" name="{{ regform.title }}"
-                                   value="{{ regform.id }}"
-                                   {% if is_requested %} checked {% endif %}>
-                            <span class="switch-label" data-on="Yes" data-off="No"></span>
-                            <span class="switch-handle"></span>
-                        </label></td>
+                        <td>
+                            <label class="switch">
+                                <input type="checkbox" class="switch-input" id="{{ regform.id }}" name="{{ regform.title }}"
+                                       value="{{ regform.id }}"
+                                       {% if is_requested %} checked {% endif %}>
+                                <span class="switch-label" data-on="Yes" data-off="No"></span>
+                                <span class="switch-handle"></span>
+                            </label>
+                        </td>
                         {% if requested_regforms_count %}
                             <td>
                                 {% if is_requested %}
-                                    {% set rejected_registrations = regform.active_registrations|rejectattr('cern_access_request.request_state', 'equalto', field.state.accepted) | rejectattr('cern_access_request.request_state', 'equalto', field.state.withdrawn) | list | length %}
-                                    {% if rejected_registrations %}
-                                        <button class="i-button borderless text-color icon-warning danger"></button>
+                                    {% if field.error_count.get(regform.id) %}
+                                        <label class="i-label borderless icon-warning danger"
+                                               title="There are participants without granted access to CERN site due to an error. Check again later or contact support "></label>
+                                    {% elif field.warning_count.get(regform.id) %}
+                                         <label class="i-label borderless icon-warning warning"
+                                                title="There are participants without granted access to CERN site because their registration process is not compete (e.g. not approved, awaiting payment)"></label>
                                     {% else %}
-                                        <button class="i-button borderless text-color icon-checkmark accept"></button>
+                                        <label class="i-label borderless icon-checkmark accept"></label>
                                     {% endif %}
                                 {% endif %}
                             </td>

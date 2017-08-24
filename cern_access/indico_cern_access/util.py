@@ -280,3 +280,28 @@ def enable_ticketing(regform):
         regform.tickets_on_email = True
         regform.ticket_on_event_page = True
         regform.ticket_on_summary_page = True
+
+
+def get_error_count(regform):
+    """Returns the number of registrations that failed to get the access to CERN"""
+    return len([r for r in regform.active_registrations if
+                ((r.cern_access_request
+                  and r.cern_access_request.is_active
+                  and r.cern_access_request.request_state != CERNAccessRequestState.accepted)
+                 or (regform.cern_access_request.allow_unpaid
+                     and (not r.cern_access_request or r.cern_access_request and not r.cern_access_request.is_active)
+                     and r.state in (RegistrationState.complete, RegistrationState.unpaid))
+                 or (not regform.cern_access_request.allow_unpaid
+                     and (not r.cern_access_request or r.cern_access_request and not r.cern_access_request.is_active)
+                     and r.state == RegistrationState.complete))])
+
+
+def get_warning_count(regform):
+    """Returns the number of registrations that don't have the access to CERN (e.g. not accepted, awaiting payment)"""
+    return len([r for r in regform.active_registrations if
+                ((regform.cern_access_request.allow_unpaid
+                  and (not r.cern_access_request or r.cern_access_request and not r.cern_access_request.is_active)
+                  and r.state not in (RegistrationState.complete, RegistrationState.unpaid))
+                 or (not regform.cern_access_request.allow_unpaid
+                     and (not r.cern_access_request or r.cern_access_request and not r.cern_access_request.is_active)
+                     and r.state != RegistrationState.complete))])

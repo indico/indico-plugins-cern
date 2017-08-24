@@ -5,12 +5,14 @@ from operator import attrgetter
 from wtforms.validators import DataRequired
 
 from indico.modules.events.registration.models.forms import RegistrationForm
+from indico.modules.events.registration.models.registrations import RegistrationState
 from indico.modules.events.requests import RequestFormBase
 from indico.web.forms.fields import JSONField
 from indico.web.forms.widgets import JinjaWidget
 
 from indico_cern_access import _
 from indico_cern_access.models.access_requests import CERNAccessRequestState
+from indico_cern_access.util import get_error_count, get_warning_count
 
 
 class CERNAccessField(JSONField):
@@ -25,8 +27,12 @@ class CERNAccessField(JSONField):
                 .all())
 
     @property
-    def state(self):
-        return CERNAccessRequestState
+    def error_count(self):
+        return {regform.id: get_error_count(regform) for regform in self.event_regforms}
+
+    @property
+    def warning_count(self):
+        return {regform.id: get_warning_count(regform) for regform in self.event_regforms}
 
     def _value(self):
         regforms = []
