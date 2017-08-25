@@ -11,6 +11,7 @@ from wtforms.fields.html5 import URLField, EmailField
 from wtforms.validators import DataRequired
 
 from indico.core import signals
+from indico.core.errors import UserValueError
 from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.modules.events.payment import (PaymentPluginMixin, PaymentPluginSettingsFormBase,
                                            PaymentEventSettingsFormBase)
@@ -25,7 +26,8 @@ from indico_payment_cern.util import get_payment_methods, get_payment_method, cr
 PAYMENT_METHODS_FIELDS = [{'id': 'name', 'caption': _("Name"), 'required': True},
                           {'id': 'title', 'caption': _("Displayed Name"), 'required': True},
                           {'id': 'type', 'caption': _("Type"), 'required': True},
-                          {'id': 'fee', 'caption': _("Extra Fee (%)"), 'required': True}]
+                          {'id': 'fee', 'caption': _("Extra Fee (%)"), 'required': True},
+                          {'id': 'disabled_currencies', 'caption': _("Disabled currencies"), 'required': False}]
 
 
 class PluginSettingsForm(PaymentPluginSettingsFormBase):
@@ -113,11 +115,13 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         return render_plugin_template('event_settings_readonly.html', fp_name=fp_name, fp_email=fp_email)
 
     def adjust_payment_form_data(self, data):
-        data['postfinance_methods'] = get_payment_methods(data['event'])
+        data['postfinance_methods'] = get_payment_methods(data['event'], data['currency'])
         data['selected_method'] = selected_method = request.args.get('postfinance_method', '')
         base_amount = data['amount']
         if selected_method:
-            method = get_payment_method(data['event'], selected_method)
+            method = get_payment_method(data['event'], data['currency'], selected_method)
+            if method is None:
+                raise UserValueError(_('Invalid currency'))
             modifier = Decimal(1 / (1 - method['fee'] / 100))
             data['amount'] = base_amount * modifier
             data['fee'] = data['amount'] - base_amount
@@ -140,7 +144,9 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         currency = data['currency']
         seed = data['settings']['hash_seed_{}'.format(currency.lower())]
         shop_id = data['settings']['shop_id_{}'.format(currency.lower())]
-        method = get_payment_method(event, data['selected_method'])
+        method = get_payment_method(event, currency, data['selected_method'])
+        if method is None:
+            raise UserValueError(_('Invalid currency'))
         template_page = ''  # yes, apparently it's supposed to be empty..
         template_hash = sha512((seed + template_page).encode('utf-8')).hexdigest()
         order_id = self._get_order_id(data)
