@@ -7,7 +7,7 @@ from flask_pluginengine import current_plugin
 from indico.util.string import remove_non_alpha, remove_accents
 
 
-def get_payment_methods(event):
+def get_payment_methods(event, currency):
     """Returns the available payment methods with the correct fees.
 
     :return: a list containing the payment methods with the correct fees
@@ -16,6 +16,8 @@ def get_payment_methods(event):
     apply_fees = current_plugin.event_settings.get(event, 'apply_fees')
     custom_fees = current_plugin.event_settings.get(event, 'custom_fees')
     for method in current_plugin.settings.get('payment_methods'):
+        if currency in method.get('disabled_currencies', '').split(','):
+            continue
         if apply_fees:
             try:
                 fee = float(custom_fees[method['name']]['fee'])
@@ -28,9 +30,9 @@ def get_payment_methods(event):
     return methods
 
 
-def get_payment_method(event, name):
+def get_payment_method(event, currency, name):
     """Returns a specific payment method with the correct fee"""
-    return next(x for x in get_payment_methods(event) if x['name'] == name)
+    return next((x for x in get_payment_methods(event, currency) if x['name'] == name), None)
 
 
 def create_hash(seed, form_data):
