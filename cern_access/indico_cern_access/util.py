@@ -311,3 +311,9 @@ def get_warning_count(regform):
                  or (not regform.cern_access_request.allow_unpaid
                      and (not r.cern_access_request or r.cern_access_request and not r.cern_access_request.is_active)
                      and r.state != RegistrationState.complete))])
+
+
+def is_category_blacklisted(category):
+    """Checks if access to CERN can be requested for an event belonging to a category"""
+    from indico_cern_access.plugin import CERNAccessPlugin
+    return category.id in {int(category['id']) for category in CERNAccessPlugin.settings.get('excluded_categories')}

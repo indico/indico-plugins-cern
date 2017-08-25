@@ -14,7 +14,7 @@ setup(
     include_package_data=True,
     platforms='any',
     install_requires=[
-        'indico>=1.9.11.dev4'
+        'indico>=1.9.11.dev16'
     ],
     entry_points={
         'indico.plugins': {'cern_access = indico_cern_access.plugin:CERNAccessPlugin'}

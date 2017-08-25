@@ -6,11 +6,12 @@ from werkzeug.exceptions import Forbidden
 from wtforms import StringField
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from wtforms.fields.html5 import URLField
-from wtforms.validators import DataRequired
+from wtforms.validators import DataRequired, ValidationError
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
 from indico.core.settings.converters import SettingConverter
+from indico.modules.categories import Category
 from indico.modules.designer import TemplateType
 from indico.modules.designer.models.templates import DesignerTemplate
 from indico.modules.events import Event
@@ -20,7 +21,7 @@ from indico.modules.events.registration.models.registrations import Registration
 from indico.modules.events.requests.views import WPRequestsEventManagement
 from indico.util.string import remove_accents, unicode_to_ascii
 from indico.web.forms.base import IndicoForm
-from indico.web.forms.fields import IndicoPasswordField, PrincipalListField
+from indico.web.forms.fields import IndicoPasswordField, MultipleItemsField, PrincipalListField
 
 from indico_cern_access import _
 from indico_cern_access.blueprint import blueprint
@@ -37,6 +38,7 @@ class PluginSettingsForm(IndicoForm):
                          description=_('The URL of the ADaMS REST API'))
     authorized_users = PrincipalListField(_('Authorized_users'), groups=True,
                                           description=_('List of users/groups who can send requests'))
+    excluded_categories = MultipleItemsField('Excluded categories', fields=[{'id': 'id', 'caption': 'Category ID'}])
     login = StringField(_('Login'), [DataRequired()],
                         description=_('The login used to authenticate with ADaMS service'))
     password = IndicoPasswordField(_('Password'), [DataRequired()],
@@ -79,7 +81,8 @@ class CERNAccessPlugin(IndicoPlugin):
                         'login': 'indicoprod',
                         'password': '',
                         'secret_key': '',
-                        'access_ticket_template_id': None}
+                        'access_ticket_template_id': None,
+                        'excluded_categories': []}
     settings_converters = {
         'access_ticket_template_id': DesignerTemplateConverter
     }

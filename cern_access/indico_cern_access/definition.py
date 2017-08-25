@@ -8,7 +8,8 @@ from indico.modules.events.requests import RequestDefinitionBase, RequestState
 
 from indico_cern_access import _
 from indico_cern_access.forms import CERNAccessForm
-from indico_cern_access.util import is_authorized_user, update_access_request, withdraw_event_access_request
+from indico_cern_access.util import (is_authorized_user, is_category_blacklisted, update_access_request,
+                                     withdraw_event_access_request)
 
 
 class CERNAccessRequestDefinition(RequestDefinitionBase):
@@ -19,6 +20,7 @@ class CERNAccessRequestDefinition(RequestDefinitionBase):
     @classmethod
     def render_form(cls, event, **kwargs):
         kwargs['can_send_request'] = is_authorized_user(session.user)
+        kwargs['is_category_blacklisted'] = is_category_blacklisted(event.category)
         return super(CERNAccessRequestDefinition, cls).render_form(event, **kwargs)
 
     @classmethod
@@ -28,8 +30,9 @@ class CERNAccessRequestDefinition(RequestDefinitionBase):
     @classmethod
     def send(cls, req, data):
         with db.session.no_autoflush:
-            is_authorized = is_authorized_user(session.user)
-        if not is_authorized:
+            user_authorized = is_authorized_user(session.user)
+            category_blacklisted = is_category_blacklisted(req.event_new.category)
+        if not user_authorized or category_blacklisted:
             raise Forbidden()
         super(CERNAccessRequestDefinition, cls).send(req, data)
         update_access_request(req)
@@ -38,8 +41,9 @@ class CERNAccessRequestDefinition(RequestDefinitionBase):
     @classmethod
     def withdraw(cls, req, notify_event_managers=False):
         with db.session.no_autoflush:
-            is_authorized = is_authorized_user(session.user)
-        if not is_authorized:
+            user_authorized = is_authorized_user(session.user)
+            category_blacklisted = is_category_blacklisted(req.event_new.category)
+        if not user_authorized or category_blacklisted:
             raise Forbidden()
         withdraw_event_access_request(req)
         super(CERNAccessRequestDefinition, cls).withdraw(req, notify_event_managers)

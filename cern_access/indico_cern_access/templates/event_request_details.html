@@ -1,39 +1,44 @@
 {% extends 'events/requests/event_request_details.html' %}
 {% from 'message_box.html' import message_box %}
 {% block content %}
-    {% if can_send_request %}
-        {% if can_send_request %}
-            <div class="warning-message-box">
-                <div class="message-box-content">
-                    <span class="icon"></span>
-                    <div class="message-text">
-                        {% trans -%}
-                            By sending this request you are giving event participants access to CERN.
-                            Please note that after the request is accepted they will be able to enter CERN
-                            by presenting a valid ticket.</br>
-                            <b>Before sending the request please make sure that the event is in its final form.</b>
-                            Event participants will receive a ticket to access CERN site
-                            just after the request is accepted and their registration is complete.
-                            If you change:
-                            <ul><b>
-                                <li>starting or ending time of the event</li>
-                                <li>title of the event</li>
-                                <li>registration details of participants</li>
-                            </b></ul>
-                            the updated ticket won't be sent automatically.
-                            However the old ticket will be still valid.
-                        {%- endtrans %}
-                    </div>
-                </div>
-            </div>
-        {% endif %}
-        {{ super() }}
-    {% else %}
+    {% if not can_send_request %}
         {% call message_box('warning') %}
             {% trans -%}
                 Unfortunately you are not allowed to send CERN access requests.
             {%- endtrans %}
         {% endcall %}
         <a href="{{ url_for('.event_requests', event) }}" class="i-button big">{% trans %}Back{% endtrans %}</a>
+    {% elif category_blacklisted %}
+        {% call message_box('warning') %}
+            {% trans -%}
+                You cannot send CERN access requests for events in this category.
+            {%- endtrans %}
+        {% endcall %}
+        <a href="{{ url_for('.event_requests', event) }}" class="i-button big">{% trans %}Back{% endtrans %}</a>
+    {% else %}
+        <div class="warning-message-box">
+            <div class="message-box-content">
+                <span class="icon"></span>
+                <div class="message-text">
+                    {% trans -%}
+                        By sending this request you are giving event participants access to CERN.
+                        Please note that after the request is accepted they will be able to enter CERN
+                        by presenting a valid ticket.<br/>
+                        <b>Before sending the request please make sure that the event is in its final form.</b>
+                        Event participants will receive a ticket to access CERN site
+                        just after the request is accepted and their registration is complete.
+                        If you change:
+                        <ul><strong>
+                            <li>starting or ending time of the event</li>
+                            <li>title of the event</li>
+                            <li>registration details of participants</li>
+                        </strong></ul>
+                        the updated ticket will not be sent automatically.
+                        However the old ticket will be still valid.
+                    {%- endtrans %}
+                </div>
+            </div>
+        </div>
+        {{ super() }}
     {% endif %}
 {% endblock %}

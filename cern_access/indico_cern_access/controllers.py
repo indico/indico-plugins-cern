@@ -1,12 +1,11 @@
 from __future__ import unicode_literals
 
-from flask import request
 
 from indico.modules.events.registration.controllers import RegistrationFormMixin
 from indico.modules.events.registration.controllers.management import RHManageRegFormsBase
-from indico.modules.events.registration.models.registrations import Registration, RegistrationState
+from indico.modules.events.registration.models.registrations import RegistrationState
 
-from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState
+from indico_cern_access.models.access_requests import CERNAccessRequestState
 from indico_cern_access.util import get_error_count, get_warning_count
 from indico_cern_access.views import WPAccessRequestDetails
 

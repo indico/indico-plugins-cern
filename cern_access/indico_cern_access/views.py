@@ -7,7 +7,7 @@ from indico.legacy.webinterface.wcomponents import WSimpleNavigationDrawer
 
 class WPAccessRequestDetails(WPJinjaMixinPlugin, WPMainBase):
     def _getNavigationDrawer(self):
-        return WSimpleNavigationDrawer('Cern Access Request')
+        return WSimpleNavigationDrawer('CERN Access Request')
 
     def _getBody(self, params):
         return self._getPageContent(params)
