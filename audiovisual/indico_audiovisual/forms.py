@@ -6,7 +6,6 @@ from datetime import timedelta
 from flask import session, render_template
 from flask_pluginengine import current_plugin
 from markupsafe import Markup
-from wtforms.ext.dateutil.fields import DateField
 from wtforms.fields import TextAreaField, SelectField, BooleanField
 from wtforms.fields.html5 import IntegerField, URLField
 from wtforms.validators import DataRequired, NumberRange, Optional
@@ -18,7 +17,7 @@ from indico.modules.events.requests.models.requests import RequestState
 from indico.web.forms.base import IndicoForm, generated_data
 from indico.web.forms.validators import UsedIf, Exclusive
 from indico.web.forms.widgets import JinjaWidget
-from indico.web.forms.fields import IndicoSelectMultipleCheckboxField, IndicoEnumSelectField
+from indico.web.forms.fields import IndicoSelectMultipleCheckboxField, IndicoEnumSelectField, IndicoDateField
 
 from indico_audiovisual import SERVICES, _
 from indico_audiovisual.util import is_av_manager, get_contributions, contribution_id
@@ -89,10 +88,8 @@ class RequestListFilterForm(IndicoForm):
                               choices=[('events', _('Events')), ('talks', _('Talks'))])
     state = IndicoEnumSelectField(_('Request state'), enum=RequestState, skip={RequestState.withdrawn},
                                   none=_('Any state'))
-    abs_start_date = DateField(_('Start Date'), [Optional(), Exclusive('rel_start_date')],
-                               parse_kwargs={'dayfirst': True})
-    abs_end_date = DateField(_('End Date'), [Optional(), Exclusive('rel_end_date')],
-                             parse_kwargs={'dayfirst': True})
+    abs_start_date = IndicoDateField(_('Start Date'), [Optional(), Exclusive('rel_start_date')])
+    abs_end_date = IndicoDateField(_('End Date'), [Optional(), Exclusive('rel_end_date')])
     rel_start_date = IntegerField(_('Days in the past'), [Optional(), Exclusive('abs_start_date'), NumberRange(min=0)])
     rel_end_date = IntegerField(_('Days in the future'), [Optional(), Exclusive('abs_end_date'), NumberRange(min=0)])
 
