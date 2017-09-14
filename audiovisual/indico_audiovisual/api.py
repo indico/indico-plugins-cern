@@ -95,18 +95,18 @@ class RecordingLinkAPI(HTTPAPIHook):
     COMMIT = True
     HTTP_POST = True
 
-    def _hasAccess(self, aw):
-        return AVRequest.can_be_managed(aw.getUser().user)
+    def _has_access(self, user):
+        return AVRequest.can_be_managed(user)
 
     def _getParams(self):
         super(RecordingLinkAPI, self)._getParams()
         self._indico_id = get_query_parameter(self._queryParams, ['iid', 'indicoID'])
         self._cds_id = get_query_parameter(self._queryParams, ['cid', 'cdsID'])
 
-    def api_create_cds_link(self, aw):
+    def api_create_cds_link(self, user):
         if not self._indico_id or not self._cds_id:
             raise HTTPAPIError('A required argument is missing.', 400)
-        success = create_link(self._indico_id, self._cds_id, aw.getUser().user)
+        success = create_link(self._indico_id, self._cds_id, user)
         return {'success': success}
 
 
@@ -123,14 +123,14 @@ class AVExportHook(HTTPAPIHook):
         self._services = set(request.args.getlist('service'))
         self._alarm = get_query_parameter(self._queryParams, ['alarms'], None, True)
 
-    def _hasAccess(self, aw):
-        return AVRequest.can_be_managed(aw.getUser().user)
+    def _has_access(self, user):
+        return AVRequest.can_be_managed(user)
 
     @property
     def serializer_args(self):
         return {'ical_serializer': _ical_serialize_av}
 
-    def export_webcast_recording(self, aw):
+    def export_webcast_recording(self, user):
         results = find_requests(talks=True, from_dt=self._fromDT, to_dt=self._toDT, services=self._services,
                                 states=(RequestState.accepted, RequestState.pending))
         for req, contrib, _ in results:
