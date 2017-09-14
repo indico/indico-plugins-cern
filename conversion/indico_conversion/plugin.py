@@ -1,10 +1,9 @@
 from __future__ import unicode_literals
 
+import os
 from datetime import timedelta
 
-import os
-
-from flask import g, flash
+from flask import flash, g
 from flask_pluginengine import render_plugin_template
 from wtforms.fields.core import BooleanField
 from wtforms.fields.html5 import URLField
@@ -13,7 +12,7 @@ from wtforms.validators import DataRequired
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.modules.attachments.forms import AddAttachmentFilesForm
-from indico.modules.attachments.models.attachments import AttachmentType, Attachment
+from indico.modules.attachments.models.attachments import Attachment, AttachmentType
 from indico.modules.events.views import WPSimpleEventDisplay
 from indico.util.date_time import now_utc
 from indico.web.forms.base import IndicoForm

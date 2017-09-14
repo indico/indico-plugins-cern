@@ -1,13 +1,14 @@
-from flask import request, jsonify
+from flask import jsonify, request
 from werkzeug.exceptions import NotFound
 
 from indico.core.errors import IndicoError
-from indico.modules.vc.models.vc_rooms import VCRoomEventAssociation
 from indico.legacy.webinterface.rh.base import RH
+from indico.modules.vc.models.vc_rooms import VCRoomEventAssociation
 
 from indico_ravem import _
-from indico_ravem.operations import get_room_status, connect_room, disconnect_room
-from indico_ravem.util import has_access, RavemOperationException, RavemException
+from indico_ravem.operations import connect_room, disconnect_room, get_room_status
+from indico_ravem.util import RavemException, RavemOperationException, has_access
+
 
 __all__ = ('RHRavemRoomStatus', 'RHRavemConnectRoom', 'RHRavemDisconnectRoom')
 

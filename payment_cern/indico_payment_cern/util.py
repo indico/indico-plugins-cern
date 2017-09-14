@@ -4,7 +4,7 @@ from hashlib import sha512
 
 from flask_pluginengine import current_plugin
 
-from indico.util.string import remove_non_alpha, remove_accents
+from indico.util.string import remove_accents, remove_non_alpha
 
 
 def get_payment_methods(event, currency):

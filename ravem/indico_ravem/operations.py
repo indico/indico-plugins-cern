@@ -1,9 +1,10 @@
 from time import sleep
 
 from indico_ravem import _
-from indico_ravem.api import get_endpoint_status, disconnect_endpoint, connect_endpoint
+from indico_ravem.api import connect_endpoint, disconnect_endpoint, get_endpoint_status
 from indico_ravem.plugin import RavemPlugin
-from indico_ravem.util import get_room_endpoint, RavemException, RavemOperationException
+from indico_ravem.util import RavemException, RavemOperationException, get_room_endpoint
+
 
 _all__ = ('get_room_status', 'connect_room', 'disconnect_room')
 

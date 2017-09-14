@@ -9,7 +9,7 @@ from sqlalchemy.orm import noload
 
 from indico.core import signals
 from indico.core.db import db
-from indico.modules.attachments.models.attachments import AttachmentType, Attachment
+from indico.modules.attachments.models.attachments import Attachment, AttachmentType
 from indico.modules.attachments.models.folders import AttachmentFolder
 from indico.modules.events import Event
 from indico.modules.events.contributions import Contribution

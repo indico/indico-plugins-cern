@@ -15,14 +15,15 @@ from wtforms import StringField
 from indico.cli.core import cli_command
 from indico.core import signals
 from indico.core.celery import celery
-from indico.core.plugins import IndicoPlugin
 from indico.core.db.sqlalchemy import db
+from indico.core.plugins import IndicoPlugin
+from indico.modules.rb.models.equipment import EquipmentType
 from indico.modules.rb.models.holidays import Holiday
 from indico.modules.rb.models.locations import Location
-from indico.modules.rb.models.equipment import EquipmentType
 from indico.modules.rb.models.rooms import Room
 from indico.modules.users.util import get_user_by_email
 from indico.web.forms.base import IndicoForm
+
 
 try:
     import cx_Oracle

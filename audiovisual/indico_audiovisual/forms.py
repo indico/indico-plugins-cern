@@ -1,12 +1,11 @@
 from __future__ import unicode_literals
 
-from datetime import date
-from datetime import timedelta
+from datetime import date, timedelta
 
-from flask import session, render_template
+from flask import render_template, session
 from flask_pluginengine import current_plugin
 from markupsafe import Markup
-from wtforms.fields import TextAreaField, SelectField, BooleanField
+from wtforms.fields import BooleanField, SelectField, TextAreaField
 from wtforms.fields.html5 import IntegerField, URLField
 from wtforms.validators import DataRequired, NumberRange, Optional
 
@@ -15,12 +14,12 @@ from indico.modules.events.requests import RequestFormBase
 from indico.modules.events.requests.base import RequestManagerForm
 from indico.modules.events.requests.models.requests import RequestState
 from indico.web.forms.base import IndicoForm, generated_data
-from indico.web.forms.validators import UsedIf, Exclusive
+from indico.web.forms.fields import IndicoDateField, IndicoEnumSelectField, IndicoSelectMultipleCheckboxField
+from indico.web.forms.validators import Exclusive, UsedIf
 from indico.web.forms.widgets import JinjaWidget
-from indico.web.forms.fields import IndicoSelectMultipleCheckboxField, IndicoEnumSelectField, IndicoDateField
 
 from indico_audiovisual import SERVICES, _
-from indico_audiovisual.util import is_av_manager, get_contributions, contribution_id
+from indico_audiovisual.util import contribution_id, get_contributions, is_av_manager
 
 
 class AVRequestForm(RequestFormBase):

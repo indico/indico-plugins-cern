@@ -1,13 +1,13 @@
 from __future__ import unicode_literals
 
-from flask import request, redirect
+from flask import redirect, request
 from werkzeug.exceptions import NotFound
 
 from indico.core.plugins import IndicoPluginBlueprint
 from indico.modules.events.agreements.models.agreements import Agreement
 from indico.web.flask.util import url_for
 
-from indico_audiovisual.definition import SpeakerReleaseAgreement, AVRequest
+from indico_audiovisual.definition import AVRequest, SpeakerReleaseAgreement
 
 
 compat_blueprint = IndicoPluginBlueprint('compat_audiovisual', 'indico_audiovisual')

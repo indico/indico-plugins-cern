@@ -2,7 +2,8 @@ from __future__ import unicode_literals
 
 from indico.core.plugins import IndicoPluginBlueprint
 
-from indico_ravem.controllers import RHRavemRoomStatus, RHRavemConnectRoom, RHRavemDisconnectRoom
+from indico_ravem.controllers import RHRavemConnectRoom, RHRavemDisconnectRoom, RHRavemRoomStatus
+
 
 blueprint = IndicoPluginBlueprint('ravem', 'indico_ravem', url_prefix='/event/<confId>/videoconference/ravem')
 

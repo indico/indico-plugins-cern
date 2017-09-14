@@ -2,17 +2,17 @@ from __future__ import unicode_literals
 
 import re
 
-from flask import request, flash, redirect
+from flask import flash, redirect, request
 from flask_pluginengine import current_plugin, render_plugin_template
 from markupsafe import Markup
 from werkzeug.exceptions import BadRequest
 
-from indico.modules.events.registration.controllers.display import RHRegistrationFormRegistrationBase
-from indico.modules.events.registration.models.registrations import Registration
+from indico.legacy.webinterface.rh.base import RH
 from indico.modules.events.payment.models.transactions import TransactionAction
 from indico.modules.events.payment.util import register_transaction
+from indico.modules.events.registration.controllers.display import RHRegistrationFormRegistrationBase
+from indico.modules.events.registration.models.registrations import Registration
 from indico.web.flask.util import url_for
-from indico.legacy.webinterface.rh.base import RH
 
 from indico_payment_cern import _
 from indico_payment_cern.util import create_hash

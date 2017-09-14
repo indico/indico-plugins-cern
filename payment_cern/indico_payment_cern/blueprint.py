@@ -1,8 +1,9 @@
 from __future__ import unicode_literals
 
 from indico.core.plugins import IndicoPluginBlueprint
-from indico_payment_cern.controllers import (RHPaymentCancel, RHPaymentDecline, RHPaymentUncertain, RHPaymentSuccess,
-                                             RHPaymentSuccessBackground, RHPaymentCancelBackground)
+
+from indico_payment_cern.controllers import (RHPaymentCancel, RHPaymentCancelBackground, RHPaymentDecline,
+                                             RHPaymentSuccess, RHPaymentSuccessBackground, RHPaymentUncertain)
 
 
 blueprint = IndicoPluginBlueprint('payment_cern', __name__,

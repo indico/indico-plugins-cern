@@ -5,6 +5,7 @@ from wtforms.validators import DataRequired
 
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import IndicoPasswordField
+
 from indico_livesync_cern import _
 
 

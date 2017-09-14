@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from indico.core.db.sqlalchemy import db, PyIntEnum
+from indico.core.db.sqlalchemy import PyIntEnum, db
 from indico.util.string import return_ascii
 from indico.util.struct.enum import IndicoEnum
 

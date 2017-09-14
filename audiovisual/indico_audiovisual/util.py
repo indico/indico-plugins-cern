@@ -3,16 +3,16 @@ from __future__ import unicode_literals
 import json
 
 import requests
-from sqlalchemy.orm import joinedload, undefer, noload, subqueryload
+from sqlalchemy.orm import joinedload, noload, subqueryload, undefer
 
 from indico.core.celery import celery
 from indico.core.db import db
-from indico.modules.events.sessions.models.blocks import SessionBlock
+from indico.core.db.sqlalchemy.util.queries import limit_groups
 from indico.modules.events import Event
 from indico.modules.events.contributions import Contribution
 from indico.modules.events.contributions.models.subcontributions import SubContribution
 from indico.modules.events.requests.models.requests import Request, RequestState
-from indico.core.db.sqlalchemy.util.queries import limit_groups
+from indico.modules.events.sessions.models.blocks import SessionBlock
 from indico.modules.rb.models.equipment import EquipmentType
 from indico.modules.rb.models.locations import Location
 from indico.modules.rb.models.rooms import Room

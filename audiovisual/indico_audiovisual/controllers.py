@@ -3,15 +3,15 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 from operator import itemgetter
 
-from flask import session, request
+from flask import request, session
 from werkzeug.exceptions import Forbidden
 
-from indico.util.date_time import get_day_start, get_day_end, as_utc
-from indico.util.struct.iterables import group_list
 from indico.legacy.webinterface.rh.base import RHProtected
+from indico.util.date_time import as_utc, get_day_end, get_day_start
+from indico.util.struct.iterables import group_list
 
 from indico_audiovisual.forms import RequestListFilterForm
-from indico_audiovisual.util import is_av_manager, find_requests
+from indico_audiovisual.util import find_requests, is_av_manager
 from indico_audiovisual.views import WPAudiovisualManagers
 
 

@@ -4,8 +4,8 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import joinedload
 
 from indico.core.db import db
-from indico.modules.events.registration.models.registrations import Registration
 from indico.modules.events.registration.models.forms import RegistrationForm
+from indico.modules.events.registration.models.registrations import Registration
 from indico.modules.users import UserSetting
 
 

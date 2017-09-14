@@ -8,7 +8,7 @@ from indico.modules.categories.models.categories import Category
 from indico.modules.rb.models.rooms import Room
 from indico.util.string import natural_sort_key
 from indico.web.forms.base import IndicoForm
-from indico.web.forms.fields import IndicoQuerySelectMultipleField, EmailListField, MultipleItemsField
+from indico.web.forms.fields import EmailListField, IndicoQuerySelectMultipleField, MultipleItemsField
 
 
 def _order_func(object_list):

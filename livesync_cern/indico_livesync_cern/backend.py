@@ -4,13 +4,11 @@ import requests
 from lxml import etree
 from wtforms.fields.core import StringField
 from wtforms.fields.html5 import URLField
-from wtforms.validators import DataRequired, URL
+from wtforms.validators import URL, DataRequired
 
 from indico.web.forms.fields import IndicoPasswordField
 
-from indico_livesync import LiveSyncBackendBase, MARCXMLUploader
-from indico_livesync import AgentForm
-
+from indico_livesync import AgentForm, LiveSyncBackendBase, MARCXMLUploader
 from indico_livesync_cern import _
 
 

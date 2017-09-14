@@ -1,4 +1,4 @@
-from __future__ import unicode_literals, division
+from __future__ import division, unicode_literals
 
 import re
 from decimal import Decimal
@@ -6,22 +6,23 @@ from hashlib import sha512
 
 from flask import request, session
 from flask_pluginengine import render_plugin_template
-from wtforms.fields.core import StringField, BooleanField
-from wtforms.fields.html5 import URLField, EmailField
+from wtforms.fields.core import BooleanField, StringField
+from wtforms.fields.html5 import EmailField, URLField
 from wtforms.validators import DataRequired
 
 from indico.core import signals
 from indico.core.errors import UserValueError
 from indico.core.plugins import IndicoPlugin, url_for_plugin
-from indico.modules.events.payment import (PaymentPluginMixin, PaymentPluginSettingsFormBase,
-                                           PaymentEventSettingsFormBase)
+from indico.modules.events.payment import (PaymentEventSettingsFormBase, PaymentPluginMixin,
+                                           PaymentPluginSettingsFormBase)
 from indico.util.string import remove_accents, unicode_to_ascii
 from indico.web.flask.util import url_for
-from indico.web.forms.fields import PrincipalListField, MultipleItemsField, OverrideMultipleItemsField
+from indico.web.forms.fields import MultipleItemsField, OverrideMultipleItemsField, PrincipalListField
 
 from indico_payment_cern import _
 from indico_payment_cern.blueprint import blueprint
-from indico_payment_cern.util import get_payment_methods, get_payment_method, create_hash, get_order_id
+from indico_payment_cern.util import create_hash, get_order_id, get_payment_method, get_payment_methods
+
 
 PAYMENT_METHODS_FIELDS = [{'id': 'name', 'caption': _("Name"), 'required': True},
                           {'id': 'title', 'caption': _("Displayed Name"), 'required': True},

@@ -5,6 +5,7 @@ from flask_pluginengine import current_plugin
 from werkzeug.urls import url_encode
 
 from indico.core.db import db
+
 from indico_search import SearchEngine
 
 

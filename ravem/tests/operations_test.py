@@ -5,9 +5,10 @@ from mock import MagicMock
 
 from indico.testing.util import extract_logs
 
-from indico_ravem.operations import get_room_status, connect_room, disconnect_room
+from indico_ravem.operations import connect_room, disconnect_room, get_room_status
 from indico_ravem.plugin import RavemPlugin
 from indico_ravem.util import RavemException, RavemOperationException
+
 
 RAVEM_TEST_HOST = 'http://ravem.test'
 RAVEM_TEST_PATH = '/api/services/'

@@ -4,10 +4,10 @@ from collections import defaultdict
 from datetime import timedelta
 
 from flask import g
-from wtforms.fields.core import SelectField, BooleanField, FloatField
-from wtforms.fields.html5 import URLField, IntegerField
+from wtforms.fields.core import BooleanField, FloatField, SelectField
+from wtforms.fields.html5 import IntegerField, URLField
 from wtforms.fields.simple import StringField
-from wtforms.validators import DataRequired, NumberRange, URL
+from wtforms.validators import URL, DataRequired, NumberRange
 
 from indico.cli.core import cli_command
 from indico.core import signals
@@ -24,8 +24,8 @@ from indico.web.forms.widgets import SwitchWidget
 
 from indico_outlook import _
 from indico_outlook.calendar import update_calendar
-from indico_outlook.models.queue import OutlookQueueEntry, OutlookAction
-from indico_outlook.util import get_participating_users, latest_actions_only, is_event_excluded
+from indico_outlook.models.queue import OutlookAction, OutlookQueueEntry
+from indico_outlook.util import get_participating_users, is_event_excluded, latest_actions_only
 
 
 _status_choices = [('free', _('Free')),

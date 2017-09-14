@@ -1,13 +1,12 @@
 import pytest
 from mock import MagicMock
-
 from requests.auth import HTTPDigestAuth
 from requests.exceptions import HTTPError, Timeout
 
 from indico.testing.util import extract_logs
 
 from indico_ravem.plugin import RavemPlugin
-from indico_ravem.util import has_access, ravem_api_call, RavemAPIException
+from indico_ravem.util import RavemAPIException, has_access, ravem_api_call
 
 
 @pytest.mark.usefixtures('db')

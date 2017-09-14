@@ -1,5 +1,6 @@
 from indico_ravem.util import ravem_api_call
 
+
 __all__ = ('get_endpoint_status', 'disconnect_endpoint', 'connect_endpoint')
 
 

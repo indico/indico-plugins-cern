@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from indico.core.plugins import IndicoPluginBlueprint
+
 from indico_audiovisual.controllers import RHRequestList
 
 

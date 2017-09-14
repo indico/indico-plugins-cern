@@ -1,11 +1,11 @@
 from __future__ import unicode_literals
 
-from flask import current_app, request, jsonify
+from flask import current_app, jsonify, request
 from sqlalchemy.orm import load_only
 from werkzeug.exceptions import Unauthorized
 
-from indico.modules.categories import Category
 from indico.legacy.webinterface.rh.base import RH
+from indico.modules.categories import Category
 
 
 class RHCategoriesJSON(RH):

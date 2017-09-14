@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from functools import partial
 
 from flask_pluginengine import depends, render_plugin_template
-from wtforms.fields import IntegerField, BooleanField
+from wtforms.fields import BooleanField, IntegerField
 from wtforms.fields.html5 import URLField
 from wtforms.fields.simple import StringField
 from wtforms.validators import DataRequired, NumberRange
@@ -15,6 +15,7 @@ from indico.modules.vc.views import WPVCEventPage, WPVCManageEvent
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import IndicoPasswordField
 from indico.web.forms.widgets import SwitchWidget
+
 from indico_ravem import _
 
 

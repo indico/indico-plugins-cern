@@ -8,7 +8,7 @@ from werkzeug.exceptions import NotFound
 from indico.modules.events.agreements import AgreementDefinitionBase, AgreementPersonInfo
 from indico.modules.events.contributions.models.subcontributions import SubContribution
 from indico.modules.events.requests import RequestDefinitionBase
-from indico.modules.events.requests.models.requests import RequestState, Request
+from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.util.caching import memoize_request
 from indico.util.decorators import classproperty
 from indico.util.placeholders import Placeholder
@@ -16,10 +16,10 @@ from indico.web.flask.util import url_for
 
 from indico_audiovisual import _
 from indico_audiovisual.forms import AVRequestForm, AVRequestManagerForm
-from indico_audiovisual.util import (is_av_manager, send_webcast_ping, get_data_identifiers, get_selected_contributions,
-                                     contribution_id, contribution_by_id, count_capable_contributions,
-                                     get_av_capable_rooms, event_has_empty_sessions, get_selected_services,
-                                     all_agreements_signed)
+from indico_audiovisual.util import (all_agreements_signed, contribution_by_id, contribution_id,
+                                     count_capable_contributions, event_has_empty_sessions, get_av_capable_rooms,
+                                     get_data_identifiers, get_selected_contributions, get_selected_services,
+                                     is_av_manager, send_webcast_ping)
 
 
 class AVRequest(RequestDefinitionBase):

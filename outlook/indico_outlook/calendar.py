@@ -1,19 +1,19 @@
 from __future__ import unicode_literals
 
 import posixpath
-import pytz
 from pprint import pformat
 
+import pytz
 import requests
-from requests.exceptions import Timeout, RequestException
+from requests.exceptions import RequestException, Timeout
 from werkzeug.datastructures import MultiDict
 
 from indico.core.db import db
 from indico.util.date_time import format_datetime
 from indico.util.string import strip_control_chars
 
-from indico_outlook.models.queue import OutlookQueueEntry, OutlookAction
-from indico_outlook.util import check_config, latest_actions_only, is_event_excluded
+from indico_outlook.models.queue import OutlookAction, OutlookQueueEntry
+from indico_outlook.util import check_config, is_event_excluded, latest_actions_only
 
 
 operation_map = {

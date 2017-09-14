@@ -8,7 +8,9 @@ Create Date: 2017-06-30 16:16:52.276112
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.sql.ddl import CreateSchema, DropSchema
+
 from indico.core.db.sqlalchemy import PyIntEnum
+
 from indico_outlook.models.queue import OutlookAction
 
 

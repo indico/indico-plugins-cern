@@ -1,4 +1,5 @@
 import json
+
 import pytest
 from flask import request
 from mock import MagicMock
