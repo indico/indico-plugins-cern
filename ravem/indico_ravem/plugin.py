@@ -8,7 +8,7 @@ from wtforms.fields.html5 import URLField
 from wtforms.fields.simple import StringField
 from wtforms.validators import DataRequired, NumberRange
 
-from indico.core.config import Config
+from indico.core.config import config
 from indico.core.plugins import IndicoPlugin, PluginCategory
 from indico.modules.events.views import WPSimpleEventDisplay
 from indico.modules.vc.views import WPVCEventPage, WPVCManageEvent
@@ -65,7 +65,7 @@ class RavemPlugin(IndicoPlugin):
 
     def init(self):
         super(RavemPlugin, self).init()
-        if not Config.getInstance().getIsRoomBookingActive():
+        if not config.ENABLE_ROOMBOOKING:
             from indico_ravem.util import RavemException
             raise RavemException('RoomBooking is inactive.')
 
