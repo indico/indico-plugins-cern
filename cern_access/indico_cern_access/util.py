@@ -5,6 +5,7 @@ import hmac
 import json
 import random
 import string
+from pprint import pformat
 
 import requests
 from flask import session
@@ -65,10 +66,15 @@ def send_adams_post_request(event, registrations, update=False):
     headers = {'content-type': 'Application/JSON'}
     auth = (CERNAccessPlugin.settings.get('login'), CERNAccessPlugin.settings.get('password'))
     json_data = json.dumps([data[key] for key in data])
-    r = requests.post(CERNAccessPlugin.settings.get('adams_url'), data=json_data, headers=headers, auth=auth)
-    return ((CERNAccessRequestState.accepted, data)
-            if r.status_code == requests.codes.ok
-            else (CERNAccessRequestState.rejected, data))
+    url = CERNAccessPlugin.settings.get('adams_url')
+    try:
+        r = requests.post(url, data=json_data, headers=headers, auth=auth)
+        r.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        CERNAccessPlugin.logger.exception('Request to ADAMS failed:\nURL: %s\nData: %s \nReason: %s', url,
+                                          pformat(json_data), e)
+        raise RequestModuleError()
+    return (CERNAccessRequestState.accepted, data)
 
 
 def send_adams_delete_request(registrations):
@@ -79,8 +85,14 @@ def send_adams_delete_request(registrations):
     headers = {'Content-Type': 'application/json'}
     auth = (CERNAccessPlugin.settings.get('login'), CERNAccessPlugin.settings.get('password'))
     data = json.dumps(data)
-    r = requests.delete(CERNAccessPlugin.settings.get('adams_url'), data=data, headers=headers, auth=auth)
-    return True if r.status_code == requests.codes.ok else False
+    url = CERNAccessPlugin.settings.get('adams_url')
+    try:
+        r = requests.delete(url, data=data, headers=headers, auth=auth)
+        r.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        CERNAccessPlugin.logger.exception('Request to ADAMS failed:\nURL: %s\nData: %s \nReason: %s', url,
+                                          pformat(data), e)
+        raise RequestModuleError()
 
 
 def generate_access_id(registration_id):
@@ -113,6 +125,8 @@ def build_access_request_data(registration, event, update=False):
 
 def update_access_request(req):
     """Adds, upodates and deletes CERN access requests from registration forms"""
+    from indico_cern_access.plugin import CERNAccessPlugin
+
     event = req.event_new
     existing_forms = get_requested_forms(event)
     requested_forms = req.data['regforms']['regforms']
@@ -131,14 +145,11 @@ def update_access_request(req):
         regform = event_regforms[regform_id]
         registrations = get_event_registrations(event, regform=regform, allow_unpaid=allow_unpaid)
         state, data = send_adams_post_request(event, registrations)
-        if state == CERNAccessRequestState.accepted:
-            create_access_request_regform(regform, state, allow_unpaid)
-            enable_ticketing(regform)
-            add_access_requests(registrations, data, state)
-            if regform.ticket_on_email:
-                send_tickets(registrations)
-        else:
-            raise RequestModuleError()
+        create_access_request_regform(regform, state, allow_unpaid)
+        enable_ticketing(regform)
+        add_access_requests(registrations, data, state)
+        if regform.ticket_on_email:
+            send_tickets(registrations)
 
     # update requests
     for regform_id in set.intersection(requested_forms_ids, existing_forms_ids):
@@ -148,35 +159,26 @@ def update_access_request(req):
             if allow_unpaid is True:
                 registrations = get_event_registrations(event, regform=regform, only_unpaid=True)
                 state, data = send_adams_post_request(event, registrations)
-                if state == CERNAccessRequestState.accepted:
-                    regform.cern_access_request.allow_unpaid = allow_unpaid
-                    add_access_requests(registrations, data, state)
-                    if regform.ticket_on_email:
-                        send_tickets(registrations)
-                else:
-                    raise RequestModuleError()
+                regform.cern_access_request.allow_unpaid = allow_unpaid
+                add_access_requests(registrations, data, state)
+                if regform.ticket_on_email:
+                    send_tickets(registrations)
             else:
                 registrations = get_event_registrations(event, regform=regform, only_unpaid=True, requested=True)
-                deleted = send_adams_delete_request(registrations)
-                if deleted:
-                    regform.cern_access_request.allow_unpaid = allow_unpaid
-                    withdraw_access_requests(registrations)
-                    notify_access_withdrawn(registrations)
-                else:
-                    raise RequestModuleError()
+                send_adams_delete_request(registrations)
+                regform.cern_access_request.allow_unpaid = allow_unpaid
+                withdraw_access_requests(registrations)
+                notify_access_withdrawn(registrations)
 
     # delete requests
     for regform_id in existing_forms_ids - requested_forms_ids:
         regform = event_regforms[regform_id]
         registrations = get_event_registrations(event, regform=regform, requested=True)
-        deleted = send_adams_delete_request(registrations)
-        if deleted:
-            regform.cern_access_request.request_state = CERNAccessRequestState.withdrawn
-            check_if_access_template_used(regform)
-            withdraw_access_requests(registrations)
-            notify_access_withdrawn(registrations)
-        else:
-            raise RequestModuleError()
+        send_adams_delete_request(registrations)
+        regform.cern_access_request.request_state = CERNAccessRequestState.withdrawn
+        check_if_access_template_used(regform)
+        withdraw_access_requests(registrations)
+        notify_access_withdrawn(registrations)
 
 
 def check_if_access_template_used(regform):
@@ -208,15 +210,12 @@ def withdraw_event_access_request(req):
     """Withdraws all CERN access requests of an event"""
     requested_forms = get_requested_forms(req.event_new)
     requested_registrations = get_event_registrations(req.event_new, requested=True)
-    deleted = send_adams_delete_request(requested_registrations)
-    if deleted:
-        for regform in requested_forms:
-            regform.cern_access_request.request_state = CERNAccessRequestState.withdrawn
-            check_if_access_template_used(regform)
-        withdraw_access_requests(requested_registrations)
-        notify_access_withdrawn(requested_registrations)
-    else:
-        raise RequestModuleError()
+    send_adams_delete_request(requested_registrations)
+    for regform in requested_forms:
+        regform.cern_access_request.request_state = CERNAccessRequestState.withdrawn
+        check_if_access_template_used(regform)
+    withdraw_access_requests(requested_registrations)
+    notify_access_withdrawn(requested_registrations)
 
 
 def get_random_reservation_code():
