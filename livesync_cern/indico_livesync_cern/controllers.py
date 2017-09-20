@@ -11,7 +11,7 @@ from indico.modules.categories import Category
 class RHCategoriesJSON(RH):
     """Provide category information for CERN search"""
 
-    def _checkProtection(self):
+    def _check_access(self):
         from indico_livesync_cern.plugin import CERNLiveSyncPlugin
         auth = request.authorization
         username = CERNLiveSyncPlugin.settings.get('username')

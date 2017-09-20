@@ -18,8 +18,8 @@ from indico_audiovisual.views import WPAudiovisualManagers
 class RHRequestList(RHProtected):
     """Provides a list of webcast/recording requests"""
 
-    def _checkProtection(self):
-        RHProtected._checkProtection(self)
+    def _check_access(self):
+        RHProtected._check_access(self)
         if self._doProcess and not is_av_manager(session.user):
             raise Forbidden
 

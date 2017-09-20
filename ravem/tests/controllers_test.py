@@ -362,6 +362,6 @@ def test_exception_raised_on_unauthorized_access(mocker, rh_class):
 
     with RavemPlugin.instance.plugin_context():
         with pytest.raises(RavemException) as excinfo:
-            rh._checkProtection()
+            rh._check_access()
 
     assert excinfo.value.message == "Not authorized to access the room with RAVEM"
