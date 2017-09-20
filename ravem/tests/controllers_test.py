@@ -49,7 +49,7 @@ def test_event_vc_room_not_found(mocker, rh_class):
 
     with RavemPlugin.instance.plugin_context():
         with pytest.raises(NotFound) as excinfo:
-            rh._checkParams()
+            rh._process_args()
 
     assert excinfo.value.description == "Event VC Room not found for id {0}".format(id_)
 
@@ -69,7 +69,7 @@ def test_event_vc_room_without_link_object(mocker, rh_class):
 
     with RavemPlugin.instance.plugin_context():
         with pytest.raises(IndicoError) as excinfo:
-            rh._checkParams()
+            rh._process_args()
 
     assert excinfo.value.message == "Event VC Room ({0}) is not linked to anything".format(id_)
 
@@ -89,7 +89,7 @@ def test_link_object_without_conference(mocker, rh_class):
 
     with RavemPlugin.instance.plugin_context():
         with pytest.raises(IndicoError) as excinfo:
-            rh._checkParams()
+            rh._process_args()
 
     assert excinfo.value.message == "Event VC Room ({0}) does not have an event".format(id_)
 
@@ -110,7 +110,7 @@ def test_event_id_not_matching_conf_id(mocker, rh_class):
 
     with RavemPlugin.instance.plugin_context():
         with pytest.raises(IndicoError) as excinfo:
-            rh._checkParams()
+            rh._process_args()
 
     assert excinfo.value.message == "Event VC Room ({0}) does not have an event with the id {1}" \
                                     .format(id_, evcr_conf_id)
@@ -131,7 +131,7 @@ def test_invalid_room(mocker, rh_class):
 
     with RavemPlugin.instance.plugin_context():
         with pytest.raises(IndicoError) as excinfo:
-            rh._checkParams()
+            rh._process_args()
 
     assert excinfo.value.message == "Event VC Room ({0}) is not linked to an event with a room".format(id_)
 
@@ -151,7 +151,7 @@ def test_invalid_room_name(mocker, rh_class):
 
     with RavemPlugin.instance.plugin_context():
         with pytest.raises(IndicoError) as excinfo:
-            rh._checkParams()
+            rh._process_args()
 
     assert excinfo.value.message == "Event VC Room ({0}) is not linked to an event with a valid room".format(id_)
 
@@ -172,7 +172,7 @@ def test_special_name_different_from_name(mocker, rh_class):
     rh = rh_class()
 
     with RavemPlugin.instance.plugin_context():
-        rh._checkParams()
+        rh._process_args()
 
     assert rh.room_name != room_special_name
     assert rh.room_name == room_name
@@ -194,7 +194,7 @@ def test_default_special_name(mocker, rh_class):
     rh = rh_class()
 
     with RavemPlugin.instance.plugin_context():
-        rh._checkParams()
+        rh._process_args()
 
     assert rh.room_name == room_name
     assert rh.room_special_name == room_name
@@ -238,7 +238,7 @@ def test_operation_called_with_correct_args(mocker, rh_class, operation_name, ar
         request.args = {'force': '1'}
 
     with RavemPlugin.instance.plugin_context():
-        rh._checkParams()
+        rh._process_args()
         rh._process()
 
     assert operation.call_count == 1
@@ -280,7 +280,7 @@ def test_successful_operation(mocker, rh_class, operation):
     rh = rh_class()
 
     with RavemPlugin.instance.plugin_context():
-        rh._checkParams()
+        rh._process_args()
         response = rh._process()
 
     data = json.loads(response.get_data())
@@ -311,7 +311,7 @@ def test_operation_exception_is_handled(mocker, rh_class, operation_name, err_re
     rh = rh_class()
 
     with RavemPlugin.instance.plugin_context():
-        rh._checkParams()
+        rh._process_args()
         response = rh._process()
 
     data = json.loads(response.get_data())
@@ -343,7 +343,7 @@ def test_exception_is_handled(mocker, rh_class, operation_name, err_message):
     rh = rh_class()
 
     with RavemPlugin.instance.plugin_context():
-        rh._checkParams()
+        rh._process_args()
         response = rh._process()
 
     data = json.loads(response.get_data())

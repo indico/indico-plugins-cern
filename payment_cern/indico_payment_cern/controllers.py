@@ -91,7 +91,7 @@ class RHPaymentSuccess(PaymentSuccessMixin, RHRegistrationFormRegistrationBase):
 class RHPaymentSuccessBackground(PaymentSuccessMixin, RH):
     """Verify and process a successful payment (server2server notification)"""
 
-    def _checkParams(self):
+    def _process_args(self):
         matches = re.search(r'r(\d)+$', request.values['orderID'])
         if matches is None:
             raise BadRequest

@@ -18,7 +18,7 @@ class RHRavemBase(RH):
         if not has_access(self.event_vc_room):
             raise RavemException(_("Not authorized to access the room with RAVEM"))
 
-    def _checkParams(self):
+    def _process_args(self):
         id_ = request.view_args['event_vc_room_id']
         self.event_vc_room = VCRoomEventAssociation.find_one(id=id_)
         if not self.event_vc_room:
