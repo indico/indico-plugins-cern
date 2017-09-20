@@ -8,9 +8,9 @@ from requests.auth import HTTPDigestAuth
 from requests.exceptions import HTTPError, Timeout
 
 from indico.util.i18n import _
-from indico.util.user import retrieve_principal
 
 from indico_ravem.plugin import RavemPlugin
+from indico_vc_vidyo.util import retrieve_principal
 
 
 def ravem_api_call(api_endpoint, method='GET', **kwargs):
@@ -111,7 +111,7 @@ def has_access(event_vc_room, _split_re=re.compile(r'[\s,;]+')):
 
     ips = set(filter(None, (x.strip() for x in _split_re.split(room.get_attribute_value('ip', '')))))
     return any([
-        current_user == retrieve_principal(vc_room.data.get('owner'), allow_groups=False, legacy=False),
+        current_user == retrieve_principal(vc_room.data.get('owner')),
         event.can_manage(current_user),
         request.remote_addr in ips
     ])

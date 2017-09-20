@@ -270,8 +270,7 @@ def test_check_if_current_user_is_room_owner(mocker):
     assert has_access(event_vc_room)
 
     event_vc_room.vc_room.data.get.assert_called_once_with('owner')
-    retrieve_principal.assert_called_once_with(event_vc_room.vc_room.data.get.return_value, allow_groups=False,
-                                               legacy=False)
+    retrieve_principal.assert_called_once_with(event_vc_room.vc_room.data.get.return_value)
 
 
 @pytest.mark.usefixtures('db')
