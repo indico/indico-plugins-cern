@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='indico_payment_cern',
-    version='0.4',
+    version='0.4.1',
     url='https://gitlab.cern.ch/indico/indico-plugins-cern',
     author='Indico Team',
     author_email='indico-team@cern.ch',

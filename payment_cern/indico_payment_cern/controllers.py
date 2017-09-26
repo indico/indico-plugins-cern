@@ -20,8 +20,10 @@ from indico_payment_cern.util import create_hash
 
 class RHPaymentAbortedBase(RHRegistrationFormRegistrationBase):
     """Base class for simple payment errors which just show a message"""
+
     _category = 'info'
     _msg = None
+    CSRF_ENABLED = False
 
     def _process(self):
         flash(self._msg, self._category)
@@ -47,6 +49,8 @@ class RHPaymentUncertain(RHPaymentAbortedBase):
 
 
 class PaymentSuccessMixin:
+    CSRF_ENABLED = False
+
     def _check_hash(self):
         if bool(request.form) == bool(request.args):
             # Prevent tampering with GET/POST data. We expect only one type of arguments!
@@ -108,6 +112,8 @@ class RHPaymentSuccessBackground(PaymentSuccessMixin, RH):
 
 class RHPaymentCancelBackground(RH):
     """Request cancelled callback (server2server notification)"""
+
+    CSRF_ENABLED = False
 
     def _process(self):
         # We don't do anything here since we don't have anything stored locally
