@@ -1,11 +1,11 @@
 from __future__ import unicode_literals
 
 from indico.core.plugins import WPJinjaMixinPlugin
-from indico.legacy.webinterface.pages.main import WPMainBase
+from indico.legacy.webinterface.pages.base import WPDecorated
 from indico.legacy.webinterface.wcomponents import WSimpleNavigationDrawer
 
 
-class WPAudiovisualManagers(WPJinjaMixinPlugin, WPMainBase):
+class WPAudiovisualManagers(WPJinjaMixinPlugin, WPDecorated):
     def _getNavigationDrawer(self):
         return WSimpleNavigationDrawer('Webcast/Recording')
 
