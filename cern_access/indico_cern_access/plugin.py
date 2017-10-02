@@ -1,17 +1,17 @@
 from __future__ import unicode_literals
 
 from flask import request
+from flask_pluginengine import render_plugin_template
 from pytz import timezone
 from werkzeug.exceptions import Forbidden
 from wtforms import StringField
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from wtforms.fields.html5 import URLField
-from wtforms.validators import DataRequired, ValidationError
+from wtforms.validators import DataRequired
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
 from indico.core.settings.converters import SettingConverter
-from indico.modules.categories import Category
 from indico.modules.designer import TemplateType
 from indico.modules.designer.models.templates import DesignerTemplate
 from indico.modules.events import Event
@@ -90,6 +90,7 @@ class CERNAccessPlugin(IndicoPlugin):
 
     def init(self):
         super(CERNAccessPlugin, self).init()
+        self.template_hook('registration_access_status', self._get_access_status)
         self.inject_js('cern_access_js', WPRequestsEventManagement)
         self.inject_css('cern_access_css', WPRequestsEventManagement)
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
@@ -114,6 +115,11 @@ class CERNAccessPlugin(IndicoPlugin):
 
     def _get_event_request_definitions(self, sender, **kwargs):
         return CERNAccessRequestDefinition
+
+    def _get_access_status(self, registration, **kwargs):
+        return render_plugin_template('cern_access_status.html',
+                                      registration=registration,
+                                      access_state=CERNAccessRequestState)
 
     def _registration_deleted(self, registration, **kwargs):
         """Withdraws CERN access request for deleted registrations"""

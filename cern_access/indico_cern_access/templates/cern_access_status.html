@@ -1,0 +1,17 @@
+<td>
+    {% if registration.cern_access_request and registration.cern_access_request.is_active %}
+        {% if registration.cern_access_request.request_state == access_state.pending %}
+            <div class="i-label warning">
+                {% trans %}pending{% endtrans %}
+            </div>
+        {% elif registration.cern_access_request.request_state == access_state.accepted %}
+            <div class="i-label accept">
+                {% trans %}access granted{% endtrans %}
+            </div>
+        {% else %}
+             <div class="i-label danger">
+                {% trans %}no access{% endtrans %}
+             </div>
+        {% endif %}
+    {% endif %}
+</td>
