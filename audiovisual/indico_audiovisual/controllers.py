@@ -20,7 +20,7 @@ class RHRequestList(RHProtected):
 
     def _check_access(self):
         RHProtected._check_access(self)
-        if self._doProcess and not is_av_manager(session.user):
+        if not is_av_manager(session.user):
             raise Forbidden
 
     def _process(self):
