@@ -18,7 +18,7 @@
                         <span class="subItemText">{{ subcontrib.title }}</span>
                         {% if show_notes and subcontrib.has_note %}
                             <span class="notes">
-                                {{ subcontrib.note.html | safe }}
+                                {{ subcontrib.note.html | sanitize_html }}
                             </span>
                         {% endif %}
                     </td>

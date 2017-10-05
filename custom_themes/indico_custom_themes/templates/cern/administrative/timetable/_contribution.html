@@ -25,7 +25,7 @@
             {% endif %}
             {% if show_notes and contrib.has_note %}
                 <span class="notes">
-                    {{ contrib.note.html | safe }}
+                    {{ contrib.note.html | sanitize_html }}
                 </span>
             {% endif %}
         </td>

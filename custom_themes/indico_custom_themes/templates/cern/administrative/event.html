@@ -77,7 +77,7 @@
             <br/><br/>
 
             {% if theme_settings.show_notes and event.has_note %}
-                <span class="notes">{{ event.note.html | safe }}</span>
+                <span class="notes">{{ event.note.html | sanitize_html }}</span>
             {% endif %}
 
             <div class="event-body {{ 'event-locked' if event.is_locked }}">
