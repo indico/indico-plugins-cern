@@ -12,6 +12,7 @@ from itsdangerous import BadData
 
 from indico.core import signals
 from indico.core.celery import celery
+from indico.core.config import config
 from indico.core.db import db
 from indico.core.plugins import url_for_plugin
 from indico.legacy.webinterface.rh.base import RH
@@ -50,7 +51,7 @@ def submit_attachment(task, attachment):
                 raise requests.RequestException('Unexpected response from server: {}'.format(response.text))
         except requests.RequestException as exc:
             attempt = task.request.retries + 1
-            delay = (DELAYS + [0])[task.request.retries]
+            delay = (DELAYS + [0])[task.request.retries] if not config.DEBUG else 1
             try:
                 task.retry(countdown=delay, max_retries=(MAX_TRIES - 1))
             except MaxRetriesExceededError:
