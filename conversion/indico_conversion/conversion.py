@@ -6,6 +6,7 @@ from datetime import timedelta
 from io import BytesIO
 
 import requests
+from celery.exceptions import MaxRetriesExceededError, Retry
 from flask import jsonify, request, session
 from itsdangerous import BadData
 
@@ -20,6 +21,10 @@ from indico.web.flask.templating import get_template_module
 
 from indico_conversion import cache
 from indico_conversion.util import get_pdf_title
+
+
+MAX_TRIES = 10
+DELAYS = [30, 60, 120, 300, 600, 1800, 3600, 3600, 7200]
 
 
 @celery.task(bind=True, max_retries=None)
@@ -43,11 +48,21 @@ def submit_attachment(task, attachment):
             response.raise_for_status()
             if 'ok' not in response.text:
                 raise requests.RequestException('Unexpected response from server: {}'.format(response.text))
-        except requests.RequestException:
-            cache.delete(unicode(attachment.id))
-            ConversionPlugin.logger.exception('Could not submit %s for PDF conversion', attachment)
+        except requests.RequestException as exc:
+            attempt = task.request.retries + 1
+            delay = (DELAYS + [0])[task.request.retries]
+            try:
+                task.retry(countdown=delay, max_retries=(MAX_TRIES - 1))
+            except MaxRetriesExceededError:
+                ConversionPlugin.logger.error('Could not submit attachment %d (attempt %d/%d); giving up [%s]',
+                                              attachment.id, attempt, MAX_TRIES, exc)
+                cache.delete(unicode(attachment.id))
+            except Retry:
+                ConversionPlugin.logger.warning('Could not submit attachment %d (attempt %d/%d); retry in %ds [%s]',
+                                                attachment.id, attempt, MAX_TRIES, delay, exc)
+                raise
         else:
-            ConversionPlugin.logger.info('Submitted %s for PDF conversion', attachment)
+            ConversionPlugin.logger.info('Submitted %r', attachment)
 
 
 class RHConversionFinished(RH):
