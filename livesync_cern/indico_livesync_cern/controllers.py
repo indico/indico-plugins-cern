@@ -4,8 +4,8 @@ from flask import current_app, jsonify, request
 from sqlalchemy.orm import load_only
 from werkzeug.exceptions import Unauthorized
 
-from indico.legacy.webinterface.rh.base import RH
 from indico.modules.categories import Category
+from indico.web.rh import RH
 
 
 class RHCategoriesJSON(RH):

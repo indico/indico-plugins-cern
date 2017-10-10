@@ -6,9 +6,9 @@ from operator import itemgetter
 from flask import request, session
 from werkzeug.exceptions import Forbidden
 
-from indico.legacy.webinterface.rh.base import RHProtected
 from indico.util.date_time import as_utc, get_day_end, get_day_start
 from indico.util.struct.iterables import group_list
+from indico.web.rh import RHProtected
 
 from indico_audiovisual.forms import RequestListFilterForm
 from indico_audiovisual.util import find_requests, is_av_manager

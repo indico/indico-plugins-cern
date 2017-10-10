@@ -2,8 +2,8 @@ from flask import jsonify, request
 from werkzeug.exceptions import NotFound
 
 from indico.core.errors import IndicoError
-from indico.legacy.webinterface.rh.base import RH
 from indico.modules.vc.models.vc_rooms import VCRoomEventAssociation
+from indico.web.rh import RH
 
 from indico_ravem import _
 from indico_ravem.operations import connect_room, disconnect_room, get_room_status

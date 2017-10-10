@@ -15,10 +15,10 @@ from indico.core.celery import celery
 from indico.core.config import config
 from indico.core.db import db
 from indico.core.plugins import url_for_plugin
-from indico.legacy.webinterface.rh.base import RH
 from indico.modules.attachments.models.attachments import Attachment, AttachmentFile, AttachmentType
 from indico.util.signing import secure_serializer
 from indico.web.flask.templating import get_template_module
+from indico.web.rh import RH
 
 from indico_conversion import cache
 from indico_conversion.util import get_pdf_title
