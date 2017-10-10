@@ -16,7 +16,6 @@ from indico.core.settings.converters import TimedeltaConverter
 from indico.modules.events import Event
 from indico.modules.events.registration.models.registrations import RegistrationState
 from indico.modules.users import ExtraUserPreferences
-from indico.util.event import unify_event_args
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import IndicoPasswordField, TimeDeltaField
 from indico.web.forms.validators import HiddenUnless
@@ -155,7 +154,6 @@ class OutlookPlugin(IndicoPlugin):
             self.logger.info('Event time change: updating %s in %r', user, event)
             self._record_change(event, user, OutlookAction.update)
 
-    @unify_event_args
     def event_deleted(self, event, **kwargs):
         for user in get_participating_users(event):
             self.logger.info('Event deletion: removing %s in %r', user, event)
