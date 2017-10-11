@@ -62,7 +62,7 @@ class FoundationSync(object):
         try:
             connection = cx_Oracle.connect(self.db_name)
             connection.outputtypehandler = OutputTypeHandler
-            self._logger.info("Connected to Foundation DB")
+            self._logger.debug("Connected to Foundation DB")
             yield connection
             connection.close()
         except cx_Oracle.DatabaseError:
@@ -123,7 +123,7 @@ class FoundationSync(object):
         return room
 
     def fetch_buildings_coordinates(self, connection):
-        self._logger.info("Fetching the building geocoordinates...")
+        self._logger.debug("Fetching the building geocoordinates...")
 
         coordinates = {}
         cursor = connection.cursor()
@@ -138,11 +138,11 @@ class FoundationSync(object):
             if latitude and longitude and building_number:
                 coordinates[building_number] = {'latitude': latitude, 'longitude': longitude}
 
-        self._logger.info("Fetched geocoordinates for %d buildings", len(coordinates))
+        self._logger.debug("Fetched geocoordinates for %d buildings", len(coordinates))
         return coordinates
 
     def fetch_equipment(self, connection):
-        self._logger.info("Fetching equipment list...")
+        self._logger.debug("Fetching equipment list...")
 
         counter = Counter()
         foundation_equipment_ids = []
@@ -169,7 +169,7 @@ class FoundationSync(object):
         self._logger.info("Equipment objects summary: %d found - %d new added", counter['found'], counter['added'])
 
     def fetch_holidays(self, connection):
-        self._logger.info("Fetching holidays...")
+        self._logger.debug("Fetching holidays...")
 
         counter = Counter()
         cursor = connection.cursor()
@@ -183,13 +183,13 @@ class FoundationSync(object):
             holiday = Holiday(date=row['HOLIDAY_DATE'].date(), name=row['COMMENTS'])
             counter['found'] += 1
             self._location.holidays.append(holiday)
-            self._logger.info(u"Added %s as a holiday (%s)", holiday.date, holiday.name)
+            self._logger.debug(u"Added %s as a holiday (%s)", holiday.date, holiday.name)
 
         db.session.commit()
         self._logger.info("Holidays summary: %d found", counter['found'])
 
     def fetch_rooms(self, connection, room_name=None):
-        self._logger.info("Fetching room information...")
+        self._logger.debug("Fetching room information...")
 
         counter = Counter()
         foundation_rooms = []
@@ -210,10 +210,10 @@ class FoundationSync(object):
             try:
                 room_data = self._parse_room_data(data, coordinates)
                 room_attrs = self._get_room_attrs(data)
-                self._logger.info("Fetched data for room with id='%s'", room_id)
+                self._logger.debug("Fetched data for room with id='%s'", room_id)
             except SkipRoom as e:
                 counter['skipped'] += 1
-                self._logger.warning("Skipped room %s: %s", room_id, e)
+                self._logger.info("Skipped room %s: %s", room_id, e)
                 continue
 
             room = Room.find_first(Room.building == room_data['building'],
@@ -240,6 +240,7 @@ class FoundationSync(object):
         indico_rooms = Room.find(Room.name == room_name) if room_name else Room.find(location=self._location)
         rooms_to_deactivate = (room for room in indico_rooms if room not in foundation_rooms and room.is_active)
         for room in rooms_to_deactivate:
+            self._logger.info("Deactivated room '%s'", room.full_name)
             room.is_active = False
             room.is_reservable = False
             counter['deactivated'] += 1
@@ -251,7 +252,7 @@ class FoundationSync(object):
                           counter['deactivated'])
 
     def fetch_room_equipment(self, connection, room_name=None):
-        self._logger.info("Fetching rooms equipment...")
+        self._logger.debug("Fetching rooms equipment...")
 
         cursor = connection.cursor()
         if room_name:
@@ -298,14 +299,14 @@ class FoundationSync(object):
                 foundation_room_equipment[room].append(equipment.id)
             except SkipRoom as e:
                 counter['skipped'] += 1
-                self._logger.warning("Skipped room %s: %s", room_id, e)
+                self._logger.info("Skipped room %s: %s", room_id, e)
 
         for room, equipment_types in foundation_room_equipment.iteritems():
             # We handle VC subequipment like equipment that's in the foundation DB since the latter only contains "VC"
             # but no information about the actually available vc equipment...
             foundation_equipment_ids = set(equipment_types) | {eq.id for eq in vc_equipment}
             for equipment in room.available_equipment.filter(~EquipmentType.id.in_(foundation_equipment_ids)):
-                self._logger.info("Mismatch: Room %s has equipment %s in Indico DB but not in Foundation",
+                self._logger.info("Mismatch: Room '%s' has equipment '%s' in Indico DB but not in Foundation",
                                   room.full_name, equipment.name)
 
         db.session.commit()
