@@ -34,6 +34,10 @@ except ImportError:
 DEFAULT_VC_EQUIPMENT = {'Built-in (MCU) Bridge', 'Vidyo', 'H323 point2point', 'Audio Conference'}
 
 
+class SkipRoom(Exception):
+    pass
+
+
 def OutputTypeHandler(cursor, name, defaultType, size, precision, scale):
     """
     Unicode output handler for oracle connections
@@ -76,13 +80,13 @@ class FoundationSync(object):
         data['number'] = raw_data['ROOM_NUMBER']
         data['email'] = raw_data['RESPONSIBLE_EMAIL']
         if not data['building'] or not data['floor'] or not data['number']:
-            raise ValueError('Error in Foundation - No value for BUILDING or FLOOR or ROOM_NUMBER')
+            raise SkipRoom('Error in Foundation - No value for BUILDING or FLOOR or ROOM_NUMBER')
         if not data['email']:
-            raise ValueError('Error in Foundation - No value for RESPONSIBLE_EMAIL')
+            raise SkipRoom('Error in Foundation - No value for RESPONSIBLE_EMAIL')
 
         user = get_user_by_email(data['email'], create_pending=True)
         if not user:
-            raise ValueError('Bad RESPONSIBLE_EMAIL in Foundation - No user found with email {}'.format(data['email']))
+            raise SkipRoom('Bad RESPONSIBLE_EMAIL in Foundation - No user found with email {}'.format(data['email']))
 
         data['owner'] = user
         data['name'] = (raw_data.get('FRIENDLY_NAME') or '').strip()
@@ -207,7 +211,7 @@ class FoundationSync(object):
                 room_data = self._parse_room_data(data, coordinates)
                 room_attrs = self._get_room_attrs(data)
                 self._logger.info("Fetched data for room with id='%s'", room_id)
-            except ValueError as e:
+            except SkipRoom as e:
                 counter['skipped'] += 1
                 self._logger.warning("Skipped room %s: %s", room_id, e)
                 continue
@@ -278,9 +282,9 @@ class FoundationSync(object):
                                    Room.number == number)
             try:
                 if not room:
-                    raise ValueError('Room not found in Indico DB')
+                    raise SkipRoom('Room not found in Indico DB')
                 if not equipment:
-                    raise ValueError('Equipment %s not found in Indico DB', equipment_name)
+                    raise SkipRoom('Equipment %s not found in Indico DB', equipment_name)
                 if not room.available_equipment.filter(EquipmentType.id == equipment.id).count():
                     room.available_equipment.append(equipment)
                     counter['added'] += 1
@@ -292,7 +296,7 @@ class FoundationSync(object):
                             room.available_equipment.append(eq)
                             self._logger.info("Added VC equipment '%s' to room '%s'", eq.name, room.full_name)
                 foundation_room_equipment[room].append(equipment.id)
-            except ValueError as e:
+            except SkipRoom as e:
                 counter['skipped'] += 1
                 self._logger.warning("Skipped room %s: %s", room_id, e)
 
