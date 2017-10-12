@@ -80,7 +80,7 @@ class RHConversionFinished(RH):
             return jsonify(success=False)
         attachment = Attachment.get(payload['attachment_id'])
         if not attachment or attachment.is_deleted or attachment.folder.is_deleted:
-            ConversionPlugin.logger.warning('Attachment has been deleted: %s', attachment)
+            ConversionPlugin.logger.info('Attachment has been deleted: %s', attachment)
             return jsonify(success=True)
         elif request.form['status'] != '1':
             ConversionPlugin.logger.error('Received invalid status %s for %s', request.form['status'], attachment)
