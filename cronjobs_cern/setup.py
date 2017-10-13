@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='indico_cronjobs_cern',
-    version='1.0.dev0',
+    version='1.0.dev1',
     url='https://gitlab.cern.ch/indico/indico-plugins-cern',
     author='Indico Team',
     author_email='indico-team@cern.ch',

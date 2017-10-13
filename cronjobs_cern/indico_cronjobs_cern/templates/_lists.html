@@ -1,3 +1,7 @@
+{% macro _format_time(dt) -%}
+    {{ dt | format_time('HH:mm', timezone=indico_config.DEFAULT_TIMEZONE) }}
+{%- endmacro %}
+
 {% macro render_event_list(events_by_date, show_location=true) %}
     <ul>
         {% if events_by_date %}
@@ -7,7 +11,9 @@
                     <ul>
                         {% for event in events %}
                             <li>
-                                <span>{{ event.start_dt | format_time('HH:mm') }}</span>
+                                <span>
+                                    {{- _format_time(event.start_dt) -}}
+                                </span>
                                 <span>{{ event.category.title }}</span>
                                 <a href="{{ event.url }}">
                                     <span>{{ event.title }}</span>
@@ -31,7 +37,7 @@
         {% if reservations %}
             {% for rsv in reservations %}
                 <li>
-                    {{ rsv.start_dt | format_time('HH:mm') }} ⟶ {{ rsv.end_dt | format_time('HH:mm') }}
+                    {{ _format_time(rsv.start_dt) }} ⟶ {{ _format_time(rsv.end_dt) }}
                     <a href="{{ rsv.details_url }}">{{ rsv.booking_reason }}</a>
                     (Booked for: {{ rsv.booked_for_name }})
                 </li>
