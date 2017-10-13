@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-from sqlalchemy import Boolean
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from indico.core.db.sqlalchemy import PyIntEnum, db
@@ -21,11 +20,6 @@ class CERNAccessRequestRegForm(db.Model):
         nullable=False,
         default=CERNAccessRequestState.not_requested
     )
-    allow_unpaid = db.Column(
-        Boolean,
-        nullable=False,
-        default=False
-    )
 
     registration_form = db.relationship(
         'RegistrationForm',
@@ -33,7 +27,8 @@ class CERNAccessRequestRegForm(db.Model):
         lazy=False,
         backref=db.backref(
             'cern_access_request',
-            uselist=False)
+            uselist=False
+        )
     )
 
     @hybrid_property

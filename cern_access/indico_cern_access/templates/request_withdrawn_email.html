@@ -1,15 +1,13 @@
-{% extends 'events/registration/emails/base_registration_details.html' %}
+{% extends 'events/registration/emails/base_registration.html' %}
+
 {% block subject_name %}{% endblock %}
+
 {% block subject_message -%}
     CERN access withdrawn
 {%- endblock %}
 
 {% block registration_header -%}
-    {% set event = registration.registration_form.event_new %}
+    {% set event = registration.registration_form.event %}
     <p>Dear {{ registration.full_name }},</p>
-    <p>
-        {% block registration_header_text %}
-            Access to the CERN site has been withdrawn from your registration. Your ticket is not valid anymore.
-        {% endblock %}
-    </p>
+    <p>Access to the CERN site has been withdrawn from your registration. Your ticket is not valid anymore.</p>
 {%- endblock %}

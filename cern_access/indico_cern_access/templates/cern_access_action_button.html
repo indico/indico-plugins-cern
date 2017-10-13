@@ -1,0 +1,21 @@
+<a class="i-button arrow button js-requires-selected-row disabled" data-toggle="dropdown">
+     {%- trans %}CERN access control{% endtrans -%}
+</a>
+<ul class="dropdown">
+    <li>
+        <a href="#" class="icon-checkmark js-requires-selected-row disabled js-modify-status"
+           data-method="POST"
+           data-flag="1"
+           data-href="{{ url_for_plugin('cern_access.registrations_cern_access', regform) }}">
+            {%- trans %}Grant access{% endtrans -%}
+        </a>
+    </li>
+    <li>
+        <a href="#" class="icon-close js-requires-selected-row disabled js-modify-status"
+           data-href="{{ url_for_plugin('cern_access.registrations_cern_access', regform) }}"
+           data-method="POST"
+           data-flag="0">
+            {%- trans %}Revoke access{% endtrans -%}
+        </a>
+    </li>
+</ul>

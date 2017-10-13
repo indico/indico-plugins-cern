@@ -17,7 +17,6 @@ from indico.modules.designer.models.templates import DesignerTemplate
 from indico.modules.events import Event
 from indico.modules.events.registration.forms import TicketsForm
 from indico.modules.events.registration.models.forms import RegistrationForm
-from indico.modules.events.registration.models.registrations import RegistrationState
 from indico.modules.events.requests.views import WPRequestsEventManagement
 from indico.util.string import remove_accents, unicode_to_ascii
 from indico.web.forms.base import IndicoForm
@@ -27,10 +26,9 @@ from indico_cern_access import _
 from indico_cern_access.blueprint import blueprint
 from indico_cern_access.definition import CERNAccessRequestDefinition
 from indico_cern_access.models.access_requests import CERNAccessRequestState
-from indico_cern_access.util import (create_access_request, generate_access_id, get_event_registrations,
-                                     get_random_reservation_code, get_requested_forms, notify_access_withdrawn,
-                                     send_adams_delete_request, send_adams_post_request, send_tickets,
-                                     update_access_requests, withdraw_access_requests)
+from indico_cern_access.util import (generate_access_id, get_random_reservation_code, get_requested_forms,
+                                     get_requested_registrations, notify_access_withdrawn, send_adams_delete_request,
+                                     send_adams_post_request, update_access_requests, withdraw_access_requests)
 
 
 class PluginSettingsForm(IndicoForm):
@@ -39,15 +37,15 @@ class PluginSettingsForm(IndicoForm):
     authorized_users = PrincipalListField(_('Authorized_users'), groups=True,
                                           description=_('List of users/groups who can send requests'))
     excluded_categories = MultipleItemsField('Excluded categories', fields=[{'id': 'id', 'caption': 'Category ID'}])
-    login = StringField(_('Login'), [DataRequired()],
-                        description=_('The login used to authenticate with ADaMS service'))
+    username = StringField(_('Username'), [DataRequired()],
+                           description=_('The login used to authenticate with ADaMS service'))
     password = IndicoPasswordField(_('Password'), [DataRequired()],
                                    description=_('The password used to authenticate with ADaMS service'))
-    secret_key = StringField(_('Secret key'), [DataRequired()],
-                             description=_('Secret key to sign requests to ADaMS API'))
-    access_ticket_template_id = QuerySelectField(_("Access ticket template"), allow_blank=True,
-                                                 blank_text=_("No access ticket selected"), get_label='title',
-                                                 description=_("Ticket template allowing access to CERN"))
+    secret_key = IndicoPasswordField(_('Secret key'), [DataRequired()],
+                                     description=_('Secret key to sign requests to ADaMS API'))
+    access_ticket_template = QuerySelectField(_("Access ticket template"), allow_blank=True,
+                                              blank_text=_("No access ticket selected"), get_label='title',
+                                              description=_("Ticket template allowing access to CERN"))
 
     def __init__(self, *args, **kwargs):
         super(PluginSettingsForm, self).__init__(*args, **kwargs)
@@ -77,12 +75,14 @@ class CERNAccessPlugin(IndicoPlugin):
 
     settings_form = PluginSettingsForm
     configurable = True
-    default_settings = {'adams_url': 'https://oraweb.cern.ch/ords/devdb11/adams3/api/bookings/',
-                        'login': 'indicoprod',
-                        'password': '',
-                        'secret_key': '',
-                        'access_ticket_template_id': None,
-                        'excluded_categories': []}
+    default_settings = {
+        'adams_url': 'https://oraweb.cern.ch/ords/devdb11/adams3/api/bookings/',
+        'login': 'indicoprod',
+        'password': '',
+        'secret_key': '',
+        'access_ticket_template_id': None,
+        'excluded_categories': []
+    }
     settings_converters = {
         'access_ticket_template_id': DesignerTemplateConverter
     }
@@ -90,12 +90,10 @@ class CERNAccessPlugin(IndicoPlugin):
 
     def init(self):
         super(CERNAccessPlugin, self).init()
-        self.template_hook('registration_access_status', self._get_access_status)
-        self.inject_js('cern_access_js', WPRequestsEventManagement)
-        self.inject_css('cern_access_css', WPRequestsEventManagement)
+        self.template_hook('registration-status-flag', self._get_access_status)
+        self.template_hook('registration-status-action-button', self._get_access_action_button)
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
         self.connect(signals.event.registration_deleted, self._registration_deleted)
-        self.connect(signals.event.registration_state_updated, self._registration_state_changed)
         self.connect(signals.event.timetable.times_changed, self._event_time_changed, sender=Event)
         self.connect(signals.event.registration_personal_data_modified, self._registration_modified)
         self.connect(signals.event.registration_form_deleted, self._registration_form_deleted)
@@ -109,17 +107,18 @@ class CERNAccessPlugin(IndicoPlugin):
     def get_blueprints(self):
         yield blueprint
 
-    def register_assets(self):
-        self.register_js_bundle('cern_access_js', 'js/cern_access.js')
-        self.register_css_bundle('cern_access_css', 'css/cern_access.scss')
-
     def _get_event_request_definitions(self, sender, **kwargs):
         return CERNAccessRequestDefinition
 
-    def _get_access_status(self, registration, **kwargs):
-        return render_plugin_template('cern_access_status.html',
-                                      registration=registration,
-                                      access_state=CERNAccessRequestState)
+    def _get_access_action_button(self, regform):
+        if regform.cern_access_request and regform.cern_access_request.is_active:
+            return render_plugin_template('cern_access_action_button.html', regform=regform)
+
+    def _get_access_status(self, regform, registration=None, header=False):
+        if regform.cern_access_request and regform.cern_access_request.is_active:
+            return render_plugin_template('cern_access_status.html',
+                                          registration=registration,
+                                          header=header)
 
     def _registration_deleted(self, registration, **kwargs):
         """Withdraws CERN access request for deleted registrations"""
@@ -127,45 +126,19 @@ class CERNAccessPlugin(IndicoPlugin):
             send_adams_delete_request([registration])
             registration.cern_access_request.request_state = CERNAccessRequestState.withdrawn
 
-    def _registration_state_changed(self, registration, **kwargs):
-        """Requests/withdraws CERN access for registrations that changed their state"""
-        access_request_regform = registration.registration_form.cern_access_request
-        is_form_requested = access_request_regform and access_request_regform.is_active
-        is_registration_requested = registration.cern_access_request and registration.cern_access_request.is_active
-        if not is_form_requested:
-            return
-        if registration.state == RegistrationState.complete:
-            if not is_registration_requested:
-                event = registration.registration_form.event_new
-                state, data = send_adams_post_request(event, [registration])
-                create_access_request(registration, state, data[registration.id]["$rc"])
-                if state == CERNAccessRequestState.accepted and registration.registration_form.ticket_on_email:
-                    send_tickets([registration])
-        elif registration.state == RegistrationState.unpaid:
-            if access_request_regform.allow_unpaid and not is_registration_requested:
-                state, data = send_adams_post_request(registration.event_new, [registration])
-                create_access_request(registration, state, data[registration.id]["$rc"])
-                if state == CERNAccessRequestState.accepted and registration.registration_form.ticket_on_email:
-                    send_tickets([registration])
-            elif not access_request_regform.allow_unpaid and is_registration_requested:
-                send_adams_delete_request([registration])
-                registration.cern_access_request.request_state = CERNAccessRequestState.withdrawn
-        elif is_registration_requested:
-            send_adams_delete_request([registration])
-            registration.cern_access_request.request_state = CERNAccessRequestState.withdrawn
-
-    def _event_time_changed(self, event, obj, **kwargs):
+    def _event_time_changed(self, sender, obj, **kwargs):
         """Updates event time in CERN access requests in ADaMS"""
-        registrations = get_event_registrations(event=obj, requested=True)
+        event = obj
+        registrations = get_requested_registrations(event=event)
         if registrations:
-            state, _ = send_adams_post_request(obj, registrations, update=True)
+            state = send_adams_post_request(event, registrations, update=True)[0]
             if state == CERNAccessRequestState.accepted:
                 update_access_requests(registrations, state)
 
     def _registration_form_deleted(self, registration_form):
         """Withdraws CERN access request for deleted registration form and corresponding registrations"""
         if registration_form.cern_access_request and registration_form.cern_access_request.is_active:
-            registrations = get_event_registrations(registration_form.event_new, regform=registration_form, requested=True)
+            registrations = get_requested_registrations(registration_form.event, regform=registration_form)
             if registrations:
                 deleted = send_adams_delete_request(registrations)
                 if deleted:
@@ -177,7 +150,7 @@ class CERNAccessPlugin(IndicoPlugin):
         """Withdraws CERN access request for registration forms and corresponding registrations of deleted event"""
         access_requests_forms = get_requested_forms(event)
         if access_requests_forms:
-            requested_registrations = get_event_registrations(event=event, requested=True)
+            requested_registrations = get_requested_registrations(event=event)
             if requested_registrations:
                 deleted = send_adams_delete_request(requested_registrations)
                 if deleted:
@@ -188,8 +161,8 @@ class CERNAccessPlugin(IndicoPlugin):
 
     def _registration_modified(self, registration, change):
         """If name of registration changed, updates the ADaMS CERN access request"""
-        if registration.cern_access_request and ('first_name' in change.keys() or 'last_name' in change.keys()):
-            state, _ = send_adams_post_request(registration.event_new, [registration], update=True)
+        if registration.cern_access_request and ('first_name' in change or 'last_name' in change):
+            state, _ = send_adams_post_request(registration.event, [registration], update=True)
             if state == CERNAccessRequestState.accepted:
                 registration.cern_access_request.request_state = state
 
@@ -197,7 +170,7 @@ class CERNAccessPlugin(IndicoPlugin):
         """Updates event name in the ADaMS CERN access request"""
         if 'title' not in changes:
             return
-        requested_registrations = get_event_registrations(event=event, requested=True)
+        requested_registrations = get_requested_registrations(event=event)
         if requested_registrations:
             state, _ = send_adams_post_request(event, requested_registrations, update=True)
             if state == CERNAccessRequestState.accepted:
@@ -217,34 +190,34 @@ class CERNAccessPlugin(IndicoPlugin):
             return
         regform = RegistrationForm.get_one(request.view_args['reg_form_id'])
         if regform.cern_access_request and regform.cern_access_request.is_active and form.tickets_enabled.data is False:
-            error = 'Access to CERN is requested for participants registered with this form, ticketing must be enabled'
-            form.tickets_enabled.errors.append(error)
+            err = _('Access to CERN is requested for participants registered with this form, ticketing must be enabled')
+            form.tickets_enabled.errors.append(err)
             return False
         access_tpl = self.settings.get('access_ticket_template_id')
         ticket_template = DesignerTemplate.get_one(form.ticket_template_id.data)
         if not access_tpl:
             return
         if ticket_template == access_tpl or ticket_template.backside_template == access_tpl:
-            if (not regform.cern_access_request or regform.cern_access_request and
-                    regform.cern_access_request.request_state != CERNAccessRequestState.accepted):
+            if (not regform.cern_access_request or
+                    (regform.cern_access_request and
+                        regform.cern_access_request.request_state != CERNAccessRequestState.accepted)):
                 form.ticket_template_id.errors.append(_('Selected template can only be used with an '
                                                         'accepted CERN access request'))
                 return False
 
-    def _print_badge_template(self, template, **kwargs):
+    def _print_badge_template(self, template, regform, **kwargs):
         access_tpl = self.settings.get('access_ticket_template_id')
         if not access_tpl:
             return
-        regform = kwargs.get('regform')
         if template == access_tpl or template.backside_template == access_tpl:
             if (not regform.cern_access_request or
-                    regform.cern_access_request and
-                    regform.cern_access_request.request_state != CERNAccessRequestState.accepted):
-                raise Forbidden('This badge cannot be printed because it uses the CERN access ticket '
-                                'template without an accepted CERN access request')
+                    (regform.cern_access_request and
+                        regform.cern_access_request.request_state != CERNAccessRequestState.accepted)):
+                raise Forbidden(_('This badge cannot be printed because it uses the CERN access ticket '
+                                  'template without an accepted CERN access request'))
 
     def _generate_ticket_qr_code(self, registration, ticket_data, **kwargs):
-        event = registration.event_new
+        event = registration.event
         tz = timezone('Europe/Zurich')
         ticket_data.update({
             '$id': generate_access_id(registration.id),

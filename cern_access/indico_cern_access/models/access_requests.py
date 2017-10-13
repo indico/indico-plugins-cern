@@ -42,9 +42,14 @@ class CERNAccessRequest(db.Model):
         lazy=False,
         backref=db.backref(
             'cern_access_request',
-            uselist=False)
+            uselist=False
+        )
     )
 
     @hybrid_property
     def is_active(self):
         return self.request_state != CERNAccessRequestState.withdrawn
+
+    @hybrid_property
+    def is_accepted(self):
+        return self.request_state == CERNAccessRequestState.accepted

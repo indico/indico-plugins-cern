@@ -5,21 +5,20 @@ import hmac
 import json
 import random
 import string
-from pprint import pformat
 
 import requests
 from flask import session
 from pytz import timezone
+from werkzeug.exceptions import Forbidden
 
-from indico.core.db import db
 from indico.core.notifications import make_email, send_email
 from indico.modules.events.registration.controllers.management.tickets import generate_ticket
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.registration.models.registrations import Registration, RegistrationState
-from indico.modules.events.requests.exceptions import RequestModuleError
 from indico.util.string import remove_accents, unicode_to_ascii
 from indico.web.flask.templating import get_template_module
 
+from indico_cern_access import _
 from indico_cern_access.models.access_request_regforms import CERNAccessRequestRegForm
 from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState
 
@@ -32,26 +31,16 @@ def get_requested_forms(event):
             .all())
 
 
-def get_event_registrations(event, regform=None, allow_unpaid=False, only_unpaid=False, requested=False):
-    """By default returns a list of complete registrations of an event
+def get_requested_registrations(event, regform=None):
+    """By default returns a list of requested registrations of an event
 
     :param regform: if specified, returns only registrations with that registration form
-    :param allow_unpaid: if True, returns not only complete registrations but also unpaid ones
-    :param only_unpaid: if True, returns only unpaid registrations
-    :param requested: if True, returns registrations with requested access to CERN
     """
-    query = Registration.query.with_parent(event).filter(Registration.is_active)
+    query = (Registration.query.with_parent(event)
+             .join(CERNAccessRequest)
+             .filter(CERNAccessRequest.is_active))
     if regform:
         query = query.filter(Registration.registration_form_id == regform.id)
-    if allow_unpaid:
-        query = query.filter(db.or_(Registration.state == RegistrationState.complete,
-                             Registration.state == RegistrationState.unpaid))
-    elif only_unpaid:
-        query = query.filter(Registration.state == RegistrationState.unpaid)
-    elif requested:
-        query = query.join(CERNAccessRequest).filter(CERNAccessRequest.is_active)
-    else:
-        query = query.filter(Registration.state == RegistrationState.complete)
     return query.all()
 
 
@@ -63,17 +52,16 @@ def send_adams_post_request(event, registrations, update=False):
     from indico_cern_access.plugin import CERNAccessPlugin
     data = {registration.id: build_access_request_data(registration, event, update=update)
             for registration in registrations}
-    headers = {'content-type': 'Application/JSON'}
+    headers = {'content-type': 'application/json'}
     auth = (CERNAccessPlugin.settings.get('login'), CERNAccessPlugin.settings.get('password'))
-    json_data = json.dumps([data[key] for key in data])
+    json_data = json.dumps(data.values())
     url = CERNAccessPlugin.settings.get('adams_url')
     try:
         r = requests.post(url, data=json_data, headers=headers, auth=auth)
         r.raise_for_status()
     except requests.exceptions.RequestException as e:
-        CERNAccessPlugin.logger.exception('Request to ADAMS failed:\nURL: %s\nData: %s \nReason: %s', url,
-                                          pformat(json_data), e)
-        raise RequestModuleError()
+        CERNAccessPlugin.logger.exception('Request to ADAMS failed (%r)', json_data)
+        raise AdamsError(_('Sending request to ADAMS failed'))
     return (CERNAccessRequestState.accepted, data)
 
 
@@ -90,9 +78,8 @@ def send_adams_delete_request(registrations):
         r = requests.delete(url, data=data, headers=headers, auth=auth)
         r.raise_for_status()
     except requests.exceptions.RequestException as e:
-        CERNAccessPlugin.logger.exception('Request to ADAMS failed:\nURL: %s\nData: %s \nReason: %s', url,
-                                          pformat(data), e)
-        raise RequestModuleError()
+        CERNAccessPlugin.logger.exception('Request to ADAMS failed (%r)', data)
+        raise AdamsError('Sending request to ADAMS failed')
 
 
 def generate_access_id(registration_id):
@@ -119,69 +106,41 @@ def build_access_request_data(registration, event, update=False):
                  '$ed': event.end_dt.astimezone(tz).strftime('%Y-%m-%dT%H:%M')})
     checksum = ';;'.join('{}:{}'.format(key, value) for key, value in sorted(data.viewitems()))
     signature = hmac.new(str(CERNAccessPlugin.settings.get('secret_key')), checksum, hashlib.sha256)
-    data.update({'$si': signature.hexdigest()})
+    data['$si'] = signature.hexdigest()
     return data
 
 
 def update_access_request(req):
-    """Adds, upodates and deletes CERN access requests from registration forms"""
-    from indico_cern_access.plugin import CERNAccessPlugin
+    """Adds, updates and deletes CERN access requests from registration forms"""
 
-    event = req.event_new
+    event = req.event
     existing_forms = get_requested_forms(event)
-    requested_forms = req.data['regforms']['regforms']
+    requested_forms = req.data['regforms']
 
-    # pull out ids of existing and requested forms to easily check which ones should be added/deleted/updated afterwards
+    # Pull out ids of existing and requested forms to easily
+    # check which ones should be added/deleted afterwards
     existing_forms_ids = {regform.id for regform in existing_forms}
-    requested_forms_ids = {regform['regform_id'] for regform in requested_forms}
-
-    allow_unpaid_info = {data['regform_id']: data['allow_unpaid'] for data in requested_forms}
-
+    requested_forms_ids = {int(id) for id in requested_forms}
     event_regforms = {regform.id: regform for regform in event.registration_forms}
 
     # add requests
     for regform_id in requested_forms_ids - existing_forms_ids:
-        allow_unpaid = allow_unpaid_info[regform_id]
         regform = event_regforms[regform_id]
-        registrations = get_event_registrations(event, regform=regform, allow_unpaid=allow_unpaid)
-        state, data = send_adams_post_request(event, registrations)
-        create_access_request_regform(regform, state, allow_unpaid)
+        create_access_request_regform(regform, state=CERNAccessRequestState.accepted)
         enable_ticketing(regform)
-        add_access_requests(registrations, data, state)
-        if regform.ticket_on_email:
-            send_tickets(registrations)
-
-    # update requests
-    for regform_id in set.intersection(requested_forms_ids, existing_forms_ids):
-        allow_unpaid = allow_unpaid_info[regform_id]
-        regform = event_regforms[regform_id]
-        if allow_unpaid != regform.cern_access_request.allow_unpaid:
-            if allow_unpaid is True:
-                registrations = get_event_registrations(event, regform=regform, only_unpaid=True)
-                state, data = send_adams_post_request(event, registrations)
-                regform.cern_access_request.allow_unpaid = allow_unpaid
-                add_access_requests(registrations, data, state)
-                if regform.ticket_on_email:
-                    send_tickets(registrations)
-            else:
-                registrations = get_event_registrations(event, regform=regform, only_unpaid=True, requested=True)
-                send_adams_delete_request(registrations)
-                regform.cern_access_request.allow_unpaid = allow_unpaid
-                withdraw_access_requests(registrations)
-                notify_access_withdrawn(registrations)
 
     # delete requests
     for regform_id in existing_forms_ids - requested_forms_ids:
         regform = event_regforms[regform_id]
-        registrations = get_event_registrations(event, regform=regform, requested=True)
+        registrations = get_requested_registrations(event, regform=regform)
         send_adams_delete_request(registrations)
         regform.cern_access_request.request_state = CERNAccessRequestState.withdrawn
-        check_if_access_template_used(regform)
+        remove_access_template(regform)
         withdraw_access_requests(registrations)
         notify_access_withdrawn(registrations)
 
 
-def check_if_access_template_used(regform):
+def remove_access_template(regform):
     from indico_cern_access.plugin import CERNAccessPlugin
     access_tpl = CERNAccessPlugin.settings.get('access_ticket_template_id')
     if regform.ticket_template == access_tpl:
@@ -191,7 +150,7 @@ def check_if_access_template_used(regform):
 def add_access_requests(registrations, data, state):
     """Adds CERN access requests for registrations"""
     for registration in registrations:
-        create_access_request(registration, state, data[registration.id]["$rc"])
+        create_access_request(registration, state, data[registration.id]['$rc'])
 
 
 def update_access_requests(registrations, state):
@@ -208,12 +167,12 @@ def withdraw_access_requests(registrations):
 
 def withdraw_event_access_request(req):
     """Withdraws all CERN access requests of an event"""
-    requested_forms = get_requested_forms(req.event_new)
-    requested_registrations = get_event_registrations(req.event_new, requested=True)
+    requested_forms = get_requested_forms(req.event)
+    requested_registrations = get_requested_registrations(req.event)
     send_adams_delete_request(requested_registrations)
     for regform in requested_forms:
         regform.cern_access_request.request_state = CERNAccessRequestState.withdrawn
-        check_if_access_template_used(regform)
+        remove_access_template(regform)
     withdraw_access_requests(requested_registrations)
     notify_access_withdrawn(requested_registrations)
 
@@ -233,7 +192,7 @@ def create_access_request(registration, state, reservation_code):
                                                              reservation_code=reservation_code)
 
 
-def create_access_request_regform(regform, state, allow_unpaid):
+def create_access_request_regform(regform, state):
     """Creates CERN access request object for registration form"""
     from indico_cern_access.plugin import CERNAccessPlugin
     access_tpl = CERNAccessPlugin.settings.get('access_ticket_template_id')
@@ -241,10 +200,8 @@ def create_access_request_regform(regform, state, allow_unpaid):
         regform.ticket_template = access_tpl
     if regform.cern_access_request:
         regform.cern_access_request.request_state = state
-        regform.cern_access_request.allow_unpaid = allow_unpaid
     else:
-        regform.cern_access_request = CERNAccessRequestRegForm(request_state=state,
-                                                               allow_unpaid=allow_unpaid)
+        regform.cern_access_request = CERNAccessRequestRegForm(request_state=state)
 
 
 def is_authorized_user(user):
@@ -260,7 +217,7 @@ def notify_access_withdrawn(registrations):
         from_address = registration.registration_form.sender_address
         email = make_email(to_list=registration.email, from_address=from_address,
                            template=template, html=True)
-        send_email(email, event=registration.registration_form.event_new, module='Registration', user=session.user)
+        send_email(email, event=registration.registration_form.event, module='Registration', user=session.user)
 
 
 def send_tickets(registrations):
@@ -272,9 +229,10 @@ def send_tickets(registrations):
             'name': 'Ticket.pdf',
             'binary': generate_ticket(registration).getvalue()
         }]
+        # attachments = [('Ticket.pdf', generate_ticket(registration).getvalue())]
         email = make_email(to_list=registration.email, from_address=from_address,
                            template=template, html=True, attachments=attachments)
-        send_email(email, event=registration.registration_form.event_new, module='Registration',
+        send_email(email, event=registration.registration_form.event, module='Registration',
                    user=session.user)
 
 
@@ -287,32 +245,39 @@ def enable_ticketing(regform):
         regform.ticket_on_summary_page = True
 
 
-def get_error_count(regform):
-    """Returns the number of registrations that failed to get the access to CERN"""
-    return len([r for r in regform.active_registrations if
-                ((r.cern_access_request
-                  and r.cern_access_request.is_active
-                  and r.cern_access_request.request_state != CERNAccessRequestState.accepted)
-                 or (regform.cern_access_request.allow_unpaid
-                     and (not r.cern_access_request or r.cern_access_request and not r.cern_access_request.is_active)
-                     and r.state in (RegistrationState.complete, RegistrationState.unpaid))
-                 or (not regform.cern_access_request.allow_unpaid
-                     and (not r.cern_access_request or r.cern_access_request and not r.cern_access_request.is_active)
-                     and r.state == RegistrationState.complete))])
-
-
-def get_warning_count(regform):
-    """Returns the number of registrations that don't have the access to CERN (e.g. not accepted, awaiting payment)"""
-    return len([r for r in regform.active_registrations if
-                ((regform.cern_access_request.allow_unpaid
-                  and (not r.cern_access_request or r.cern_access_request and not r.cern_access_request.is_active)
-                  and r.state not in (RegistrationState.complete, RegistrationState.unpaid))
-                 or (not regform.cern_access_request.allow_unpaid
-                     and (not r.cern_access_request or r.cern_access_request and not r.cern_access_request.is_active)
-                     and r.state != RegistrationState.complete))])
-
-
 def is_category_blacklisted(category):
-    """Checks if access to CERN can be requested for an event belonging to a category"""
     from indico_cern_access.plugin import CERNAccessPlugin
-    return category.id in {int(category['id']) for category in CERNAccessPlugin.settings.get('excluded_categories')}
+    return any(category.id == int(cat['id']) for cat in CERNAccessPlugin.settings.get('excluded_categories'))
+
+
+def grant_access(registrations, regform):
+    event = regform.event
+    new_registrations = [reg for reg in registrations if
+                         not (reg.cern_access_request
+                              and reg.cern_access_request.is_active
+                              and reg.cern_access_request.request_state == CERNAccessRequestState.accepted)]
+    state, data = send_adams_post_request(event, new_registrations)
+    add_access_requests(new_registrations, data, state)
+    if regform.ticket_on_email:
+        send_tickets(new_registrations)
+
+
+def revoke_access(registrations):
+    send_adams_delete_request(registrations)
+    requested_registrations = [reg for reg in registrations if
+                               reg.cern_access_request
+                               and reg.cern_access_request.is_active
+                               and reg.cern_access_request.request_state == CERNAccessRequestState.accepted]
+    withdraw_access_requests(requested_registrations)
+    notify_access_withdrawn(requested_registrations)
+
+
+def check_access(req):
+    user_authorized = is_authorized_user(session.user)
+    category_blacklisted = is_category_blacklisted(req.event.category)
+    if not user_authorized or category_blacklisted:
+        raise Forbidden()
+
+
+class AdamsError(Exception):
+    pass

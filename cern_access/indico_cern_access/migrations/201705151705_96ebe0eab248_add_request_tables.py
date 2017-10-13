@@ -1,9 +1,11 @@
 """Add access request tables
 
 Revision ID: 96ebe0eab248
-Revises: 
+Revises:
 Create Date: 2017-05-15 17:05:21.752213
 """
+
+from __future__ import unicode_literals
 
 import sqlalchemy as sa
 from alembic import op
@@ -32,7 +34,6 @@ def upgrade():
     op.create_table('access_request_regforms',
                     sa.Column('form_id', sa.Integer(), nullable=False),
                     sa.Column('request_state', PyIntEnum(CERNAccessRequestState), nullable=False),
-                    sa.Column('allow_unpaid', sa.Boolean(), nullable=False),
                     sa.ForeignKeyConstraint(['form_id'], ['event_registration.forms.id']),
                     sa.PrimaryKeyConstraint('form_id'),
                     schema='plugin_cern_access')

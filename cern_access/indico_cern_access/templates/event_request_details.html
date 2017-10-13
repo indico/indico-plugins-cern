@@ -1,7 +1,8 @@
 {% extends 'events/requests/event_request_details.html' %}
 {% from 'message_box.html' import message_box %}
+
 {% block content %}
-    {% if not can_send_request %}
+    {% if not user_authorized %}
         {% call message_box('warning') %}
             {% trans -%}
                 Unfortunately you are not allowed to send CERN access requests.
@@ -21,19 +22,17 @@
                 <span class="icon"></span>
                 <div class="message-text">
                     {% trans -%}
-                        By sending this request you are giving event participants access to CERN.
-                        Please note that after the request is accepted they will be able to enter CERN
-                        by presenting a valid ticket.<br/>
-                        <b>Before sending the request please make sure that the event is in its final form.</b>
-                        Event participants will receive a ticket to access CERN site
-                        just after the request is accepted and their registration is complete.
+                        By sending this request you are giving event participants access to the CERN site.
+                        Please note that after the request is accepted, you will need to grant the access to every participant
+                        manually on the registration list page. By default the tickets will be sent to them automatically afterwards.<br>
+                        <strong>Before granting access to any user please make sure that the event is in its final form.</strong>
                         If you change:
-                        <ul><strong>
-                            <li>starting or ending time of the event</li>
-                            <li>title of the event</li>
-                            <li>registration details of participants</li>
-                        </strong></ul>
-                        the updated ticket will not be sent automatically.
+                        <ul>
+                            <li><strong>starting or ending time of the event</strong></li>
+                            <li><strong>title of the event</strong></li>
+                            <li><strong>registration details of participants</strong></li>
+                        </ul>
+                        the updated ticket will <strong>not</strong> be sent automatically.
                         However the old ticket will be still valid.
                     {%- endtrans %}
                 </div>

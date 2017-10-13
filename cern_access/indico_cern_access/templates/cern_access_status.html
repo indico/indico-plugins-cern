@@ -1,17 +1,12 @@
-<td>
-    {% if registration.cern_access_request and registration.cern_access_request.is_active %}
-        {% if registration.cern_access_request.request_state == access_state.pending %}
-            <div class="i-label warning">
-                {% trans %}pending{% endtrans %}
-            </div>
-        {% elif registration.cern_access_request.request_state == access_state.accepted %}
-            <div class="i-label accept">
-                {% trans %}access granted{% endtrans %}
-            </div>
+{% if registration %}
+    {% set access_requested = registration.cern_access_request and registration.cern_access_request.is_active %}
+    <td class="i-table id-column">
+        {% if access_requested and registration.cern_access_request.is_accepted %}
+            <i class="icon-user-check semantic-text success" title="Access to CERN granted"></i>
         {% else %}
-             <div class="i-label danger">
-                {% trans %}no access{% endtrans %}
-             </div>
+            <i class="icon-user-block" title="No access to CERN"></i>
         {% endif %}
-    {% endif %}
-</td>
+    </td>
+{% elif header %}
+    <th class="i-table id-column"></th>
+{% endif %}
