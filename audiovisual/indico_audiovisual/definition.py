@@ -202,9 +202,7 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
         else:
             contribs = [x[0] for x in get_selected_contributions(req)]
             for contrib in contribs:
-                print contrib, contrib.person_links
                 for link in contrib.person_links:
-                    print link, link.is_speaker
                     if not link.is_speaker:
                         continue
                     yield SpeakerPersonInfo(link.full_name, link.email or None,
