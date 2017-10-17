@@ -4,7 +4,7 @@ from setuptools import setup
 
 
 setup(
-    name='indico_burotel',
+    name='indico-plugin-burotel',
     version='1.0.0.dev0',
     url='https://gitlab.cern.ch/indico/indico-plugins-cern',
     author='Indico Team',

@@ -4,7 +4,7 @@ from setuptools import setup
 
 
 setup(
-    name='indico_foundationsync',
+    name='indico-plugin-foundationsync',
     version='1.0.5.dev0',
     url='https://gitlab.cern.ch/indico/indico-plugins-cern',
     author='Indico Team',

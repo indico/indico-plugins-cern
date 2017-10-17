@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 
 
 setup(
-    name='indico_outlook',
+    name='indico-plugin-outlook',
     version='1.0.dev0',
     url='https://gitlab.cern.ch/indico/indico-plugins-cern',
     author='Indico Team',

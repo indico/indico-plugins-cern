@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 
 
 setup(
-    name='indico_custom_themes',
+    name='indico-plugin-custom-themes',
     version='1.0.dev0',
     url='https://gitlab.cern.ch/indico/indico-plugins-cern',
     author='Indico Team',
