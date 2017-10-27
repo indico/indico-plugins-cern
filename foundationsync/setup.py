@@ -5,14 +5,14 @@ from setuptools import setup
 
 setup(
     name='indico-plugin-foundationsync',
-    version='1.0.5.dev0',
+    version='1.0.5',
     url='https://gitlab.cern.ch/indico/indico-plugins-cern',
     author='Indico Team',
     author_email='indico-team@cern.ch',
     py_modules=('indico_foundationsync',),
     zip_safe=False,
     install_requires=[
-        'indico>=2.0.dev0',
+        'indico>=2.0a1',
         'cx_Oracle',
     ],
     entry_points={
