@@ -163,6 +163,7 @@ def withdraw_access_requests(registrations):
     """Withdraws CERN access requests for registrations"""
     for registration in registrations:
         registration.cern_access_request.request_state = CERNAccessRequestState.withdrawn
+        registration.cern_access_request.clear_identity_data()
 
 
 def withdraw_event_access_request(req):
@@ -254,8 +255,15 @@ def grant_access(registrations, regform):
                               and reg.cern_access_request.request_state == CERNAccessRequestState.accepted)]
     state, data = send_adams_post_request(event, new_registrations)
     add_access_requests(new_registrations, data, state)
-    if regform.ticket_on_email:
-        send_tickets(new_registrations)
+    send_link_to_the_form(new_registrations)
+
+
+def send_link_to_the_form(registrations):
+    for registration in registrations:
+        template = get_template_module('cern_access:identity_data_form_email.html', registration=registration)
+        from_address = registration.registration_form.sender_address
+        email = make_email(to_list=registration.email, from_address=from_address, template=template, html=True)
+        send_email(email, event=registration.registration_form.event, module='Registration', user=session.user)
 
 
 def revoke_access(registrations):

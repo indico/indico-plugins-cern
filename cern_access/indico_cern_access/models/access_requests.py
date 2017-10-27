@@ -36,6 +36,21 @@ class CERNAccessRequest(db.Model):
         nullable=False
     )
 
+    birth_date = db.Column(
+        db.Date,
+        nullable=True
+    )
+
+    birth_country = db.Column(
+        db.String,
+        nullable=True
+    )
+
+    birth_city = db.Column(
+        db.String,
+        nullable=True
+    )
+
     registration = db.relationship(
         'Registration',
         uselist=False,
@@ -53,3 +68,12 @@ class CERNAccessRequest(db.Model):
     @hybrid_property
     def is_accepted(self):
         return self.request_state == CERNAccessRequestState.accepted
+
+    @property
+    def has_identity_info(self):
+        return self.birth_city is not None and self.birth_date is not None and self.birth_country is not None
+
+    def clear_identity_data(self):
+        self.birth_date = None
+        self.birth_country = None
+        self.birth_city = None

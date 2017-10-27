@@ -1,0 +1,36 @@
+{% extends 'events/display/conference/base.html' %}
+
+{% from 'forms/_form.html' import simple_form %}
+
+{% block title %}
+    {% trans %}Additional data form{% endtrans %}
+{% endblock %}
+
+{% block content %}
+    {% if access_request is none or not access_request.is_accepted %}
+        <div class="info-message-box">
+            <div class="message-box-content">
+                <span class="icon"></span>
+                <div class="message-text">
+                    {% trans %}
+                        You have not been granted access to the CERN site yet.
+                    {% endtrans %}
+                </div>
+            </div>
+        </div>
+    {% elif not access_request.has_identity_info %}
+        {{ simple_form(form, back_button=False) }}
+    {% else %}
+        <div class="success-message-box">
+            <div class="message-box-content">
+                <span class="icon"></span>
+                <div class="message-text">
+                    {% trans %}
+                        You have successfully filled in the form with necessary data.
+                        Please check you mailbox for the ticket.
+                    {% endtrans %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

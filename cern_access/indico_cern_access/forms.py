@@ -1,10 +1,17 @@
 from __future__ import unicode_literals
 
+from datetime import datetime
+from operator import itemgetter
+
 from markupsafe import Markup
+from wtforms.fields import SelectField, StringField
+from wtforms.validators import DataRequired, ValidationError
 
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.requests import RequestFormBase
-from indico.web.forms.fields import IndicoSelectMultipleCheckboxField
+from indico.util.countries import get_countries
+from indico.web.forms.base import IndicoForm
+from indico.web.forms.fields import IndicoDateField, IndicoSelectMultipleCheckboxField
 from indico.web.forms.widgets import JinjaWidget
 
 from indico_cern_access import _
@@ -24,3 +31,14 @@ def get_regforms(event):
             .with_parent(event)
             .order_by(RegistrationForm.title, RegistrationForm.id)
             .all())
+
+
+class AccessIdentityDataForm(IndicoForm):
+    birth_date = IndicoDateField(_('Birth date'), [DataRequired()])
+    birth_country = SelectField(_('Country of birth'), [DataRequired()],
+                                choices=sorted(get_countries().iteritems(), key=itemgetter(1)))
+    birth_city = StringField(_('City of birth'), [DataRequired()])
+
+    def validate_birth_date(self, field):
+        if field.data > datetime.now().date():
+            raise ValidationError(_('The specified date is in the future'))
