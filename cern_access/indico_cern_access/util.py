@@ -59,7 +59,7 @@ def send_adams_post_request(event, registrations, update=False):
     try:
         r = requests.post(url, data=json_data, headers=headers, auth=auth)
         r.raise_for_status()
-    except requests.exceptions.RequestException as e:
+    except requests.exceptions.RequestException:
         CERNAccessPlugin.logger.exception('Request to ADAMS failed (%r)', json_data)
         raise AdamsError(_('Sending request to ADAMS failed'))
     return (CERNAccessRequestState.accepted, data)
@@ -77,7 +77,7 @@ def send_adams_delete_request(registrations):
     try:
         r = requests.delete(url, data=data, headers=headers, auth=auth)
         r.raise_for_status()
-    except requests.exceptions.RequestException as e:
+    except requests.exceptions.RequestException:
         CERNAccessPlugin.logger.exception('Request to ADAMS failed (%r)', data)
         raise AdamsError('Sending request to ADAMS failed')
 
