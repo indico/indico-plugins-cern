@@ -12,9 +12,9 @@ from pytz import timezone
 from werkzeug.exceptions import Forbidden
 
 from indico.core.notifications import make_email, send_email
-from indico.modules.events.registration.controllers.management.tickets import generate_ticket
 from indico.modules.events.registration.models.forms import RegistrationForm
-from indico.modules.events.registration.models.registrations import Registration, RegistrationState
+from indico.modules.events.registration.models.registrations import Registration
+from indico.modules.events.registration.util import get_ticket_attachments
 from indico.util.string import remove_accents, unicode_to_ascii
 from indico.web.flask.templating import get_template_module
 
@@ -225,11 +225,7 @@ def send_tickets(registrations):
     for registration in registrations:
         template = get_template_module('cern_access:ticket_email.html', registration=registration)
         from_address = registration.registration_form.sender_address
-        attachments = [{
-            'name': 'Ticket.pdf',
-            'binary': generate_ticket(registration).getvalue()
-        }]
-        # attachments = [('Ticket.pdf', generate_ticket(registration).getvalue())]
+        attachments = get_ticket_attachments(registration)
         email = make_email(to_list=registration.email, from_address=from_address,
                            template=template, html=True, attachments=attachments)
         send_email(email, event=registration.registration_form.event, module='Registration',
