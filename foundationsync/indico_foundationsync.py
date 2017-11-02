@@ -9,6 +9,8 @@
 Synchronizes holidays, rooms and equipment with the CERN Foundation Database.
 """
 
+from __future__ import unicode_literals
+
 import sys
 from collections import Counter, defaultdict
 from contextlib import contextmanager
@@ -38,7 +40,7 @@ except ImportError:
     cx_Oracle = None
 
 
-DEFAULT_VC_EQUIPMENT = {'Built-in (MCU) Bridge', 'Vidyo', 'H323 point2point', 'Audio Conference'}
+DEFAULT_VC_EQUIPMENT = {'Vidyo'}
 
 
 class SkipRoom(Exception):
@@ -274,10 +276,10 @@ class FoundationSync(object):
         foundation_room_equipment = defaultdict(list)
         vc_parent = self._location.get_equipment_by_name('Video conference')
         vc_equipment = set(self._location.equipment_types
-                           .filter(EquipmentType.parent_id == vc_parent.id,
-                                   EquipmentType.name.in_(DEFAULT_VC_EQUIPMENT))
-                           .all())
-
+                           .filter(EquipmentType.parent_id == vc_parent.id))
+        default_vc_equipment = set(self._location.equipment_types
+                                   .filter(EquipmentType.parent_id == vc_parent.id,
+                                           EquipmentType.name.in_(DEFAULT_VC_EQUIPMENT)))
         for row in cursor:
             row = self._prepare_row(row, cursor)
             counter['found'] += 1
@@ -301,7 +303,7 @@ class FoundationSync(object):
                     self._logger.info("Added equipment '%s' to room '%s'", equipment.name, room.full_name)
                     if equipment == vc_parent:
                         db_vc_equipment = set(room.available_equipment.filter(EquipmentType.parent_id == vc_parent.id))
-                        missing_vc_equipment = vc_equipment - db_vc_equipment
+                        missing_vc_equipment = default_vc_equipment - db_vc_equipment
                         for eq in missing_vc_equipment:
                             room.available_equipment.append(eq)
                             self._logger.info("Added VC equipment '%s' to room '%s'", eq.name, room.full_name)
@@ -313,14 +315,21 @@ class FoundationSync(object):
         for room, equipment_types in foundation_room_equipment.iteritems():
             # We handle VC subequipment like equipment that's in the foundation DB since the latter only contains "VC"
             # but no information about the actually available vc equipment...
-            foundation_equipment_ids = set(equipment_types) | {eq.id for eq in vc_equipment}
+            vc_equipment_ids = {eq.id for eq in vc_equipment}
+            foundation_equipment_ids = set(equipment_types) | vc_equipment_ids
             for equipment in room.available_equipment.filter(~EquipmentType.id.in_(foundation_equipment_ids)):
-                self._logger.info("Mismatch: Room '%s' has equipment '%s' in Indico DB but not in Foundation",
-                                  room.full_name, equipment.name)
+                if equipment == vc_parent:
+                    for vc_equip in room.available_equipment.filter(EquipmentType.parent_id == vc_parent.id):
+                        room.available_equipment.remove(vc_equip)
+                        counter['deleted'] += 1
+                        self._logger.info("Deleted VC equipment '%s' from room '%s'", equipment.name, room.full_name)
+                room.available_equipment.remove(equipment)
+                counter['deleted'] += 1
+                self._logger.info("Deleted equipment '%s' from room '%s'", equipment.name, room.full_name)
 
         db.session.commit()
-        self._logger.info("Equipment associations summary: %d found - %d new added - %d skipped",
-                          counter['found'], counter['added'], counter['skipped'])
+        self._logger.info("Equipment associations summary: %d found - %d new added - %d skipped - %d deleted",
+                          counter['found'], counter['added'], counter['skipped'], counter['deleted'])
 
     def run_all(self, room_name=None):
         with self.connect_to_foundation() as connection:
