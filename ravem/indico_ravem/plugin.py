@@ -53,7 +53,7 @@ class RavemPlugin(IndicoPlugin):
     settings_form = SettingsForm
     default_settings = {
         'debug': False,
-        'api_endpoint': 'https://ravem.cern.ch/api/services',
+        'api_endpoint': '',
         'username': 'ravem',
         'password': None,
         'prefix': 21,
