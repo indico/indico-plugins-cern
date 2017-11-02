@@ -44,7 +44,7 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
 
     try:
         response = requests.request(method, url, params=kwargs, headers=headers,
-                                    auth=HTTPDigestAuth(username, password), verify=False, timeout=timeout)
+                                    auth=HTTPDigestAuth(username, password), timeout=timeout)
     except Timeout as error:
         RavemPlugin.logger.warning("%s %s timed out: %s", error.request.method, error.request.url, error.message)
         # request timeout sometime has an inner timeout error as message instead of a string.
