@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='indico-plugin-conversion',
-    version='1.0',
+    version='1.0.1',
     url='https://gitlab.cern.ch/indico/indico-plugins-cern',
     author='Indico Team',
     author_email='indico-team@cern.ch',
