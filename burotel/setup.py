@@ -6,7 +6,8 @@ from setuptools import setup
 setup(
     name='indico-plugin-burotel',
     version='1.0',
-    url='https://gitlab.cern.ch/indico/indico-plugins-cern',
+    url='https://github.com/indico/indico-plugins-cern',
+    license='MIT',
     author='Indico Team',
     author_email='indico-team@cern.ch',
     py_modules=('indico_burotel',),
@@ -16,5 +17,11 @@ setup(
     ],
     entry_points={
         'indico.plugins': {'burotel = indico_burotel:BurotelPlugin'}
-    }
+    },
+    classifiers=[
+        'Environment :: Plugins',
+        'Environment :: Web Environment',
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 2.7',
+    ],
 )

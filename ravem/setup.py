@@ -6,7 +6,8 @@ from setuptools import find_packages, setup
 setup(
     name='indico-plugin-ravem',
     version='1.0.1',
-    url='https://gitlab.cern.ch/indico/indico-plugins-cern',
+    url='https://github.com/indico/indico-plugins-cern',
+    license='MIT',
     author='Indico Team',
     author_email='indico-team@cern.ch',
     packages=find_packages(),
@@ -17,5 +18,11 @@ setup(
     ],
     entry_points={
         'indico.plugins': {'ravem = indico_ravem.plugin:RavemPlugin'},
-    }
+    },
+    classifiers=[
+        'Environment :: Plugins',
+        'Environment :: Web Environment',
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 2.7',
+    ],
 )
