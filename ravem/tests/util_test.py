@@ -85,21 +85,21 @@ def test_accepts_json(mocker):
 
 @pytest.mark.usefixtures('db')
 @pytest.mark.parametrize(('root_endpoint', 'endpoint', 'expected_url'), (
-    ('http://ravem.com/', 'final_endpoint', 'http://ravem.com/final_endpoint'),
-    ('http://ravem.com/api/', 'final_endpoint', 'http://ravem.com/api/final_endpoint'),
-    ('http://ravem.com/api/v2/', 'final_endpoint', 'http://ravem.com/api/v2/final_endpoint'),
-    ('http://ravem.com', './final_endpoint', 'http://ravem.com/final_endpoint'),
-    ('http://ravem.com/api/', './final_endpoint', 'http://ravem.com/api/final_endpoint'),
-    ('http://ravem.com/api/v2/', './final_endpoint', 'http://ravem.com/api/v2/final_endpoint'),
-    ('http://ravem.com', 'sub/final_endpoint', 'http://ravem.com/sub/final_endpoint'),
-    ('http://ravem.com/api/', 'sub/final_endpoint', 'http://ravem.com/api/sub/final_endpoint'),
-    ('http://ravem.com/api/v2/', 'sub/final_endpoint', 'http://ravem.com/api/v2/sub/final_endpoint'),
-    ('http://ravem.com', './sub/final_endpoint', 'http://ravem.com/sub/final_endpoint'),
-    ('http://ravem.com/api/', './sub/final_endpoint', 'http://ravem.com/api/sub/final_endpoint'),
-    ('http://ravem.com/api/v2/', './sub/final_endpoint', 'http://ravem.com/api/v2/sub/final_endpoint'),
-    ('http://ravem.com/', '', 'http://ravem.com/'),
-    ('http://ravem.com/api/', '', 'http://ravem.com/api/'),
-    ('http://ravem.com/api/v2/', '', 'http://ravem.com/api/v2/'),
+    ('https://ravem.test/', 'final_endpoint', 'https://ravem.test/final_endpoint'),
+    ('https://ravem.test/api/', 'final_endpoint', 'https://ravem.test/api/final_endpoint'),
+    ('https://ravem.test/api/v2/', 'final_endpoint', 'https://ravem.test/api/v2/final_endpoint'),
+    ('https://ravem.test', './final_endpoint', 'https://ravem.test/final_endpoint'),
+    ('https://ravem.test/api/', './final_endpoint', 'https://ravem.test/api/final_endpoint'),
+    ('https://ravem.test/api/v2/', './final_endpoint', 'https://ravem.test/api/v2/final_endpoint'),
+    ('https://ravem.test', 'sub/final_endpoint', 'https://ravem.test/sub/final_endpoint'),
+    ('https://ravem.test/api/', 'sub/final_endpoint', 'https://ravem.test/api/sub/final_endpoint'),
+    ('https://ravem.test/api/v2/', 'sub/final_endpoint', 'https://ravem.test/api/v2/sub/final_endpoint'),
+    ('https://ravem.test', './sub/final_endpoint', 'https://ravem.test/sub/final_endpoint'),
+    ('https://ravem.test/api/', './sub/final_endpoint', 'https://ravem.test/api/sub/final_endpoint'),
+    ('https://ravem.test/api/v2/', './sub/final_endpoint', 'https://ravem.test/api/v2/sub/final_endpoint'),
+    ('https://ravem.test/', '', 'https://ravem.test/'),
+    ('https://ravem.test/api/', '', 'https://ravem.test/api/'),
+    ('https://ravem.test/api/v2/', '', 'https://ravem.test/api/v2/'),
 ))
 def test_correct_api_endpoint(mocker, root_endpoint, endpoint, expected_url):
     request = mocker.patch('indico_ravem.util.requests.request')
