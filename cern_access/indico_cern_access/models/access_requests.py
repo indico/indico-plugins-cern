@@ -31,28 +31,23 @@ class CERNAccessRequest(db.Model):
         db.ForeignKey('event_registration.registrations.id'),
         primary_key=True
     )
-
     request_state = db.Column(
         PyIntEnum(CERNAccessRequestState),
         nullable=False,
         default=CERNAccessRequestState.not_requested
     )
-
     reservation_code = db.Column(
         db.String,
         nullable=False
     )
-
     birth_date = db.Column(
         db.Date,
         nullable=True
     )
-
     birth_country = db.Column(
         db.String,
         nullable=True
     )
-
     birth_city = db.Column(
         db.String,
         nullable=True
