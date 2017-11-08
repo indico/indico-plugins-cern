@@ -1,0 +1,25 @@
+sudo: false
+language: python
+python:
+  - 2.7
+addons:
+  postgresql: 9.6
+env:
+  - PLUGIN=payment_cern
+  - PLUGIN=ravem
+before_install:
+  - pip install -U pip setuptools
+  - pip install https://github.com/indico/indico/archive/master.zip
+  - pip install httpretty
+install:
+  - cd "${TRAVIS_BUILD_DIR}/${PLUGIN}"
+  - pip install -e .
+script:
+  - pytest
+notifications:
+  email: false
+  irc:
+    channels:
+      - 'chat.freenode.net#indico-gang'
+    use_notice: true
+    skip_join: true
