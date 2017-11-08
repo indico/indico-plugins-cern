@@ -20,6 +20,6 @@ notifications:
   email: false
   irc:
     channels:
-      - 'chat.freenode.net#indico-gang'
+      - 'chat.freenode.net#indico'
     use_notice: true
     skip_join: true
