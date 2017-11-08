@@ -10,7 +10,6 @@ from __future__ import unicode_literals
 from datetime import datetime
 from operator import itemgetter
 
-from markupsafe import Markup
 from wtforms.fields import SelectField, StringField
 from wtforms.validators import DataRequired, ValidationError
 
@@ -42,9 +41,12 @@ def get_regforms(event):
 
 class AccessIdentityDataForm(IndicoForm):
     birth_date = IndicoDateField(_('Birth date'), [DataRequired()])
-    birth_country = SelectField(_('Country of birth'), [DataRequired()],
-                                choices=sorted(get_countries().iteritems(), key=itemgetter(1)))
+    birth_country = SelectField(_('Country of birth'), [DataRequired()])
     birth_city = StringField(_('City of birth'), [DataRequired()])
+
+    def __init__(self, *args, **kwargs):
+        super(AccessIdentityDataForm, self).__init__(*args, **kwargs)
+        self.birth_country.choices = [('', '')] + sorted(get_countries().iteritems(), key=itemgetter(1))
 
     def validate_birth_date(self, field):
         if field.data > datetime.now().date():
