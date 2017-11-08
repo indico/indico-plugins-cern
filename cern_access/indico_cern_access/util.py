@@ -60,7 +60,7 @@ def send_adams_post_request(event, registrations, update=False):
     data = {registration.id: build_access_request_data(registration, event, update=update)
             for registration in registrations}
     headers = {'content-type': 'application/json'}
-    auth = (CERNAccessPlugin.settings.get('login'), CERNAccessPlugin.settings.get('password'))
+    auth = (CERNAccessPlugin.settings.get('username'), CERNAccessPlugin.settings.get('password'))
     json_data = json.dumps(data.values())
     url = CERNAccessPlugin.settings.get('adams_url')
     try:
@@ -78,7 +78,7 @@ def send_adams_delete_request(registrations):
 
     data = [generate_access_id(registration.id) for registration in registrations]
     headers = {'Content-Type': 'application/json'}
-    auth = (CERNAccessPlugin.settings.get('login'), CERNAccessPlugin.settings.get('password'))
+    auth = (CERNAccessPlugin.settings.get('username'), CERNAccessPlugin.settings.get('password'))
     data = json.dumps(data)
     url = CERNAccessPlugin.settings.get('adams_url')
     try:
@@ -149,7 +149,7 @@ def update_access_request(req):
 
 def remove_access_template(regform):
     from indico_cern_access.plugin import CERNAccessPlugin
-    access_tpl = CERNAccessPlugin.settings.get('access_ticket_template_id')
+    access_tpl = CERNAccessPlugin.settings.get('access_ticket_template')
     if regform.ticket_template == access_tpl:
         regform.ticket_template = None
 
@@ -203,7 +203,7 @@ def create_access_request(registration, state, reservation_code):
 def create_access_request_regform(regform, state):
     """Creates CERN access request object for registration form"""
     from indico_cern_access.plugin import CERNAccessPlugin
-    access_tpl = CERNAccessPlugin.settings.get('access_ticket_template_id')
+    access_tpl = CERNAccessPlugin.settings.get('access_ticket_template')
     if state == CERNAccessRequestState.accepted and access_tpl:
         regform.ticket_template = access_tpl
     if regform.cern_access_request:

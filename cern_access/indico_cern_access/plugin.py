@@ -17,6 +17,7 @@ from wtforms.fields.html5 import URLField
 from wtforms.validators import DataRequired
 
 from indico.core import signals
+from indico.core.db import db
 from indico.core.plugins import IndicoPlugin
 from indico.core.settings.converters import SettingConverter
 from indico.modules.designer import TemplateType
@@ -24,7 +25,6 @@ from indico.modules.designer.models.templates import DesignerTemplate
 from indico.modules.events import Event
 from indico.modules.events.registration.forms import TicketsForm
 from indico.modules.events.registration.models.forms import RegistrationForm
-from indico.modules.events.requests.views import WPRequestsEventManagement
 from indico.util.string import remove_accents, unicode_to_ascii
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import IndicoPasswordField, MultipleItemsField, PrincipalListField
@@ -41,24 +41,25 @@ from indico_cern_access.util import (generate_access_id, get_random_reservation_
 class PluginSettingsForm(IndicoForm):
     adams_url = URLField(_('ADaMS URL'), [DataRequired()],
                          description=_('The URL of the ADaMS REST API'))
-    authorized_users = PrincipalListField(_('Authorized_users'), groups=True,
-                                          description=_('List of users/groups who can send requests'))
-    excluded_categories = MultipleItemsField('Excluded categories', fields=[{'id': 'id', 'caption': 'Category ID'}])
     username = StringField(_('Username'), [DataRequired()],
                            description=_('The login used to authenticate with ADaMS service'))
     password = IndicoPasswordField(_('Password'), [DataRequired()],
                                    description=_('The password used to authenticate with ADaMS service'))
     secret_key = IndicoPasswordField(_('Secret key'), [DataRequired()],
                                      description=_('Secret key to sign requests to ADaMS API'))
+    authorized_users = PrincipalListField(_('Authorized_users'), groups=True,
+                                          description=_('List of users/groups who can send requests'))
+    excluded_categories = MultipleItemsField('Excluded categories', fields=[{'id': 'id', 'caption': 'Category ID'}])
     access_ticket_template = QuerySelectField(_("Access ticket template"), allow_blank=True,
                                               blank_text=_("No access ticket selected"), get_label='title',
                                               description=_("Ticket template allowing access to CERN"))
 
     def __init__(self, *args, **kwargs):
         super(PluginSettingsForm, self).__init__(*args, **kwargs)
-        self.access_ticket_template_id.query = (DesignerTemplate.query
-                                                .filter(DesignerTemplate.category_id == 0,
-                                                        DesignerTemplate.type == TemplateType.badge))
+        self.access_ticket_template.query = (DesignerTemplate.query
+                                             .filter(DesignerTemplate.category_id == 0,
+                                                     DesignerTemplate.type == TemplateType.badge)
+                                             .order_by(db.func.lower(DesignerTemplate.title)))
 
 
 class DesignerTemplateConverter(SettingConverter):
@@ -84,14 +85,14 @@ class CERNAccessPlugin(IndicoPlugin):
     configurable = True
     default_settings = {
         'adams_url': '',
-        'login': '',
+        'username': '',
         'password': '',
         'secret_key': '',
-        'access_ticket_template_id': None,
-        'excluded_categories': []
+        'excluded_categories': [],
+        'access_ticket_template': None,
     }
     settings_converters = {
-        'access_ticket_template_id': DesignerTemplateConverter
+        'access_ticket_template': DesignerTemplateConverter
     }
     acl_settings = {'authorized_users'}
 
@@ -200,7 +201,7 @@ class CERNAccessPlugin(IndicoPlugin):
             err = _('Access to CERN is requested for participants registered with this form, ticketing must be enabled')
             form.tickets_enabled.errors.append(err)
             return False
-        access_tpl = self.settings.get('access_ticket_template_id')
+        access_tpl = self.settings.get('access_ticket_template')
         ticket_template = DesignerTemplate.get_one(form.ticket_template_id.data)
         if not access_tpl:
             return
@@ -213,7 +214,7 @@ class CERNAccessPlugin(IndicoPlugin):
                 return False
 
     def _print_badge_template(self, template, regform, **kwargs):
-        access_tpl = self.settings.get('access_ticket_template_id')
+        access_tpl = self.settings.get('access_ticket_template')
         if not access_tpl:
             return
         if template == access_tpl or template.backside_template == access_tpl:
