@@ -76,8 +76,8 @@ class CERNAccessPlugin(IndicoPlugin):
     settings_form = PluginSettingsForm
     configurable = True
     default_settings = {
-        'adams_url': 'https://oraweb.cern.ch/ords/devdb11/adams3/api/bookings/',
-        'login': 'indicoprod',
+        'adams_url': '',
+        'login': '',
         'password': '',
         'secret_key': '',
         'access_ticket_template_id': None,
