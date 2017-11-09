@@ -13,6 +13,7 @@ from operator import itemgetter
 from wtforms.fields import SelectField, StringField
 from wtforms.validators import DataRequired, ValidationError
 
+from indico.core.db import db
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.requests import RequestFormBase
 from indico.util.countries import get_countries
@@ -35,7 +36,7 @@ class CERNAccessForm(RequestFormBase):
 def get_regforms(event):
     return (RegistrationForm.query
             .with_parent(event)
-            .order_by(RegistrationForm.title, RegistrationForm.id)
+            .order_by(db.func.lower(RegistrationForm.title), RegistrationForm.id)
             .all())
 
 
