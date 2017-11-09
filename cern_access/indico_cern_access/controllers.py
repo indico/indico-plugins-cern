@@ -37,7 +37,10 @@ class RHRegistrationAccessIdentityData(RHRegistrationFormRegistrationBase):
     def _process(self):
         form = AccessIdentityDataForm()
         access_request = self.registration.cern_access_request
-        view_class = WPAccessRequestDetailsConference if self.event.type_ == EventType.conference else WPAccessRequestDetailsSimpleEvent
+        if self.event.type_ == EventType.conference:
+            view_class = WPAccessRequestDetailsConference
+        else:
+            view_class = WPAccessRequestDetailsSimpleEvent
         if access_request is not None and not access_request.has_identity_info and form.validate_on_submit():
             form.populate_obj(access_request)
             db.session.flush()
