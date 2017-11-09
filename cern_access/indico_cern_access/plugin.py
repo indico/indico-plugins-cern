@@ -108,6 +108,7 @@ class CERNAccessPlugin(IndicoPlugin):
         self.connect(signals.event.deleted, self._event_deleted)
         self.connect(signals.event.updated, self._event_title_changed)
         self.connect(signals.event.is_ticketing_handled, self._is_ticketing_handled)
+        self.connect(signals.event.is_ticket_blocked, self._is_ticket_blocked)
         self.connect(signals.form_validated, self._form_validated)
         self.connect(signals.event.designer.print_badge_template, self._print_badge_template)
         self.connect(signals.event.registration.generate_ticket_qr_code, self._generate_ticket_qr_code)
@@ -184,11 +185,22 @@ class CERNAccessPlugin(IndicoPlugin):
             if state == CERNAccessRequestState.accepted:
                 update_access_requests(requested_registrations, state)
 
-    def _is_ticketing_handled(self, regform):
-        """Checks if a registration form has requested access to CERN, if so the plugin will handle tickets mailing """
-        if regform.cern_access_request and regform.cern_access_request.is_active:
-            return True
-        return False
+    def _is_ticketing_handled(self, regform, **kwargs):
+        """
+        Check if the registration form is used for CERN access and
+        thus should not send tickets automatically.
+        """
+        return regform.cern_access_request is not None and regform.cern_access_request.is_active
+
+    def _is_ticket_blocked(self, registration, **kwargs):
+        """
+        Check if the user should be prevented from downloading the
+        ticket manually.
+        """
+        if not self._is_ticketing_handled(registration.registration_form):
+            return False
+        req = registration.cern_access_request
+        return not req or not req.is_accepted or not req.has_identity_info
 
     def _form_validated(self, form, **kwargs):
         """Forbids to disable the tickets when access to CERN is requested and
