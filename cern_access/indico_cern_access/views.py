@@ -8,8 +8,16 @@
 from __future__ import unicode_literals
 
 from indico.core.plugins import WPJinjaMixinPlugin
-from indico.modules.events.views import WPConferenceDisplayBase
+from indico.modules.events.views import WPConferenceDisplayBase, WPSimpleEventDisplayBase
 
 
-class WPAccessRequestDetails(WPJinjaMixinPlugin, WPConferenceDisplayBase):
+class WPAccessRequestDetailsConference(WPConferenceDisplayBase, WPJinjaMixinPlugin):
     sidemenu_option = 'registration'
+
+    def _getBody(self, params):
+        return WPConferenceDisplayBase._getPageContent(self, params)
+
+
+class WPAccessRequestDetailsSimpleEvent(WPSimpleEventDisplayBase, WPJinjaMixinPlugin):
+    def _getBody(self, params):
+        return self._getPageContent(params)

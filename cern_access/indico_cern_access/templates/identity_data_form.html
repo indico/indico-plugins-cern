@@ -1,9 +1,9 @@
-{% extends 'events/display/conference/base.html' %}
+{% extends 'events/display/conference/base.html' if event.type == 'conference' else 'layout/meeting_page_base.html' %}
 
 {% from 'forms/_form.html' import simple_form %}
 
 {% block title %}
-    {% trans %}Additional data form{% endtrans %}
+    {% trans %}Additional data for CERN access badges{% endtrans %}
 {% endblock %}
 
 {% block content %}
@@ -12,23 +12,36 @@
             <div class="message-box-content">
                 <span class="icon"></span>
                 <div class="message-text">
-                    {% trans %}
+                    {% trans -%}
                         You have not been granted access to the CERN site yet.
-                    {% endtrans %}
+                    {%- endtrans %}
                 </div>
             </div>
         </div>
     {% elif not access_request.has_identity_info %}
-        {{ simple_form(form, back_button=False) }}
+        <div class="info-message-box">
+            <div class="message-box-content">
+                <span class="icon"></span>
+                <div class="message-text">
+                    {% trans -%}
+                        CERN's Security Policy requires us to ask you to fill in
+                        the following additional data. The contents of this form
+                        will not be shared with event organizers and will be
+                        revealed upon request from CERN's Site Surveillance service.
+                    {%- endtrans %}
+                </div>
+            </div>
+        </div>
+        {{ simple_form(form, back_button=false) }}
     {% else %}
         <div class="success-message-box">
             <div class="message-box-content">
                 <span class="icon"></span>
                 <div class="message-text">
-                    {% trans %}
+                    {% trans -%}
                         You have successfully filled in the form with necessary data.
                         Please check you mailbox for the ticket.
-                    {% endtrans %}
+                    {%- endtrans %}
                 </div>
             </div>
         </div>

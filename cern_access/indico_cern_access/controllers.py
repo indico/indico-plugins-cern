@@ -7,16 +7,18 @@
 
 from __future__ import unicode_literals
 
-from flask import request
+from flask import redirect, request
 
 from indico.core.db import db
+from indico.modules.events.models.events import EventType
 from indico.modules.events.registration.controllers.display import RHRegistrationFormRegistrationBase
 from indico.modules.events.registration.controllers.management.reglists import RHRegistrationsActionBase
+from indico.web.flask.util import url_for
 from indico.web.util import jsonify_data
 
 from indico_cern_access.forms import AccessIdentityDataForm
 from indico_cern_access.util import grant_access, revoke_access, send_tickets
-from indico_cern_access.views import WPAccessRequestDetails
+from indico_cern_access.views import WPAccessRequestDetailsConference, WPAccessRequestDetailsSimpleEvent
 
 
 class RHRegistrationBulkCERNAccess(RHRegistrationsActionBase):
@@ -35,9 +37,12 @@ class RHRegistrationAccessIdentityData(RHRegistrationFormRegistrationBase):
     def _process(self):
         form = AccessIdentityDataForm()
         access_request = self.registration.cern_access_request
+        view_class = WPAccessRequestDetailsConference if self.event.type_ == EventType.conference else WPAccessRequestDetailsSimpleEvent
         if access_request is not None and not access_request.has_identity_info and form.validate_on_submit():
             form.populate_obj(access_request)
             db.session.flush()
             send_tickets([self.registration])
-        return WPAccessRequestDetails.render_template('identity_data_form.html', self.event, form=form,
-                                                      access_request=access_request)
+            return redirect(url_for('plugin_cern_access.access_identity_data', self.registration,
+                                    token=self.registration.uuid))
+        return view_class.render_template('identity_data_form.html', self.event, form=form,
+                                          access_request=access_request)

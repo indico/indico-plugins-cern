@@ -262,10 +262,10 @@ def grant_access(registrations, regform):
                               and reg.cern_access_request.request_state == CERNAccessRequestState.accepted)]
     state, data = send_adams_post_request(event, new_registrations)
     add_access_requests(new_registrations, data, state)
-    send_link_to_the_form(new_registrations)
+    send_form_link(new_registrations)
 
 
-def send_link_to_the_form(registrations):
+def send_form_link(registrations):
     for registration in registrations:
         template = get_template_module('cern_access:identity_data_form_email.html', registration=registration)
         from_address = registration.registration_form.sender_address
