@@ -31,7 +31,7 @@ from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAcc
 
 
 def get_requested_forms(event):
-    """Returns list of registration forms with requested access to CERN"""
+    """Return list of registration forms with requested access to CERN."""
     return (RegistrationForm.query.with_parent(event)
             .join(CERNAccessRequestRegForm)
             .filter(CERNAccessRequestRegForm.is_active)
@@ -52,7 +52,7 @@ def get_requested_registrations(event, regform=None):
 
 
 def send_adams_post_request(event, registrations, update=False):
-    """ Sends POST request to ADaMS API
+    """Send POST request to ADaMS API
 
     :param update: if True, send request updating already stored data
     """
@@ -69,11 +69,11 @@ def send_adams_post_request(event, registrations, update=False):
     except requests.exceptions.RequestException:
         CERNAccessPlugin.logger.exception('Request to ADAMS failed (%r)', json_data)
         raise AdamsError(_('Sending request to ADAMS failed'))
-    return (CERNAccessRequestState.accepted, data)
+    return CERNAccessRequestState.accepted, data
 
 
 def send_adams_delete_request(registrations):
-    """Sends DELETE request to ADaMS API"""
+    """Send DELETE request to ADaMS API."""
     from indico_cern_access.plugin import CERNAccessPlugin
 
     data = [generate_access_id(registration.id) for registration in registrations]
@@ -90,12 +90,12 @@ def send_adams_delete_request(registrations):
 
 
 def generate_access_id(registration_id):
-    """Generates an id in format required by ADaMS API"""
+    """Generate an id in format required by ADaMS API."""
     return 'in{}'.format(registration_id)
 
 
 def build_access_request_data(registration, event, update=False):
-    """Returns a dictionary with data required by ADaMS API"""
+    """Return a dictionary with data required by ADaMS API."""
     from indico_cern_access.plugin import CERNAccessPlugin
 
     tz = timezone('Europe/Zurich')
@@ -118,7 +118,7 @@ def build_access_request_data(registration, event, update=False):
 
 
 def update_access_request(req):
-    """Adds, updates and deletes CERN access requests from registration forms"""
+    """Add, update and delete CERN access requests from registration forms."""
 
     event = req.event
     existing_forms = get_requested_forms(event)
@@ -155,26 +155,26 @@ def remove_access_template(regform):
 
 
 def add_access_requests(registrations, data, state):
-    """Adds CERN access requests for registrations"""
+    """Add CERN access requests for registrations."""
     for registration in registrations:
         create_access_request(registration, state, data[registration.id]['$rc'])
 
 
 def update_access_requests(registrations, state):
-    """Updates already requested registrations"""
+    """Update already requested registrations."""
     for registration in registrations:
         registration.cern_access_request.request_state = state
 
 
 def withdraw_access_requests(registrations):
-    """Withdraws CERN access requests for registrations"""
+    """Withdraw CERN access requests for registrations."""
     for registration in registrations:
         registration.cern_access_request.request_state = CERNAccessRequestState.withdrawn
         registration.cern_access_request.clear_identity_data()
 
 
 def withdraw_event_access_request(req):
-    """Withdraws all CERN access requests of an event"""
+    """Withdraw all CERN access requests of an event."""
     requested_forms = get_requested_forms(req.event)
     requested_registrations = get_requested_registrations(req.event)
     send_adams_delete_request(requested_registrations)
@@ -186,12 +186,12 @@ def withdraw_event_access_request(req):
 
 
 def get_random_reservation_code():
-    """Generates random reservation code for data required by ADaMS API"""
+    """Generate random reservation code for data required by ADaMS API."""
     return 'I' + ''.join(random.sample(string.ascii_uppercase.replace('O', '') + string.digits, 6))
 
 
 def create_access_request(registration, state, reservation_code):
-    """Creates CERN access request object for registration"""
+    """Create CERN access request object for registration."""
     if registration.cern_access_request:
         registration.cern_access_request.request_state = state
         registration.cern_access_request.reservation_code = reservation_code
@@ -201,7 +201,7 @@ def create_access_request(registration, state, reservation_code):
 
 
 def create_access_request_regform(regform, state):
-    """Creates CERN access request object for registration form"""
+    """Create CERN access request object for registration form."""
     from indico_cern_access.plugin import CERNAccessPlugin
     access_tpl = CERNAccessPlugin.settings.get('access_ticket_template')
     if state == CERNAccessRequestState.accepted and access_tpl:
@@ -213,13 +213,13 @@ def create_access_request_regform(regform, state):
 
 
 def is_authorized_user(user):
-    """Checks if user is authorized to request access to CERN"""
+    """Check if user is authorized to request access to CERN."""
     from indico_cern_access.plugin import CERNAccessPlugin
     return CERNAccessPlugin.settings.acls.contains_user('authorized_users', user)
 
 
 def notify_access_withdrawn(registrations):
-    """Notifies participants when access to CERN has been withdrawn"""
+    """Notify participants when access to CERN has been withdrawn."""
     for registration in registrations:
         template = get_template_module('cern_access:request_withdrawn_email.html', registration=registration)
         from_address = registration.registration_form.sender_address
@@ -229,7 +229,7 @@ def notify_access_withdrawn(registrations):
 
 
 def send_tickets(registrations):
-    """Sends tickets to access CERN site to registered users"""
+    """Send tickets to access CERN site to registered users."""
     for registration in registrations:
         template = get_template_module('cern_access:ticket_email.html', registration=registration)
         from_address = registration.registration_form.sender_address
@@ -241,7 +241,7 @@ def send_tickets(registrations):
 
 
 def enable_ticketing(regform):
-    """Enables ticketing module automatically"""
+    """Enable ticketing module automatically."""
     if not regform.tickets_enabled:
         regform.tickets_enabled = True
         regform.tickets_on_email = True

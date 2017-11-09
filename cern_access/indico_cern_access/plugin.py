@@ -130,13 +130,13 @@ class CERNAccessPlugin(IndicoPlugin):
                                           header=header)
 
     def _registration_deleted(self, registration, **kwargs):
-        """Withdraws CERN access request for deleted registrations"""
+        """Withdraw CERN access request for deleted registrations."""
         if registration.cern_access_request:
             send_adams_delete_request([registration])
             registration.cern_access_request.request_state = CERNAccessRequestState.withdrawn
 
     def _event_time_changed(self, sender, obj, **kwargs):
-        """Updates event time in CERN access requests in ADaMS"""
+        """Update event time in CERN access requests in ADaMS."""
         event = obj
         registrations = get_requested_registrations(event=event)
         if registrations:
@@ -145,7 +145,10 @@ class CERNAccessPlugin(IndicoPlugin):
                 update_access_requests(registrations, state)
 
     def _registration_form_deleted(self, registration_form):
-        """Withdraws CERN access request for deleted registration form and corresponding registrations"""
+        """
+        Withdraw CERN access request for deleted registration form and
+        corresponding registrations.
+        """
         if registration_form.cern_access_request and registration_form.cern_access_request.is_active:
             registrations = get_requested_registrations(registration_form.event, regform=registration_form)
             if registrations:
@@ -156,7 +159,10 @@ class CERNAccessPlugin(IndicoPlugin):
             registration_form.cern_access_request.request_state = CERNAccessRequestState.withdrawn
 
     def _event_deleted(self, event, user):
-        """Withdraws CERN access request for registration forms and corresponding registrations of deleted event"""
+        """
+        Withdraw CERN access request for registration forms and corresponding
+        registrations of deleted event.
+        """
         access_requests_forms = get_requested_forms(event)
         if access_requests_forms:
             requested_registrations = get_requested_registrations(event=event)
@@ -169,16 +175,17 @@ class CERNAccessPlugin(IndicoPlugin):
                 form.cern_access_request.request_state = CERNAccessRequestState.withdrawn
 
     def _registration_modified(self, registration, change):
-        """If name of registration changed, updates the ADaMS CERN access request"""
+        """If name of registration changed, updates the ADaMS CERN access request."""
         if registration.cern_access_request and ('first_name' in change or 'last_name' in change):
             state, _ = send_adams_post_request(registration.event, [registration], update=True)
             if state == CERNAccessRequestState.accepted:
                 registration.cern_access_request.request_state = state
 
     def _event_title_changed(self, event, changes, **kwargs):
-        """Updates event name in the ADaMS CERN access request"""
+        """Update event name in the ADaMS CERN access request."""
         if 'title' not in changes:
             return
+
         requested_registrations = get_requested_registrations(event=event)
         if requested_registrations:
             state, _ = send_adams_post_request(event, requested_registrations, update=True)
@@ -187,24 +194,22 @@ class CERNAccessPlugin(IndicoPlugin):
 
     def _is_ticketing_handled(self, regform, **kwargs):
         """
-        Check if the registration form is used for CERN access and
-        thus should not send tickets automatically.
+        Check if the registration form is used for CERN access and thus
+        should not send tickets automatically.
         """
         return regform.cern_access_request is not None and regform.cern_access_request.is_active
 
     def _is_ticket_blocked(self, registration, **kwargs):
-        """
-        Check if the user should be prevented from downloading the
-        ticket manually.
-        """
+        """Check if the user should be prevented from downloading the ticket manually."""
         if not self._is_ticketing_handled(registration.registration_form):
             return False
         req = registration.cern_access_request
         return not req or not req.is_accepted or not req.has_identity_info
 
     def _form_validated(self, form, **kwargs):
-        """Forbids to disable the tickets when access to CERN is requested and
-         to use CERN access ticket template with regforms without accepted CERN access request
+        """
+        Forbid to disable the tickets when access to CERN is requested and
+        to use CERN access ticket template with regforms without active CERN access request.
         """
         if not isinstance(form, TicketsForm):
             return

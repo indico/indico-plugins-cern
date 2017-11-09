@@ -22,7 +22,7 @@ from indico_cern_access.views import WPAccessRequestDetailsConference, WPAccessR
 
 
 class RHRegistrationBulkCERNAccess(RHRegistrationsActionBase):
-    """Bulk grant or revoke CERN access to registrations"""
+    """Bulk grant or revoke CERN access to registrations."""
 
     def _process(self):
         grant_cern_access = request.form['flag'] == '1'
