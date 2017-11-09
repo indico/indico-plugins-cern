@@ -41,12 +41,12 @@ def get_regforms(event):
 
 class AccessIdentityDataForm(IndicoForm):
     birth_date = IndicoDateField(_('Birth date'), [DataRequired()])
-    birth_country = SelectField(_('Country of birth'), [DataRequired()])
-    birth_city = StringField(_('City of birth'), [DataRequired()])
+    nationality = SelectField(_('Nationality'), [DataRequired()])
+    birth_place = StringField(_('Place of birth'), [DataRequired()])
 
     def __init__(self, *args, **kwargs):
         super(AccessIdentityDataForm, self).__init__(*args, **kwargs)
-        self.birth_country.choices = [('', '')] + sorted(get_countries().iteritems(), key=itemgetter(1))
+        self.nationality.choices = [('', '')] + sorted(get_countries().iteritems(), key=itemgetter(1))
 
     def validate_birth_date(self, field):
         if field.data > datetime.now().date():

@@ -44,11 +44,11 @@ class CERNAccessRequest(db.Model):
         db.Date,
         nullable=True
     )
-    birth_country = db.Column(
+    nationality = db.Column(
         db.String,
         nullable=True
     )
-    birth_city = db.Column(
+    birth_place = db.Column(
         db.String,
         nullable=True
     )
@@ -73,9 +73,9 @@ class CERNAccessRequest(db.Model):
 
     @property
     def has_identity_info(self):
-        return self.birth_city is not None and self.birth_date is not None and self.birth_country is not None
+        return bool(self.birth_place) and bool(self.nationality) and self.birth_date is not None
 
     def clear_identity_data(self):
         self.birth_date = None
-        self.birth_country = None
-        self.birth_city = None
+        self.nationality = None
+        self.birth_place = None
