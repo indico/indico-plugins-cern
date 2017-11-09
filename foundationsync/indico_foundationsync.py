@@ -322,7 +322,7 @@ class FoundationSync(object):
                     for vc_equip in room.available_equipment.filter(EquipmentType.parent_id == vc_parent.id):
                         room.available_equipment.remove(vc_equip)
                         counter['deleted'] += 1
-                        self._logger.info("Deleted VC equipment '%s' from room '%s'", equipment.name, room.full_name)
+                        self._logger.info("Deleted VC equipment '%s' from room '%s'", vc_equip.name, room.full_name)
                 room.available_equipment.remove(equipment)
                 counter['deleted'] += 1
                 self._logger.info("Deleted equipment '%s' from room '%s'", equipment.name, room.full_name)
