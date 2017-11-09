@@ -244,7 +244,7 @@ def enable_ticketing(regform):
     """Enable ticketing module automatically."""
     if not regform.tickets_enabled:
         regform.tickets_enabled = True
-        regform.tickets_on_email = True
+        regform.ticket_on_email = True
         regform.ticket_on_event_page = True
         regform.ticket_on_summary_page = True
 
@@ -256,10 +256,10 @@ def is_category_blacklisted(category):
 
 def grant_access(registrations, regform):
     event = regform.event
-    new_registrations = [reg for reg in registrations if
-                         not (reg.cern_access_request
-                              and reg.cern_access_request.is_active
-                              and reg.cern_access_request.request_state == CERNAccessRequestState.accepted)]
+    new_registrations = [reg for reg in registrations
+                         if not (reg.cern_access_request and
+                                 reg.cern_access_request.is_active and
+                                 reg.cern_access_request.request_state == CERNAccessRequestState.accepted)]
     state, data = send_adams_post_request(event, new_registrations)
     add_access_requests(new_registrations, data, state)
     send_form_link(new_registrations)

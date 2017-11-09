@@ -26,7 +26,7 @@
                     {% trans -%}
                         CERN's Security Policy requires us to ask you to fill in
                         the following additional data. The contents of this form
-                        will not be shared with event organizers and will be
+                        will not be shared with event organizers and will only be
                         revealed upon request from CERN's Site Surveillance service.
                     {%- endtrans %}
                 </div>
@@ -46,7 +46,7 @@
                 </div>
             </div>
         </div>
-        <div class="group">
+        <div class="group right">
             {%- set download_ticket_url = url_for('event_registration.ticket_download', access_request.registration.locator.registrant) -%}
             <a href="{{ download_ticket_url }}" class="i-button accept icon-ticket">
                 {% trans %}Get ticket{% endtrans %}
