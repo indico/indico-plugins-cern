@@ -46,11 +46,13 @@
                 </div>
             </div>
         </div>
-        <div class="group right">
-            {%- set download_ticket_url = url_for('event_registration.ticket_download', access_request.registration.locator.registrant) -%}
-            <a href="{{ download_ticket_url }}" class="i-button accept icon-ticket">
-                {% trans %}Get ticket{% endtrans %}
-            </a>
-        </div>
+        {% if not access_request.registration.is_ticket_blocked %}
+            <div class="group right">
+                {%- set download_ticket_url = url_for('event_registration.ticket_download', access_request.registration.locator.registrant) -%}
+                <a href="{{ download_ticket_url }}" class="i-button accept icon-ticket">
+                    {% trans %}Get ticket{% endtrans %}
+                </a>
+            </div>
+        {% endif %}
     {% endif %}
 {% endblock %}
