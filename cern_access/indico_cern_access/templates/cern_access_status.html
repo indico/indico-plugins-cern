@@ -1,7 +1,9 @@
 {% if registration %}
     {% set access_requested = registration.cern_access_request and registration.cern_access_request.is_active %}
     <td class="i-table id-column">
-        {% if access_requested and registration.cern_access_request.is_accepted %}
+        {% if access_requested and not registration.cern_access_request.has_identity_info %}
+            <i class="icon-user-check semantic-text warning" title="Needs additional data"></i>
+        {% elif access_requested and registration.cern_access_request.is_accepted %}
             <i class="icon-user-check semantic-text success" title="Access to CERN granted"></i>
         {% else %}
             <i class="icon-user-block" title="No access to CERN"></i>
