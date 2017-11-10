@@ -51,42 +51,36 @@ def get_requested_registrations(event, regform=None):
     return query.all()
 
 
+def _send_adams_http_request(method, data):
+    from indico_cern_access.plugin import CERNAccessPlugin
+
+    url = CERNAccessPlugin.settings.get('adams_url')
+    auth = (CERNAccessPlugin.settings.get('username'), CERNAccessPlugin.settings.get('password'))
+    request_headers = {'Content-Type': 'application/json'}
+
+    try:
+        r = requests.request(method, url, data=json.dumps(data), headers=request_headers, auth=auth)
+        r.raise_for_status()
+    except requests.exceptions.RequestException:
+        CERNAccessPlugin.logger.exception('Request to ADAMS failed (%r)', data)
+        raise AdamsError(_('Sending request to ADAMS failed'))
+    return r.status_code == requests.codes.all_ok
+
+
 def send_adams_post_request(event, registrations, update=False):
     """Send POST request to ADaMS API
 
     :param update: if True, send request updating already stored data
     """
-    from indico_cern_access.plugin import CERNAccessPlugin
-    data = {registration.id: build_access_request_data(registration, event, update=update)
-            for registration in registrations}
-    headers = {'content-type': 'application/json'}
-    auth = (CERNAccessPlugin.settings.get('username'), CERNAccessPlugin.settings.get('password'))
-    json_data = json.dumps(data.values())
-    url = CERNAccessPlugin.settings.get('adams_url')
-    try:
-        r = requests.post(url, data=json_data, headers=headers, auth=auth)
-        r.raise_for_status()
-    except requests.exceptions.RequestException:
-        CERNAccessPlugin.logger.exception('Request to ADAMS failed (%r)', json_data)
-        raise AdamsError(_('Sending request to ADAMS failed'))
+    data = {reg.id: build_access_request_data(reg, event, update=update) for reg in registrations}
+    _send_adams_http_request('POST', data.values())
     return CERNAccessRequestState.accepted, data
 
 
 def send_adams_delete_request(registrations):
     """Send DELETE request to ADaMS API."""
-    from indico_cern_access.plugin import CERNAccessPlugin
-
     data = [generate_access_id(registration.id) for registration in registrations]
-    headers = {'Content-Type': 'application/json'}
-    auth = (CERNAccessPlugin.settings.get('username'), CERNAccessPlugin.settings.get('password'))
-    data = json.dumps(data)
-    url = CERNAccessPlugin.settings.get('adams_url')
-    try:
-        r = requests.delete(url, data=data, headers=headers, auth=auth)
-        r.raise_for_status()
-    except requests.exceptions.RequestException:
-        CERNAccessPlugin.logger.exception('Request to ADAMS failed (%r)', data)
-        raise AdamsError('Sending request to ADAMS failed')
+    return _send_adams_http_request('DELETE', data)
 
 
 def generate_access_id(registration_id):
