@@ -141,7 +141,7 @@ class CERNAccessPlugin(IndicoPlugin):
         registrations = get_requested_registrations(event=event)
         if registrations:
             state = send_adams_post_request(event, registrations, update=True)[0]
-            if state == CERNAccessRequestState.accepted:
+            if state == CERNAccessRequestState.active:
                 update_access_requests(registrations, state)
 
     def _registration_form_deleted(self, registration_form):
@@ -178,7 +178,7 @@ class CERNAccessPlugin(IndicoPlugin):
         """If name of registration changed, updates the ADaMS CERN access request."""
         if registration.cern_access_request and ('first_name' in change or 'last_name' in change):
             state = send_adams_post_request(registration.event, [registration], update=True)[0]
-            if state == CERNAccessRequestState.accepted:
+            if state == CERNAccessRequestState.active:
                 registration.cern_access_request.request_state = state
 
     def _event_title_changed(self, event, changes, **kwargs):
@@ -189,7 +189,7 @@ class CERNAccessPlugin(IndicoPlugin):
         requested_registrations = get_requested_registrations(event=event)
         if requested_registrations:
             state = send_adams_post_request(event, requested_registrations, update=True)[0]
-            if state == CERNAccessRequestState.accepted:
+            if state == CERNAccessRequestState.active:
                 update_access_requests(requested_registrations, state)
 
     def _is_ticketing_handled(self, regform, **kwargs):
@@ -204,7 +204,7 @@ class CERNAccessPlugin(IndicoPlugin):
         if not self._is_ticketing_handled(registration.registration_form):
             return False
         req = registration.cern_access_request
-        return not req or not req.is_accepted or not req.has_identity_info
+        return not req or not req.is_active or not req.has_identity_info
 
     def _form_validated(self, form, **kwargs):
         """
@@ -226,7 +226,7 @@ class CERNAccessPlugin(IndicoPlugin):
         if ticket_template == access_tpl or ticket_template.backside_template == access_tpl:
             if (not regform.cern_access_request or
                     (regform.cern_access_request and
-                        regform.cern_access_request.request_state != CERNAccessRequestState.accepted)):
+                        regform.cern_access_request.request_state != CERNAccessRequestState.active)):
                 form.ticket_template_id.errors.append(_('The selected template can only be used with an '
                                                         'active CERN access request'))
                 return False
@@ -238,7 +238,7 @@ class CERNAccessPlugin(IndicoPlugin):
         if template == access_tpl or template.backside_template == access_tpl:
             if (not regform.cern_access_request or
                     (regform.cern_access_request and
-                        regform.cern_access_request.request_state != CERNAccessRequestState.accepted)):
+                        regform.cern_access_request.request_state != CERNAccessRequestState.active)):
                 raise Forbidden(_('This badge cannot be printed because it uses the CERN access ticket '
                                   'template without an active CERN access request'))
 

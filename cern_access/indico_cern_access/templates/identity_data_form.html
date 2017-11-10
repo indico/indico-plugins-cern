@@ -7,7 +7,7 @@
 {% endblock %}
 
 {% block content %}
-    {% if access_request is none or not access_request.is_accepted %}
+    {% if access_request is none or not access_request.is_active %}
         <div class="info-message-box">
             <div class="message-box-content">
                 <span class="icon"></span>

@@ -45,7 +45,7 @@ def get_requested_registrations(event, regform=None):
     """
     query = (Registration.query.with_parent(event)
              .join(CERNAccessRequest)
-             .filter(CERNAccessRequest.is_active))
+             .filter(~CERNAccessRequest.is_withdrawn))
     if regform:
         query = query.filter(Registration.registration_form_id == regform.id)
     return query.all()
@@ -74,7 +74,7 @@ def send_adams_post_request(event, registrations, update=False):
     """
     data = {reg.id: build_access_request_data(reg, event, update=update) for reg in registrations}
     _send_adams_http_request('POST', data.values())
-    return CERNAccessRequestState.accepted, data
+    return CERNAccessRequestState.active, data
 
 
 def send_adams_delete_request(registrations):
@@ -127,7 +127,7 @@ def update_access_request(req):
     # add requests
     for regform_id in requested_forms_ids - existing_forms_ids:
         regform = event_regforms[regform_id]
-        create_access_request_regform(regform, state=CERNAccessRequestState.accepted)
+        create_access_request_regform(regform, state=CERNAccessRequestState.active)
         enable_ticketing(regform)
 
     # delete requests
@@ -198,7 +198,7 @@ def create_access_request_regform(regform, state):
     """Create CERN access request object for registration form."""
     from indico_cern_access.plugin import CERNAccessPlugin
     access_tpl = CERNAccessPlugin.settings.get('access_ticket_template')
-    if state == CERNAccessRequestState.accepted and access_tpl:
+    if state == CERNAccessRequestState.active and access_tpl:
         regform.ticket_template = access_tpl
     if regform.cern_access_request:
         regform.cern_access_request.request_state = state
@@ -251,9 +251,9 @@ def is_category_blacklisted(category):
 def grant_access(registrations, regform):
     event = regform.event
     new_registrations = [reg for reg in registrations
-                         if not (reg.cern_access_request and
-                                 reg.cern_access_request.is_active and
-                                 reg.cern_access_request.request_state == CERNAccessRequestState.accepted)]
+                         if not (reg.cern_access_request and not
+                                 reg.cern_access_request.is_withdrawn and
+                                 reg.cern_access_request.request_state == CERNAccessRequestState.active)]
     state, data = send_adams_post_request(event, new_registrations)
     add_access_requests(new_registrations, data, state)
     send_form_link(new_registrations)
@@ -270,9 +270,9 @@ def send_form_link(registrations):
 def revoke_access(registrations):
     send_adams_delete_request(registrations)
     requested_registrations = [reg for reg in registrations if
-                               reg.cern_access_request
-                               and reg.cern_access_request.is_active
-                               and reg.cern_access_request.request_state == CERNAccessRequestState.accepted]
+                               reg.cern_access_request and not
+                               reg.cern_access_request.is_withdrawn and
+                               reg.cern_access_request.request_state == CERNAccessRequestState.active]
     withdraw_access_requests(requested_registrations)
     notify_access_withdrawn(requested_registrations)
 

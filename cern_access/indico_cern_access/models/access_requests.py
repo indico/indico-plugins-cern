@@ -18,7 +18,7 @@ from indico_cern_access import _
 class CERNAccessRequestState(RichIntEnum):
     __titles__ = [_('Not requested'), _('Accepted'), _('Withdrawn')]
     not_requested = 0
-    accepted = 1
+    active = 1
     withdrawn = 2
 
 
@@ -63,12 +63,12 @@ class CERNAccessRequest(db.Model):
     )
 
     @hybrid_property
-    def is_active(self):
-        return self.request_state != CERNAccessRequestState.withdrawn
+    def is_withdrawn(self):
+        return self.request_state == CERNAccessRequestState.withdrawn
 
     @hybrid_property
-    def is_accepted(self):
-        return self.request_state == CERNAccessRequestState.accepted
+    def is_active(self):
+        return self.request_state == CERNAccessRequestState.active
 
     @property
     def has_identity_info(self):
