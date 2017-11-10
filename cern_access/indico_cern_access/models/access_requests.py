@@ -16,11 +16,10 @@ from indico_cern_access import _
 
 
 class CERNAccessRequestState(RichIntEnum):
-    __titles__ = [_('Not requested'), _('Accepted'), _('Rejected'), _('Withdrawn')]
+    __titles__ = [_('Not requested'), _('Accepted'), _('Withdrawn')]
     not_requested = 0
     accepted = 1
-    rejected = 2
-    withdrawn = 3
+    withdrawn = 2
 
 
 class CERNAccessRequest(db.Model):
