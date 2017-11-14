@@ -1,0 +1,17 @@
+{% extends 'events/registration/emails/base_registration.html' %}
+
+{% block subject_name %}{% endblock %}
+
+{% block subject_message -%}
+    {% trans %}Additional data required to get access to CERN site{% endtrans %}
+{%- endblock %}
+
+{% block registration_body -%}
+    <p>Dear {{ registration.full_name }},</p>
+    <p>
+        {% set url = url_for_plugin('cern_access.access_identity_data', registration.locator.uuid,
+                                                                        _external=true) %}
+        In order to get access to the CERN site we ask you to fill in the form which you can
+        find <a href="{{ url }}">here</a><br>
+    </p>
+{%- endblock %}

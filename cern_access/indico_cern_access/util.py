@@ -215,7 +215,7 @@ def is_authorized_user(user):
 def notify_access_withdrawn(registrations):
     """Notify participants when access to CERN has been withdrawn."""
     for registration in registrations:
-        template = get_template_module('cern_access:request_withdrawn_email.html', registration=registration)
+        template = get_template_module('cern_access:emails/request_withdrawn_email.html', registration=registration)
         from_address = registration.registration_form.sender_address
         email = make_email(to_list=registration.email, from_address=from_address,
                            template=template, html=True)
@@ -261,7 +261,7 @@ def grant_access(registrations, regform):
 
 def send_form_link(registrations):
     for registration in registrations:
-        template = get_template_module('cern_access:identity_data_form_email.html', registration=registration)
+        template = get_template_module('cern_access:emails/identity_data_form_email.html', registration=registration)
         from_address = registration.registration_form.sender_address
         email = make_email(to_list=registration.email, from_address=from_address, template=template, html=True)
         send_email(email, event=registration.registration_form.event, module='Registration', user=session.user)
