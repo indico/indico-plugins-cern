@@ -243,6 +243,8 @@ class CERNAccessPlugin(IndicoPlugin):
                                   'template without an active CERN access request'))
 
     def _generate_ticket_qr_code(self, registration, ticket_data, **kwargs):
+        if not self._is_ticketing_handled(registration.registration_form):
+            return
         event = registration.event
         tz = timezone('Europe/Zurich')
         ticket_data.update({
