@@ -225,7 +225,7 @@ def notify_access_withdrawn(registrations):
 def send_tickets(registrations):
     """Send tickets to access CERN site to registered users."""
     for registration in registrations:
-        template = get_template_module('cern_access:ticket_email.html', registration=registration)
+        template = get_template_module('cern_access:emails/ticket_email.html', registration=registration)
         from_address = registration.registration_form.sender_address
         attachments = get_ticket_attachments(registration)
         email = make_email(to_list=registration.email, from_address=from_address,

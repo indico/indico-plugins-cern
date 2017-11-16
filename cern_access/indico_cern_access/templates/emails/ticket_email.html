@@ -4,13 +4,11 @@
     CERN access ticket
 {%- endblock %}
 
-{% block registration_header -%}
+{% block registration_body -%}
     {% set event = registration.registration_form.event %}
     <p>Dear {{ registration.full_name }},</p>
     <p>
-        {% block registration_header_text %}
-            You have been granted access to the CERN site during the event.
-            You can find your ticket attached to this email.
-        {% endblock %}
+        You have been granted access to the CERN site during the event.
+        You can find your ticket attached to this email.
     </p>
 {%- endblock %}
