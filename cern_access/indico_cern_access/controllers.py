@@ -45,7 +45,6 @@ class RHRegistrationAccessIdentityData(RHRegistrationFormRegistrationBase):
             form.populate_obj(access_request)
             db.session.flush()
             send_tickets([self.registration])
-            return redirect(url_for('plugin_cern_access.access_identity_data', self.registration,
-                                    token=self.registration.uuid))
+            return redirect(url_for('plugin_cern_access.access_identity_data', self.registration.locator.uuid))
         return view_class.render_template('identity_data_form.html', self.event, form=form,
                                           access_request=access_request)
