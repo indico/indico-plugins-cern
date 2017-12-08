@@ -125,6 +125,8 @@ class FoundationSync(object):
         for k, v in room_data.iteritems():
             setattr(room, k, v)
         for attribute, value in room_attrs.iteritems():
+            if value:
+                value = value.strip()
             room.set_attribute_value(attribute, value)
         room.update_name()
         return room
