@@ -47,7 +47,7 @@ class PluginSettingsForm(IndicoForm):
                                    description=_('The password used to authenticate with ADaMS service'))
     secret_key = IndicoPasswordField(_('Secret key'), [DataRequired()],
                                      description=_('Secret key to sign ADaMS requests'))
-    authorized_users = PrincipalListField(_('Authorized_users'), groups=True,
+    authorized_users = PrincipalListField(_('Authorized users'), groups=True,
                                           description=_('List of users/groups who can send requests'))
     excluded_categories = MultipleItemsField('Excluded categories', fields=[{'id': 'id', 'caption': 'Category ID'}])
     access_ticket_template = QuerySelectField(_("Access ticket template"), allow_blank=True,
