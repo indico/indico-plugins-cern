@@ -209,6 +209,8 @@ def create_access_request_regform(regform, state):
 def is_authorized_user(user):
     """Check if user is authorized to request access to CERN."""
     from indico_cern_access.plugin import CERNAccessPlugin
+    if user.is_admin:
+        return True
     return CERNAccessPlugin.settings.acls.contains_user('authorized_users', user)
 
 
