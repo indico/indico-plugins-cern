@@ -119,11 +119,11 @@ class CERNAccessPlugin(IndicoPlugin):
     def _get_event_request_definitions(self, sender, **kwargs):
         return CERNAccessRequestDefinition
 
-    def _get_access_action_button(self, regform):
+    def _get_access_action_button(self, regform, **kwargs):
         if regform.cern_access_request and regform.cern_access_request.is_active:
             return render_plugin_template('cern_access_action_button.html', regform=regform)
 
-    def _get_access_status(self, regform, registration=None, header=False):
+    def _get_access_status(self, regform, registration, header, **kwargs):
         if regform.cern_access_request and regform.cern_access_request.is_active:
             return render_plugin_template('cern_access_status.html',
                                           registration=registration,
@@ -144,7 +144,7 @@ class CERNAccessPlugin(IndicoPlugin):
             if state == CERNAccessRequestState.active:
                 update_access_requests(registrations, state)
 
-    def _registration_form_deleted(self, registration_form):
+    def _registration_form_deleted(self, registration_form, **kwargs):
         """
         Withdraw CERN access request for deleted registration form and
         corresponding registrations.
@@ -158,7 +158,7 @@ class CERNAccessPlugin(IndicoPlugin):
                     notify_access_withdrawn(registrations)
             registration_form.cern_access_request.request_state = CERNAccessRequestState.withdrawn
 
-    def _event_deleted(self, event, user):
+    def _event_deleted(self, event, **kwargs):
         """
         Withdraw CERN access request for registration forms and corresponding
         registrations of deleted event.
@@ -174,7 +174,7 @@ class CERNAccessPlugin(IndicoPlugin):
             for form in access_requests_forms:
                 form.cern_access_request.request_state = CERNAccessRequestState.withdrawn
 
-    def _registration_modified(self, registration, change):
+    def _registration_modified(self, registration, change, **kwargs):
         """If name of registration changed, updates the ADaMS CERN access request."""
         if registration.cern_access_request and ('first_name' in change or 'last_name' in change):
             state = send_adams_post_request(registration.event, [registration], update=True)[0]
