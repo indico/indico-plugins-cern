@@ -14,6 +14,7 @@ from indico.core.db import db
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.registration.models.registrations import Registration
 from indico.modules.users import UserSetting
+from indico.util.date_time import now_utc
 
 
 def check_config():
@@ -27,7 +28,7 @@ def check_config():
 def is_event_excluded(event):
     """Check if an event is excluded from the calendar"""
     from indico_outlook.plugin import OutlookPlugin
-    return event.duration > OutlookPlugin.settings.get('max_event_duration')
+    return event.duration > OutlookPlugin.settings.get('max_event_duration') or event.end_dt <= now_utc()
 
 
 def get_participating_users(event):
