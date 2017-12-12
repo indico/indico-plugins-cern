@@ -9,9 +9,14 @@
 {% block registration_body -%}
     <p>Dear {{ registration.full_name }},</p>
     <p>
-        {% set url = url_for_plugin('cern_access.access_identity_data', registration.locator.uuid,
-                                                                        _external=true) %}
-        In order to get access to the CERN site we ask you to fill in the form which you can
-        find <a href="{{ url }}">here</a><br>
+        {%- set event = registration.registration_form.event -%}
+        {%- set url = url_for_plugin('cern_access.access_identity_data', registration.locator.uuid,
+                                                                         _external=true) -%}
+        The organizers of the event "{{ event.title }}" have requested access to the CERN premises for you.<br>
+        To grant you this access, we need you to fill in some security information in <a href="{{ url }}">this form</a>.
+    </p>
+    <p>
+        Best regards,<br>
+        CERN Access surveillance service
     </p>
 {%- endblock %}
