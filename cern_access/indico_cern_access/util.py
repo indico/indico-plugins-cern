@@ -13,6 +13,7 @@ import json
 import random
 import string
 
+import dateutil.parser
 import requests
 from flask import session
 from pytz import timezone
@@ -22,6 +23,7 @@ from indico.core.notifications import make_email, send_email
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.registration.models.registrations import Registration
 from indico.modules.events.registration.util import get_ticket_attachments
+from indico.modules.events.requests.models.requests import Request
 from indico.util.string import remove_accents, unicode_to_ascii
 from indico.web.flask.templating import get_template_module
 
@@ -90,25 +92,36 @@ def generate_access_id(registration_id):
 
 def build_access_request_data(registration, event, update=False):
     """Return a dictionary with data required by ADaMS API."""
+    from indico_cern_access.definition import CERNAccessRequestDefinition
     from indico_cern_access.plugin import CERNAccessPlugin
 
+    req = Request.find_latest_for_event(event, CERNAccessRequestDefinition.name)
+    start_dt, end_dt = get_access_dates(req)
     tz = timezone('Europe/Zurich')
-    data = {}
     if update:
         reservation_code = registration.cern_access_request.reservation_code
     else:
         reservation_code = get_random_reservation_code()
-    data.update({'$id': generate_access_id(registration.id),
-                 '$rc': reservation_code,
-                 '$gn': unicode_to_ascii(remove_accents(event.title)),
-                 '$fn': unicode_to_ascii(remove_accents(registration.first_name)),
-                 '$ln': unicode_to_ascii(remove_accents(registration.last_name)),
-                 '$sd': event.start_dt.astimezone(tz).strftime('%Y-%m-%dT%H:%M'),
-                 '$ed': event.end_dt.astimezone(tz).strftime('%Y-%m-%dT%H:%M')})
+    data = {'$id': generate_access_id(registration.id),
+            '$rc': reservation_code,
+            '$gn': unicode_to_ascii(remove_accents(event.title)),
+            '$fn': unicode_to_ascii(remove_accents(registration.first_name)),
+            '$ln': unicode_to_ascii(remove_accents(registration.last_name)),
+            '$sd': start_dt.astimezone(tz).strftime('%Y-%m-%dT%H:%M'),
+            '$ed': end_dt.astimezone(tz).strftime('%Y-%m-%dT%H:%M')}
     checksum = ';;'.join('{}:{}'.format(key, value) for key, value in sorted(data.viewitems()))
     signature = hmac.new(str(CERNAccessPlugin.settings.get('secret_key')), checksum, hashlib.sha256)
     data['$si'] = signature.hexdigest()
     return data
+
+
+def handle_event_time_update(event):
+    """Update access requests after an event time change"""
+    registrations = get_requested_registrations(event=event)
+    if registrations:
+        state = send_adams_post_request(event, registrations, update=True)[0]
+        if state == CERNAccessRequestState.active:
+            update_access_requests(registrations, state)
 
 
 def update_access_request(req):
@@ -284,6 +297,17 @@ def check_access(req):
     category_blacklisted = is_category_blacklisted(req.event.category)
     if not user_authorized or category_blacklisted:
         raise Forbidden()
+
+
+def get_access_dates(req):
+    start_dt_override = req.data['start_dt_override']
+    end_dt_override = req.data['end_dt_override']
+    if start_dt_override and end_dt_override:
+        start_dt_override = dateutil.parser.parse(start_dt_override)
+        end_dt_override = dateutil.parser.parse(end_dt_override)
+        return start_dt_override, end_dt_override
+    else:
+        return req.event.start_dt, req.event.end_dt
 
 
 class AdamsError(Exception):
