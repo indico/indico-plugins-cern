@@ -36,9 +36,12 @@
         {{ simple_form(form, back_button=false) }}
     {% else %}
         {% call message_box('success') %}
-            {% trans -%}
+            {% trans code=access_request.reservation_code -%}
                 We have received your data and sent you an email with the ticket.<br>
-                You may also download it using the button below.
+                You may also download it using the button below.<br>
+                <br>
+                If you cannot print the ticket before coming to CERN, you can print a ticket
+                at the entrance using this registration code <strong>{{ code }}</strong>.
             {%- endtrans %}
         {% endcall %}
         {% if not access_request.registration.is_ticket_blocked %}

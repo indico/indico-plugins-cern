@@ -17,7 +17,7 @@ from indico.web.flask.util import url_for
 from indico.web.util import jsonify_data
 
 from indico_cern_access.forms import AccessIdentityDataForm
-from indico_cern_access.util import grant_access, revoke_access, send_tickets
+from indico_cern_access.util import grant_access, revoke_access, send_ticket
 from indico_cern_access.views import WPAccessRequestDetailsConference, WPAccessRequestDetailsSimpleEvent
 
 
@@ -44,7 +44,7 @@ class RHRegistrationAccessIdentityData(RHRegistrationFormRegistrationBase):
         if access_request is not None and not access_request.has_identity_info and form.validate_on_submit():
             form.populate_obj(access_request)
             db.session.flush()
-            send_tickets([self.registration])
+            send_ticket(self.registration)
             return redirect(url_for('plugin_cern_access.access_identity_data', self.registration.locator.uuid))
         return view_class.render_template('identity_data_form.html', self.event, form=form,
                                           access_request=access_request)
