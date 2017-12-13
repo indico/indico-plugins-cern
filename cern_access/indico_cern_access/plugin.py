@@ -9,7 +9,6 @@ from __future__ import unicode_literals
 
 from flask import request
 from flask_pluginengine import render_plugin_template
-from pytz import timezone
 from werkzeug.exceptions import Forbidden
 from wtforms import StringField
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
@@ -25,8 +24,6 @@ from indico.modules.designer.models.templates import DesignerTemplate
 from indico.modules.events import Event
 from indico.modules.events.registration.forms import TicketsForm
 from indico.modules.events.registration.models.forms import RegistrationForm
-from indico.modules.events.requests.models.requests import Request
-from indico.util.string import remove_accents, unicode_to_ascii
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import IndicoPasswordField, MultipleItemsField, PrincipalListField
 
@@ -34,10 +31,9 @@ from indico_cern_access import _
 from indico_cern_access.blueprint import blueprint
 from indico_cern_access.definition import CERNAccessRequestDefinition
 from indico_cern_access.models.access_requests import CERNAccessRequestState
-from indico_cern_access.util import (generate_access_id, get_access_dates, get_requested_forms,
-                                     get_requested_registrations, handle_event_time_update, notify_access_withdrawn,
-                                     send_adams_delete_request, send_adams_post_request, update_access_requests,
-                                     withdraw_access_requests)
+from indico_cern_access.util import (build_access_request_data, get_requested_forms, get_requested_registrations,
+                                     handle_event_time_update, notify_access_withdrawn, send_adams_delete_request,
+                                     send_adams_post_request, update_access_requests, withdraw_access_requests)
 
 
 class PluginSettingsForm(IndicoForm):
@@ -243,15 +239,4 @@ class CERNAccessPlugin(IndicoPlugin):
         if not self._is_ticketing_handled(registration.registration_form):
             return
         event = registration.event
-        req = Request.find_latest_for_event(event, CERNAccessRequestDefinition.name)
-        start_dt, end_dt = get_access_dates(req)
-        tz = timezone('Europe/Zurich')
-        ticket_data.update({
-            '$id': generate_access_id(registration.id),
-            '$rc': registration.cern_access_request.reservation_code,
-            '$gn': unicode_to_ascii(remove_accents(event.title)),
-            '$fn': unicode_to_ascii(remove_accents(registration.first_name)),
-            '$ln': unicode_to_ascii(remove_accents(registration.last_name)),
-            '$sd': start_dt.astimezone(tz).strftime('%Y-%m-%dT%H:%M'),
-            '$ed': end_dt.astimezone(tz).strftime('%Y-%m-%dT%H:%M')
-        })
+        ticket_data.update(build_access_request_data(registration, event, generate_code=False))

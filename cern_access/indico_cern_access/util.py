@@ -74,7 +74,7 @@ def send_adams_post_request(event, registrations, update=False):
 
     :param update: if True, send request updating already stored data
     """
-    data = {reg.id: build_access_request_data(reg, event, update=update) for reg in registrations}
+    data = {reg.id: build_access_request_data(reg, event, generate_code=(not update)) for reg in registrations}
     _send_adams_http_request('POST', data.values())
     return CERNAccessRequestState.active, data
 
@@ -90,7 +90,7 @@ def generate_access_id(registration_id):
     return 'in{}'.format(registration_id)
 
 
-def build_access_request_data(registration, event, update=False):
+def build_access_request_data(registration, event, generate_code):
     """Return a dictionary with data required by ADaMS API."""
     from indico_cern_access.definition import CERNAccessRequestDefinition
     from indico_cern_access.plugin import CERNAccessPlugin
@@ -98,10 +98,10 @@ def build_access_request_data(registration, event, update=False):
     req = Request.find_latest_for_event(event, CERNAccessRequestDefinition.name)
     start_dt, end_dt = get_access_dates(req)
     tz = timezone('Europe/Zurich')
-    if update:
-        reservation_code = registration.cern_access_request.reservation_code
-    else:
+    if generate_code:
         reservation_code = get_random_reservation_code()
+    else:
+        reservation_code = registration.cern_access_request.reservation_code
     data = {'$id': generate_access_id(registration.id),
             '$rc': reservation_code,
             '$gn': unicode_to_ascii(remove_accents(event.title)),
