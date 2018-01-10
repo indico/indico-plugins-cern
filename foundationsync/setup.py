@@ -20,7 +20,7 @@ setup(
     py_modules=('indico_foundationsync',),
     zip_safe=False,
     install_requires=[
-        'indico>=2.0a1',
+        'indico>=2.0',
         'cx_Oracle',
     ],
     entry_points={

@@ -21,7 +21,7 @@ setup(
     zip_safe=False,
     include_package_data=True,
     install_requires=[
-        'indico>=2.0a1'
+        'indico>=2.0'
     ],
     entry_points={
         'indico.plugins': {'themes_cern = indico_custom_themes.plugins:CERNThemesPlugin',

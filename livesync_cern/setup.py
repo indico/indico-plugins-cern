@@ -21,8 +21,8 @@ setup(
     zip_safe=False,
     include_package_data=True,
     install_requires=[
-        'indico>=2.0a1',
-        'indico-plugin-livesync>=1.0a1'
+        'indico>=2.0',
+        'indico-plugin-livesync>=1.0'
     ],
     entry_points={
         'indico.plugins': {'livesync_cern = indico_livesync_cern.plugin:CERNLiveSyncPlugin'}
