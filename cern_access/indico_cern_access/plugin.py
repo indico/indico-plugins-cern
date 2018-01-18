@@ -31,6 +31,7 @@ from indico_cern_access import _
 from indico_cern_access.blueprint import blueprint
 from indico_cern_access.definition import CERNAccessRequestDefinition
 from indico_cern_access.models.access_requests import CERNAccessRequestState
+from indico_cern_access.placeholders import AccessDatesPlaceholder
 from indico_cern_access.util import (build_access_request_data, get_requested_forms, get_requested_registrations,
                                      handle_event_time_update, notify_access_withdrawn, send_adams_delete_request,
                                      send_adams_post_request, update_access_requests, withdraw_access_requests)
@@ -110,6 +111,7 @@ class CERNAccessPlugin(IndicoPlugin):
         self.connect(signals.form_validated, self._form_validated)
         self.connect(signals.event.designer.print_badge_template, self._print_badge_template)
         self.connect(signals.event.registration.generate_ticket_qr_code, self._generate_ticket_qr_code)
+        self.connect(signals.get_placeholders, self._get_designer_placeholders, sender='designer-fields')
 
     def get_blueprints(self):
         return blueprint
@@ -240,3 +242,6 @@ class CERNAccessPlugin(IndicoPlugin):
             return
         event = registration.event
         ticket_data.update(build_access_request_data(registration, event, generate_code=False))
+
+    def _get_designer_placeholders(self, sender, **kwargs):
+        yield AccessDatesPlaceholder
