@@ -7,16 +7,53 @@
 {%- endblock %}
 
 {% block registration_body -%}
+    {%- set event = registration.registration_form.event -%}
+    {%- set url = url_for_plugin('cern_access.access_identity_data', registration.locator.uuid,
+                                                                    _external=true) -%}
     <p>Dear {{ registration.full_name }},</p>
     <p>
-        {%- set event = registration.registration_form.event -%}
-        {%- set url = url_for_plugin('cern_access.access_identity_data', registration.locator.uuid,
-                                                                         _external=true) -%}
-        The organizers of the event "{{ event.title }}" have requested access to the CERN premises for you.<br>
-        To grant you this access, we need you to fill in some security information in <a href="{{ url }}">this form</a>.
+        The organisers of the event "{{ event.title }}" have requested access to the CERN premises for you.<br/>
+        In order to grant you access to the site, we need you to fill in some personal information in
+        <a href="{{ url }}">this form</a> that our Host States authorities require for security reasons.
     </p>
     <p>
-        Best regards,<br>
+        In accordance with CERN’s data privacy policy, this data will be deleted from our Access database as soon as it is
+        not required anymore.
+    </p>
+    <p>
+        Upon reception of this data, you will receive an automatic email, with your access card in PDF format and an access
+        code.
+    </p>
+    <p>
+        No access on the CERN site will be granted without complying with this formality.
+    </p>
+    <p>
+        Best regards,<br/>
         CERN Access surveillance service
+    </p>
+
+    <hr>
+
+    <p>Chère/Cher {{ registration.full_name }},</p>
+    <p>
+        Les organisateurs de l'événement "{{ event.title }}" ont demandé pour vous un accès au domaine du CERN.<br/>
+        Afin de vous accorder cet accès, nous avons besoin de certaines informations personnelles que vous pourrez
+        remplir sur <a href="{{ url }}">ce formulaire</a>, et qui sont demandées par les autorités de nos pays hôtes
+        pour des raisons de sécurité.
+    </p>
+    <p>
+        En accord avec la politique du CERN en matière de confidentialité des données, ces informations seront effacées
+        de notre base de données aussitôt qu’elles ne seront plus nécessaires.
+    </p>
+    <p>
+        Dès réception de ces données, vous recevrez un mail automatique contenant votre carte d’accès au format PDF ainsi
+        que votre code d’accès.
+    </p>
+    <p>
+        Aucun accès au site du CERN ne sera autorisé si cette formalité n’est pas remplie.
+    </p>
+    <p>
+        Meilleures salutations,<br/>
+        Service de Surveillance des Accès du CERN
     </p>
 {%- endblock %}
