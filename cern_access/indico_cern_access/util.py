@@ -32,6 +32,12 @@ from indico_cern_access.models.access_request_regforms import CERNAccessRequestR
 from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState
 
 
+def get_last_request(event):
+    """Return the last CERN Acess request for the event."""
+    from indico_cern_access.definition import CERNAccessRequestDefinition
+    return Request.find_latest_for_event(event, CERNAccessRequestDefinition.name)
+
+
 def get_requested_forms(event):
     """Return list of registration forms with requested access to CERN."""
     return (RegistrationForm.query.with_parent(event)
@@ -92,11 +98,8 @@ def generate_access_id(registration_id):
 
 def build_access_request_data(registration, event, generate_code):
     """Return a dictionary with data required by ADaMS API."""
-    from indico_cern_access.definition import CERNAccessRequestDefinition
     from indico_cern_access.plugin import CERNAccessPlugin
-
-    req = Request.find_latest_for_event(event, CERNAccessRequestDefinition.name)
-    start_dt, end_dt = get_access_dates(req)
+    start_dt, end_dt = get_access_dates(get_last_request(event))
     tz = timezone('Europe/Zurich')
     if generate_code:
         reservation_code = get_random_reservation_code()
@@ -240,7 +243,9 @@ def notify_access_withdrawn(registrations):
 
 def send_ticket(registration):
     """Send the ticket to access the CERN site by email."""
-    template = get_template_module('cern_access:emails/ticket_email.html', registration=registration)
+    start_dt, end_dt = get_access_dates(get_last_request(registration.event))
+    template = get_template_module('cern_access:emails/ticket_email.html', registration=registration,
+                                   start_dt=start_dt, end_dt=end_dt)
     from_address = registration.registration_form.sender_address
     attachments = get_ticket_attachments(registration)
     email = make_email(to_list=registration.email, from_address=from_address,
@@ -270,12 +275,16 @@ def grant_access(registrations, regform):
                                  reg.cern_access_request.request_state == CERNAccessRequestState.active)]
     state, data = send_adams_post_request(event, new_registrations)
     add_access_requests(new_registrations, data, state)
-    send_form_link(new_registrations)
+    send_form_link(event, new_registrations)
 
 
-def send_form_link(registrations):
+def send_form_link(event, registrations):
+    """Send a mail asking for personal information to be filled in using a web form."""
+    start_dt, end_dt = get_access_dates(get_last_request(event))
+
     for registration in registrations:
-        template = get_template_module('cern_access:emails/identity_data_form_email.html', registration=registration)
+        template = get_template_module('cern_access:emails/identity_data_form_email.html', registration=registration,
+                                       start_dt=start_dt, end_dt=end_dt)
         from_address = registration.registration_form.sender_address
         email = make_email(to_list=registration.email, from_address=from_address, template=template, html=True)
         send_email(email, event=registration.registration_form.event, module='Registration', user=session.user)

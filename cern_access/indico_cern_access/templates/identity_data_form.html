@@ -1,5 +1,6 @@
 {% extends 'events/display/conference/base.html' if event.type == 'conference' else 'layout/meeting_page_base.html' %}
 
+{% from 'cern_access:_common.html' import render_access_dates %}
 {% from 'forms/_form.html' import simple_form %}
 {% from 'message_box.html' import message_box %}
 
@@ -36,12 +37,13 @@
         {{ simple_form(form, back_button=false) }}
     {% else %}
         {% call message_box('success') %}
-            {% trans code=access_request.reservation_code -%}
-                We have received your data and sent you an email with the ticket.<br>
-                You may also download it using the button below.<br>
+            {% trans code=access_request.reservation_code, dates=render_access_dates(start_dt, end_dt) -%}
+                Access to the CERN premises have been granted to you for the period: {{ dates }}.<br>
+                The ticket has been e-mailed to you and should be printed and presented at the CERN
+                gate in order to enter the Organisation site.
                 <br>
                 If you cannot print the ticket before coming to CERN, you can print a ticket
-                at the entrance using this registration code <strong>{{ code }}</strong>.
+                at the entrance using this registration code: <strong>{{ code }}</strong>.
             {%- endtrans %}
         {% endcall %}
         {% if not access_request.registration.is_ticket_blocked %}

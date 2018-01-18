@@ -13,11 +13,13 @@ from indico.core.db import db
 from indico.modules.events.models.events import EventType
 from indico.modules.events.registration.controllers.display import RHRegistrationFormRegistrationBase
 from indico.modules.events.registration.controllers.management.reglists import RHRegistrationsActionBase
+from indico.modules.events.requests.models.requests import Request
 from indico.web.flask.util import url_for
 from indico.web.util import jsonify_data
 
+from indico_cern_access.definition import CERNAccessRequestDefinition
 from indico_cern_access.forms import AccessIdentityDataForm
-from indico_cern_access.util import grant_access, revoke_access, send_ticket
+from indico_cern_access.util import get_access_dates, get_last_request, grant_access, revoke_access, send_ticket
 from indico_cern_access.views import WPAccessRequestDetailsConference, WPAccessRequestDetailsSimpleEvent
 
 
@@ -46,5 +48,7 @@ class RHRegistrationAccessIdentityData(RHRegistrationFormRegistrationBase):
             db.session.flush()
             send_ticket(self.registration)
             return redirect(url_for('plugin_cern_access.access_identity_data', self.registration.locator.uuid))
+
+        start_dt, end_dt = get_access_dates(get_last_request(self.event))
         return view_class.render_template('identity_data_form.html', self.event, form=form,
-                                          access_request=access_request)
+                                          access_request=access_request, start_dt=start_dt, end_dt=end_dt)

@@ -1,5 +1,7 @@
 {% extends 'events/registration/emails/base_registration.html' %}
 
+{% from 'cern_access:_common.html' import render_access_dates %}
+
 {% block subject_name %}{% endblock %}
 
 {% block subject_message -%}
@@ -12,7 +14,8 @@
                                                                     _external=true) -%}
     <p>Dear {{ registration.full_name }},</p>
     <p>
-        The organisers of the event "{{ event.title }}" have requested access to the CERN premises for you.<br/>
+        The organizers of the event "{{ event.title }}" have requested access to the CERN premises for you
+        for the period: {{ render_access_dates(start_dt, end_dt, locale='en_GB', separator='to') }}.<br>
         In order to grant you access to the site, we need you to fill in some personal information in
         <a href="{{ url }}">this form</a> that our Host States authorities require for security reasons.
     </p>
@@ -25,7 +28,7 @@
         code.
     </p>
     <p>
-        No access on the CERN site will be granted without complying with this formality.
+        No access to the CERN site will be granted without complying with this formality.
     </p>
     <p>
         Best regards,<br/>
@@ -36,7 +39,8 @@
 
     <p>Chère/Cher {{ registration.full_name }},</p>
     <p>
-        Les organisateurs de l'événement "{{ event.title }}" ont demandé pour vous un accès au domaine du CERN.<br/>
+        Les organisateurs de l'événement "{{ event.title }}" ont demandé pour vous un accès au domaine du CERN
+        pour la période: {{ render_access_dates(start_dt, end_dt, locale='fr_FR', separator='au') }}.<br>
         Afin de vous accorder cet accès, nous avons besoin de certaines informations personnelles que vous pourrez
         remplir sur <a href="{{ url }}">ce formulaire</a>, et qui sont demandées par les autorités de nos pays hôtes
         pour des raisons de sécurité.
