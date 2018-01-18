@@ -6,4 +6,4 @@ $header-text-color: $black;
 
 @import 'themes/indico';
 
-@include header-logo('/static/plugins/themes_cern/intelum_logo.png', 25px 50px, 250px, 20%);
+@include header-logo('themes_cern:intelum_logo.png', 25px 50px, 250px, 20%);

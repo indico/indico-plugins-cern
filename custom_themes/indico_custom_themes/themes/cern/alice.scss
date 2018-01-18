@@ -6,4 +6,4 @@ $header-text-color: $black;
 
 @import 'themes/indico';
 
-@include header-logo('/static/plugins/themes_cern/alice_logo.png');
+@include header-logo('themes_cern:alice_logo.png');

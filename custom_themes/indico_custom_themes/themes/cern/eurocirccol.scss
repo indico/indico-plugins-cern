@@ -6,4 +6,4 @@ $header-text-color: $black;
 
 @import 'themes/indico';
 
-@include header-logo('/static/plugins/themes_cern/eurocircol_logo.png', 26px 33px, 230px, 17%);
+@include header-logo('themes_cern:eurocircol_logo.png', 26px 33px, 230px, 17%);

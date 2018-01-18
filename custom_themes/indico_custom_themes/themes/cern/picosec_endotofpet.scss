@@ -6,7 +6,7 @@ $header-text-color: #555588;
 
 @import 'themes/indico';
 
-@include header-logo('/static/plugins/themes_cern/picosec_endotofpet_banner.png', 0 0, 200px);
+@include header-logo('themes_cern:picosec_endotofpet_banner.png', 0 0, 200px);
 
 .event-header h1 {
     max-width: 600px;

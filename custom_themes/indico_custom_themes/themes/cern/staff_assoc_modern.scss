@@ -1,4 +1,4 @@
 @import 'base/palette';
 @import 'themes/indico';
 
-@include header-logo('/static/plugins/themes_cern/staff_assoc_logo.png', 15px 0, 180px);
+@include header-logo('themes_cern:staff_assoc_logo.png', 15px 0, 180px);

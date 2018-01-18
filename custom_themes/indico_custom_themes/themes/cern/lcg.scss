@@ -6,4 +6,4 @@ $header-text-color: $black;
 
 @import 'themes/indico';
 
-@include header-logo('/static/plugins/themes_cern/lcg_logo.png', 0 0, 180px);
+@include header-logo('themes_cern:lcg_logo.png', 0 0, 180px);

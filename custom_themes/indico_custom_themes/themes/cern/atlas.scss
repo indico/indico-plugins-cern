@@ -4,4 +4,4 @@ $header-bg-color: #1382bb;
 
 @import 'themes/indico';
 
-@include header-logo('/static/plugins/themes_cern/atlas_logo.png', 40px 15px, 160px, auto 140px);
+@include header-logo('themes_cern:atlas_logo.png', 40px 15px, 160px, auto 140px);

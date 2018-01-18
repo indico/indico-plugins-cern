@@ -6,4 +6,4 @@ $header-text-color: #555588;
 
 @import 'themes/indico';
 
-@include header-logo('/static/plugins/themes_cern/tical_logo.png', 0 0, 200px, 230px);
+@include header-logo('themes_cern:tical_logo.png', 0 0, 200px, 230px);
