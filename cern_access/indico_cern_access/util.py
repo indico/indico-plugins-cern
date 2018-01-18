@@ -194,7 +194,8 @@ def withdraw_event_access_request(req):
 
 def get_random_reservation_code():
     """Generate random reservation code for data required by ADaMS API."""
-    return 'I' + ''.join(random.sample(string.ascii_uppercase.replace('O', '') + string.digits, 6))
+    charset = string.ascii_uppercase.replace('O', '').replace('0', '') + string.digits
+    return 'I' + ''.join(random.sample(charset, 6))
 
 
 def create_access_request(registration, state, reservation_code):
