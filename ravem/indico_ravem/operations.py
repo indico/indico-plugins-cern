@@ -36,7 +36,7 @@ def get_room_status(room_name, room_special_name=None):
     response = get_endpoint_status(room_name)
     if 'error' in response:
         RavemPlugin.logger.error("Failed to get status of room %s with error: %s", room_special_name, response['error'])
-        raise RavemException(_("Failed to get status of room {room} with error:\n{response[error]}")
+        raise RavemException(_("Failed to get status of room {room} with error: {response[error]}")
                              .format(room=room_special_name, response=response))
 
     result = response['result']
@@ -105,7 +105,7 @@ def connect_room(room_name, vc_room, force=False, room_special_name=None):
             RavemPlugin.logger.error("Failed to disconnect the room %s from the Vidyo room %s with error: %s",
                                      room_special_name, status['vc_room_name'], disconnect_response['error'])
             raise RavemException(
-                _("Failed to disconnect the room {room} from the Vidyo room {status[vc_room_name]} with error:\n"
+                _("Failed to disconnect the room {room} from the Vidyo room {status[vc_room_name]} with error: "
                   "{response[error]}").format(room=room_special_name, status=status, response=disconnect_response)
             )
 
@@ -131,7 +131,7 @@ def connect_room(room_name, vc_room, force=False, room_special_name=None):
         RavemPlugin.logger.error("Failed to connect the room %s to the Vidyo room %s with error: %s",
                                  room_special_name, vc_room.name, response['error'])
         raise RavemException(
-            _("Failed to connect the room {room} to the Vidyo room {vc_room.name} with error:\n{response[error]}")
+            _("Failed to connect the room {room} to the Vidyo room {vc_room.name} with error: {response[error]}")
             .format(room=room_special_name, vc_room=vc_room, response=response)
         )
 
@@ -190,6 +190,6 @@ def disconnect_room(room_name, vc_room, force=False, room_special_name=None):
         RavemPlugin.logger.error("Failed to disconnect the room %s from the Vidyo room %s with error: %s",
                                  room_special_name, vc_room.name, response['error'])
         raise RavemException(
-            _("Failed to disconnect the room {room} from the Vidyo room {vc_room.name} with error:\n{response[error]}")
+            _("Failed to disconnect the room {room} from the Vidyo room {vc_room.name} with error: {response[error]}")
             .format(room=room_special_name, vc_room=vc_room, response=response)
         )
