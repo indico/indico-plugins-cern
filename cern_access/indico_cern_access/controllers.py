@@ -13,11 +13,9 @@ from indico.core.db import db
 from indico.modules.events.models.events import EventType
 from indico.modules.events.registration.controllers.display import RHRegistrationFormRegistrationBase
 from indico.modules.events.registration.controllers.management.reglists import RHRegistrationsActionBase
-from indico.modules.events.requests.models.requests import Request
 from indico.web.flask.util import url_for
 from indico.web.util import jsonify_data
 
-from indico_cern_access.definition import CERNAccessRequestDefinition
 from indico_cern_access.forms import AccessIdentityDataForm
 from indico_cern_access.util import get_access_dates, get_last_request, grant_access, revoke_access, send_ticket
 from indico_cern_access.views import WPAccessRequestDetailsConference, WPAccessRequestDetailsSimpleEvent
