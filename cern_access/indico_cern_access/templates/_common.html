@@ -1,10 +1,10 @@
-{% macro render_access_dates(start_dt, end_dt, locale=none, separator='-') %}
-    {% if start_dt.date() == end_dt.date() %}
+{%- macro render_access_dates(start_dt, end_dt, locale=none, separator='-') -%}
+    {%- if start_dt.date() == end_dt.date() -%}
         {{ start_dt | format_date(format='medium', locale=locale) }}
         ({{ start_dt | format_time('short', locale=locale) }} - {{ end_dt | format_time('short', locale=locale) }})
-    {% else %}
+    {%- else -%}
         {{ start_dt | format_datetime(format='d MMM yyy (H:mm)', locale=locale) }}
         {{ separator }}
         {{ end_dt | format_datetime(format='d MMM yyy (H:mm)', locale=locale) }}
-    {% endif %}
-{% endmacro %}
+    {%- endif -%}
+{%- endmacro -%}

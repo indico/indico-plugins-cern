@@ -37,12 +37,16 @@
         {{ simple_form(form, back_button=false) }}
     {% else %}
         {% call message_box('success') %}
-            {% trans code=access_request.reservation_code, dates=render_access_dates(start_dt, end_dt) -%}
-                Access to the CERN premises have been granted to you for the period: {{ dates }}.<br>
-                The ticket has been e-mailed to you and should be printed and presented at the CERN
-                gate in order to enter the Organisation site.
+            {% trans code=access_request.reservation_code, dates=render_access_dates(start_dt, end_dt),
+                     email=access_request.registration.email -%}
+                Access to the CERN premises has been granted to you for the period: {{ dates }}.<br>
+                Your ticket has been sent to your email address <strong>{{ email }}</strong>, but you can
+                also download it using the button below.<br>
                 <br>
-                If you cannot print the ticket before coming to CERN, you can print a ticket
+                We invite you to print your ticket as showing it at the CERN gate will be required in
+                order to enter the site.
+                <br>
+                If you cannot print the ticket before coming to CERN, you can also print one
                 at the entrance using this registration code: <strong>{{ code }}</strong>.
             {%- endtrans %}
         {% endcall %}
