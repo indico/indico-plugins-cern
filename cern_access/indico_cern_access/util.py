@@ -235,9 +235,7 @@ def notify_access_withdrawn(registrations):
     """Notify participants when access to CERN has been withdrawn."""
     for registration in registrations:
         template = get_template_module('cern_access:emails/request_withdrawn_email.html', registration=registration)
-        from_address = registration.registration_form.sender_address
-        email = make_email(to_list=registration.email, from_address=from_address,
-                           template=template, html=True)
+        email = make_email(to_list=registration.email, template=template, html=True)
         send_email(email, event=registration.registration_form.event, module='Registration', user=session.user)
 
 
@@ -246,10 +244,8 @@ def send_ticket(registration):
     start_dt, end_dt = get_access_dates(get_last_request(registration.event))
     template = get_template_module('cern_access:emails/ticket_email.html', registration=registration,
                                    start_dt=start_dt, end_dt=end_dt)
-    from_address = registration.registration_form.sender_address
     attachments = get_ticket_attachments(registration)
-    email = make_email(to_list=registration.email, from_address=from_address,
-                       template=template, html=True, attachments=attachments)
+    email = make_email(to_list=registration.email, template=template, html=True, attachments=attachments)
     send_email(email, event=registration.registration_form.event, module='Registration', user=session.user)
 
 
@@ -285,8 +281,7 @@ def send_form_link(event, registrations):
     for registration in registrations:
         template = get_template_module('cern_access:emails/identity_data_form_email.html', registration=registration,
                                        start_dt=start_dt, end_dt=end_dt)
-        from_address = registration.registration_form.sender_address
-        email = make_email(to_list=registration.email, from_address=from_address, template=template, html=True)
+        email = make_email(to_list=registration.email, template=template, html=True)
         send_email(email, event=registration.registration_form.event, module='Registration', user=session.user)
 
 
