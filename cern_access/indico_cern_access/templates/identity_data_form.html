@@ -1,11 +1,17 @@
-{% extends 'events/display/conference/base.html' if event.type == 'conference' else 'layout/meeting_page_base.html' %}
+{% extends 'layout/base.html' %}
 
 {% from 'cern_access:_common.html' import render_access_dates %}
 {% from 'forms/_form.html' import simple_form %}
 {% from 'message_box.html' import message_box %}
 
+{% block page_class %}meeting-page{% endblock %}
+
 {% block title %}
-    {% trans %}Additional data for your CERN access badge{% endtrans %}
+    {% trans %}CERN site access{% endtrans %}
+{% endblock %}
+
+{% block subtitle %}
+    {{ event.title }}
 {% endblock %}
 
 {% block content %}
@@ -25,11 +31,16 @@
             <div class="message-box-content">
                 <span class="icon"></span>
                 <div class="message-text">
-                    {% trans -%}
+                    {% trans dates=render_access_dates(start_dt, end_dt) -%}
                         CERN's Security Policy requires us to ask you to fill in
                         the following additional data. The contents of this form
                         will not be shared with the event organizers and will only be
                         revealed upon request from CERN's Site Surveillance service.
+                        <br>
+                        <br>
+                        One you have provided this data, you will be able to download
+                        a ticket which grants you access to the CERN site during this
+                        period: {{ dates }}
                     {%- endtrans %}
                 </div>
             </div>
