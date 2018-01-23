@@ -1,7 +1,7 @@
 {% extends 'layout/base.html' %}
 
 {% from 'cern_access:_common.html' import render_access_dates %}
-{% from 'forms/_form.html' import simple_form %}
+{% from 'forms/_form.html' import simple_form, form_rows, form_row_static %}
 {% from 'message_box.html' import message_box %}
 
 {% block page_class %}meeting-page{% endblock %}
@@ -45,7 +45,10 @@
                 </div>
             </div>
         </div>
-        {{ simple_form(form, back_button=false) }}
+        {% call simple_form(form, back_button=false) %}
+            {{ form_row_static(_('Name'), access_request.registration.full_name) }}
+            {{ form_rows(form) }}
+        {% endcall %}
     {% else %}
         {% call message_box('success') %}
             {% trans code=access_request.reservation_code, dates=render_access_dates(start_dt, end_dt),
