@@ -55,10 +55,11 @@ class CERNAccessRequest(db.Model):
     registration = db.relationship(
         'Registration',
         uselist=False,
-        lazy=False,
+        lazy=True,
         backref=db.backref(
             'cern_access_request',
-            uselist=False
+            uselist=False,
+            lazy=False
         )
     )
 
