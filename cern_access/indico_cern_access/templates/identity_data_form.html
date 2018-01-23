@@ -32,10 +32,10 @@
                 <span class="icon"></span>
                 <div class="message-text">
                     {% trans dates=render_access_dates(start_dt, end_dt) -%}
-                        CERN's Security Policy requires us to ask you to fill in
-                        the following additional data. The contents of this form
-                        will not be shared with the event organizers and will only be
-                        revealed upon request from CERN's Site Surveillance service.
+                        CERN's Security Policy requires you to provide the following
+                        additional data. The contents of this form will not be shared
+                        with the event organizers and will only be revealed upon request
+                        from CERN's Site Surveillance service.
                         <br>
                         <br>
                         One you have provided this data, you will be able to download
@@ -54,13 +54,13 @@
             {% trans code=access_request.reservation_code, dates=render_access_dates(start_dt, end_dt),
                      email=access_request.registration.email -%}
                 Access to the CERN premises has been granted to you for the period: {{ dates }}.<br>
-                Your ticket has been sent to your email address <strong>{{ email }}</strong>, but you can
-                also download it using the button below.<br>
+                Your access ticket has been sent to your email address <strong>{{ email }}</strong>, but you
+                can also download it using the button below.<br>
                 <br>
-                We invite you to print your ticket as showing it at the CERN gate will be required in
+                We invite you to print this ticket as showing it at the CERN gate will be required in
                 order to enter the site.
                 <br>
-                If you cannot print the ticket before coming to CERN, you can also print one
+                If you cannot print the access ticket before coming to CERN, you can also print one
                 at the entrance using this registration code: <strong>{{ code }}</strong>.
             {%- endtrans %}
         {% endcall %}
@@ -68,7 +68,7 @@
             <div class="group right">
                 {%- set download_ticket_url = url_for('event_registration.ticket_download', access_request.registration.locator.registrant) -%}
                 <a href="{{ download_ticket_url }}" class="i-button accept icon-ticket">
-                    {% trans %}Get ticket{% endtrans %}
+                    {% trans %}Get access ticket{% endtrans %}
                 </a>
             </div>
         {% endif %}

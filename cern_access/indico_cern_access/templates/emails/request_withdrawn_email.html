@@ -3,11 +3,11 @@
 {% block subject_name %}{% endblock %}
 
 {% block subject_message -%}
-    CERN access withdrawn
+    Access to the CERN site withdrawn
 {%- endblock %}
 
 {% block registration_body -%}
     {% set event = registration.registration_form.event %}
     <p>Dear {{ registration.full_name }},</p>
-    <p>Access to the CERN site has been withdrawn from your registration. Your ticket is not valid anymore.</p>
+    <p>Access to the CERN site has been withdrawn from your registration. Your access ticket is not valid anymore.</p>
 {%- endblock %}
