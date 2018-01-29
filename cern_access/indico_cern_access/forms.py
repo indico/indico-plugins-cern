@@ -38,7 +38,9 @@ class CERNAccessForm(RequestFormBase):
 
     def __init__(self, *args, **kwargs):
         super(CERNAccessForm, self).__init__(*args, **kwargs)
-        self.regforms.choices = [(unicode(rf.id), rf.title) for rf in get_regforms(self.event)]
+        regforms = get_regforms(self.event)
+        self._regform_map = {unicode(rf.id): rf for rf in regforms}
+        self.regforms.choices = [(unicode(rf.id), rf.title) for rf in regforms]
         self.start_dt_override.default_time = self.event.start_dt_local.time()
         self.end_dt_override.default_time = self.event.end_dt_local.time()
 
