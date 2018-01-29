@@ -19,6 +19,7 @@ from indico.modules.events import Event
 from indico.modules.events.contributions import Contribution
 from indico.modules.events.contributions.models.subcontributions import SubContribution
 from indico.modules.events.requests.models.requests import Request, RequestState
+from indico.modules.events.sessions import Session
 from indico.modules.events.sessions.models.blocks import SessionBlock
 from indico.modules.rb.models.equipment import EquipmentType
 from indico.modules.rb.models.locations import Location
@@ -70,7 +71,9 @@ def get_contributions(event):
     contribs = (Contribution.query
                 .with_parent(event)
                 .filter(Contribution.is_scheduled)
-                .filter((Contribution.session == None) | Contribution.session.has(is_poster=False))  # noqa
+                .filter(db.or_(Contribution.session == None,  # noqa
+                               Contribution.session.has(db.or_(Session.type == None,  # noqa
+                                                               Session.type.has(is_poster=False)))))
                 .options(joinedload('timetable_entry').load_only('start_dt'),
                          joinedload('session_block'),
                          subqueryload('person_links'),

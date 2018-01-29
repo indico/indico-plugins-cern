@@ -12,7 +12,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='indico-plugin-audiovisual',
-    version='1.0',
+    version='2.0.dev0',
     url='https://github.com/indico/indico-plugins-cern',
     license='MIT',
     author='Indico Team',
@@ -21,7 +21,7 @@ setup(
     zip_safe=False,
     include_package_data=True,
     install_requires=[
-        'indico>=2.0'
+        'indico>=2.1.dev0'
     ],
     entry_points={
         'indico.plugins': {'audiovisual = indico_audiovisual.plugin:AVRequestsPlugin'},
