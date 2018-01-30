@@ -1,12 +1,18 @@
 {% if registration %}
     {% set access_requested = registration.cern_access_request and not registration.cern_access_request.is_withdrawn %}
-    <td class="i-table id-column">
+    <td class="i-table id-column" id="cern-access-status-{{ registration.id }}">
         {% if access_requested and not registration.cern_access_request.has_identity_info %}
-            <i class="icon-user-check semantic-text warning" title="Needs additional data"></i>
+            <a class="icon-user-check semantic-text warning"
+               title="{% trans %}Needs additional data. Click to enter it on behalf of the user{% endtrans %}"
+               data-href="{{ url_for_plugin('cern_access.enter_identity_data', registration) }}"
+               data-title="{% trans name=registration.full_name %}Enter personal data for &quot;{{ name }}&quot;{% endtrans %}"
+               data-update="#cern-access-status-{{ registration.id }}"
+               data-replace-update
+               data-ajax-dialog></a>
         {% elif access_requested and not registration.cern_access_request.is_withdrawn %}
-            <i class="icon-user-check semantic-text success" title="Access to CERN granted"></i>
+            <i class="icon-user-check semantic-text success" title="{% trans %}Access to CERN granted{% endtrans %}"></i>
         {% else %}
-            <i class="icon-user-block" title="No access to CERN"></i>
+            <i class="icon-user-block" title="{% trans %}No access to CERN{% endtrans %}"></i>
         {% endif %}
     </td>
 {% elif header %}

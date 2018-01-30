@@ -8,17 +8,21 @@
 from __future__ import unicode_literals
 
 from flask import redirect, request
+from flask_pluginengine import render_plugin_template
 
 from indico.core.db import db
+from indico.core.errors import UserValueError
 from indico.modules.events.registration.controllers.display import RHRegistrationFormRegistrationBase
+from indico.modules.events.registration.controllers.management import RHManageRegistrationBase
 from indico.modules.events.registration.controllers.management.reglists import RHRegistrationsActionBase
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.registration.models.registrations import Registration
 from indico.modules.events.requests.controllers import RHRequestsEventRequestDetailsBase
 from indico.util.spreadsheets import send_csv, send_xlsx
 from indico.web.flask.util import url_for
-from indico.web.util import jsonify_data
+from indico.web.util import jsonify_data, jsonify_template
 
+from indico_cern_access import _
 from indico_cern_access.forms import AccessIdentityDataForm
 from indico_cern_access.util import get_access_dates, get_last_request, grant_access, revoke_access, send_ticket
 from indico_cern_access.views import WPAccessRequestDetails
@@ -49,6 +53,22 @@ class RHRegistrationAccessIdentityData(RHRegistrationFormRegistrationBase):
         start_dt, end_dt = get_access_dates(get_last_request(self.event))
         return WPAccessRequestDetails.render_template('identity_data_form.html', self.event, form=form,
                                                       access_request=access_request, start_dt=start_dt, end_dt=end_dt)
+
+
+class RHRegistrationEnterIdentityData(RHManageRegistrationBase):
+    def _process(self):
+        access_request = self.registration.cern_access_request
+        if not access_request or access_request.has_identity_info:
+            raise UserValueError(_('The personal data for this registrant has already been entered'))
+        form = AccessIdentityDataForm()
+        if form.validate_on_submit():
+            form.populate_obj(access_request)
+            db.session.flush()
+            send_ticket(self.registration)
+            return jsonify_data(html=render_plugin_template('cern_access_status.html', registration=self.registration,
+                                                            header=False))
+        return jsonify_template('identity_data_form_management.html', render_plugin_template, form=form,
+                                registration=self.registration)
 
 
 class RHExportCERNAccessBase(RHRequestsEventRequestDetailsBase):
