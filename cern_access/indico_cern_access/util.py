@@ -11,7 +11,6 @@ import hashlib
 import hmac
 import json
 import random
-import string
 
 import dateutil.parser
 import requests
@@ -197,7 +196,7 @@ def withdraw_event_access_request(req):
 
 def get_random_reservation_code():
     """Generate random reservation code for data required by ADaMS API."""
-    charset = string.ascii_uppercase.replace('O', '').replace('0', '') + string.digits
+    charset = 'ABCDEFGHIJKLMNPQRSTUVWXYZ123456789'
     return 'I' + ''.join(random.sample(charset, 6))
 
 
