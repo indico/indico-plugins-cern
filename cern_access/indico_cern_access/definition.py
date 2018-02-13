@@ -18,7 +18,8 @@ from indico.web.forms.base import FormDefaults
 from indico_cern_access import _
 from indico_cern_access.forms import CERNAccessForm
 from indico_cern_access.util import (check_access, get_access_dates, handle_event_time_update, is_authorized_user,
-                                     is_category_blacklisted, update_access_request, withdraw_event_access_request)
+                                     is_category_blacklisted, is_event_too_early, update_access_request,
+                                     withdraw_event_access_request)
 
 
 class CERNAccessRequestDefinition(RequestDefinitionBase):
@@ -40,8 +41,11 @@ class CERNAccessRequestDefinition(RequestDefinitionBase):
 
     @classmethod
     def render_form(cls, event, **kwargs):
+        from indico_cern_access.plugin import CERNAccessPlugin
         kwargs['user_authorized'] = is_authorized_user(session.user)
         kwargs['category_blacklisted'] = is_category_blacklisted(event.category)
+        kwargs['event_too_early'] = is_event_too_early(event)
+        kwargs['earliest_start_dt'] = CERNAccessPlugin.settings.get('earliest_start_dt')
         return super(CERNAccessRequestDefinition, cls).render_form(event, **kwargs)
 
     @classmethod

@@ -262,6 +262,12 @@ def is_category_blacklisted(category):
     return any(category.id == int(cat['id']) for cat in CERNAccessPlugin.settings.get('excluded_categories'))
 
 
+def is_event_too_early(event):
+    from indico_cern_access.plugin import CERNAccessPlugin
+    earliest_start_dt = CERNAccessPlugin.settings.get('earliest_start_dt')
+    return earliest_start_dt is not None and event.start_dt < earliest_start_dt
+
+
 def grant_access(registrations, regform):
     event = regform.event
     new_registrations = [reg for reg in registrations
@@ -297,7 +303,8 @@ def revoke_access(registrations):
 def check_access(req):
     user_authorized = is_authorized_user(session.user)
     category_blacklisted = is_category_blacklisted(req.event.category)
-    if not user_authorized or category_blacklisted:
+    too_early = is_event_too_early(req.event)
+    if not user_authorized or category_blacklisted or too_early:
         raise Forbidden()
 
 

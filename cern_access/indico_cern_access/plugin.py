@@ -7,25 +7,27 @@
 
 from __future__ import unicode_literals
 
+from datetime import time
+
 from flask import request
 from flask_pluginengine import render_plugin_template
 from werkzeug.exceptions import Forbidden
 from wtforms import StringField
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from wtforms.fields.html5 import URLField
-from wtforms.validators import DataRequired
+from wtforms.validators import DataRequired, Optional
 
 from indico.core import signals
 from indico.core.db import db
 from indico.core.plugins import IndicoPlugin
-from indico.core.settings.converters import SettingConverter
+from indico.core.settings.converters import DatetimeConverter, SettingConverter
 from indico.modules.designer import TemplateType
 from indico.modules.designer.models.templates import DesignerTemplate
 from indico.modules.events import Event
 from indico.modules.events.registration.forms import TicketsForm
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.web.forms.base import IndicoForm
-from indico.web.forms.fields import IndicoPasswordField, MultipleItemsField, PrincipalListField
+from indico.web.forms.fields import IndicoDateTimeField, IndicoPasswordField, MultipleItemsField, PrincipalListField
 
 from indico_cern_access import _
 from indico_cern_access.blueprint import blueprint
@@ -52,6 +54,9 @@ class PluginSettingsForm(IndicoForm):
     access_ticket_template = QuerySelectField(_("Access ticket template"), allow_blank=True,
                                               blank_text=_("No access ticket selected"), get_label='title',
                                               description=_("Ticket template allowing access to CERN"))
+    earliest_start_dt = IndicoDateTimeField(_("Earliest start date"), [Optional()], default_time=time(0, 0),
+                                            description=_("The earliest date an event can start to qualify for CERN "
+                                                          "access badges"))
 
     def __init__(self, *args, **kwargs):
         super(PluginSettingsForm, self).__init__(*args, **kwargs)
@@ -89,9 +94,11 @@ class CERNAccessPlugin(IndicoPlugin):
         'secret_key': '',
         'excluded_categories': [],
         'access_ticket_template': None,
+        'earliest_start_dt': None,
     }
     settings_converters = {
-        'access_ticket_template': DesignerTemplateConverter
+        'access_ticket_template': DesignerTemplateConverter,
+        'earliest_start_dt': DatetimeConverter,
     }
     acl_settings = {'authorized_users'}
 

@@ -16,6 +16,13 @@
             {%- endtrans %}
         {% endcall %}
         <a href="{{ url_for('.event_requests', event) }}" class="i-button big">{% trans %}Back{% endtrans %}</a>
+    {% elif event_too_early %}
+        {% call message_box('warning') %}
+            {% trans date=earliest_start_dt|format_date -%}
+                This service is not available for events starting before {{ date }}.
+            {%- endtrans %}
+        {% endcall %}
+        <a href="{{ url_for('.event_requests', event) }}" class="i-button big">{% trans %}Back{% endtrans %}</a>
     {% else %}
         <div class="warning-message-box">
             <div class="message-box-content">
