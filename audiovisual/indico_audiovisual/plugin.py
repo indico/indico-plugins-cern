@@ -82,9 +82,9 @@ class AVRequestsPlugin(IndicoPlugin):
 
     def init(self):
         super(AVRequestsPlugin, self).init()
-        self.inject_css('audiovisual_css', WPAudiovisualManagers)
-        self.inject_css('audiovisual_css', WPRequestsEventManagement, subclasses=False,
-                        condition=lambda: request.view_args.get('type') == AVRequest.name)
+        self.inject_bundle('main.css', WPAudiovisualManagers)
+        self.inject_bundle('main.css', WPRequestsEventManagement, subclasses=False,
+                           condition=lambda: request.view_args.get('type') == AVRequest.name)
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
         self.connect(signals.agreements.get_definitions, self._get_agreement_definitions)
         self.connect(signals.acl.can_access, self._can_access_event, sender=Event)
@@ -107,9 +107,6 @@ class AVRequestsPlugin(IndicoPlugin):
     def get_blueprints(self):
         yield blueprint
         yield compat_blueprint
-
-    def register_assets(self):
-        self.register_css_bundle('audiovisual_css', 'css/audiovisual.scss')
 
     def _get_event_request_definitions(self, sender, **kwargs):
         return AVRequest
