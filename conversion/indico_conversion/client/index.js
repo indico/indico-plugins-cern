@@ -6,6 +6,8 @@
  * the LICENSE file for more details.
  */
 
+import './style.scss';
+
 (function() {
     'use strict';
 

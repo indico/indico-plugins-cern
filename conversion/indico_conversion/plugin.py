@@ -65,15 +65,11 @@ class ConversionPlugin(IndicoPlugin):
         self.connect(signals.attachments.attachment_created, self._attachment_created)
         self.connect(signals.model_committed, self._attachment_committed, sender=Attachment)
         self.template_hook('event-display-after-attachment', self._event_display_after_attachment)
-        self.inject_css('conversion_css', WPSimpleEventDisplay)
-        self.inject_js('conversion_js', WPSimpleEventDisplay)
+        self.inject_bundle('main.css', WPSimpleEventDisplay)
+        self.inject_bundle('main.js', WPSimpleEventDisplay)
 
     def get_blueprints(self):
         return blueprint
-
-    def register_assets(self):
-        self.register_css_bundle('conversion_css', 'css/conversion.scss')
-        self.register_js_bundle('conversion_js', 'js/conversion.js')
 
     def get_vars_js(self):
         return {'urls': {'check': url_for_plugin('conversion.check')}}
