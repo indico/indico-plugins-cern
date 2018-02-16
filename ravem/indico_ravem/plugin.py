@@ -83,16 +83,13 @@ class RavemPlugin(IndicoPlugin):
         self.template_hook('event-timetable-vc-extra-buttons',
                            partial(self.inject_connect_button, 'ravem_button_group.html'))
 
-        self.inject_js('ravem_js', WPSimpleEventDisplay)
-        self.inject_js('ravem_js', WPVCEventPage)
-        self.inject_js('ravem_js', WPVCManageEvent)
+        self.inject_bundle('main.js', WPSimpleEventDisplay)
+        self.inject_bundle('main.js', WPVCEventPage)
+        self.inject_bundle('main.js', WPVCManageEvent)
 
     def get_blueprints(self):
         from indico_ravem.blueprint import blueprint
         return blueprint
-
-    def register_assets(self):
-        self.register_js_bundle('ravem_js', 'js/ravem.js')
 
     def get_vars_js(self):  # pragma: no cover
         return {'polling': {'limit': self.settings.get('polling_limit'),
