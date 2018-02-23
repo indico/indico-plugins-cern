@@ -11,4 +11,4 @@ dist/
 build/
 wheelhouse/
 .cache/
-config.json
+webpack-build-config.json
