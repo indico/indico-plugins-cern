@@ -12,144 +12,144 @@ definitions:
   # Lectures
   egee_lecture:
     <<: *lecture_themes_cern
-    stylesheet: cern/egee.scss
+    stylesheet: egee.scss
     title: EGEE lecture
 
   picosec_endtofpet_lectures:
     <<: *lecture_themes_cern
-    stylesheet: cern/picosec_endotofpet.scss
+    stylesheet: picosec_endotofpet.scss
     title: PicoSEC - EndoTOFPET US
 
   picosec_lecture:
     <<: *lecture_themes_cern
-    stylesheet: cern/picosec.scss
+    stylesheet: picosec.scss
     title: PicoSEC Lectures
 
   tical-lectures:
     <<: *lecture_themes_cern
-    stylesheet: cern/tical.scss
+    stylesheet: tical.scss
     title: TICAL
 
   # Meetings
   atlas:
     <<: *standard_themes_cern
-    stylesheet: cern/atlas.scss
+    stylesheet: atlas.scss
     title: ATLAS meeting
 
   cms:
     <<: *standard_themes_cern
-    stylesheet: cern/cms.scss
+    stylesheet: cms.scss
     title: CMS meeting
 
   alice_meeting:
     <<: *standard_themes_cern
-    stylesheet: cern/alice.scss
+    stylesheet: alice.scss
     title: ALICE meeting
 
   lhcb_meeting:
     <<: *standard_themes_cern
-    stylesheet: cern/lhcb.scss
+    stylesheet: lhcb.scss
     title: LHCb meeting
 
   cast:
     <<: *standard_themes_cern
-    stylesheet: cern/cast.scss
+    stylesheet: cast.scss
     title: CAST meeting
 
   fcc:
     <<: *standard_themes_cern
-    stylesheet: cern/fcc.scss
+    stylesheet: fcc.scss
     title: FCC
 
   ilc:
     <<: *standard_themes_cern
-    stylesheet: cern/ilc.scss
+    stylesheet: ilc.scss
     title: ILC style
 
   intelum:
     <<: *standard_themes_cern
-    stylesheet: cern/intelum.scss
+    stylesheet: intelum.scss
     title: Intelum
 
   fast:
     <<: *standard_themes_cern
-    stylesheet: cern/fast.scss
+    stylesheet: fast.scss
     title: FAST meetings
 
   EuroCirCol:
     <<: *standard_themes_cern
-    stylesheet: cern/eurocirccol.scss
+    stylesheet: eurocirccol.scss
     title: EuroCirCol
 
   EASITrain:
     <<: *standard_themes_cern
-    stylesheet: cern/easitrain.scss
+    stylesheet: easitrain.scss
     title: EASITrain
 
   crystal_clear:
     <<: *standard_themes_cern
-    stylesheet: cern/crystalclear.scss
+    stylesheet: crystalclear.scss
     title: Crystal Clear
 
   egee_meeting:
     <<: *standard_themes_cern
-    stylesheet: cern/egee.scss
+    stylesheet: egee.scss
     title: EGEE meeting
 
   endotofpet:
     <<: *standard_themes_cern
     event_types: [lecture, meeting]
-    stylesheet: cern/endotofpet.scss
+    stylesheet: endotofpet.scss
     title: EndoTOFPET
 
   openlab:
     <<: *standard_themes_cern
-    stylesheet: cern/openlab.scss
+    stylesheet: openlab.scss
     title: Openlab
     settings:
       logo_link: http://openlab.cern
 
   lcg:
     <<: *standard_themes_cern
-    stylesheet: cern/lcg.scss
+    stylesheet: lcg.scss
     title: LCG style
 
   picosec:
     <<: *standard_themes_cern
-    stylesheet: cern/picosec.scss
+    stylesheet: picosec.scss
     title: Picosec
 
   picosec_endtofpet:
     <<: *standard_themes_cern
-    stylesheet: cern/picosec_endotofpet.scss
+    stylesheet: picosec_endotofpet.scss
     title: PicoSEC - EndoTOFPET US
 
   tical-meetings:
     <<: *standard_themes_cern
-    stylesheet: cern/tical.scss
+    stylesheet: tical.scss
     title: TICAL Meetings
 
   totem_meeting:
     <<: *standard_themes_cern
-    stylesheet: cern/totem.scss
+    stylesheet: totem.scss
     title: TOTEM meeting
 
   sa2:
     <<: *standard_themes_cern
-    stylesheet: cern/staff_assoc_modern.scss
+    stylesheet: staff_assoc_modern.scss
     title: Staff Association
 
   clic:
     <<: *standard_themes_cern
-    stylesheet: cern/clic.scss
+    stylesheet: clic.scss
     title: CLIC
 
   # Meetings - CERN Administrative
   administrative: &administrative
     event_types: [conference, meeting]
-    stylesheet: cern/administrative.scss
-    template: :cern/administrative/event.html
-    tt_template: :cern/administrative/timetable.html
+    stylesheet: administrative.scss
+    template: :administrative/event.html
+    tt_template: :administrative/timetable.html
     title: Administrative style
 
   administrative2:
@@ -166,9 +166,9 @@ definitions:
 
   cern_committees: &cern_committees
     event_types: [meeting]
-    stylesheet: cern/cern_committees.scss
-    template: :cern/cern_committees.html
-    tt_template: :cern/administrative/timetable.html
+    stylesheet: cern_committees.scss
+    template: :cern_committees.html
+    tt_template: :administrative/timetable.html
     title: CERN Committees
     settings:
       session_attachments: true
@@ -179,7 +179,7 @@ definitions:
   lhcrrb:
     <<: *cern_committees
     event_types: [conference, meeting]
-    stylesheet: cern/lhc_rrb.scss
+    stylesheet: lhc_rrb.scss
     title: LHC RRB
     settings:
       session_attachments: true
@@ -188,9 +188,9 @@ definitions:
 
   pf:
     event_types: [meeting]
-    stylesheet: cern/administrative.scss
-    template: :cern/pension_fund.html
-    tt_template: :cern/administrative/timetable.html
+    stylesheet: administrative.scss
+    template: :pension_fund.html
+    tt_template: :administrative/timetable.html
     title: Pension Fund
     settings:
       link_documents: false
