@@ -138,13 +138,13 @@ class FoundationSync(object):
 
         coordinates = {}
         cursor = connection.cursor()
-        cursor.execute('SELECT * FROM geosip_pub.ouvrage')
+        cursor.execute('SELECT * FROM aispub.loc_cl_cur_ouvrage')
 
         for row in cursor:
             row = self._prepare_row(row, cursor)
             longitude = row['LONGITUDE']
             latitude = row['LATITUDE']
-            building_number = int(row['NUMERO']) if row['NUMERO'] else None
+            building_number = int(row['NO_OUVRAGE']) if row['NO_OUVRAGE'] else None
 
             if latitude and longitude and building_number:
                 coordinates[building_number] = {'latitude': latitude, 'longitude': longitude}
