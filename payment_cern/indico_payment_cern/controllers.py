@@ -17,7 +17,7 @@ from werkzeug.exceptions import BadRequest
 from indico.modules.events.payment.models.transactions import TransactionAction
 from indico.modules.events.payment.util import register_transaction
 from indico.modules.events.registration.controllers.display import RHRegistrationFormRegistrationBase
-from indico.modules.events.registration.models.registrations import Registration
+from indico.modules.events.registration.models.registrations import Registration, RegistrationState
 from indico.web.flask.util import url_for
 from indico.web.rh import RH
 
@@ -79,12 +79,13 @@ class PaymentSuccessMixin:
         if transaction and transaction.data == request_data:
             # Same request, e.g. because of the client-side and server-side success notification
             return
-        register_transaction(registration=self.registration,
-                             amount=amount,
-                             currency=currency,
-                             action=TransactionAction.complete,
-                             provider='cern',
-                             data=request_data)
+        if self.registration.state != RegistrationState.complete:
+            register_transaction(registration=self.registration,
+                                 amount=amount,
+                                 currency=currency,
+                                 action=TransactionAction.complete,
+                                 provider='cern',
+                                 data=request_data)
 
 
 class RHPaymentSuccess(PaymentSuccessMixin, RHRegistrationFormRegistrationBase):
