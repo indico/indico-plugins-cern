@@ -1,0 +1,50 @@
+{% extends 'events/requests/event_request_details.html' %}
+{% from 'message_box.html' import message_box %}
+
+{% block content %}
+    {% if not user_authorized %}
+        {% call message_box('warning') %}
+            {% trans -%}
+                Unfortunately you are not allowed to send CERN access requests.
+            {%- endtrans %}
+        {% endcall %}
+        <a href="{{ url_for('.event_requests', event) }}" class="i-button big">{% trans %}Back{% endtrans %}</a>
+    {% elif category_blacklisted %}
+        {% call message_box('warning') %}
+            {% trans -%}
+                You cannot send CERN access requests for events in this category.
+            {%- endtrans %}
+        {% endcall %}
+        <a href="{{ url_for('.event_requests', event) }}" class="i-button big">{% trans %}Back{% endtrans %}</a>
+    {% elif event_too_early %}
+        {% call message_box('warning') %}
+            {% trans date=earliest_start_dt|format_date -%}
+                This service is not available for events starting before {{ date }}.
+            {%- endtrans %}
+        {% endcall %}
+        <a href="{{ url_for('.event_requests', event) }}" class="i-button big">{% trans %}Back{% endtrans %}</a>
+    {% else %}
+        <div class="warning-message-box">
+            <div class="message-box-content">
+                <span class="icon"></span>
+                <div class="message-text">
+                    {% trans -%}
+                        By sending this request you are giving event participants access to the CERN site.
+                        Please note that after the request is accepted, you will need to grant the access to every participant
+                        manually on the registration list page. By default the tickets will be sent to them automatically afterwards.<br>
+                        <strong>Before granting access to any user please make sure that the event is in its final form.</strong>
+                        If you change the:
+                        <ul>
+                            <li><strong>starting or ending time of the event</strong></li>
+                            <li><strong>title of the event</strong></li>
+                            <li><strong>registration details of participants</strong></li>
+                        </ul>
+                        the updated ticket will <strong>not</strong> be sent automatically.
+                        However the old ticket will be still valid.
+                    {%- endtrans %}
+                </div>
+            </div>
+        </div>
+        {{ super() }}
+    {% endif %}
+{% endblock %}

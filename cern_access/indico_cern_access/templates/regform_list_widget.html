@@ -1,0 +1,51 @@
+{% extends 'forms/base_widget.html' %}
+
+{% block html %}
+    <div class="page-content">
+        {% if field.choices %}
+            <table id="regforms-list" class="i-table-widget">
+                <thead>
+                    <tr>
+                        <th>{% trans %}Registration form{% endtrans %}</th>
+                        <th>{% trans %}Include{% endtrans %}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for subfield in field %}
+                    {% set regform = field.get_form()._regform_map[subfield.data] %}
+                    <tr>
+                        <td>{{ subfield.label }}</td>
+                        <td style="padding-bottom: 0;">
+                            <label class="switch">
+                                {{ subfield() }}
+                                <span class="switch-label" data-on="Yes" data-off="No"></span>
+                                <span class="switch-handle"></span>
+                            </label>
+                        </td>
+                        <td>
+                            <div class="thin toolbar right">
+                                <div class="group">
+                                    <a href="{{ url_for_plugin('cern_access.registrations_cern_access_csv', regform) }}"
+                                       class="i-button icon-file-spreadsheet icon-only text-color borderless"
+                                       title="{% trans %}Export as CSV{% endtrans %}"></a>
+                                    <a href="{{ url_for_plugin('cern_access.registrations_cern_access_excel', regform) }}"
+                                       class="i-button icon-file-excel icon-only text-color borderless"
+                                       title="{% trans %}Export as XLSX (Excel){% endtrans %}"></a>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="info-message-box">
+                <div class="message-box-content">
+                    <span class="icon"></span>
+                    <div class="message-text">{% trans %}There are no registration forms for this event{% endtrans %}</div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

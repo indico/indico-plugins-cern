@@ -1,0 +1,26 @@
+{% from 'forms/_form.html' import simple_form, form_rows, form_row_static %}
+{% from 'message_box.html' import message_box %}
+
+{% call message_box('info', fixed_width=true) %}
+    {% trans -%}
+        CERN's Security Policy requires external users entering the CERN site to
+        provide the following additional data. This data will not be shared with
+        you and will only be revealed upon request from CERN's Site Surveillance
+        service.
+        <br>
+        <br>
+        Note that you usually do not need to fill out this form! When you requested
+        CERN access for this user, an email with a link to this form has been sent
+        to them. You may however enter the data on behalf of the user; in this case
+        it is your responsibility to ensure that the data is correct and the user is
+        aware that it will be stored in our database temporarily.
+        <br>
+        <br>
+        After entering the data, the ticket will be immediately sent to the user.
+    {%- endtrans %}
+{% endcall %}
+
+{% call simple_form(form, back_button=false) %}
+    {{ form_row_static(_('Name'), registration.full_name) }}
+    {{ form_rows(form) }}
+{% endcall %}

@@ -1,0 +1,69 @@
+{% extends 'events/registration/emails/base_registration.html' %}
+
+{% from 'cern_access:_common.html' import render_access_dates %}
+
+{%- set event = registration.registration_form.event -%}
+
+{% block subject_name %}{% endblock %}
+
+{% block subject_message -%}
+    Action required: Access to the CERN site
+{%- endblock %}
+
+{% block registration_body -%}
+    {%- set url = url_for_plugin('cern_access.access_identity_data', registration.locator.uuid, _external=true) -%}
+    <p>Dear {{ registration.full_name }},</p>
+    <p>
+        The organizers of the event "{{ event.title }}" have requested access to the CERN premises for you
+        for the period: {{ render_access_dates(start_dt, end_dt, locale='en_GB', separator='to') }}.<br>
+        In order to grant you access to the site, we need you to provide some personal information in
+        <a href="{{ url }}">this form</a> that our Host States authorities require for security reasons.
+    </p>
+    <p>
+        In accordance with CERN’s data privacy policy, this data will be deleted from our Access database as soon as it is
+        not required anymore.
+    </p>
+    <p>
+        Upon reception of this data, you will receive an automatic email, with your access ticket in PDF format and an
+        access code.
+    </p>
+    <p>
+        Please note that no access to the CERN site will be granted without complying with this formality.
+    </p>
+    <p>
+        If you already have a valid CERN access card please ignore this email as you do not need to request
+        specific access for this event.
+    </p>
+    <p>
+        We look forward to welcoming you at CERN.
+    </p>
+
+    <hr>
+
+    <p>Chère/Cher {{ registration.full_name }},</p>
+    <p>
+        Les organisateurs de l'événement "{{ event.title }}" ont demandé pour vous un accès au domaine du CERN
+        pour la période: {{ render_access_dates(start_dt, end_dt, locale='fr_FR', separator='au') }}.<br>
+        Afin de vous accorder cet accès, nous avons besoin de certaines informations personnelles que vous pourrez
+        remplir sur <a href="{{ url }}">ce formulaire</a>, et qui sont demandées par les autorités de nos pays hôtes
+        pour des raisons de sécurité.
+    </p>
+    <p>
+        En accord avec la politique du CERN en matière de confidentialité des données, ces informations seront effacées
+        de notre base de données aussitôt qu’elles ne seront plus nécessaires.
+    </p>
+    <p>
+        Dès réception de ces données, vous recevrez un mail automatique contenant votre carte d’accès au format PDF ainsi
+        que votre code d’accès.
+    </p>
+    <p>
+        Aucun accès au site du CERN ne sera autorisé si cette formalité n’est pas remplie.
+    </p>
+    <p>
+        Si vous possédez déjà une carte d'accès au CERN valide, merci d'ignorer ce courriel car vous n'avez pas besoin
+        de demander un accès spécifique pour cet événement.
+    </p>
+    <p>
+        Nous nous réjouissons de vous accueillir prochainement au CERN.
+    </p>
+{%- endblock %}

@@ -1,0 +1,32 @@
+{% if registration %}
+    {% set access_requested = registration.cern_access_request and not registration.cern_access_request.is_withdrawn %}
+    <td class="i-table id-column" id="cern-access-status-{{ registration.id }}">
+        {% if access_requested and not registration.cern_access_request.has_identity_info %}
+            <a class="icon-user-check semantic-text warning"
+               title="{% trans %}Needs additional data. Click to enter it on behalf of the user{% endtrans %}"
+               data-href="{{ url_for_plugin('cern_access.enter_identity_data', registration) }}"
+               data-title="{% trans name=registration.full_name %}Enter personal data for {{ name }}{% endtrans %}"
+               data-update="#cern-access-status-{{ registration.id }}"
+               data-replace-update
+               data-ajax-dialog></a>
+        {% elif access_requested and not registration.cern_access_request.is_withdrawn %}
+            <a class="icon-user-check semantic-text success js-copy-cern-access-code"
+               title="{% trans %}Access to CERN granted. Click to see access code.{% endtrans %}"
+               data-cern-access-message="{% trans name=registration.full_name %}Access Code for <strong>{{ name }}</strong>{% endtrans %}"
+               data-cern-access-code="{{ registration.cern_access_request.reservation_code }}"></a>
+        {% else %}
+            <i class="icon-user-block" title="{% trans %}No access to CERN{% endtrans %}"></i>
+        {% endif %}
+    </td>
+{% elif header %}
+    <th class="i-table id-column sorter-false">
+        <script>
+            $('#registration-list').on('click', '.js-copy-cern-access-code', function() {
+                var $this = $(this);
+                var msg = $this.data('cern-access-message');
+                var code = '<code style="font-weight: bold; font-size: 2em;">{0}</code>'.format($this.data('cern-access-code'));
+                alertPopup(msg + '<br>' + code);
+            });
+        </script>
+    </th>
+{% endif %}

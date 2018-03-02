@@ -1,0 +1,25 @@
+{% extends 'events/registration/emails/base_registration.html' %}
+
+{% from 'cern_access:_common.html' import render_access_dates %}
+
+{% block subject_name %}{% endblock %}
+{% block subject_message -%}
+    CERN access ticket
+{%- endblock %}
+
+{% block registration_body -%}
+    {% set event = registration.registration_form.event %}
+    <p>Dear {{ registration.full_name }},</p>
+    <p>
+        You have been granted access to the CERN site for the period:
+        {{ render_access_dates(start_dt, end_dt) }}.
+        You can find your access ticket attached to this email.
+        This ticket should be printed and presented at the CERN gate in
+        order to enter the site.
+    </p>
+    <p>
+        If you cannot print the ticket yourself, you can also use the code
+        <strong>{{ registration.cern_access_request.reservation_code }}</strong>
+        to print an access ticket at the entrance.
+    </p>
+{%- endblock %}
