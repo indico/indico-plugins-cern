@@ -27,6 +27,7 @@ from indico_cern_access import _
 
 class CERNAccessForm(RequestFormBase):
     regforms = IndicoSelectMultipleCheckboxField(_('Registration forms'),
+                                                 [DataRequired(_('At least one registration form has to be selected'))],
                                                  widget=JinjaWidget('regform_list_widget.html', 'cern_access'))
     start_dt_override = IndicoDateTimeField(_('Start date override'), [Optional()],
                                             description=_("If set, CERN access will be granted starting at the "
