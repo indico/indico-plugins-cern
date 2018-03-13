@@ -7,4 +7,4 @@ $header-text-color: $black;
 
 @import 'themes/indico';
 
-@include header-logo('/static/plugins/themes_lcagenda/lcc_logo.png', 50px 35px);
+@include header-logo('themes_lcagenda:lcc_logo.png', 50px 35px);
