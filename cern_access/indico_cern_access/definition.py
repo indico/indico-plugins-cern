@@ -8,8 +8,9 @@
 from __future__ import unicode_literals
 
 import dateutil.parser
-from flask import session
+from flask import flash, session
 from flask_pluginengine import plugin_context
+from markupsafe import Markup
 
 from indico.modules.events.requests import RequestDefinitionBase
 from indico.modules.events.requests.models.requests import RequestState
@@ -71,6 +72,13 @@ class CERNAccessRequestDefinition(RequestDefinitionBase):
         req.state = RequestState.accepted
         if times_changed:
             handle_event_time_update(req.event)
+
+        link = "https://indico-user-docs.web.cern.ch/indico-user-docs/cern/cern_access/#granting-access-to-participants"
+        message = _('Please note that even though your request has been accepted, you still have to '
+                    'request badges for each one of your participants. {link}More details here.{endlink}').format(
+                        link='<a href="{}">'.format(link),
+                        endlink='</a>')
+        flash(Markup(message), 'warning')
 
     @classmethod
     def withdraw(cls, req, notify_event_managers=False):
