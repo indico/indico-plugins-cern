@@ -11,4 +11,5 @@ dist/
 build/
 wheelhouse/
 .cache/
+.pytest_cache/
 webpack-build-config.json
