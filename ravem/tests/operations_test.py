@@ -6,6 +6,7 @@
 # the LICENSE file for more details.
 
 import json
+import logging
 
 import pytest
 from mock import MagicMock
@@ -475,6 +476,7 @@ def test_disconnect_room_connected_other(httpretty, room_name, status, data):
 @pytest.mark.usefixtures('db')
 @pytest.mark.parametrize(*_gen_params(connected_fixtures, 'room_name', 'status', 'data'))
 def test_disconnect_room_force(caplog, httpretty, room_name, status, data):
+    caplog.set_level(logging.INFO)
     RavemPlugin.settings.set('api_endpoint', RAVEM_TEST_API_ENDPOINT)
     different_vc_room = 'different_vc_room'
     httpretty.register_uri(
