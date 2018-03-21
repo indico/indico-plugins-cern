@@ -20,7 +20,7 @@ class LCAgendaThemesPlugin(IndicoPlugin):
     """
 
     def init(self):
-        super(IndicoPlugin, self).init()
+        super(LCAgendaThemesPlugin, self).init()
         self.connect(signals.plugin.get_event_themes_files, self._get_themes_yaml)
 
     def get_blueprints(self):
