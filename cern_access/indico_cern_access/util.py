@@ -149,7 +149,8 @@ def update_access_request(req):
     for regform_id in existing_forms_ids - requested_forms_ids:
         regform = event_regforms[regform_id]
         registrations = get_requested_registrations(event, regform=regform)
-        send_adams_delete_request(registrations)
+        if registrations:
+            send_adams_delete_request(registrations)
         regform.cern_access_request.request_state = CERNAccessRequestState.withdrawn
         remove_access_template(regform)
         withdraw_access_requests(registrations)
@@ -186,7 +187,8 @@ def withdraw_event_access_request(req):
     """Withdraw all CERN access requests of an event."""
     requested_forms = get_requested_forms(req.event)
     requested_registrations = get_requested_registrations(req.event)
-    send_adams_delete_request(requested_registrations)
+    if requested_registrations:
+        send_adams_delete_request(requested_registrations)
     for regform in requested_forms:
         regform.cern_access_request.request_state = CERNAccessRequestState.withdrawn
         remove_access_template(regform)
@@ -291,6 +293,8 @@ def send_form_link(event, registrations):
 
 
 def revoke_access(registrations):
+    if not registrations:
+        return
     send_adams_delete_request(registrations)
     requested_registrations = [reg for reg in registrations if
                                reg.cern_access_request and not

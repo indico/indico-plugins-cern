@@ -21,7 +21,7 @@
 {% elif header %}
     <th class="i-table id-column sorter-false">
         <script>
-            $('#registration-list').on('click', '.js-copy-cern-access-code', function() {
+            $('#registration-list .js-list-table-wrapper').on('click', '.js-copy-cern-access-code', function() {
                 var $this = $(this);
                 var msg = $this.data('cern-access-message');
                 var code = '<code style="font-weight: bold; font-size: 2em;">{0}</code>'.format($this.data('cern-access-code'));
