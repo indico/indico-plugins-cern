@@ -1,4 +1,4 @@
-Select your credit card type to proceed with your payment.
+{% trans %}Select your credit card type to proceed with your payment.{% endtrans %}
 
 <dl class="i-data-list">
     <dt>{% trans %}First name{% endtrans %}</dt>
@@ -42,7 +42,8 @@ Select your credit card type to proceed with your payment.
                     <input type="hidden" name="{{ name }}" value="{{ value }}">
                 {% endfor %}
             {% endif %}
-            <input class="i-button highlight" type="submit" name="submit" value="Pay now" {%- if not selected_method %} disabled{% endif %}>
+            <input class="i-button highlight" type="submit" name="submit"
+                   value="{% trans %}Pay now{% endtrans %}" {%- if not selected_method %} disabled{% endif %}>
         </form>
     </dd>
 </dl>
