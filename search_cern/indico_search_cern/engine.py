@@ -7,6 +7,8 @@
 
 from __future__ import unicode_literals
 
+import re
+
 from flask import redirect
 from flask_pluginengine import current_plugin
 from werkzeug.urls import url_encode
@@ -53,7 +55,13 @@ class CERNSearchEngine(SearchEngine):
             if field in FIELD_MAP:
                 query += self._make_field_query(phrase, FIELD_MAP[field])
             else:
-                query.append(phrase)
+                def replacement(match):
+                    field = match.group(2).lower()
+                    return match.group(1) + FIELD_MAP[field] + ':'
+
+                pattern = re.compile(r'(-?)({}):'.format('|'.join(FIELD_MAP)), re.IGNORECASE)
+                query.append(pattern.sub(replacement, phrase))
+
         # Date
         query += self._make_date_query()
         # Category/Event
