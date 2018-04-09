@@ -9,7 +9,7 @@ env:
   - PLUGIN=ravem
 before_install:
   - pip install -U pip setuptools
-  - pip install https://github.com/indico/indico/archive/master.zip
+  - pip install https://github.com/indico/indico/archive/${TRAVIS_BRANCH}.zip
   - pip install httpretty
 install:
   - cd "${TRAVIS_BUILD_DIR}/${PLUGIN}"
