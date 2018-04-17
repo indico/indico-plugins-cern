@@ -15,6 +15,7 @@ import random
 import dateutil.parser
 import requests
 from flask import session
+from jinja2.filters import do_truncate
 from pytz import timezone
 from werkzeug.exceptions import Forbidden
 
@@ -62,11 +63,11 @@ def _send_adams_http_request(method, data):
     from indico_cern_access.plugin import CERNAccessPlugin
 
     url = CERNAccessPlugin.settings.get('adams_url')
-    auth = (CERNAccessPlugin.settings.get('username'), CERNAccessPlugin.settings.get('password'))
+    credentials = (CERNAccessPlugin.settings.get('username'), CERNAccessPlugin.settings.get('password'))
     request_headers = {'Content-Type': 'application/json'}
 
     try:
-        r = requests.request(method, url, data=json.dumps(data), headers=request_headers, auth=auth)
+        r = requests.request(method, url, data=json.dumps(data), headers=request_headers, auth=credentials)
         r.raise_for_status()
     except requests.exceptions.RequestException:
         CERNAccessPlugin.logger.exception('Request to ADAMS failed (%r)', data)
@@ -100,13 +101,14 @@ def build_access_request_data(registration, event, generate_code):
     from indico_cern_access.plugin import CERNAccessPlugin
     start_dt, end_dt = get_access_dates(get_last_request(event))
     tz = timezone('Europe/Zurich')
+    title = do_truncate(None, event.title, 100, leeway=0)
     if generate_code:
         reservation_code = get_random_reservation_code()
     else:
         reservation_code = registration.cern_access_request.reservation_code
     data = {'$id': generate_access_id(registration.id),
             '$rc': reservation_code,
-            '$gn': unicode_to_ascii(remove_accents(event.title)),
+            '$gn': unicode_to_ascii(remove_accents(title)),
             '$fn': unicode_to_ascii(remove_accents(registration.first_name)),
             '$ln': unicode_to_ascii(remove_accents(registration.last_name)),
             '$sd': start_dt.astimezone(tz).strftime('%Y-%m-%dT%H:%M'),
