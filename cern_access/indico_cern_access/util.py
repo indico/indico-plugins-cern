@@ -33,7 +33,7 @@ from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAcc
 
 
 def get_last_request(event):
-    """Return the last CERN Acess request for the event."""
+    """Return the last CERN Access request for the event."""
     from indico_cern_access.definition import CERNAccessRequestDefinition
     return Request.find_latest_for_event(event, CERNAccessRequestDefinition.name)
 
