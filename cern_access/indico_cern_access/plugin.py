@@ -26,6 +26,7 @@ from indico.modules.designer.models.templates import DesignerTemplate
 from indico.modules.events import Event
 from indico.modules.events.registration.forms import TicketsForm
 from indico.modules.events.registration.models.forms import RegistrationForm
+from indico.util.date_time import now_utc
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import IndicoDateTimeField, IndicoPasswordField, MultipleItemsField, PrincipalListField
 
@@ -34,9 +35,10 @@ from indico_cern_access.blueprint import blueprint
 from indico_cern_access.definition import CERNAccessRequestDefinition
 from indico_cern_access.models.access_requests import CERNAccessRequestState
 from indico_cern_access.placeholders import AccessDatesPlaceholder
-from indico_cern_access.util import (build_access_request_data, get_requested_forms, get_requested_registrations,
-                                     handle_event_time_update, notify_access_withdrawn, send_adams_delete_request,
-                                     send_adams_post_request, update_access_requests, withdraw_access_requests)
+from indico_cern_access.util import (build_access_request_data, get_access_dates, get_last_request, get_requested_forms,
+                                     get_requested_registrations, handle_event_time_update, notify_access_withdrawn,
+                                     send_adams_delete_request, send_adams_post_request, update_access_requests,
+                                     withdraw_access_requests)
 
 
 class PluginSettingsForm(IndicoForm):
@@ -136,9 +138,13 @@ class CERNAccessPlugin(IndicoPlugin):
                                           registration=registration,
                                           header=header)
 
+    def _is_past_event(self, event):
+        end_dt = get_access_dates(get_last_request(event))[1]
+        return end_dt < now_utc()
+
     def _registration_deleted(self, registration, **kwargs):
         """Withdraw CERN access request for deleted registrations."""
-        if registration.cern_access_request:
+        if registration.cern_access_request and not self._is_past_event(registration.event):
             send_adams_delete_request([registration])
             registration.cern_access_request.request_state = CERNAccessRequestState.withdrawn
 
@@ -151,7 +157,8 @@ class CERNAccessPlugin(IndicoPlugin):
         Withdraw CERN access request for deleted registration form and
         corresponding registrations.
         """
-        if registration_form.cern_access_request and registration_form.cern_access_request.is_active:
+        if (registration_form.cern_access_request and registration_form.cern_access_request.is_active and
+                not self._is_past_event(registration_form.event)):
             registrations = get_requested_registrations(registration_form.event, regform=registration_form)
             if registrations:
                 deleted = send_adams_delete_request(registrations)
@@ -166,7 +173,7 @@ class CERNAccessPlugin(IndicoPlugin):
         registrations of deleted event.
         """
         access_requests_forms = get_requested_forms(event)
-        if access_requests_forms:
+        if access_requests_forms and not self._is_past_event(event):
             requested_registrations = get_requested_registrations(event=event)
             if requested_registrations:
                 deleted = send_adams_delete_request(requested_registrations)
