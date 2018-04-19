@@ -82,6 +82,5 @@ class CERNAccessRequestDefinition(RequestDefinitionBase):
 
     @classmethod
     def withdraw(cls, req, notify_event_managers=False):
-        check_access(req)
         withdraw_event_access_request(req)
         super(CERNAccessRequestDefinition, cls).withdraw(req, notify_event_managers)

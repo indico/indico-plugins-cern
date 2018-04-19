@@ -18,7 +18,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='indico-plugin-cern-access',
-    version='1.0.3',
+    version='1.0.4',
     url='https://github.com/indico/indico-plugins-cern',
     license='MIT',
     author='Indico Team',
