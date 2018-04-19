@@ -239,7 +239,8 @@ def notify_access_withdrawn(registrations):
     for registration in registrations:
         template = get_template_module('cern_access:emails/request_withdrawn_email.html', registration=registration)
         email = make_email(to_list=registration.email, template=template, html=True)
-        send_email(email, event=registration.registration_form.event, module='Registration', user=session.user)
+        send_email(email, event=registration.registration_form.event, module='Registration',
+                   user=(session.user if session else None))
 
 
 def send_ticket(registration):
