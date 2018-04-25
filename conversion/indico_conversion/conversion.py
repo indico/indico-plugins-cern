@@ -50,9 +50,10 @@ def submit_attachment(task, attachment):
         'urlresponse': url_for_plugin('conversion.callback', _external=True),
         'dirresponse': secure_serializer.dumps(payload, salt='pdf-conversion')
     }
-    with attachment.file.open() as fd:
+    file = attachment.file
+    with file.open() as fd:
         try:
-            response = requests.post(url, data=data, files={'uploadedfile': fd})
+            response = requests.post(url, data=data, files={'uploadedfile': (file.filename, fd, file.content_type)})
             response.raise_for_status()
             if 'ok' not in response.text:
                 raise requests.RequestException('Unexpected response from server: {}'.format(response.text))
