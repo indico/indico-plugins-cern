@@ -12,7 +12,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='indico-plugin-conversion',
-    version='1.0.1',
+    version='1.0.2',
     url='https://github.com/indico/indico-plugins-cern',
     license='MIT',
     author='Indico Team',
