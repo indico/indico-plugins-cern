@@ -12,7 +12,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='indico-plugin-custom-themes',
-    version='2.0.dev0',
+    version='2.0rc1',
     url='https://github.com/indico/indico-plugins-cern',
     license='MIT',
     author='Indico Team',
