@@ -8,8 +8,8 @@ $header-text-color: $light-gray;
 
 @include header-logo('/static/plugins/themes_cern/clic_logo.png', 15px, 190px, 15%);
 
-.event-header {
-    .icon-calendar::before {
+.event-header .details {
+    [class^='icon-']::before, [class*=' icon-']::before {
         color: $light-gray;
     }
 }
