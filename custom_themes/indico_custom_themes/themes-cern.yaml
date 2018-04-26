@@ -139,6 +139,11 @@ definitions:
     stylesheet: cern/staff_assoc_modern.scss
     title: Staff Association
 
+  clic:
+    <<: *standard_themes_cern
+    stylesheet: cern/clic.scss
+    title: CLIC
+
   # Meetings - CERN Administrative
   administrative: &administrative
     event_types: [conference, meeting]

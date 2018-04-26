@@ -1,0 +1,15 @@
+@import 'base/palette';
+
+$header-bg-color: #f14f25;
+$header-icon-color: $light-black;
+$header-text-color: $light-gray;
+
+@import 'themes/indico';
+
+@include header-logo('/static/plugins/themes_cern/clic_logo.png', 15px, 190px, 15%);
+
+.event-header {
+    .icon-calendar::before {
+        color: $light-gray;
+    }
+}
