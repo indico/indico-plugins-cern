@@ -22,23 +22,31 @@
             {%- endtrans %}
         {% endcall %}
     {% elif not access_request.has_identity_info %}
-        {% call message_box('info') %}
-            {% trans dates=render_access_dates(start_dt, end_dt) -%}
-                CERN's Security Policy requires you to provide the following
-                additional data. The contents of this form will not be shared
-                with the event organizers and will only be revealed upon request
-                from CERN's Site Surveillance service.
-                <br>
-                <br>
-                One you have provided this data, you will be able to download
-                a ticket which grants you access to the CERN site during this
-                period: {{ dates }}
-            {%- endtrans %}
-        {% endcall %}
-        {% call simple_form(form, back_button=false) %}
-            {{ form_row_static(_('Name'), access_request.registration.full_name) }}
-            {{ form_rows(form) }}
-        {% endcall %}
+        {% if expired %}
+            {% call message_box('error') %}
+                {% trans -%}
+                    This event has already finished.
+                {%- endtrans %}
+            {% endcall %}
+        {% else %}
+            {% call message_box('info') %}
+                {% trans dates=render_access_dates(start_dt, end_dt) -%}
+                    CERN's Security Policy requires you to provide the following
+                    additional data. The contents of this form will not be shared
+                    with the event organizers and will only be revealed upon request
+                    from CERN's Site Surveillance service.
+                    <br>
+                    <br>
+                    One you have provided this data, you will be able to download
+                    a ticket which grants you access to the CERN site during this
+                    period: {{ dates }}
+                {%- endtrans %}
+            {% endcall %}
+            {% call simple_form(form, back_button=false) %}
+                {{ form_row_static(_('Name'), access_request.registration.full_name) }}
+                {{ form_rows(form) }}
+            {% endcall %}
+        {% endif %}
     {% else %}
         {% call message_box('success') %}
             {% trans code=access_request.reservation_code, dates=render_access_dates(start_dt, end_dt),

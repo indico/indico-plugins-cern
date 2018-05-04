@@ -9,6 +9,7 @@ from __future__ import unicode_literals
 
 from flask import redirect, request
 from flask_pluginengine import render_plugin_template
+from werkzeug.exceptions import Forbidden
 
 from indico.core.db import db
 from indico.core.errors import UserValueError
@@ -18,6 +19,7 @@ from indico.modules.events.registration.controllers.management.reglists import R
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.registration.models.registrations import Registration
 from indico.modules.events.requests.controllers import RHRequestsEventRequestDetailsBase
+from indico.util.date_time import now_utc
 from indico.util.spreadsheets import send_csv, send_xlsx
 from indico.web.flask.util import url_for
 from indico.web.util import jsonify_data, jsonify_template
@@ -42,17 +44,21 @@ class RHRegistrationBulkCERNAccess(RHRegistrationsActionBase):
 
 class RHRegistrationAccessIdentityData(RHRegistrationFormRegistrationBase):
     def _process(self):
+        start_dt, end_dt = get_access_dates(get_last_request(self.event))
+        expired = now_utc() > end_dt
         form = AccessIdentityDataForm()
         access_request = self.registration.cern_access_request
         if access_request is not None and not access_request.has_identity_info and form.validate_on_submit():
+            if expired:
+                raise Forbidden
             form.populate_obj(access_request)
             db.session.flush()
             send_ticket(self.registration)
             return redirect(url_for('.access_identity_data', self.registration.locator.uuid))
 
-        start_dt, end_dt = get_access_dates(get_last_request(self.event))
         return WPAccessRequestDetails.render_template('identity_data_form.html', self.event, form=form,
-                                                      access_request=access_request, start_dt=start_dt, end_dt=end_dt)
+                                                      access_request=access_request, start_dt=start_dt, end_dt=end_dt,
+                                                      expired=expired)
 
 
 class RHRegistrationEnterIdentityData(RHManageRegistrationBase):
