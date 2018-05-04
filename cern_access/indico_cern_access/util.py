@@ -19,11 +19,14 @@ from jinja2.filters import do_truncate
 from pytz import timezone
 from werkzeug.exceptions import Forbidden
 
+from indico.core.db import db
 from indico.core.notifications import make_email, send_email
+from indico.modules.events import Event
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.registration.models.registrations import Registration
 from indico.modules.events.registration.util import get_ticket_attachments
 from indico.modules.events.requests.models.requests import Request
+from indico.util.date_time import now_utc
 from indico.util.string import remove_accents, unicode_to_ascii
 from indico.web.flask.templating import get_template_module
 
@@ -324,6 +327,19 @@ def get_access_dates(req):
         return start_dt_override, end_dt_override
     else:
         return req.event.start_dt, req.event.end_dt
+
+
+def sanitize_personal_data():
+    from indico_cern_access.plugin import CERNAccessPlugin
+    query = (CERNAccessRequest.query
+             .join(CERNAccessRequest.registration)
+             .join(Registration.event)
+             .filter(CERNAccessRequest.has_identity_info,
+                     Event.end_dt < now_utc() - CERNAccessPlugin.settings.get('delete_personal_data_after')))
+    for req in query:
+        req.clear_identity_data()
+        CERNAccessPlugin.logger.info('Removing personal data for registrant %d', req.registration_id)
+    db.session.flush()
 
 
 class AdamsError(Exception):

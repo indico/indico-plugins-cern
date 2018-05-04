@@ -71,9 +71,13 @@ class CERNAccessRequest(db.Model):
     def is_active(self):
         return self.request_state == CERNAccessRequestState.active
 
-    @property
+    @hybrid_property
     def has_identity_info(self):
         return bool(self.birth_place) and bool(self.nationality) and self.birth_date is not None
+
+    @has_identity_info.expression
+    def has_identity_info(cls):
+        return cls.birth_place.isnot(None) & cls.nationality.isnot(None) & cls.birth_date.isnot(None)
 
     def clear_identity_data(self):
         self.birth_date = None

@@ -7,7 +7,18 @@
 
 from __future__ import unicode_literals
 
+from celery.schedules import crontab
+
+from indico.core.celery import celery
+from indico.core.db import db
 from indico.util.i18n import make_bound_gettext
 
 
 _ = make_bound_gettext('cern_access')
+
+
+@celery.periodic_task(run_every=crontab(minute='0', hour='5'))
+def scheduled_sanitization():
+    from indico_cern_access.util import sanitize_personal_data
+    sanitize_personal_data()
+    db.session.commit()
