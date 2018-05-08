@@ -9,7 +9,7 @@ from __future__ import unicode_literals
 
 from flask import redirect, request
 from flask_pluginengine import render_plugin_template
-from werkzeug.exceptions import Forbidden
+from werkzeug.exceptions import Forbidden, NotFound
 
 from indico.core.db import db
 from indico.core.errors import UserValueError
@@ -43,8 +43,14 @@ class RHRegistrationBulkCERNAccess(RHRegistrationsActionBase):
 
 
 class RHRegistrationAccessIdentityData(RHRegistrationFormRegistrationBase):
+    def _process_args(self):
+        RHRegistrationFormRegistrationBase._process_args(self)
+        self.cern_access_request = get_last_request(self.event)
+        if not self.cern_access_request:
+            raise NotFound
+
     def _process(self):
-        start_dt, end_dt = get_access_dates(get_last_request(self.event))
+        start_dt, end_dt = get_access_dates(self.cern_access_request)
         expired = now_utc() > end_dt
         form = AccessIdentityDataForm()
         access_request = self.registration.cern_access_request
