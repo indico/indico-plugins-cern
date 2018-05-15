@@ -61,7 +61,7 @@ def get_regforms(event):
 
 class AccessIdentityDataForm(IndicoForm):
     birth_date = IndicoDateField(_('Birth date'), [DataRequired()])
-    nationality = SelectField(_('Nationality'), [DataRequired()])
+    nationality = SelectField(_('Country of birth'), [DataRequired()])
     birth_place = StringField(_('Place of birth'), [DataRequired()])
 
     def __init__(self, *args, **kwargs):
