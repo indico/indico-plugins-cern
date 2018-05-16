@@ -49,6 +49,10 @@ class RHRegistrationAccessIdentityData(RHRegistrationFormRegistrationBase):
         if not self.cern_access_request:
             raise NotFound
 
+    def _check_access(self):
+        # no access restrictions for this page
+        pass
+
     def _process(self):
         start_dt, end_dt = get_access_dates(self.cern_access_request)
         expired = now_utc() > end_dt
