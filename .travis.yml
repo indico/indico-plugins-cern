@@ -12,6 +12,7 @@ before_install:
   - pip install https://github.com/indico/indico/archive/${TRAVIS_BRANCH}.zip
   - pip install httpretty
 install:
+  - '[[ "$PLUGIN" == "ravem" ]] && pip install git+https://github.com/indico/indico-plugins.git@${TRAVIS_BRANCH}#subdirectory=vc_vidyo || :'
   - cd "${TRAVIS_BUILD_DIR}/${PLUGIN}"
   - pip install -e .
 script:
