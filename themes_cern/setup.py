@@ -12,7 +12,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='indico-plugin-themes-cern',
-    version='2.0rc2',
+    version='3.0-dev',
     url='https://github.com/indico/indico-plugins-cern',
     license='MIT',
     author='Indico Team',
@@ -21,7 +21,7 @@ setup(
     zip_safe=False,
     include_package_data=True,
     install_requires=[
-        'indico>=2.1.dev0'
+        'indico>=2.2.dev0'
     ],
     entry_points={
         'indico.plugins': {'themes_cern = indico_themes_cern.plugin:CERNThemesPlugin'}
