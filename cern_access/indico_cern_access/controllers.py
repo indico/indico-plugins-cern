@@ -8,7 +8,7 @@
 from __future__ import unicode_literals
 
 from flask import jsonify, redirect, render_template, request
-from flask_pluginengine import render_plugin_template
+from flask_pluginengine import current_plugin, render_plugin_template
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 
 from indico.core.db import db
@@ -37,12 +37,15 @@ class RHRegistrationGrantCERNAccess(RHRegistrationsActionBase):
 
     def _process(self):
         tpl = get_template_module('cern_access:emails/identity_data_form_email_default.html', event=self.event)
-        default_subject = tpl.get_subject()
-        default_body = tpl.get_html_body()
+        default_subject = current_plugin.event_settings.get(self.event, 'email_subject') or tpl.get_subject()
+        default_body = current_plugin.event_settings.get(self.event, 'email_body') or tpl.get_html_body()
         registration_ids = request.form.getlist('registration_id')
         form = GrantAccessEmailForm(subject=default_subject, body=default_body, regform=self.regform,
                                     registration_id=registration_ids)
         if form.validate_on_submit():
+            if form.save_default.data:
+                current_plugin.event_settings.set(self.event, 'email_subject', form.subject.data)
+                current_plugin.event_settings.set(self.event, 'email_body', form.body.data)
             grant_access(self.registrations, self.regform, form.subject.data, form.body.data, form.from_address.data)
             return jsonify_data(**self.list_generator.render_list())
         return jsonify_template('cern_access:grant_access.html', form=form, regform=self.regform)

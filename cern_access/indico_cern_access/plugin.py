@@ -113,6 +113,10 @@ class CERNAccessPlugin(IndicoPlugin):
         'delete_personal_data_after': TimedeltaConverter,
     }
     acl_settings = {'authorized_users'}
+    default_event_settings = {
+        'email_subject': None,
+        'email_body': None,
+    }
 
     def init(self):
         super(CERNAccessPlugin, self).init()

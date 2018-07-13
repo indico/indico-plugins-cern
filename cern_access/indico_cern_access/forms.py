@@ -10,7 +10,7 @@ from __future__ import unicode_literals
 from datetime import datetime
 from operator import itemgetter
 
-from wtforms.fields import SelectField, StringField
+from wtforms.fields import BooleanField, SelectField, StringField
 from wtforms.validators import DataRequired, Optional, ValidationError
 
 from indico.core.db import db
@@ -22,12 +22,16 @@ from indico.util.placeholders import get_missing_placeholders, render_placeholde
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import IndicoDateField, IndicoDateTimeField, IndicoSelectMultipleCheckboxField
 from indico.web.forms.validators import LinkedDateTime
-from indico.web.forms.widgets import JinjaWidget
+from indico.web.forms.widgets import JinjaWidget, SwitchWidget
 
 from indico_cern_access import _
 
 
 class GrantAccessEmailForm(EmailRegistrantsForm):
+    save_default = BooleanField(_("Save as default"), widget=SwitchWidget(),
+                                description=_("Save this email's content as the default that will be used the next "
+                                              "time a CERN access request is sent for a registrant in this event."))
+
     def __init__(self, *args, **kwargs):
         super(GrantAccessEmailForm, self).__init__(*args, recipients=[], **kwargs)
         self.body.description = render_placeholder_info('cern-access-email', regform=self.regform, registration=None)
