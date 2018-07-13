@@ -26,6 +26,8 @@ from indico.modules.designer.models.templates import DesignerTemplate
 from indico.modules.events import Event
 from indico.modules.events.registration.forms import TicketsForm
 from indico.modules.events.registration.models.forms import RegistrationForm
+from indico.modules.events.registration.placeholders.registrations import (EventTitlePlaceholder, FirstNamePlaceholder,
+                                                                           LastNamePlaceholder)
 from indico.util.date_time import now_utc
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import (IndicoDateTimeField, IndicoPasswordField, MultipleItemsField, PrincipalListField,
@@ -35,7 +37,7 @@ from indico_cern_access import _
 from indico_cern_access.blueprint import blueprint
 from indico_cern_access.definition import CERNAccessRequestDefinition
 from indico_cern_access.models.access_requests import CERNAccessRequestState
-from indico_cern_access.placeholders import AccessDatesPlaceholder
+from indico_cern_access.placeholders import AccessPeriodPlaceholder, FormLinkPlaceholder, TicketAccessDatesPlaceholder
 from indico_cern_access.util import (build_access_request_data, get_access_dates, get_last_request, get_requested_forms,
                                      get_requested_registrations, handle_event_time_update, notify_access_withdrawn,
                                      send_adams_delete_request, send_adams_post_request, update_access_requests,
@@ -129,6 +131,7 @@ class CERNAccessPlugin(IndicoPlugin):
         self.connect(signals.event.designer.print_badge_template, self._print_badge_template)
         self.connect(signals.event.registration.generate_ticket_qr_code, self._generate_ticket_qr_code)
         self.connect(signals.get_placeholders, self._get_designer_placeholders, sender='designer-fields')
+        self.connect(signals.get_placeholders, self._get_email_placeholders, sender='cern-access-email')
 
     def get_blueprints(self):
         return blueprint
@@ -266,4 +269,11 @@ class CERNAccessPlugin(IndicoPlugin):
         ticket_data.update(build_access_request_data(registration, event, generate_code=False))
 
     def _get_designer_placeholders(self, sender, **kwargs):
-        yield AccessDatesPlaceholder
+        yield TicketAccessDatesPlaceholder
+
+    def _get_email_placeholders(self, sender, **kwargs):
+        yield FirstNamePlaceholder
+        yield LastNamePlaceholder
+        yield EventTitlePlaceholder
+        yield FormLinkPlaceholder
+        yield AccessPeriodPlaceholder

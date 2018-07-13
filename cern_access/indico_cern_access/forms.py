@@ -14,15 +14,32 @@ from wtforms.fields import SelectField, StringField
 from wtforms.validators import DataRequired, Optional, ValidationError
 
 from indico.core.db import db
+from indico.modules.events.registration.forms import EmailRegistrantsForm
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.requests import RequestFormBase
 from indico.util.countries import get_countries
+from indico.util.placeholders import get_missing_placeholders, render_placeholder_info
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import IndicoDateField, IndicoDateTimeField, IndicoSelectMultipleCheckboxField
 from indico.web.forms.validators import LinkedDateTime
 from indico.web.forms.widgets import JinjaWidget
 
 from indico_cern_access import _
+
+
+class GrantAccessEmailForm(EmailRegistrantsForm):
+    def __init__(self, *args, **kwargs):
+        super(GrantAccessEmailForm, self).__init__(*args, recipients=[], **kwargs)
+        self.body.description = render_placeholder_info('cern-access-email', regform=self.regform, registration=None)
+        del self.cc_addresses
+        del self.copy_for_sender
+        del self.attach_ticket
+        del self.recipients
+
+    def validate_body(self, field):
+        missing = get_missing_placeholders('cern-access-email', field.data, regform=self.regform, registration=None)
+        if missing:
+            raise ValidationError(_('Missing placeholders: {}').format(', '.join(missing)))
 
 
 class CERNAccessForm(RequestFormBase):

@@ -27,6 +27,7 @@ from indico.modules.events.registration.models.registrations import Registration
 from indico.modules.events.registration.util import get_ticket_attachments
 from indico.modules.events.requests.models.requests import Request
 from indico.util.date_time import now_utc
+from indico.util.placeholders import replace_placeholders
 from indico.util.string import remove_accents, unicode_to_ascii
 from indico.web.flask.templating import get_template_module
 
@@ -276,7 +277,7 @@ def is_event_too_early(event):
     return earliest_start_dt is not None and event.start_dt < earliest_start_dt
 
 
-def grant_access(registrations, regform):
+def grant_access(registrations, regform, email_subject, email_body, email_sender):
     event = regform.event
     new_registrations = [reg for reg in registrations
                          if not (reg.cern_access_request and not
@@ -284,17 +285,19 @@ def grant_access(registrations, regform):
                                  reg.cern_access_request.request_state == CERNAccessRequestState.active)]
     state, data = send_adams_post_request(event, new_registrations)
     add_access_requests(new_registrations, data, state)
-    send_form_link(event, new_registrations)
+    send_form_link(new_registrations, email_subject, email_body, email_sender)
 
 
-def send_form_link(event, registrations):
+def send_form_link(registrations, email_subject, email_body, email_sender):
     """Send a mail asking for personal information to be filled in using a web form."""
-    start_dt, end_dt = get_access_dates(get_last_request(event))
-
     for registration in registrations:
+        email_body = replace_placeholders('cern-access-email', email_body,
+                                          regform=registration.registration_form, registration=registration)
+        email_subject = replace_placeholders('cern-access-email', email_subject,
+                                             regform=registration.registration_form, registration=registration)
         template = get_template_module('cern_access:emails/identity_data_form_email.html', registration=registration,
-                                       start_dt=start_dt, end_dt=end_dt)
-        email = make_email(to_list=registration.email, template=template, html=True)
+                                       email_subject=email_subject, email_body=email_body)
+        email = make_email(to_list=registration.email, from_address=email_sender, template=template, html=True)
         send_email(email, event=registration.registration_form.event, module='Registration', user=session.user)
 
 
