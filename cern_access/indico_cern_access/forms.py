@@ -10,6 +10,7 @@ from __future__ import unicode_literals
 from datetime import datetime
 from operator import itemgetter
 
+from markupsafe import Markup
 from wtforms.fields import BooleanField, SelectField, StringField
 from wtforms.validators import DataRequired, Optional, ValidationError
 
@@ -33,8 +34,11 @@ class GrantAccessEmailForm(EmailRegistrantsForm):
                                               "time a CERN access request is sent for a registrant in this event."))
 
     def __init__(self, *args, **kwargs):
+        reset_text = (Markup('<a id="reset-cern-access-email">{}</a><br>')
+                      .format(_('Click here to reset subject and body to the default text.')))
         super(GrantAccessEmailForm, self).__init__(*args, recipients=[], **kwargs)
-        self.body.description = render_placeholder_info('cern-access-email', regform=self.regform, registration=None)
+        self.body.description = reset_text + render_placeholder_info('cern-access-email', regform=self.regform,
+                                                                     registration=None)
         del self.cc_addresses
         del self.copy_for_sender
         del self.attach_ticket

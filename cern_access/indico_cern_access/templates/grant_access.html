@@ -22,3 +22,19 @@
            data-href="{{ url_for('.registrations_preview_cern_access_email', regform) }}">
     <a class="i-button big" data-button-back>{% trans %}Cancel{% endtrans %}</a>
 {% endcall %}
+
+
+<script>
+    (function() {
+        'use strict';
+        var defaultSubject = {{ default_subject | tojson }};
+        var defaultBody = {{ default_body | tojson }};
+
+        $('#reset-cern-access-email').on('click', function() {
+            var id = $('#body-editor').children()[0].id;
+            var editor = CKEDITOR.instances[id];
+            $('#subject').val(defaultSubject);
+            editor.setData(defaultBody);
+        });
+    })();
+</script>
