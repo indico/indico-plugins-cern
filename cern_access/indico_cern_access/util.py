@@ -285,7 +285,15 @@ def grant_access(registrations, regform, email_subject, email_body, email_sender
                                  reg.cern_access_request.request_state == CERNAccessRequestState.active)]
     state, data = send_adams_post_request(event, new_registrations)
     add_access_requests(new_registrations, data, state)
-    send_form_link(new_registrations, email_subject, email_body, email_sender)
+    registrations_without_data = []
+    for registration in new_registrations:
+        if registration.cern_access_request.has_identity_info:
+            send_ticket(registration)
+        else:
+            registrations_without_data.append(registration)
+
+    if registrations_without_data:
+        send_form_link(registrations_without_data, email_subject, email_body, email_sender)
 
 
 def send_form_link(registrations, email_subject, email_body, email_sender):

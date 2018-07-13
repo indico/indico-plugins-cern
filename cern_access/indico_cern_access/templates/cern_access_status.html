@@ -1,5 +1,5 @@
 {% if registration %}
-    {% set access_requested = registration.cern_access_request and not registration.cern_access_request.is_withdrawn %}
+    {% set access_requested = registration.cern_access_request and registration.cern_access_request.is_active %}
     <td class="i-table id-column" id="cern-access-status-{{ registration.id }}">
         {% if access_requested and not registration.cern_access_request.has_identity_info %}
             <a class="icon-user-check semantic-text warning"
@@ -9,7 +9,7 @@
                data-update="#cern-access-status-{{ registration.id }}"
                data-replace-update
                data-ajax-dialog></a>
-        {% elif access_requested and not registration.cern_access_request.is_withdrawn %}
+        {% elif access_requested and registration.cern_access_request.is_active %}
             <a class="icon-user-check semantic-text success js-copy-cern-access-code"
                title="{% trans %}Access to CERN granted. Click to see access code.{% endtrans %}"
                data-cern-access-message="{% trans name=registration.full_name %}Access Code for <strong>{{ name }}</strong>{% endtrans %}"

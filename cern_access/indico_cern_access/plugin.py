@@ -9,11 +9,11 @@ from __future__ import unicode_literals
 
 from datetime import time, timedelta
 
-from flask import request
+from flask import g, request
 from flask_pluginengine import render_plugin_template
 from werkzeug.exceptions import Forbidden
-from wtforms import StringField
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
+from wtforms.fields import StringField
 from wtforms.fields.html5 import URLField
 from wtforms.validators import DataRequired, Optional
 
@@ -36,7 +36,8 @@ from indico.web.forms.fields import (IndicoDateTimeField, IndicoPasswordField, M
 from indico_cern_access import _
 from indico_cern_access.blueprint import blueprint
 from indico_cern_access.definition import CERNAccessRequestDefinition
-from indico_cern_access.models.access_requests import CERNAccessRequestState
+from indico_cern_access.forms import RegistrationFormPersonalDataForm
+from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState
 from indico_cern_access.placeholders import AccessPeriodPlaceholder, FormLinkPlaceholder, TicketAccessDatesPlaceholder
 from indico_cern_access.util import (build_access_request_data, get_access_dates, get_last_request, get_requested_forms,
                                      get_requested_registrations, handle_event_time_update, notify_access_withdrawn,
@@ -122,8 +123,11 @@ class CERNAccessPlugin(IndicoPlugin):
         super(CERNAccessPlugin, self).init()
         self.template_hook('registration-status-flag', self._get_access_status)
         self.template_hook('registration-status-action-button', self._get_access_action_button)
+        self.template_hook('after-regform', self._get_personal_data_form)
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
         self.connect(signals.event.registration_deleted, self._registration_deleted)
+        self.connect(signals.event.registration_created, self._registration_created)
+        self.connect(signals.form_validated, self._personal_data_form_validated)
         self.connect(signals.event.timetable.times_changed, self._event_time_changed, sender=Event)
         self.connect(signals.event.registration_personal_data_modified, self._registration_modified)
         self.connect(signals.event.registration_form_deleted, self._registration_form_deleted)
@@ -153,6 +157,16 @@ class CERNAccessPlugin(IndicoPlugin):
                                           registration=registration,
                                           header=header)
 
+    def _get_personal_data_form(self, event, regform, management, registration=None, **kwargs):
+        if management or registration is not None:
+            return
+
+        if regform.cern_access_request and regform.cern_access_request.is_active:
+            form = g.get('personal_data_form') or RegistrationFormPersonalDataForm()
+            start_dt, end_dt = get_access_dates(get_last_request(event))
+            return render_plugin_template('regform_identity_data_section.html', event=event, form=form,
+                                          start_dt=start_dt, end_dt=end_dt, registration=registration)
+
     def _is_past_event(self, event):
         end_dt = get_access_dates(get_last_request(event))[1]
         return end_dt < now_utc()
@@ -162,6 +176,33 @@ class CERNAccessPlugin(IndicoPlugin):
         if registration.cern_access_request and not self._is_past_event(registration.event):
             send_adams_delete_request([registration])
             registration.cern_access_request.request_state = CERNAccessRequestState.withdrawn
+
+    def _registration_created(self, registration, management, **kwargs):
+        if management:
+            return
+
+        regform = registration.registration_form
+        personal_data_form = g.pop('personal_data_form', None)
+
+        if not regform.cern_access_request or not regform.cern_access_request.is_active or not personal_data_form:
+            return
+
+        if not personal_data_form.request_cern_access.data:
+            return
+
+        registration.cern_access_request = CERNAccessRequest(birth_date=personal_data_form.birth_date.data,
+                                                             nationality=personal_data_form.nationality.data,
+                                                             birth_place=personal_data_form.birth_place.data,
+                                                             request_state=CERNAccessRequestState.not_requested,
+                                                             reservation_code='')
+
+    def _personal_data_form_validated(self, form, **kwargs):
+        if type(form).__name__ != 'RegistrationFormWTF':
+            return
+
+        g.personal_data_form = form = RegistrationFormPersonalDataForm()
+        if not form.validate_on_submit():
+            return False
 
     def _event_time_changed(self, sender, obj, **kwargs):
         """Update event time in CERN access requests in ADaMS."""

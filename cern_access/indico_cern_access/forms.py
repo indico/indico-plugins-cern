@@ -22,7 +22,8 @@ from indico.util.countries import get_countries
 from indico.util.placeholders import get_missing_placeholders, render_placeholder_info
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import IndicoDateField, IndicoDateTimeField, IndicoSelectMultipleCheckboxField
-from indico.web.forms.validators import LinkedDateTime
+from indico.web.forms.util import inject_validators
+from indico.web.forms.validators import LinkedDateTime, UsedIf
 from indico.web.forms.widgets import JinjaWidget, SwitchWidget
 
 from indico_cern_access import _
@@ -96,3 +97,16 @@ class AccessIdentityDataForm(IndicoForm):
     def validate_birth_date(self, field):
         if field.data > datetime.now().date():
             raise ValidationError(_('The specified date is in the future'))
+
+
+class RegistrationFormPersonalDataForm(AccessIdentityDataForm):
+    request_cern_access = BooleanField(_('Request access to the CERN site'), widget=SwitchWidget())
+
+    @classmethod
+    def _add_fields_hidden_unless(cls):
+        for field_name in ('birth_date', 'nationality', 'birth_place'):
+            inject_validators(RegistrationFormPersonalDataForm, field_name,
+                              [UsedIf(lambda form, field: form.request_cern_access.data)], early=True)
+
+
+RegistrationFormPersonalDataForm._add_fields_hidden_unless()

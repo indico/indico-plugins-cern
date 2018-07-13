@@ -1,0 +1,61 @@
+{% from 'cern_access:_common.html' import render_access_dates, render_security_policy %}
+{% from 'forms/_form.html' import form_rows, form_row %}
+
+{% set access_request = registration.cern_access_request %}
+
+{% if not registration or not access_request or (not access_request.has_identity_info and not access_request.is_active) %}
+    <div class="personal-data-form">
+        <div class="action-box highlight" style="margin-top: 15px;">
+            <div class="section">
+                <div class="icon icon-location"></div>
+                <div class="text">
+                    <div class="label">
+                        {%- trans %}Request access to the CERN site{% endtrans -%}
+                    </div>
+                    <div class="text">
+                        {% trans -%}
+                            In case you do not have a valid CERN badge, you can request temporary CERN site access here.
+                        {%- endtrans %}
+                    </div>
+                </div>
+                <div class="toolbar">
+                    {{ form_row(form.request_cern_access, skip_label=true)}}
+                </div>
+            </div>
+        </div>
+        <div class="i-box">
+            <div class="i-box-header">
+                <div class="i-box-title">{% trans %}Request access to the CERN site{% endtrans %}</div>
+                <div class="i-box-header-text">
+                    {{ render_security_policy(start_dt, end_dt) }}
+                </div>
+            </div>
+            <div class="i-box-content">
+                <div class="i-form">
+                    {{ form_rows(form, orientation='horizontal', fields=('birth_date', 'nationality', 'birth_place')) }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            $(document).on('indico:registration-form-loaded', function() {
+                var registrationForm = $('#registrationForm'),
+                    personalDataForm = $('.personal-data-form').detach();
+
+                registrationForm.find('.regform-section-list').append(personalDataForm);
+            });
+
+            $(document).ready(function() {
+                var personalDataForm = $('.personal-data-form').find('.i-box');
+
+                $('#request_cern_access').on('change', function() {
+                    personalDataForm.toggle(this.checked);
+                }).trigger('change');
+            });
+        })();
+    </script>
+{% endif %}
