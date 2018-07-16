@@ -66,6 +66,7 @@ class AVRequest(RequestDefinitionBase):
         form = super(AVRequest, cls).create_manager_form(req)
         if 'webcast' not in req.data['services']:
             del form.custom_webcast_url
+            del form.webcast_hidden
         return form
 
     @classmethod
@@ -99,6 +100,7 @@ class AVRequest(RequestDefinitionBase):
     def manager_save(cls, req, data):
         super(AVRequest, cls).manager_save(req, data)
         req.data['custom_webcast_url'] = data.get('custom_webcast_url')
+        req.data['webcast_hidden'] = data.get('webcast_hidden', False)
         flag_modified(req, 'data')
 
 
