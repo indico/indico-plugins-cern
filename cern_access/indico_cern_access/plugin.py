@@ -36,13 +36,13 @@ from indico.web.forms.fields import (IndicoDateTimeField, IndicoPasswordField, M
 from indico_cern_access import _
 from indico_cern_access.blueprint import blueprint
 from indico_cern_access.definition import CERNAccessRequestDefinition
-from indico_cern_access.forms import RegistrationFormPersonalDataForm
+from indico_cern_access.forms import AccessIdentityDataForm, RegistrationFormPersonalDataForm
 from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState
 from indico_cern_access.placeholders import AccessPeriodPlaceholder, FormLinkPlaceholder, TicketAccessDatesPlaceholder
-from indico_cern_access.util import (build_access_request_data, get_access_dates, get_last_request, get_requested_forms,
-                                     get_requested_registrations, handle_event_time_update, notify_access_withdrawn,
-                                     send_adams_delete_request, send_adams_post_request, update_access_requests,
-                                     withdraw_access_requests)
+from indico_cern_access.util import (RegformDataMode, build_access_request_data, get_access_dates, get_last_request,
+                                     get_requested_forms, get_requested_registrations, handle_event_time_update,
+                                     notify_access_withdrawn, send_adams_delete_request, send_adams_post_request,
+                                     update_access_requests, withdraw_access_requests)
 
 
 class PluginSettingsForm(IndicoForm):
@@ -127,7 +127,7 @@ class CERNAccessPlugin(IndicoPlugin):
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
         self.connect(signals.event.registration_deleted, self._registration_deleted)
         self.connect(signals.event.registration_created, self._registration_created)
-        self.connect(signals.form_validated, self._personal_data_form_validated)
+        self.connect(signals.form_validated, self._registration_form_validated)
         self.connect(signals.event.timetable.times_changed, self._event_time_changed, sender=Event)
         self.connect(signals.event.registration_personal_data_modified, self._registration_modified)
         self.connect(signals.event.registration_form_deleted, self._registration_form_deleted)
@@ -162,10 +162,17 @@ class CERNAccessPlugin(IndicoPlugin):
             return
 
         if regform.cern_access_request and regform.cern_access_request.is_active:
-            form = g.get('personal_data_form') or RegistrationFormPersonalDataForm()
-            start_dt, end_dt = get_access_dates(get_last_request(event))
+            req = get_last_request(event)
+            mode = req.data.get('regform_data_mode')
+            if mode not in (RegformDataMode.during_registration, RegformDataMode.during_registration_required):
+                return
+            required = mode == RegformDataMode.during_registration_required
+            form_cls = AccessIdentityDataForm if required else RegistrationFormPersonalDataForm
+            form = g.get('personal_data_form') or form_cls()
+            start_dt, end_dt = get_access_dates(req)
             return render_plugin_template('regform_identity_data_section.html', event=event, form=form,
-                                          start_dt=start_dt, end_dt=end_dt, registration=registration)
+                                          start_dt=start_dt, end_dt=end_dt, registration=registration,
+                                          required=required)
 
     def _is_past_event(self, event):
         end_dt = get_access_dates(get_last_request(event))[1]
@@ -187,7 +194,13 @@ class CERNAccessPlugin(IndicoPlugin):
         if not regform.cern_access_request or not regform.cern_access_request.is_active or not personal_data_form:
             return
 
-        if not personal_data_form.request_cern_access.data:
+        req = get_last_request(registration.event)
+        mode = req.data.get('regform_data_mode')
+        if mode not in (RegformDataMode.during_registration, RegformDataMode.during_registration_required):
+            return
+
+        required = req.data.get('regform_data_mode') == RegformDataMode.during_registration_required
+        if not required and not personal_data_form.request_cern_access.data:
             return
 
         registration.cern_access_request = CERNAccessRequest(birth_date=personal_data_form.birth_date.data,
@@ -196,11 +209,18 @@ class CERNAccessPlugin(IndicoPlugin):
                                                              request_state=CERNAccessRequestState.not_requested,
                                                              reservation_code='')
 
-    def _personal_data_form_validated(self, form, **kwargs):
+    def _registration_form_validated(self, form, **kwargs):
         if type(form).__name__ != 'RegistrationFormWTF':
             return
 
-        g.personal_data_form = form = RegistrationFormPersonalDataForm()
+        req = get_last_request(g.rh.regform.event)
+        mode = req.data.get('regform_data_mode')
+        if mode not in (RegformDataMode.during_registration, RegformDataMode.during_registration_required):
+            return
+
+        required = req.data.get('regform_data_mode') == RegformDataMode.during_registration_required
+        form_cls = AccessIdentityDataForm if required else RegistrationFormPersonalDataForm
+        g.personal_data_form = form = form_cls()
         if not form.validate_on_submit():
             return False
 

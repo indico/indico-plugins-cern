@@ -21,12 +21,14 @@ from indico.modules.events.requests import RequestFormBase
 from indico.util.countries import get_countries
 from indico.util.placeholders import get_missing_placeholders, render_placeholder_info
 from indico.web.forms.base import IndicoForm
-from indico.web.forms.fields import IndicoDateField, IndicoDateTimeField, IndicoSelectMultipleCheckboxField
+from indico.web.forms.fields import (IndicoDateField, IndicoDateTimeField, IndicoEnumSelectField,
+                                     IndicoSelectMultipleCheckboxField)
 from indico.web.forms.util import inject_validators
 from indico.web.forms.validators import LinkedDateTime, UsedIf
 from indico.web.forms.widgets import JinjaWidget, SwitchWidget
 
 from indico_cern_access import _
+from indico_cern_access.util import RegformDataMode
 
 
 class GrantAccessEmailForm(EmailRegistrantsForm):
@@ -55,6 +57,15 @@ class CERNAccessForm(RequestFormBase):
     regforms = IndicoSelectMultipleCheckboxField(_('Registration forms'),
                                                  [DataRequired(_('At least one registration form has to be selected'))],
                                                  widget=JinjaWidget('regform_list_widget.html', 'cern_access'))
+    regform_data_mode = IndicoEnumSelectField(_('Personal data prompt'), enum=RegformDataMode, keep_enum=False,
+                                              description=_("Specify when a user is prompted to provide additional "
+                                                            "data to get their CERN access ticket. When selecting "
+                                                            "'after registration', an email is sent when you request "
+                                                            "site access for a registrant. When selecting 'during "
+                                                            "registration' the user can enter the data immediately "
+                                                            "when registering for the event; a CERN access ticket is "
+                                                            "only generated when you request access to this particular "
+                                                            "user."))
     start_dt_override = IndicoDateTimeField(_('Start date override'), [Optional()],
                                             description=_("If set, CERN access will be granted starting at the "
                                                           "specified date instead of the event's start date"))

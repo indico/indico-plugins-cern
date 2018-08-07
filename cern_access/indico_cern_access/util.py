@@ -33,7 +33,14 @@ from indico.web.flask.templating import get_template_module
 
 from indico_cern_access import _
 from indico_cern_access.models.access_request_regforms import CERNAccessRequestRegForm
-from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState
+from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState, RichIntEnum
+
+
+class RegformDataMode(RichIntEnum):
+    __titles__ = [_('After registration'), _('During registration (optional)'), _('During registration (required)')]
+    after_registration = 0
+    during_registration = 1
+    during_registration_required = 2
 
 
 def get_last_request(event):
