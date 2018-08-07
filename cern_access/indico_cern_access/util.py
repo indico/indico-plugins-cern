@@ -37,7 +37,7 @@ from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAcc
 
 
 class RegformDataMode(RichIntEnum):
-    __titles__ = [_('After registration'), _('During registration (optional)'), _('During registration (required)')]
+    __titles__ = [_('No'), _('Yes'), _('Yes (required)')]
     after_registration = 0
     during_registration = 1
     during_registration_required = 2

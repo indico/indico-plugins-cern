@@ -57,15 +57,14 @@ class CERNAccessForm(RequestFormBase):
     regforms = IndicoSelectMultipleCheckboxField(_('Registration forms'),
                                                  [DataRequired(_('At least one registration form has to be selected'))],
                                                  widget=JinjaWidget('regform_list_widget.html', 'cern_access'))
-    regform_data_mode = IndicoEnumSelectField(_('Personal data prompt'), enum=RegformDataMode, keep_enum=False,
-                                              description=_("Specify when a user is prompted to provide additional "
-                                                            "data to get their CERN access ticket. When selecting "
-                                                            "'after registration', an email is sent when you request "
-                                                            "site access for a registrant. When selecting 'during "
-                                                            "registration' the user can enter the data immediately "
-                                                            "when registering for the event; a CERN access ticket is "
-                                                            "only generated when you request access to this particular "
-                                                            "user."))
+    regform_data_mode = IndicoEnumSelectField(_('Show during user registration'),
+                                              enum=RegformDataMode, keep_enum=False,
+                                              description=_("When enabled, users can request site access while "
+                                                            "registering and provide their additional personal data "
+                                                            "in the registration form. When set to required, the user "
+                                                            "cannot register without providing this data. In any case, "
+                                                            "site access is only granted after a manager explicitly "
+                                                            "enables it for the registrations."))
     start_dt_override = IndicoDateTimeField(_('Start date override'), [Optional()],
                                             description=_("If set, CERN access will be granted starting at the "
                                                           "specified date instead of the event's start date"))
