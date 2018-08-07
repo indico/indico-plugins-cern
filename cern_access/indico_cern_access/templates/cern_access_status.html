@@ -9,6 +9,9 @@
                data-update="#cern-access-status-{{ registration.id }}"
                data-replace-update
                data-ajax-dialog></a>
+        {% elif not access_requested and registration.cern_access_request.has_identity_info %}
+            <a class="icon-user-chairperson semantic-text highlight"
+               title="{% trans %}Additional data provided. Access to CERN still needs to be granted.{% endtrans %}"></a>
         {% elif access_requested and registration.cern_access_request.is_active %}
             <a class="icon-user-check semantic-text success js-copy-cern-access-code"
                title="{% trans %}Access to CERN granted. Click to see access code.{% endtrans %}"
