@@ -36,22 +36,33 @@ class RHRegistrationGrantCERNAccess(RHRegistrationsActionBase):
     """Grant CERN access to registrants."""
 
     def _process(self):
+        all_have_data = all(r.cern_access_request and r.cern_access_request.has_identity_info
+                            for r in self.registrations)
+        some_have_data = any(r.cern_access_request and r.cern_access_request.has_identity_info
+                             for r in self.registrations)
         tpl = get_template_module('cern_access:emails/identity_data_form_email_default.html', event=self.event)
         default_subject = tpl.get_subject()
         default_body = tpl.get_html_body()
         registration_ids = request.form.getlist('registration_id')
         form = GrantAccessEmailForm(regform=self.regform, registration_id=registration_ids)
+        if all_have_data:
+            del form.subject
+            del form.body
+            del form.from_address
+            del form.save_default
         if form.validate_on_submit():
-            if form.save_default.data:
+            if not all_have_data and form.save_default.data:
                 current_plugin.event_settings.set(self.event, 'email_subject', form.subject.data)
                 current_plugin.event_settings.set(self.event, 'email_body', form.body.data)
-            grant_access(self.registrations, self.regform, form.subject.data, form.body.data, form.from_address.data)
+            email_data = (form.subject.data, form.body.data, form.from_address.data) if not all_have_data else ()
+            grant_access(self.registrations, self.regform, *email_data)
             return jsonify_data(**self.list_generator.render_list())
-        elif not form.is_submitted():
+        elif not all_have_data and not form.is_submitted():
             form.subject.data = current_plugin.event_settings.get(self.event, 'email_subject') or default_subject
             form.body.data = current_plugin.event_settings.get(self.event, 'email_body') or default_body
         return jsonify_template('cern_access:grant_access.html', form=form, regform=self.regform,
-                                default_subject=default_subject, default_body=default_body)
+                                default_subject=default_subject, default_body=default_body,
+                                all_have_data=all_have_data, some_have_data=some_have_data)
 
 
 class RHRegistrationRevokeCERNAccess(RHRegistrationsActionBase):

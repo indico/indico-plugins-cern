@@ -284,11 +284,11 @@ def is_event_too_early(event):
     return earliest_start_dt is not None and event.start_dt < earliest_start_dt
 
 
-def grant_access(registrations, regform, email_subject, email_body, email_sender):
+def grant_access(registrations, regform, email_subject=None, email_body=None, email_sender=None):
     event = regform.event
     new_registrations = [reg for reg in registrations
-                         if not (reg.cern_access_request and not
-                                 reg.cern_access_request.is_withdrawn and
+                         if not (reg.cern_access_request and
+                                 not reg.cern_access_request.is_withdrawn and
                                  reg.cern_access_request.request_state == CERNAccessRequestState.active)]
     state, data = send_adams_post_request(event, new_registrations)
     add_access_requests(new_registrations, data, state)
