@@ -294,10 +294,10 @@ def grant_access(registrations, regform, email_subject=None, email_body=None, em
     add_access_requests(new_registrations, data, state)
     registrations_without_data = []
     for registration in new_registrations:
-        if registration.cern_access_request.has_identity_info:
-            send_ticket(registration)
-        else:
+        if not registration.cern_access_request.has_identity_info:
             registrations_without_data.append(registration)
+        elif regform.ticket_on_email:
+            send_ticket(registration)
 
     if registrations_without_data:
         send_form_link(registrations_without_data, email_subject, email_body, email_sender)

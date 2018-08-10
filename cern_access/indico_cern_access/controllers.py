@@ -40,7 +40,8 @@ class RHRegistrationGrantCERNAccess(RHRegistrationsActionBase):
                             for r in self.registrations)
         some_have_data = any(r.cern_access_request and r.cern_access_request.has_identity_info
                              for r in self.registrations)
-        tpl = get_template_module('cern_access:emails/identity_data_form_email_default.html', event=self.event)
+        tpl = get_template_module('cern_access:emails/identity_data_form_email_default.html', event=self.event,
+                                  regform=self.regform)
         default_subject = tpl.get_subject()
         default_body = tpl.get_html_body()
         registration_ids = request.form.getlist('registration_id')
@@ -107,17 +108,19 @@ class RHRegistrationAccessIdentityData(RHRegistrationFormRegistrationBase):
         expired = now_utc() > end_dt
         form = AccessIdentityDataForm()
         access_request = self.registration.cern_access_request
+        email_ticket = self.registration.registration_form.ticket_on_email
         if access_request is not None and not access_request.has_identity_info and form.validate_on_submit():
             if expired:
                 raise Forbidden
             form.populate_obj(access_request)
             db.session.flush()
-            send_ticket(self.registration)
+            if email_ticket:
+                send_ticket(self.registration)
             return redirect(url_for('.access_identity_data', self.registration.locator.uuid))
 
         return WPAccessRequestDetails.render_template('identity_data_form.html', self.event, form=form,
                                                       access_request=access_request, start_dt=start_dt, end_dt=end_dt,
-                                                      expired=expired)
+                                                      expired=expired, email_ticket=email_ticket)
 
 
 class RHRegistrationEnterIdentityData(RHManageRegistrationBase):
@@ -126,10 +129,12 @@ class RHRegistrationEnterIdentityData(RHManageRegistrationBase):
         if not access_request or access_request.has_identity_info:
             raise UserValueError(_('The personal data for this registrant has already been entered'))
         form = AccessIdentityDataForm()
+        email_ticket = self.registration.registration_form.ticket_on_email
         if form.validate_on_submit():
             form.populate_obj(access_request)
             db.session.flush()
-            send_ticket(self.registration)
+            if email_ticket:
+                send_ticket(self.registration)
             return jsonify_data(html=render_plugin_template('cern_access_status.html', registration=self.registration,
                                                             header=False))
         return jsonify_template('identity_data_form_management.html', render_plugin_template, form=form,

@@ -286,10 +286,12 @@ class CERNAccessPlugin(IndicoPlugin):
 
     def _is_ticket_blocked(self, registration, **kwargs):
         """Check if the user should be prevented from downloading the ticket manually."""
-        if not self._is_ticketing_handled(registration.registration_form):
+        regform = registration.registration_form
+        if not self._is_ticketing_handled(regform):
             return False
         req = registration.cern_access_request
-        return not req or not req.is_active or not req.has_identity_info
+        return (not req or not req.is_active or not req.has_identity_info
+                or not (regform.ticket_on_event_page or regform.ticket_on_summary_page))
 
     def _form_validated(self, form, **kwargs):
         """

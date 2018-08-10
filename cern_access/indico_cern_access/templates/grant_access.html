@@ -6,7 +6,8 @@
         <p>
             {%- trans %}
                 All selected registrants provided the additional personal data needed to access the
-                CERN site. Granting them access will immediately send them their access tickets.
+                CERN site. Granting them access will immediately send them their access tickets,
+                if emailing tickets option is enabled.
             {% endtrans %}
         </p>
     {% endcall %}
@@ -25,7 +26,8 @@
                 <br>
                 {% trans -%}
                     Remember that those users who already provided the requested data will not receive this message.
-                    Instead they will receive an email with a ticket granting them access to the CERN site.
+                    Instead they will receive an email with a ticket granting them access to the CERN site,
+                    if emailing tickets option is enabled.
                 {%- endtrans %}
             {% endif %}
         </p>

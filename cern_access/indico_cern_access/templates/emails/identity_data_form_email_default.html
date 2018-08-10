@@ -14,10 +14,12 @@
         In accordance with CERN’s data privacy policy, this data will be deleted from our database as soon as it is
         not required anymore.
     </p>
-    <p>
-        Upon reception of this data, you will receive an automatic email, with your access ticket in PDF format and an
-        access code.
-    </p>
+    {% if regform.ticket_on_email %}
+        <p>
+            Upon reception of this data, you will receive an automatic email, with your access ticket in PDF format and
+            an access code.
+        </p>
+    {% endif %}
     <p>
         Please note that no access to the CERN site will be granted without complying with this formality.
     </p>
@@ -43,10 +45,12 @@
         En accord avec la politique du CERN en matière de confidentialité des données, ces informations seront effacées
         de notre base de données aussitôt qu’elles ne seront plus nécessaires.
     </p>
-    <p>
-        Dès réception de ces données, vous recevrez un mail automatique contenant votre carte d’accès au format PDF ainsi
-        que votre code d’accès.
-    </p>
+    {% if regform.ticket_on_email %}
+        <p>
+            Dès réception de ces données, vous recevrez un mail automatique contenant votre carte d’accès au format PDF
+            ainsi que votre code d’accès.
+        </p>
+    {% endif %}
     <p>
         Aucun accès au site du CERN ne sera autorisé si cette formalité n’est pas remplie.
     </p>
