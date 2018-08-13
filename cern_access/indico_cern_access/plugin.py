@@ -9,7 +9,7 @@ from __future__ import unicode_literals
 
 from datetime import time, timedelta
 
-from flask import g, request
+from flask import g, request, session
 from flask_pluginengine import render_plugin_template
 from werkzeug.exceptions import Forbidden
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
@@ -289,9 +289,11 @@ class CERNAccessPlugin(IndicoPlugin):
         regform = registration.registration_form
         if not self._is_ticketing_handled(regform):
             return False
-        req = registration.cern_access_request
-        return (not req or not req.is_active or not req.has_identity_info
-                or not (regform.ticket_on_event_page or regform.ticket_on_summary_page))
+        if (regform.ticket_on_event_page or regform.ticket_on_summary_page or
+                registration.event.can_manage(session.user, 'registration')):
+            req = registration.cern_access_request
+            return not req or not req.is_active or not req.has_identity_info
+        return False
 
     def _form_validated(self, form, **kwargs):
         """
