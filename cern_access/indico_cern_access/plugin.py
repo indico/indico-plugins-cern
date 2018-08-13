@@ -287,13 +287,19 @@ class CERNAccessPlugin(IndicoPlugin):
     def _is_ticket_blocked(self, registration, **kwargs):
         """Check if the user should be prevented from downloading the ticket manually."""
         regform = registration.registration_form
+        # if we don't handle ticketing (no active access request) we never block tickets
         if not self._is_ticketing_handled(regform):
             return False
-        if (regform.ticket_on_event_page or regform.ticket_on_summary_page or
+        # if ticket downloads are disabled and the user is not a manager, block ticket downloads
+        # skipping this check for managers is needed so they can generate tickets using the
+        # management area
+        if (not regform.ticket_on_event_page and not regform.ticket_on_summary_page and not
                 registration.event.can_manage(session.user, 'registration')):
-            req = registration.cern_access_request
-            return not req or not req.is_active or not req.has_identity_info
-        return False
+            return True
+        # if the request does not have personal data we always block the tickets, even for
+        # a manager since they are not supposed to get tickets for people who didn't provide
+        # the required personal data
+        return not registration.cern_access_request.has_identity_info
 
     def _form_validated(self, form, **kwargs):
         """

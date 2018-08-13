@@ -38,7 +38,11 @@
             {% endcall %}
         {% endif %}
     {% else %}
-        {% set ticket_available = not access_request.registration.is_ticket_blocked %}
+        {# checking is_ticket_blocked is enough for regular users but without the extra check
+           a manager would see the download button anyway and might get confused #}
+        {% set regform = access_request.registration.registration_form %}
+        {% set ticket_available = not access_request.registration.is_ticket_blocked and
+                                  (regform.ticket_on_event_page or regform.ticket_on_summary_page) %}
         {% call message_box('success') %}
             {% trans dates=render_access_dates(start_dt, end_dt) %}
                 Access to the CERN premises has been granted to you for the period:<br><b>{{ dates }}</b><br>
