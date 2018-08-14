@@ -214,6 +214,9 @@ class CERNAccessPlugin(IndicoPlugin):
             return
 
         req = get_last_request(g.rh.regform.event)
+        if not req:
+            return
+
         mode = req.data.get('regform_data_mode')
         if mode not in (RegformDataMode.during_registration, RegformDataMode.during_registration_required):
             return
