@@ -24,6 +24,7 @@ from indico.core.settings.converters import DatetimeConverter, SettingConverter,
 from indico.modules.designer import TemplateType
 from indico.modules.designer.models.templates import DesignerTemplate
 from indico.modules.events import Event
+from indico.modules.events.registration.controllers.display import RHRegistrationForm
 from indico.modules.events.registration.forms import TicketsForm
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.registration.placeholders.registrations import (EventTitlePlaceholder, FirstNamePlaceholder,
@@ -211,6 +212,9 @@ class CERNAccessPlugin(IndicoPlugin):
 
     def _registration_form_validated(self, form, **kwargs):
         if type(form).__name__ != 'RegistrationFormWTF':
+            return
+
+        if type(g.rh) is not RHRegistrationForm:
             return
 
         req = get_last_request(g.rh.regform.event)
