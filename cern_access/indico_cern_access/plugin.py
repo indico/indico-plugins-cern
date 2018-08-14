@@ -302,7 +302,8 @@ class CERNAccessPlugin(IndicoPlugin):
         # if the request does not have personal data we always block the tickets, even for
         # a manager since they are not supposed to get tickets for people who didn't provide
         # the required personal data
-        return not registration.cern_access_request.has_identity_info
+        req = registration.cern_access_request
+        return not req or not req.is_active or not req.has_identity_info
 
     def _form_validated(self, form, **kwargs):
         """
