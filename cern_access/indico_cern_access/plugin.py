@@ -9,11 +9,11 @@ from __future__ import unicode_literals
 
 from datetime import time, timedelta
 
-from flask import request
+from flask import g, request, session
 from flask_pluginengine import render_plugin_template
 from werkzeug.exceptions import Forbidden
-from wtforms import StringField
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
+from wtforms.fields import StringField
 from wtforms.fields.html5 import URLField
 from wtforms.validators import DataRequired, Optional
 
@@ -26,6 +26,8 @@ from indico.modules.designer.models.templates import DesignerTemplate
 from indico.modules.events import Event
 from indico.modules.events.registration.forms import TicketsForm
 from indico.modules.events.registration.models.forms import RegistrationForm
+from indico.modules.events.registration.placeholders.registrations import (EventTitlePlaceholder, FirstNamePlaceholder,
+                                                                           LastNamePlaceholder)
 from indico.util.date_time import now_utc
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import (IndicoDateTimeField, IndicoPasswordField, MultipleItemsField, PrincipalListField,
@@ -34,12 +36,13 @@ from indico.web.forms.fields import (IndicoDateTimeField, IndicoPasswordField, M
 from indico_cern_access import _
 from indico_cern_access.blueprint import blueprint
 from indico_cern_access.definition import CERNAccessRequestDefinition
-from indico_cern_access.models.access_requests import CERNAccessRequestState
-from indico_cern_access.placeholders import AccessDatesPlaceholder
-from indico_cern_access.util import (build_access_request_data, get_access_dates, get_last_request, get_requested_forms,
-                                     get_requested_registrations, handle_event_time_update, notify_access_withdrawn,
-                                     send_adams_delete_request, send_adams_post_request, update_access_requests,
-                                     withdraw_access_requests)
+from indico_cern_access.forms import AccessIdentityDataForm, RegistrationFormPersonalDataForm
+from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState
+from indico_cern_access.placeholders import AccessPeriodPlaceholder, FormLinkPlaceholder, TicketAccessDatesPlaceholder
+from indico_cern_access.util import (RegformDataMode, build_access_request_data, get_access_dates, get_last_request,
+                                     get_requested_forms, get_requested_registrations, handle_event_time_update,
+                                     notify_access_withdrawn, send_adams_delete_request, send_adams_post_request,
+                                     update_access_requests, withdraw_access_requests)
 
 
 class PluginSettingsForm(IndicoForm):
@@ -111,13 +114,20 @@ class CERNAccessPlugin(IndicoPlugin):
         'delete_personal_data_after': TimedeltaConverter,
     }
     acl_settings = {'authorized_users'}
+    default_event_settings = {
+        'email_subject': None,
+        'email_body': None,
+    }
 
     def init(self):
         super(CERNAccessPlugin, self).init()
         self.template_hook('registration-status-flag', self._get_access_status)
         self.template_hook('registration-status-action-button', self._get_access_action_button)
+        self.template_hook('after-regform', self._get_personal_data_form)
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
         self.connect(signals.event.registration_deleted, self._registration_deleted)
+        self.connect(signals.event.registration_created, self._registration_created)
+        self.connect(signals.form_validated, self._registration_form_validated)
         self.connect(signals.event.timetable.times_changed, self._event_time_changed, sender=Event)
         self.connect(signals.event.registration_personal_data_modified, self._registration_modified)
         self.connect(signals.event.registration_form_deleted, self._registration_form_deleted)
@@ -129,6 +139,7 @@ class CERNAccessPlugin(IndicoPlugin):
         self.connect(signals.event.designer.print_badge_template, self._print_badge_template)
         self.connect(signals.event.registration.generate_ticket_qr_code, self._generate_ticket_qr_code)
         self.connect(signals.get_placeholders, self._get_designer_placeholders, sender='designer-fields')
+        self.connect(signals.get_placeholders, self._get_email_placeholders, sender='cern-access-email')
 
     def get_blueprints(self):
         return blueprint
@@ -146,6 +157,23 @@ class CERNAccessPlugin(IndicoPlugin):
                                           registration=registration,
                                           header=header)
 
+    def _get_personal_data_form(self, event, regform, management, registration=None, **kwargs):
+        if management or registration is not None:
+            return
+
+        if regform.cern_access_request and regform.cern_access_request.is_active:
+            req = get_last_request(event)
+            mode = req.data.get('regform_data_mode')
+            if mode not in (RegformDataMode.during_registration, RegformDataMode.during_registration_required):
+                return
+            required = mode == RegformDataMode.during_registration_required
+            form_cls = AccessIdentityDataForm if required else RegistrationFormPersonalDataForm
+            form = g.get('personal_data_form') or form_cls()
+            start_dt, end_dt = get_access_dates(req)
+            return render_plugin_template('regform_identity_data_section.html', event=event, form=form,
+                                          start_dt=start_dt, end_dt=end_dt, registration=registration,
+                                          required=required)
+
     def _is_past_event(self, event):
         end_dt = get_access_dates(get_last_request(event))[1]
         return end_dt < now_utc()
@@ -155,6 +183,46 @@ class CERNAccessPlugin(IndicoPlugin):
         if registration.cern_access_request and not self._is_past_event(registration.event):
             send_adams_delete_request([registration])
             registration.cern_access_request.request_state = CERNAccessRequestState.withdrawn
+
+    def _registration_created(self, registration, management, **kwargs):
+        if management:
+            return
+
+        regform = registration.registration_form
+        personal_data_form = g.pop('personal_data_form', None)
+
+        if not regform.cern_access_request or not regform.cern_access_request.is_active or not personal_data_form:
+            return
+
+        req = get_last_request(registration.event)
+        mode = req.data.get('regform_data_mode')
+        if mode not in (RegformDataMode.during_registration, RegformDataMode.during_registration_required):
+            return
+
+        required = req.data.get('regform_data_mode') == RegformDataMode.during_registration_required
+        if not required and not personal_data_form.request_cern_access.data:
+            return
+
+        registration.cern_access_request = CERNAccessRequest(birth_date=personal_data_form.birth_date.data,
+                                                             nationality=personal_data_form.nationality.data,
+                                                             birth_place=personal_data_form.birth_place.data,
+                                                             request_state=CERNAccessRequestState.not_requested,
+                                                             reservation_code='')
+
+    def _registration_form_validated(self, form, **kwargs):
+        if type(form).__name__ != 'RegistrationFormWTF':
+            return
+
+        req = get_last_request(g.rh.regform.event)
+        mode = req.data.get('regform_data_mode')
+        if mode not in (RegformDataMode.during_registration, RegformDataMode.during_registration_required):
+            return
+
+        required = req.data.get('regform_data_mode') == RegformDataMode.during_registration_required
+        form_cls = AccessIdentityDataForm if required else RegistrationFormPersonalDataForm
+        g.personal_data_form = form = form_cls()
+        if not form.validate_on_submit():
+            return False
 
     def _event_time_changed(self, sender, obj, **kwargs):
         """Update event time in CERN access requests in ADaMS."""
@@ -218,10 +286,20 @@ class CERNAccessPlugin(IndicoPlugin):
 
     def _is_ticket_blocked(self, registration, **kwargs):
         """Check if the user should be prevented from downloading the ticket manually."""
-        if not self._is_ticketing_handled(registration.registration_form):
+        regform = registration.registration_form
+        # if we don't handle ticketing (no active access request) we never block tickets
+        if not self._is_ticketing_handled(regform):
             return False
-        req = registration.cern_access_request
-        return not req or not req.is_active or not req.has_identity_info
+        # if ticket downloads are disabled and the user is not a manager, block ticket downloads
+        # skipping this check for managers is needed so they can generate tickets using the
+        # management area
+        if (not regform.ticket_on_event_page and not regform.ticket_on_summary_page and not
+                registration.event.can_manage(session.user, 'registration')):
+            return True
+        # if the request does not have personal data we always block the tickets, even for
+        # a manager since they are not supposed to get tickets for people who didn't provide
+        # the required personal data
+        return not registration.cern_access_request.has_identity_info
 
     def _form_validated(self, form, **kwargs):
         """
@@ -266,4 +344,11 @@ class CERNAccessPlugin(IndicoPlugin):
         ticket_data.update(build_access_request_data(registration, event, generate_code=False))
 
     def _get_designer_placeholders(self, sender, **kwargs):
-        yield AccessDatesPlaceholder
+        yield TicketAccessDatesPlaceholder
+
+    def _get_email_placeholders(self, sender, **kwargs):
+        yield FirstNamePlaceholder
+        yield LastNamePlaceholder
+        yield EventTitlePlaceholder
+        yield FormLinkPlaceholder
+        yield AccessPeriodPlaceholder

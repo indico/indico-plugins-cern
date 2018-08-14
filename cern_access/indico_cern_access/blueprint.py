@@ -10,14 +10,20 @@ from __future__ import unicode_literals
 from indico.core.plugins import IndicoPluginBlueprint
 
 from indico_cern_access.controllers import (RHExportCERNAccessCSV, RHExportCERNAccessExcel,
-                                            RHRegistrationAccessIdentityData, RHRegistrationBulkCERNAccess,
-                                            RHRegistrationEnterIdentityData)
+                                            RHRegistrationAccessIdentityData, RHRegistrationEnterIdentityData,
+                                            RHRegistrationGrantCERNAccess, RHRegistrationPreviewCERNAccessEmail,
+                                            RHRegistrationRevokeCERNAccess)
 
 
 blueprint = IndicoPluginBlueprint('cern_access', __name__, url_prefix='/event/<confId>')
 
-blueprint.add_url_rule('/manage/registration/<int:reg_form_id>/registrations/cern-access', 'registrations_cern_access',
-                       RHRegistrationBulkCERNAccess, methods=('POST',))
+blueprint.add_url_rule('/manage/registration/<int:reg_form_id>/registrations/cern-access/grant',
+                       'registrations_grant_cern_access', RHRegistrationGrantCERNAccess, methods=('POST',))
+blueprint.add_url_rule('/manage/registration/<int:reg_form_id>/registrations/cern-access/revoke',
+                       'registrations_revoke_cern_access', RHRegistrationRevokeCERNAccess, methods=('POST',))
+blueprint.add_url_rule('/manage/registration/<int:reg_form_id>/registrations/cern-access/email-preview',
+                       'registrations_preview_cern_access_email', RHRegistrationPreviewCERNAccessEmail,
+                       methods=('POST',))
 blueprint.add_url_rule('/manage/registration/<int:reg_form_id>/registrations/cern-access.csv',
                        'registrations_cern_access_csv', RHExportCERNAccessCSV, defaults={'type': 'cern-access'})
 blueprint.add_url_rule('/manage/registration/<int:reg_form_id>/registrations/cern-access.xlsx',

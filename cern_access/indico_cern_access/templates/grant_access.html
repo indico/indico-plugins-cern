@@ -1,0 +1,65 @@
+{% from 'message_box.html' import message_box %}
+{% from 'forms/_form.html' import form_header, form_rows, form_footer  %}
+
+{% if all_have_data %}
+    {% call message_box('info', fixed_width=true) %}
+        <p>
+            {%- trans %}
+                All selected registrants provided the additional personal data needed to access the
+                CERN site. Granting them access will immediately send them their access tickets,
+                if sending tickets by email is enabled.
+            {% endtrans %}
+        </p>
+    {% endcall %}
+{% else %}
+    {% call message_box('info', fixed_width=true) %}
+        <p>
+            {% trans -%}
+                To be able to access the CERN site, your registrants will have to provide some
+                additional personal data.
+            {%- endtrans %}
+            <br>
+            {% trans -%}
+                Site access will be granted automatically once they have provided the requested data.
+            {%- endtrans %}
+            {% if some_have_data %}
+                <br>
+                {% trans -%}
+                    Remember that those users who already provided the requested data will not receive this message.
+                    Instead they will receive an email with a ticket granting them access to the CERN site,
+                    if sending tickets by email is enabled.
+                {%- endtrans %}
+            {% endif %}
+        </p>
+    {% endcall %}
+{% endif %}
+
+{{ form_header(form) }}
+{{ form_rows(form) }}
+{% call form_footer(form, align_right=true) %}
+    {% if all_have_data %}
+        <input type="submit" class="i-button highlight big" value="{% trans %}Grant access{% endtrans %}">
+    {% else %}
+        <input type="submit" class="i-button highlight big"
+               value="{% trans %}Send email and grant access{% endtrans %}">
+        <input id="preview-email" class="i-button big" type="button" value="{%- trans %}Preview email{% endtrans -%}"
+               data-href="{{ url_for('.registrations_preview_cern_access_email', regform) }}">
+    {% endif %}
+    <a class="i-button big" data-button-back>{% trans %}Cancel{% endtrans %}</a>
+{% endcall %}
+
+
+<script>
+    (function() {
+        'use strict';
+        var defaultSubject = {{ default_subject | tojson }};
+        var defaultBody = {{ default_body | tojson }};
+
+        $('#reset-cern-access-email').on('click', function() {
+            var id = $('#body-editor').children()[0].id;
+            var editor = CKEDITOR.instances[id];
+            $('#subject').val(defaultSubject);
+            editor.setData(defaultBody);
+        });
+    })();
+</script>

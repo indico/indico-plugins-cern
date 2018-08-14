@@ -27,12 +27,20 @@ from indico.modules.events.registration.models.registrations import Registration
 from indico.modules.events.registration.util import get_ticket_attachments
 from indico.modules.events.requests.models.requests import Request
 from indico.util.date_time import now_utc
+from indico.util.placeholders import replace_placeholders
 from indico.util.string import remove_accents, unicode_to_ascii
 from indico.web.flask.templating import get_template_module
 
 from indico_cern_access import _
 from indico_cern_access.models.access_request_regforms import CERNAccessRequestRegForm
-from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState
+from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState, RichIntEnum
+
+
+class RegformDataMode(RichIntEnum):
+    __titles__ = [_('No'), _('Yes'), _('Yes (required)')]
+    after_registration = 0
+    during_registration = 1
+    during_registration_required = 2
 
 
 def get_last_request(event):
@@ -276,25 +284,35 @@ def is_event_too_early(event):
     return earliest_start_dt is not None and event.start_dt < earliest_start_dt
 
 
-def grant_access(registrations, regform):
+def grant_access(registrations, regform, email_subject=None, email_body=None, email_sender=None):
     event = regform.event
     new_registrations = [reg for reg in registrations
-                         if not (reg.cern_access_request and not
-                                 reg.cern_access_request.is_withdrawn and
+                         if not (reg.cern_access_request and
+                                 not reg.cern_access_request.is_withdrawn and
                                  reg.cern_access_request.request_state == CERNAccessRequestState.active)]
     state, data = send_adams_post_request(event, new_registrations)
     add_access_requests(new_registrations, data, state)
-    send_form_link(event, new_registrations)
+    registrations_without_data = []
+    for registration in new_registrations:
+        if not registration.cern_access_request.has_identity_info:
+            registrations_without_data.append(registration)
+        elif regform.ticket_on_email:
+            send_ticket(registration)
+
+    if registrations_without_data:
+        send_form_link(registrations_without_data, email_subject, email_body, email_sender)
 
 
-def send_form_link(event, registrations):
+def send_form_link(registrations, email_subject, email_body, email_sender):
     """Send a mail asking for personal information to be filled in using a web form."""
-    start_dt, end_dt = get_access_dates(get_last_request(event))
-
     for registration in registrations:
+        email_body = replace_placeholders('cern-access-email', email_body,
+                                          regform=registration.registration_form, registration=registration)
+        email_subject = replace_placeholders('cern-access-email', email_subject,
+                                             regform=registration.registration_form, registration=registration)
         template = get_template_module('cern_access:emails/identity_data_form_email.html', registration=registration,
-                                       start_dt=start_dt, end_dt=end_dt)
-        email = make_email(to_list=registration.email, template=template, html=True)
+                                       email_subject=email_subject, email_body=email_body)
+        email = make_email(to_list=registration.email, from_address=email_sender, template=template, html=True)
         send_email(email, event=registration.registration_form.event, module='Registration', user=session.user)
 
 

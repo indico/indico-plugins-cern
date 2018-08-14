@@ -10,25 +10,61 @@ from __future__ import unicode_literals
 from datetime import datetime
 from operator import itemgetter
 
-from wtforms.fields import SelectField, StringField
+from markupsafe import Markup
+from wtforms.fields import BooleanField, SelectField, StringField
 from wtforms.validators import DataRequired, Optional, ValidationError
 
 from indico.core.db import db
+from indico.modules.events.registration.forms import EmailRegistrantsForm
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.requests import RequestFormBase
 from indico.util.countries import get_countries
+from indico.util.placeholders import get_missing_placeholders, render_placeholder_info
 from indico.web.forms.base import IndicoForm
-from indico.web.forms.fields import IndicoDateField, IndicoDateTimeField, IndicoSelectMultipleCheckboxField
-from indico.web.forms.validators import LinkedDateTime
-from indico.web.forms.widgets import JinjaWidget
+from indico.web.forms.fields import (IndicoDateField, IndicoDateTimeField, IndicoEnumSelectField,
+                                     IndicoSelectMultipleCheckboxField)
+from indico.web.forms.util import inject_validators
+from indico.web.forms.validators import LinkedDateTime, UsedIf
+from indico.web.forms.widgets import JinjaWidget, SwitchWidget
 
 from indico_cern_access import _
+from indico_cern_access.util import RegformDataMode
+
+
+class GrantAccessEmailForm(EmailRegistrantsForm):
+    save_default = BooleanField(_("Save as default"), widget=SwitchWidget(),
+                                description=_("Save this email's content as the default that will be used the next "
+                                              "time a CERN access request is sent for a registrant in this event."))
+
+    def __init__(self, *args, **kwargs):
+        reset_text = (Markup('<a id="reset-cern-access-email">{}</a><br>')
+                      .format(_('Click here to reset subject and body to the default text.')))
+        super(GrantAccessEmailForm, self).__init__(*args, recipients=[], **kwargs)
+        self.body.description = reset_text + render_placeholder_info('cern-access-email', regform=self.regform,
+                                                                     registration=None)
+        del self.cc_addresses
+        del self.copy_for_sender
+        del self.attach_ticket
+        del self.recipients
+
+    def validate_body(self, field):
+        missing = get_missing_placeholders('cern-access-email', field.data, regform=self.regform, registration=None)
+        if missing:
+            raise ValidationError(_('Missing placeholders: {}').format(', '.join(missing)))
 
 
 class CERNAccessForm(RequestFormBase):
     regforms = IndicoSelectMultipleCheckboxField(_('Registration forms'),
                                                  [DataRequired(_('At least one registration form has to be selected'))],
                                                  widget=JinjaWidget('regform_list_widget.html', 'cern_access'))
+    regform_data_mode = IndicoEnumSelectField(_('Show during user registration'),
+                                              enum=RegformDataMode, keep_enum=False,
+                                              description=_("When enabled, users can request site access while "
+                                                            "registering and provide their additional personal data "
+                                                            "in the registration form. When set to required, the user "
+                                                            "cannot register without providing this data. In any case, "
+                                                            "site access is only granted after a manager explicitly "
+                                                            "enables it for the registrations."))
     start_dt_override = IndicoDateTimeField(_('Start date override'), [Optional()],
                                             description=_("If set, CERN access will be granted starting at the "
                                                           "specified date instead of the event's start date"))
@@ -71,3 +107,16 @@ class AccessIdentityDataForm(IndicoForm):
     def validate_birth_date(self, field):
         if field.data > datetime.now().date():
             raise ValidationError(_('The specified date is in the future'))
+
+
+class RegistrationFormPersonalDataForm(AccessIdentityDataForm):
+    request_cern_access = BooleanField(_('Request access to the CERN site'), widget=SwitchWidget())
+
+    @classmethod
+    def _add_fields_hidden_unless(cls):
+        for field_name in ('birth_date', 'nationality', 'birth_place'):
+            inject_validators(RegistrationFormPersonalDataForm, field_name,
+                              [UsedIf(lambda form, field: form.request_cern_access.data)], early=True)
+
+
+RegistrationFormPersonalDataForm._add_fields_hidden_unless()

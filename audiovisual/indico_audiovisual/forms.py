@@ -85,6 +85,8 @@ class AVRequestManagerForm(RequestManagerForm):
     custom_webcast_url = URLField(_('Webcast URL'),
                                   description=_("Custom URL to view the webcast. Can contain {event_id} which will be "
                                                 "replaced with the ID of this event."))
+    webcast_hidden = BooleanField(_('Hide webcast'),
+                                  description=_('Do not show a link to the webcast on the event page'))
 
 
 class RequestListFilterForm(IndicoForm):

@@ -1,6 +1,6 @@
 {% extends 'layout/base.html' %}
 
-{% from 'cern_access:_common.html' import render_access_dates %}
+{% from 'cern_access:_common.html' import render_access_dates, render_security_policy %}
 {% from 'forms/_form.html' import simple_form, form_rows, form_row_static %}
 {% from 'message_box.html' import message_box %}
 
@@ -30,17 +30,7 @@
             {% endcall %}
         {% else %}
             {% call message_box('info') %}
-                {% trans dates=render_access_dates(start_dt, end_dt) -%}
-                    CERN's Security Policy requires you to provide the following
-                    additional data. The contents of this form will not be shared
-                    with the event organizers and will only be revealed upon request
-                    from CERN's Site Surveillance service.
-                    <br>
-                    <br>
-                    One you have provided this data, you will be able to download
-                    a ticket which grants you access to the CERN site during this
-                    period: {{ dates }}
-                {%- endtrans %}
+                {{ render_security_policy(start_dt, end_dt) }}
             {% endcall %}
             {% call simple_form(form, back_button=false) %}
                 {{ form_row_static(_('Name'), access_request.registration.full_name) }}
@@ -48,21 +38,32 @@
             {% endcall %}
         {% endif %}
     {% else %}
+        {# checking is_ticket_blocked is enough for regular users but without the extra check
+           a manager would see the download button anyway and might get confused #}
+        {% set regform = access_request.registration.registration_form %}
+        {% set ticket_available = not access_request.registration.is_ticket_blocked and
+                                  (regform.ticket_on_event_page or regform.ticket_on_summary_page) %}
         {% call message_box('success') %}
-            {% trans code=access_request.reservation_code, dates=render_access_dates(start_dt, end_dt),
-                     email=access_request.registration.email -%}
-                Access to the CERN premises has been granted to you for the period: {{ dates }}.<br>
-                Your access ticket has been sent to your email address <strong>{{ email }}</strong>, but you
-                can also download it using the button below.<br>
-                <br>
-                We invite you to print this ticket as showing it at the CERN gate will be required in
-                order to enter the site.
-                <br>
-                If you cannot print the access ticket before coming to CERN, you can also print one
-                at the entrance using this registration code: <strong>{{ code }}</strong>.
-            {%- endtrans %}
+            {% trans dates=render_access_dates(start_dt, end_dt) %}
+                Access to the CERN premises has been granted to you for the period:<br><b>{{ dates }}</b><br>
+            {% endtrans %}
+            {% if email_ticket %}
+                {% trans email=access_request.registration.email %}
+                    Your access ticket has been sent to your email address <strong>{{ email }}.</strong>
+                    If you cannot print the access ticket before coming to CERN, you can also print one
+                    at the entrance using the registration code.<br>
+                {% endtrans %}
+            {% endif %}
+            {% if ticket_available %}
+                {% trans %}
+                    You can download the ticket using the button below.<br>
+                {% endtrans %}
+            {% endif %}
+            {% trans code=access_request.reservation_code %}
+                <br>Registration code: <strong>{{ code }}</strong>.
+            {% endtrans %}
         {% endcall %}
-        {% if not access_request.registration.is_ticket_blocked %}
+        {% if ticket_available %}
             <div class="group right">
                 {%- set download_ticket_url = url_for('event_registration.ticket_download', access_request.registration.locator.registrant) -%}
                 <a href="{{ download_ticket_url }}" class="i-button accept icon-ticket">
