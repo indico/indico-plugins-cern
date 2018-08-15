@@ -24,6 +24,7 @@ from indico.core.settings.converters import DatetimeConverter, SettingConverter,
 from indico.modules.designer import TemplateType
 from indico.modules.designer.models.templates import DesignerTemplate
 from indico.modules.events import Event
+from indico.modules.events.registration.controllers.display import RHRegistrationForm
 from indico.modules.events.registration.forms import TicketsForm
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.registration.placeholders.registrations import (EventTitlePlaceholder, FirstNamePlaceholder,
@@ -213,7 +214,13 @@ class CERNAccessPlugin(IndicoPlugin):
         if type(form).__name__ != 'RegistrationFormWTF':
             return
 
+        if type(g.rh) is not RHRegistrationForm:
+            return
+
         req = get_last_request(g.rh.regform.event)
+        if not req:
+            return
+
         mode = req.data.get('regform_data_mode')
         if mode not in (RegformDataMode.during_registration, RegformDataMode.during_registration_required):
             return
@@ -299,7 +306,8 @@ class CERNAccessPlugin(IndicoPlugin):
         # if the request does not have personal data we always block the tickets, even for
         # a manager since they are not supposed to get tickets for people who didn't provide
         # the required personal data
-        return not registration.cern_access_request.has_identity_info
+        req = registration.cern_access_request
+        return not req or not req.is_active or not req.has_identity_info
 
     def _form_validated(self, form, **kwargs):
         """

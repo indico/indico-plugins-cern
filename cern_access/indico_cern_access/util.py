@@ -303,12 +303,12 @@ def grant_access(registrations, regform, email_subject=None, email_body=None, em
         send_form_link(registrations_without_data, email_subject, email_body, email_sender)
 
 
-def send_form_link(registrations, email_subject, email_body, email_sender):
+def send_form_link(registrations, email_subject_tpl, email_body_tpl, email_sender):
     """Send a mail asking for personal information to be filled in using a web form."""
     for registration in registrations:
-        email_body = replace_placeholders('cern-access-email', email_body,
+        email_body = replace_placeholders('cern-access-email', email_body_tpl,
                                           regform=registration.registration_form, registration=registration)
-        email_subject = replace_placeholders('cern-access-email', email_subject,
+        email_subject = replace_placeholders('cern-access-email', email_subject_tpl,
                                              regform=registration.registration_form, registration=registration)
         template = get_template_module('cern_access:emails/identity_data_form_email.html', registration=registration,
                                        email_subject=email_subject, email_body=email_body)
