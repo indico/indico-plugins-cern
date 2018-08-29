@@ -81,21 +81,24 @@ class FoundationSync(object):
     def _get_room_attrs(self, raw_data):
         return {'manager-group': raw_data.get('EMAIL_LIST')}
 
-    def _parse_room_data(self, raw_data, coordinates):
+    def _parse_room_data(self, raw_data, coordinates, room_id):
         data = {}
-
         data['building'] = raw_data['BUILDING']
         data['floor'] = raw_data['FLOOR']
         data['number'] = raw_data['ROOM_NUMBER']
         data['email'] = raw_data['RESPONSIBLE_EMAIL']
         if not data['building'] or not data['floor'] or not data['number']:
             raise SkipRoom('Error in Foundation - No value for BUILDING or FLOOR or ROOM_NUMBER')
-        if not data['email']:
-            raise SkipRoom('Error in Foundation - No value for RESPONSIBLE_EMAIL')
 
-        user = get_user_by_email(data['email'], create_pending=True)
-        if not user:
-            raise SkipRoom('Bad RESPONSIBLE_EMAIL in Foundation - No user found with email {}'.format(data['email']))
+        email_warning = None
+        if not data['email']:
+            email_warning = ('[%s] No value for RESPONSIBLE_EMAIL in Foundation', room_id)
+            user = None
+        else:
+            user = get_user_by_email(data['email'], create_pending=True)
+            if not user:
+                email_warning = ('[%s] Bad RESPONSIBLE_EMAIL in Foundation: no user found with email %s',
+                                 data['email'], room_id)
 
         data['owner'] = user
         data['name'] = (raw_data.get('FRIENDLY_NAME') or '').strip()
@@ -117,7 +120,7 @@ class FoundationSync(object):
             data['latitude'] = building_coordinates['latitude']
             data['longitude'] = building_coordinates['longitude']
 
-        return data
+        return data, email_warning
 
     def _prepare_row(self, row, cursor):
         return dict(zip([d[0] for d in cursor.description], row))
@@ -219,7 +222,7 @@ class FoundationSync(object):
             room_id = data['ID']
 
             try:
-                room_data = self._parse_room_data(data, coordinates)
+                room_data, email_warning = self._parse_room_data(data, coordinates, room_id)
                 room_attrs = self._get_room_attrs(data)
                 self._logger.debug("Fetched data for room with id='%s'", room_id)
             except SkipRoom as e:
@@ -231,6 +234,15 @@ class FoundationSync(object):
                                    Room.floor == room_data['floor'],
                                    Room.number == room_data['number'],
                                    location=self._location)
+
+            if room_data['owner'] is None:
+                del room_data['owner']
+                if room is None:
+                    counter['skipped'] += 1
+                    self._logger.info("Skipped room %s: %s", room_id, email_warning[0] % email_warning[1:])
+                    continue
+                elif room.is_active:
+                    self._logger.warning(*email_warning)
 
             # Insert new room
             if room is None:
