@@ -1,0 +1,8 @@
+{
+  "entry": {
+    "burotel": "./js/index.jsx"
+  },
+  "sassOverrides": {
+    "rb_new:styles/palette": "./styles/palette.scss"
+  }
+}

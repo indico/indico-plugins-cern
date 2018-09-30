@@ -7,7 +7,7 @@
 
 from __future__ import unicode_literals
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 setup(
@@ -17,13 +17,13 @@ setup(
     license='MIT',
     author='Indico Team',
     author_email='indico-team@cern.ch',
-    py_modules=('indico_burotel',),
+    packages=find_packages(),
     zip_safe=False,
     install_requires=[
         'indico>=2.0'
     ],
     entry_points={
-        'indico.plugins': {'burotel = indico_burotel:BurotelPlugin'}
+        'indico.plugins': {'burotel = indico_burotel.plugin:BurotelPlugin'}
     },
     classifiers=[
         'Environment :: Plugins',

@@ -1,0 +1,39 @@
+/* This file is part of Indico.
+ * Copyright (C) 2002 - 2018 European Organization for Nuclear Research (CERN).
+ *
+ * Indico is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Indico is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Indico; if not, see <http://www.gnu.org/licenses/>.
+ */
+
+@import 'base/palette';
+
+$white: #fff;
+$highlight-color: #cf816d;
+$dark-highlight-color: #b1604b;
+$primary-color: #2185d0;
+
+$sui-red: #db2828;
+$sui-orange: #f2711c;
+$sui-green: #21ba45;
+$sui-grey: #767676;
+
+$light-red: #ffbdbd;
+
+$pre-booking-stripe-colors: ($sui-orange, lighten($sui-orange, 14%));
+$pre-booking-conflict-stripe-colors: ($sui-red, lighten($sui-red, 14%));
+$blocking-stripe-colors: (lighten($light-red, 10%), $light-red);
+
+%rb-splash-background {
+    background-image: url('burotel:images/splash.png');
+    background-size: cover;
+}
