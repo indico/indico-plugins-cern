@@ -13,3 +13,5 @@ wheelhouse/
 .cache/
 .pytest_cache/
 webpack-build-config.json
+.indico_source
+.jsconfig.json
