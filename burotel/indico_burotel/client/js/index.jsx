@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import moment from 'moment';
 import React from 'react';
 import setup from 'indico/modules/rb_new/setup';
@@ -9,8 +10,10 @@ import {TimeInformation as DefaultTimeInformation} from 'indico/modules/rb_new/m
 import DefaultBookRoom from 'indico/modules/rb_new/modules/bookRoom/BookRoom';
 import DefaultLandingStatistics from 'indico/modules/rb_new/modules/landing/LandingStatistics';
 import {Translate} from 'indico/react/i18n';
+import DeskRenderer from './DeskRenderer';
 import BootstrapOptions from './BootstrapOptions';
 import ExtraFilters from './ExtraFilters';
+
 
 const parametrize = (Component, extraProps) => ({...props}) => {
     // handle deferred prop calculation
@@ -22,7 +25,7 @@ const parametrize = (Component, extraProps) => ({...props}) => {
     const mergedProps = {...props, ...extraProps};
     const comp = <Component {...mergedProps} />;
     return comp;
-}
+};
 
 const App = parametrize(DefaultApp, {
     title: Translate.string('Burotel'),
@@ -64,7 +67,7 @@ const Menu = parametrize(DefaultMenu, {
         bookRoom: <Translate>Book a Desk</Translate>,
         roomList: <Translate>List of Spaces</Translate>
     }
-})
+});
 
 setup({
     App,
@@ -74,6 +77,15 @@ setup({
     TimeInformation,
     LandingStatistics,
     Menu,
+    'RoomRenderer': DeskRenderer,
     'Landing.bootstrapOptions': BootstrapOptions,
-    'RoomFilterBar.extraFilters': ExtraFilters
+    'RoomFilterBar.extraFilters': ExtraFilters,
+}, (state, action) => {
+    if (action.type === '@@INIT' || action.type === 'RESET_PAGE_STATE') {
+        const newState = _.cloneDeep(state);
+        _.set(newState, 'bookRoom.timeline.datePicker.mode', 'weeks');
+        _.set(newState, 'calendar.datePicker.mode', 'weeks');
+        return newState;
+    }
+    return state;
 });
