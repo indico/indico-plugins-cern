@@ -6,7 +6,7 @@
 # the LICENSE file for more details.
 
 """
-Synchronizes holidays, rooms and equipment with the CERN Foundation Database.
+Synchronizes rooms and equipment with the CERN Foundation Database.
 """
 
 from __future__ import unicode_literals
@@ -27,7 +27,6 @@ from indico.core.celery import celery
 from indico.core.db.sqlalchemy import db
 from indico.core.plugins import IndicoPlugin
 from indico.modules.rb.models.equipment import EquipmentType
-from indico.modules.rb.models.holidays import Holiday
 from indico.modules.rb.models.locations import Location
 from indico.modules.rb.models.rooms import Room
 from indico.modules.users.util import get_user_by_email
@@ -182,26 +181,6 @@ class FoundationSync(object):
         db.session.commit()
         self._logger.info("Equipment objects summary: %d found - %d new added", counter['found'], counter['added'])
 
-    def fetch_holidays(self, connection):
-        self._logger.debug("Fetching holidays...")
-
-        counter = Counter()
-        cursor = connection.cursor()
-        cursor.execute("SELECT * FROM FOUNDATION_PUB.OFFICIAL_HOLIDAYS "
-                       "WHERE COMMENTS NOT IN ('Saturday', 'Sunday') "
-                       "ORDER BY HOLIDAY_DATE ASC")
-
-        self._location.holidays.delete()
-        for row in cursor:
-            row = self._prepare_row(row, cursor)
-            holiday = Holiday(date=row['HOLIDAY_DATE'].date(), name=row['COMMENTS'])
-            counter['found'] += 1
-            self._location.holidays.append(holiday)
-            self._logger.debug(u"Added %s as a holiday (%s)", holiday.date, holiday.name)
-
-        db.session.commit()
-        self._logger.info("Holidays summary: %d found", counter['found'])
-
     def fetch_rooms(self, connection, room_name=None):
         self._logger.debug("Fetching room information...")
 
@@ -349,8 +328,6 @@ class FoundationSync(object):
                 self.fetch_rooms(connection, room_name)
                 self.fetch_equipment(connection)
                 self.fetch_room_equipment(connection, room_name)
-                if not room_name:
-                    self.fetch_holidays(connection)
             except Exception:
                 self._logger.exception("Synchronization with Foundation failed")
                 raise
@@ -363,7 +340,7 @@ class SettingsForm(IndicoForm):
 class FoundationSyncPlugin(IndicoPlugin):
     """Foundation Sync
 
-    Synchronizes holidays, rooms and equipment with the CERN Foundation Database.
+    Synchronizes rooms and equipment with the CERN Foundation Database.
     """
     configurable = True
     settings_form = SettingsForm
@@ -377,7 +354,7 @@ class FoundationSyncPlugin(IndicoPlugin):
         @cli_command()
         @click.option('--room', 'room_name', metavar='ROOM', help="Synchronize only a given room (e.g. '513 R-055')")
         def foundationsync(room_name):
-            """Synchronize holidays, rooms and equipment with the CERN Foundation Database"""
+            """Synchronize rooms and equipment with the CERN Foundation Database"""
             db_name = self.settings.get('connection_string')
             if not db_name:
                 print 'Foundation DB connection string is not set'
