@@ -9,39 +9,37 @@ from __future__ import unicode_literals
 
 from datetime import datetime, time
 
-from flask import current_app, redirect, request
+from flask import current_app, json, redirect, request
 from marshmallow import Schema, fields
-from webargs.flaskparser import parser
 from werkzeug.datastructures import ImmutableMultiDict
 
 from indico.core.plugins import IndicoPlugin
+from indico.util.marshmallow import NaiveDateTime
 from indico.web.flask.util import url_for
 from indico_burotel.controllers import WPBurotelBase
 
 
-date_args = {
-    'start_dt': fields.Date(),
-    'end_dt': fields.Date()
-}
+class DateSchema(Schema):
+    start_dt = fields.Date()
+    end_dt = fields.Date()
 
 
 class DateTimeSchema(Schema):
-    start_dt = fields.DateTime()
-    end_dt = fields.DateTime()
+    start_dt = NaiveDateTime()
+    end_dt = NaiveDateTime()
 
 
-def patch_time():
+def patch_time(args):
     """Patch `request.args` to add a time component."""
     dts = DateTimeSchema()
-    args = parser.parse(date_args, request)
+    ds = DateSchema()
     res = {}
-    res[u'start_dt'] = datetime.combine(args['start_dt'], time(0, 0))
-    if 'end_dt' in args:
-        res[u'end_dt'] = datetime.combine(args['end_dt'], time(23, 59))
-    data = request.args.to_dict()
-    data.update({k: unicode(v) for k, v in dts.dump(res).data.viewitems()})
-    # Replate request args with updated version
-    request.args = ImmutableMultiDict(data)
+    unserialized_args = ds.load(args).data
+    res['start_dt'] = datetime.combine(unserialized_args['start_dt'], time(0, 0))
+    if 'end_dt' in unserialized_args:
+        res['end_dt'] = datetime.combine(unserialized_args['end_dt'], time(23, 59))
+    # Replace request args with updated version
+    return dict(args, **dts.dump(res).data)
 
 
 class BurotelPlugin(IndicoPlugin):
@@ -54,6 +52,7 @@ class BurotelPlugin(IndicoPlugin):
         super(BurotelPlugin, self).init()
         current_app.before_request(self._before_request)
         self.inject_bundle('react.js', WPBurotelBase)
+        self.inject_bundle('react.css', WPBurotelBase)
         self.inject_bundle('semantic-ui.js', WPBurotelBase)
         self.inject_bundle('semantic-ui.css', WPBurotelBase)
         self.inject_bundle('burotel.js', WPBurotelBase)
@@ -65,6 +64,10 @@ class BurotelPlugin(IndicoPlugin):
 
     def _before_request(self):
         if 'start_dt' in request.args:
-            patch_time()
+            request.args = ImmutableMultiDict(patch_time(request.args.to_dict()))
+        if request.json and 'start_dt' in request.json:
+            data = patch_time(request.json)
+            request.data = json.dumps(data)
+            request._cached_json = data
         if request.endpoint in {'categories.display', 'rooms_new.roombooking'}:
             return redirect(url_for('plugin_burotel.landing'))

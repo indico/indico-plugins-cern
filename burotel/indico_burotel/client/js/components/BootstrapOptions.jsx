@@ -1,12 +1,12 @@
 import {Button} from 'semantic-ui-react';
 import React from 'react';
-import {Translate} from 'indico/react/i18n';
 import PropTypes from 'prop-types';
+import {Translate} from 'indico/react/i18n';
 
-export const EXPERIMENTS = ['ATLAS', 'CMS', 'ALICE']
+
+export const EXPERIMENTS = ['ATLAS', 'CMS', 'ALICE'];
 
 export default class BootstrapOptions extends React.Component {
-
     static propTypes = {
         setOptions: PropTypes.func.isRequired,
         options: PropTypes.object.isRequired
