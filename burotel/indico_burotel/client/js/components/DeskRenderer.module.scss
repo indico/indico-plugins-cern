@@ -19,9 +19,15 @@
 
 .building {
     margin-bottom: 3em;
+    border-left: 2px solid $pastel-gray;
+    padding-left: 1em;
 
     > h2 {
         color: $dark-gray;
+    }
+
+    .building-container {
+        margin: 0;
     }
 }
 
@@ -32,8 +38,7 @@
         color: $black;
     }
 
-    .room-container {
-        border-left: 10px solid $light-gray;
-        margin: 0;
+    .room-container:global(.ui.cards) {
+        margin: 0 0 0 10px;
     }
 }

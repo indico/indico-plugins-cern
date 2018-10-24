@@ -1,4 +1,4 @@
-import {Button, Form} from 'semantic-ui-react';
+import {Form} from 'semantic-ui-react';
 import React from 'react';
 import PropTypes from 'prop-types';
 import {Translate} from 'indico/react/i18n';
@@ -8,12 +8,11 @@ import {EXPERIMENTS} from './BootstrapOptions';
 
 // eslint-disable-next-line react/prop-types
 const divisionRenderer = ({division}) => (
-    (!division)
-        ? null : (
-            <span>
-                {division}
-            </span>
-        ));
+    (!division) ? null : (
+        <span>
+            {division}
+        </span>
+    ));
 
 
 class ExtraFilterForm extends FilterFormComponent {
