@@ -10,7 +10,7 @@ from __future__ import unicode_literals
 import json
 
 import requests
-from sqlalchemy.orm import joinedload, noload, subqueryload, undefer
+from sqlalchemy.orm import joinedload, subqueryload, undefer
 
 from indico.core.celery import celery
 from indico.core.db import db
@@ -21,9 +21,7 @@ from indico.modules.events.contributions.models.subcontributions import SubContr
 from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.modules.events.sessions import Session
 from indico.modules.events.sessions.models.blocks import SessionBlock
-from indico.modules.rb.models.equipment import EquipmentType
-from indico.modules.rb.models.locations import Location
-from indico.modules.rb.models.rooms import Room
+from indico.modules.rb_new.operations.rooms import search_for_rooms
 from indico.util.caching import memoize_request
 from indico.util.date_time import overlaps
 
@@ -41,9 +39,11 @@ def is_av_manager(user):
 @memoize_request
 def get_av_capable_rooms():
     """Returns a list of rooms with AV equipment"""
-    eq_types = EquipmentType.find_all(EquipmentType.name == 'Webcast/Recording', Location.name == 'CERN',
-                                      _join=EquipmentType.location)
-    return set(Room.find_with_filters({'available_equipment': eq_types}))
+    from indico_audiovisual.plugin import AVRequestsPlugin
+    feature = AVRequestsPlugin.settings.get('room_feature')
+    if not feature:
+        return set()
+    return set(search_for_rooms({'features': [feature.name]}))
 
 
 def _get_contrib(contrib_or_subcontrib):

@@ -10,15 +10,18 @@ from __future__ import unicode_literals
 from flask import g, request, session
 from flask_pluginengine import render_plugin_template, url_for_plugin
 from sqlalchemy.orm.attributes import flag_modified
+from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from wtforms.fields.html5 import URLField
 from wtforms.validators import DataRequired, ValidationError
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
+from indico.core.settings.converters import SettingConverter
 from indico.modules.events import Event
 from indico.modules.events.contributions import Contribution
 from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.modules.events.requests.views import WPRequestsEventManagement
+from indico.modules.rb.models.room_features import RoomFeature
 from indico.modules.users import User
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import EmailListField, MultipleItemsField, PrincipalListField
@@ -57,10 +60,25 @@ class PluginSettingsForm(IndicoForm):
     recording_cds_url = URLField(_('CDS URL'),
                                  description=_("The URL used when creating recording links. Must contain the {cds_id} "
                                                "placeholder."))
+    room_feature = QuerySelectField(_("Room feature"), [DataRequired()], allow_blank=True,
+                                    query_factory=lambda: RoomFeature.query, get_label='title',
+                                    description=_("The feature indicating that a room supports webcast/recording."))
 
     def validate_recording_cds_url(self, field):
         if field.data and '{cds_id}' not in field.data:
             raise ValidationError('{cds_id} placeholder is missing')
+
+
+class RoomFeatureConverter(SettingConverter):
+    """Convert a RoomFeature object to ID and backwards."""
+
+    @staticmethod
+    def from_python(value):
+        return value.id
+
+    @staticmethod
+    def to_python(value):
+        return RoomFeature.get(value)
 
 
 class AVRequestsPlugin(IndicoPlugin):
@@ -77,7 +95,11 @@ class AVRequestsPlugin(IndicoPlugin):
                         'webcast_ping_url': None,
                         'webcast_url': '',
                         'agreement_paper_url': None,
-                        'recording_cds_url': 'https://cds.cern.ch/record/{cds_id}'}
+                        'recording_cds_url': 'https://cds.cern.ch/record/{cds_id}',
+                        'room_feature': None}
+    settings_converters = {
+        'room_feature': RoomFeatureConverter,
+    }
     acl_settings = {'managers'}
 
     def init(self):
