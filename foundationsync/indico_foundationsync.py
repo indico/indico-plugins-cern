@@ -85,22 +85,22 @@ class FoundationSync(object):
         data['building'] = raw_data['BUILDING']
         data['floor'] = raw_data['FLOOR']
         data['number'] = raw_data['ROOM_NUMBER']
-        data['email'] = raw_data['RESPONSIBLE_EMAIL']
+        email = raw_data['RESPONSIBLE_EMAIL']
         if not data['building'] or not data['floor'] or not data['number']:
             raise SkipRoom('Error in Foundation - No value for BUILDING or FLOOR or ROOM_NUMBER')
 
         email_warning = None
-        if not data['email']:
+        if not email:
             email_warning = ('[%s] No value for RESPONSIBLE_EMAIL in Foundation', room_id)
             user = None
         else:
-            user = get_user_by_email(data['email'], create_pending=True)
+            user = get_user_by_email(email, create_pending=True)
             if not user:
                 email_warning = ('[%s] Bad RESPONSIBLE_EMAIL in Foundation: no user found with email %s',
-                                 data['email'], room_id)
+                                 email, room_id)
 
         data['owner'] = user
-        data['name'] = (raw_data.get('FRIENDLY_NAME') or '').strip()
+        data['verbose_name'] = (raw_data.get('FRIENDLY_NAME') or '').strip() or None
         data['capacity'] = int(raw_data['CAPACITY']) if raw_data['CAPACITY'] else None
         data['surface_area'] = int(raw_data['SURFACE']) if raw_data['SURFACE'] else None
         data['division'] = raw_data.get('DEPARTMENT')
@@ -127,12 +127,13 @@ class FoundationSync(object):
     def _update_room(self, room, room_data, room_attrs):
         room.is_active = True
         for k, v in room_data.iteritems():
-            setattr(room, k, v)
+            if getattr(room, k) != v:
+                setattr(room, k, v)
         for attribute, value in room_attrs.iteritems():
             if value:
                 value = value.strip()
-            room.set_attribute_value(attribute, value)
-        room.update_name()
+            if room.get_attribute_value(attribute) != value:
+                room.set_attribute_value(attribute, value)
         return room
 
     def fetch_buildings_coordinates(self, connection):
@@ -168,14 +169,12 @@ class FoundationSync(object):
             equipment = EquipmentType.find_first(EquipmentType.name == row['NAME'])
             if not equipment:
                 equipment = EquipmentType(name=row['NAME'])
-                self._location.equipment_types.append(equipment)
+                db.session.add(equipment)
                 counter['added'] += 1
                 self._logger.info(u"Added equipment '%s'", equipment)
             foundation_equipment_ids.append(equipment.id)
 
-        vc_parent = self._location.get_equipment_by_name('Video conference')
-        for equipment in EquipmentType.find(~EquipmentType.id.in_(foundation_equipment_ids),
-                                            EquipmentType.parent_id != vc_parent.id):
+        for equipment in EquipmentType.find(~EquipmentType.id.in_(foundation_equipment_ids)):
             self._logger.info("Mismatch: Equipment '%s' found in Indico but not in Foundation", equipment.name)
 
         db.session.commit()
@@ -209,10 +208,8 @@ class FoundationSync(object):
                 self._logger.info("Skipped room %s: %s", room_id, e)
                 continue
 
-            room = Room.find_first(Room.building == room_data['building'],
-                                   Room.floor == room_data['floor'],
-                                   Room.number == room_data['number'],
-                                   location=self._location)
+            room = Room.query.filter_by(building=room_data['building'], floor=room_data['floor'],
+                                        number=room_data['number'], location=self._location).first()
 
             if room_data['owner'] is None:
                 del room_data['owner']
@@ -265,55 +262,37 @@ class FoundationSync(object):
 
         counter = Counter()
         foundation_room_equipment = defaultdict(list)
-        vc_parent = self._location.get_equipment_by_name('Video conference')
-        vc_equipment = set(self._location.equipment_types
-                           .filter(EquipmentType.parent_id == vc_parent.id))
-        default_vc_equipment = set(self._location.equipment_types
-                                   .filter(EquipmentType.parent_id == vc_parent.id,
-                                           EquipmentType.name.in_(DEFAULT_VC_EQUIPMENT)))
         for row in cursor:
             row = self._prepare_row(row, cursor)
             counter['found'] += 1
 
             room_id = row['MEETING_ROOM_ID'].strip().replace(' ', '-')
             equipment_name = row['EQUIPMENT_NAME']
+            if equipment_name == 'Video conference':
+                equipment_name = 'Vidyo'
             building, floor, number = room_id.split('-')
 
-            equipment = self._location.get_equipment_by_name(equipment_name)
-            room = Room.find_first(Room.building == building,
-                                   Room.floor == floor,
-                                   Room.number == number)
+            equipment = EquipmentType.query.filter_by(name=equipment_name).first()
+            room = Room.query.filter_by(building=building, floor=floor, number=number).first()
             try:
                 if not room:
                     raise SkipRoom('Room not found in Indico DB')
                 if not equipment:
                     raise SkipRoom('Equipment %s not found in Indico DB', equipment_name)
-                if not room.available_equipment.filter(EquipmentType.id == equipment.id).count():
+                if equipment not in room.available_equipment:
                     room.available_equipment.append(equipment)
                     counter['added'] += 1
                     self._logger.info("Added equipment '%s' to room '%s'", equipment.name, room.full_name)
-                    if equipment == vc_parent:
-                        db_vc_equipment = set(room.available_equipment.filter(EquipmentType.parent_id == vc_parent.id))
-                        missing_vc_equipment = default_vc_equipment - db_vc_equipment
-                        for eq in missing_vc_equipment:
-                            room.available_equipment.append(eq)
-                            self._logger.info("Added VC equipment '%s' to room '%s'", eq.name, room.full_name)
                 foundation_room_equipment[room].append(equipment.id)
             except SkipRoom as e:
                 counter['skipped'] += 1
                 self._logger.info("Skipped room %s: %s", room_id, e)
 
         for room, equipment_types in foundation_room_equipment.iteritems():
-            # We handle VC subequipment like equipment that's in the foundation DB since the latter only contains "VC"
-            # but no information about the actually available vc equipment...
-            vc_equipment_ids = {eq.id for eq in vc_equipment}
-            foundation_equipment_ids = set(equipment_types) | vc_equipment_ids
-            for equipment in room.available_equipment.filter(~EquipmentType.id.in_(foundation_equipment_ids)):
-                if equipment == vc_parent:
-                    for vc_equip in room.available_equipment.filter(EquipmentType.parent_id == vc_parent.id):
-                        room.available_equipment.remove(vc_equip)
-                        counter['deleted'] += 1
-                        self._logger.info("Deleted VC equipment '%s' from room '%s'", vc_equip.name, room.full_name)
+            foundation_equipment_ids = set(equipment_types)
+            for equipment in room.available_equipment:
+                if equipment.id in foundation_equipment_ids:
+                    continue
                 room.available_equipment.remove(equipment)
                 counter['deleted'] += 1
                 self._logger.info("Deleted equipment '%s' from room '%s'", equipment.name, room.full_name)
