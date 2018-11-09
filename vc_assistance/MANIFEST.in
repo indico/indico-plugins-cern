@@ -1,0 +1,5 @@
+graft indico_vc_assistance/static
+graft indico_vc_assistance/templates
+graft indico_vc_assistance/translations
+
+global-exclude *.pyc __pycache__ .keep
