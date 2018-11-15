@@ -144,6 +144,11 @@ definitions:
     stylesheet: cern/clic.scss
     title: CLIC
 
+  rucio:
+    <<: *standard_themes_cern
+    stylesheet: cern/rucio.scss
+    title: Rucio
+
   # Meetings - CERN Administrative
   administrative: &administrative
     event_types: [conference, meeting]
