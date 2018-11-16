@@ -148,6 +148,7 @@ definitions:
   administrative: &administrative
     event_types: [conference, meeting]
     stylesheet: cern/administrative.scss
+    print_stylesheet: cern/print/administrative.scss
     template: :cern/administrative/event.html
     tt_template: :cern/administrative/timetable.html
     title: Administrative style
