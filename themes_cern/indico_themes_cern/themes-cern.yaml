@@ -153,6 +153,7 @@ definitions:
   administrative: &administrative
     event_types: [conference, meeting]
     stylesheet: administrative.scss
+    print_stylesheet: print/administrative.scss
     template: :administrative/event.html
     tt_template: :administrative/timetable.html
     title: Administrative style
