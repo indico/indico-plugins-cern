@@ -1,7 +1,7 @@
 {% from 'events/display/common/_manage_button.html' import render_manage_button %}
 {% from 'events/display/indico/_common.html' import render_users %}
-{% from 'themes_cern:cern/administrative/timetable/_common.html' import render_linked_attachments %}
-{% from 'themes_cern:cern/administrative/timetable/_subcontribution.html' import render_subcontribution %}
+{% from 'themes_cern:administrative/timetable/_common.html' import render_linked_attachments %}
+{% from 'themes_cern:administrative/timetable/_subcontribution.html' import render_subcontribution %}
 
 {% macro render_contribution(contrib, event, show_notes=false, numeral=none, show_numerals=true, hide_time=false,
                              link_documents=false, print_mode=false, timezone=none) -%}
