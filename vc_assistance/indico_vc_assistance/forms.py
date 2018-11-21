@@ -7,8 +7,14 @@
 
 from __future__ import unicode_literals
 
+from wtforms.fields.simple import TextAreaField
+
 from indico.modules.events.requests import RequestFormBase
+
+from indico_vc_assistance import _
 
 
 class VCRequestForm(RequestFormBase):
-    pass
+    comment = TextAreaField(_('Comment'),
+                            description=_('If you have any additional comments or instructions,'
+                                          'please write them down here.'))

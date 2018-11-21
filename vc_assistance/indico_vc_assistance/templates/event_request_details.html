@@ -1,0 +1,14 @@
+{% extends 'events/requests/event_request_details.html' %}
+{% from 'message_box.html' import message_box %}
+
+{% block content %}
+    {% if not user_authorized %}
+        {% call message_box('warning') %}
+            {% trans -%}
+                Unfortunately you are not allowed to request videconference assistance.
+            {%- endtrans %}
+        {% endcall %}
+    {% else %}
+        {{ super() }}
+    {% endif %}
+{% endblock %}
