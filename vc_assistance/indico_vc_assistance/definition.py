@@ -14,14 +14,14 @@ from indico.modules.events.requests import RequestDefinitionBase
 from indico.modules.events.requests.models.requests import RequestState
 
 from indico_vc_assistance import _
-from indico_vc_assistance.forms import VCRequestForm
+from indico_vc_assistance.forms import VCAssistanceRequestForm
 from indico_vc_assistance.util import can_request_assistance
 
 
-class VCRequest(RequestDefinitionBase):
+class VCAssistanceRequest(RequestDefinitionBase):
     name = 'vc-assistance'
     title = _('Videoconference assistance')
-    form = VCRequestForm
+    form = VCAssistanceRequestForm
 
     @classmethod
     def can_be_managed(cls, user):
@@ -30,11 +30,11 @@ class VCRequest(RequestDefinitionBase):
     @classmethod
     def render_form(cls, event, **kwargs):
         kwargs['user_authorized'] = can_request_assistance(session.user)
-        return super(VCRequest, cls).render_form(event, **kwargs)
-    
+        return super(VCAssistanceRequest, cls).render_form(event, **kwargs)
+
     @classmethod
     def send(cls, req, data):
         if not can_request_assistance(session.user):
             raise Forbidden
-        super(VCRequest, cls).send(req, data)
+        super(VCAssistanceRequest, cls).send(req, data)
         req.state = RequestState.accepted

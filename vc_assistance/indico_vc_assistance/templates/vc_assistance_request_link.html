@@ -1,0 +1,15 @@
+{% from 'message_box.html' import message_box %}
+{% if room_with_vc_attached and no_request %}
+    {% call message_box('highlight') %}
+        {% set link_start -%}
+            <a href="{{ url_for('requests.event_requests_details', req) }}">
+        {%- endset %}
+        {% set link_end -%}
+            </a>
+        {%- endset %}
+        {% trans -%}
+            Videconference rooms have been added with no assistance requested,
+            {{ link_start }}would you like to request assistance{{ link_end }}?
+        {%- endtrans %}
+    {% endcall %}
+{% endif %}

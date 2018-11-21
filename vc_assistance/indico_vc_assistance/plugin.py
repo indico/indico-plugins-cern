@@ -8,17 +8,19 @@
 from __future__ import unicode_literals
 
 from flask import session
-from flask_pluginengine import url_for_plugin
+from flask_pluginengine import url_for_plugin, render_plugin_template
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
+from indico.modules.events.requests.models.requests import Request, RequestState
+from indico.modules.vc import VCRoomEventAssociation
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import PrincipalListField
 from indico.web.menu import TopMenuItem
 
 from indico_vc_assistance import _
 from indico_vc_assistance.blueprint import blueprint
-from indico_vc_assistance.definition import VCRequest
+from indico_vc_assistance.definition import VCAssistanceRequest
 from indico_vc_assistance.util import is_vc_support
 
 
@@ -30,7 +32,7 @@ class PluginSettingsForm(IndicoForm):
                                                   'assistance.'))
 
 
-class VCRequestsPlugin(IndicoPlugin):
+class VCAssistanceRequestPlugin(IndicoPlugin):
     """Videoconference Assistance Request
 
     Provides a service request where participants can ask for their
@@ -42,7 +44,8 @@ class VCRequestsPlugin(IndicoPlugin):
     acl_settings = {'authorized', 'vc_support'}
 
     def init(self):
-        super(VCRequestsPlugin, self).init()
+        super(VCAssistanceRequestPlugin, self).init()
+        self.template_hook('before-vc-list', self._get_vc_assistance_request_link)
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
         self.connect(signals.menu.items, self._extend_top_menu, sender='top-menu')
 
@@ -50,10 +53,19 @@ class VCRequestsPlugin(IndicoPlugin):
         return blueprint
 
     def _get_event_request_definitions(self, sender, **kwargs):
-        return VCRequest
+        return VCAssistanceRequest
 
     def _extend_top_menu(self, sender, **kwargs):
         if not session.user or not is_vc_support(session.user):
             return
         return TopMenuItem('services-cern-vc-assistance', _('Videoconference assistance'),
                            url_for_plugin('vc_assistance.request_list'), section='services')
+
+    def _get_vc_assistance_request_link(self, event):
+        from definition import VCAssistanceRequest
+        req = Request.find_latest_for_event(event, VCAssistanceRequest.name)
+        room_with_vc_attached = any(vc for vc in VCRoomEventAssociation.find_for_event(event, include_hidden=True)
+                                    if vc.link_object.room.has_vc)
+        return render_plugin_template('vc_assistance_request_link.html', req=req,
+                                      no_request=req.state != RequestState.accepted,
+                                      room_with_vc_attached=room_with_vc_attached)

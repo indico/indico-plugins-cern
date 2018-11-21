@@ -24,7 +24,7 @@ setup(
         'indico>=2.2.dev0'
     ],
     entry_points={
-        'indico.plugins': {'vc_assistance = indico_vc_assistance.plugin:VCRequestsPlugin'},
+        'indico.plugins': {'vc_assistance = indico_vc_assistance.plugin:VCAssistanceRequestPlugin'},
     },
     classifiers=[
         'Environment :: Plugins',

@@ -19,7 +19,7 @@ def is_vc_support(user):
 
 
 def _is_in_acl(user, acl):
-    from indico_vc_assistance.plugin import VCRequestsPlugin
+    from indico_vc_assistance.plugin import VCAssistanceRequestPlugin
     if user.is_admin:
         return True
-    return VCRequestsPlugin.settings.acls.contains_user(acl, user)
+    return VCAssistanceRequestPlugin.settings.acls.contains_user(acl, user)
