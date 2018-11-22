@@ -9,6 +9,13 @@
             {%- endtrans %}
         {% endcall %}
     {% else %}
+        {% if not request_accepted and not has_vc_room_attached %}
+            {% call message_box('warning') %}
+                {% trans -%}
+                    No videoconference equipment has been found in the rooms attached to this event.
+                {%- endtrans %}
+            {% endcall %}
+        {% endif %}
         {{ super() }}
     {% endif %}
 {% endblock %}

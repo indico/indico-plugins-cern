@@ -7,6 +7,8 @@
 
 from __future__ import unicode_literals
 
+from indico.modules.vc import VCRoomEventAssociation
+
 
 def can_request_assistance(user):
     """Check if a user can request VC assistance"""
@@ -23,3 +25,8 @@ def _is_in_acl(user, acl):
     if user.is_admin:
         return True
     return VCAssistanceRequestPlugin.settings.acls.contains_user(acl, user)
+
+
+def has_room_with_vc_attached(event):
+    return any(vc for vc in VCRoomEventAssociation.find_for_event(event, include_hidden=True)
+               if vc.link_object.room.has_vc)

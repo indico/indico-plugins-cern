@@ -1,5 +1,5 @@
 {% from 'message_box.html' import message_box %}
-{% if room_with_vc_attached and no_request %}
+{% if has_vc_room_attached and not request_accepted %}
     {% call message_box('highlight') %}
         {% set link_start -%}
             <a href="{{ url_for('requests.event_requests_details', req) }}">

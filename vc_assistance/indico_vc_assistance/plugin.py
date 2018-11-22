@@ -13,7 +13,6 @@ from flask_pluginengine import url_for_plugin, render_plugin_template
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
 from indico.modules.events.requests.models.requests import Request, RequestState
-from indico.modules.vc import VCRoomEventAssociation
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import PrincipalListField
 from indico.web.menu import TopMenuItem
@@ -21,7 +20,7 @@ from indico.web.menu import TopMenuItem
 from indico_vc_assistance import _
 from indico_vc_assistance.blueprint import blueprint
 from indico_vc_assistance.definition import VCAssistanceRequest
-from indico_vc_assistance.util import is_vc_support
+from indico_vc_assistance.util import is_vc_support, has_room_with_vc_attached
 
 
 class PluginSettingsForm(IndicoForm):
@@ -64,8 +63,7 @@ class VCAssistanceRequestPlugin(IndicoPlugin):
     def _get_vc_assistance_request_link(self, event):
         from definition import VCAssistanceRequest
         req = Request.find_latest_for_event(event, VCAssistanceRequest.name)
-        room_with_vc_attached = any(vc for vc in VCRoomEventAssociation.find_for_event(event, include_hidden=True)
-                                    if vc.link_object.room.has_vc)
+        has_vc_room_attached = has_room_with_vc_attached(event)
         return render_plugin_template('vc_assistance_request_link.html', req=req,
-                                      no_request=req.state != RequestState.accepted,
-                                      room_with_vc_attached=room_with_vc_attached)
+                                      request_accepted=req.state == RequestState.accepted,
+                                      has_vc_room_attached=has_vc_room_attached)
