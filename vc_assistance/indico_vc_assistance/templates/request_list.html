@@ -1,0 +1,51 @@
+{% extends 'overview/base.html' %}
+{% block title %}Videoconference assistance{% endblock %}
+
+{% macro result_group_title(key) %}
+    {{ key | format_human_date(format='full') | title }}
+{% endmacro %}
+
+{% macro result_group_entries(items) %}
+    <tr class="result-group-header">
+        <td colspan="2"></td>
+        <td>
+            <div class="title">
+                {% trans %}Event{% endtrans %}
+            </div>
+        </td>
+        <td>
+            <div class="title">
+                {% trans %}Comment{% endtrans %}
+            </div>
+        </td>
+    </tr>
+    {% for req, obj, start_time in items %}
+        {{ request_entry(req, obj, start_time) }}
+    {% endfor %}
+{% endmacro %}
+
+{% macro request_entry(req, obj, start_time) %}
+    <tr class="result-group-entry">
+        <td class="entry-time">
+            <a class="discreet-link" href="{{ url_for('requests.event_requests_details', req) }}">
+                {{ start_time | format_time('HH:mm') }}
+            </a>
+        </td>
+        <td class="entry-location">
+            <span class="room">
+                {{ obj.room_name }}
+            </span>
+            <span class="location">
+                ({{ obj.venue_name }})
+            </span>
+        </td>
+        <td class="request-event">
+            <a href="{{ req.event.url }}">
+                {{ req.event.title }}
+            </a>
+        </td>
+        <td class="request-comment">
+            {{ req.data.comment }}
+        </td>
+    </tr>
+{% endmacro %}

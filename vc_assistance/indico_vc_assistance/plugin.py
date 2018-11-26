@@ -8,7 +8,7 @@
 from __future__ import unicode_literals
 
 from flask import session
-from flask_pluginengine import url_for_plugin, render_plugin_template
+from flask_pluginengine import render_plugin_template, url_for_plugin
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
@@ -20,7 +20,8 @@ from indico.web.menu import TopMenuItem
 from indico_vc_assistance import _
 from indico_vc_assistance.blueprint import blueprint
 from indico_vc_assistance.definition import VCAssistanceRequest
-from indico_vc_assistance.util import is_vc_support, has_room_with_vc_attached
+from indico_vc_assistance.util import has_room_with_vc_attached, is_vc_support
+from indico_vc_assistance.views import WPVCAssistance
 
 
 class PluginSettingsForm(IndicoForm):
@@ -44,6 +45,7 @@ class VCAssistanceRequestPlugin(IndicoPlugin):
 
     def init(self):
         super(VCAssistanceRequestPlugin, self).init()
+        self.inject_bundle('main.css', WPVCAssistance)
         self.template_hook('before-vc-list', self._get_vc_assistance_request_link)
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
         self.connect(signals.menu.items, self._extend_top_menu, sender='top-menu')

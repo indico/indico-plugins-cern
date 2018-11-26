@@ -7,11 +7,20 @@
 
 from __future__ import unicode_literals
 
-from flask import session
+from collections import OrderedDict
+from operator import itemgetter
+
+from flask import request, session
 from werkzeug.exceptions import Forbidden
 
+from indico.util.date_time import as_utc, get_day_end, get_day_start
+from indico.util.struct.iterables import group_list
+from indico.web.flask.util import url_for
 from indico.web.rh import RHProtected
-from indico_vc_assistance.util import is_vc_support
+
+from indico_vc_assistance.forms import RequestListFilterForm
+from indico_vc_assistance.util import find_requests, is_vc_support
+from indico_vc_assistance.views import WPVCAssistance
 
 
 class RHRequestList(RHProtected):
@@ -23,4 +32,15 @@ class RHRequestList(RHProtected):
             raise Forbidden
 
     def _process(self):
-        return 'todo'
+        form = RequestListFilterForm(request.args, csrf_enabled=False)
+        results = None
+        if form.validate_on_submit():
+            reverse = form.direction.data == 'desc'
+            from_dt = as_utc(get_day_start(form.start_date.data)) if form.start_date.data else None
+            to_dt = as_utc(get_day_end(form.end_date.data)) if form.end_date.data else None
+            results = find_requests(from_dt=from_dt, to_dt=to_dt)
+            results = [(req, req.event, req.event.start_dt) for req in results]
+            results = group_list(results, lambda x: x[2].date(), itemgetter(2), sort_reverse=reverse)
+            results = OrderedDict(sorted(results.viewitems(), key=itemgetter(0), reverse=reverse))
+        return WPVCAssistance.render_template('request_list.html', form=form, results=results,
+                                              action=url_for('.request_list'))
