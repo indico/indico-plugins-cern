@@ -8,14 +8,14 @@ import {Slot} from 'indico/react/util';
 import './DeskRenderer.module.scss';
 
 
-function Desk({desk: {name, division}, desk, actionRenderer, ...rest}) {
+function Desk({desk: {fullName, division}, desk, actionRenderer, ...rest}) {
     const {actions} = Slot.split(actionRenderer(desk));
 
     return (
         <Card {...rest}>
             <Card.Content>
                 <Card.Header>
-                    {name}
+                    {fullName}
                 </Card.Header>
                 <Card.Meta style={{fontSize: '0.8em'}}>
                     {division}
