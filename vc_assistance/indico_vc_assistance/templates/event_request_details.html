@@ -10,12 +10,21 @@
         {% endcall %}
     {% else %}
         {% if not request_accepted and not has_vc_room_attached %}
+            {% set link_start -%}
+                <a href="{{ url_for('vc.manage_vc_rooms', event) }}">
+            {%- endset %}
+            {% set link_end -%}
+                </a>
+            {%- endset %}
             {% call message_box('warning') %}
                 {% trans -%}
-                    No videoconference equipment has been found in the rooms attached to this event.
+                    It is not possible to request assistance as no videoconference
+                    equipment has been found in the rooms attached to this event.
+                    {{ link_start }}Manage videoconference rooms{{ link_end }}.
                 {%- endtrans %}
             {% endcall %}
+        {% else %}
+            {{ super() }}
         {% endif %}
-        {{ super() }}
     {% endif %}
 {% endblock %}

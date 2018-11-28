@@ -35,6 +35,10 @@ def _is_in_acl(user, acl):
 
 
 def has_room_with_vc_attached(event):
+    """
+    Check if an event or any of its contributions and sessions have some
+    vc room attached to a physical room which has videoconference equipment.
+    """
     return any(vc for vc in VCRoomEventAssociation.find_for_event(event, include_hidden=True)
                if vc.link_object.room is not None and vc.link_object.room in get_vc_capable_rooms())
 

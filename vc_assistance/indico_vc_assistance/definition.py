@@ -29,9 +29,9 @@ class VCAssistanceRequest(RequestDefinitionBase):
 
     @classmethod
     def render_form(cls, event, **kwargs):
+        req = kwargs['req']
         kwargs['user_authorized'] = can_request_assistance(session.user)
         kwargs['has_vc_room_attached'] = has_room_with_vc_attached(event)
-        req = kwargs['req']
         kwargs['request_accepted'] = req is not None and req.state == RequestState.accepted
         return super(VCAssistanceRequest, cls).render_form(event, **kwargs)
 
