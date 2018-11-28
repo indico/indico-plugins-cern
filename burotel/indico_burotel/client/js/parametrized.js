@@ -7,8 +7,10 @@ import DefaultMenu from 'indico/modules/rb_new/components/Menu';
 import DefaultBookingFilterBar from 'indico/modules/rb_new/modules/bookRoom/BookingFilterBar';
 import DefaultTimeInformation from 'indico/modules/rb_new/components/TimeInformation';
 import DefaultBookRoom from 'indico/modules/rb_new/modules/bookRoom/BookRoom';
+import DefaultRoomBookingMap from 'indico/modules/rb_new/common/map/RoomBookingMap';
 import DefaultLandingStatistics from 'indico/modules/rb_new/modules/landing/LandingStatistics';
 import {Translate} from 'indico/react/i18n';
+import MapMarkers from './components/MapMarkers';
 
 import {parametrize} from './util';
 
@@ -48,6 +50,10 @@ const LandingStatistics = parametrize(DefaultLandingStatistics, () => ({
     }
 }));
 
+const RoomBookingMap = parametrize(DefaultRoomBookingMap, {
+    markerComponent: MapMarkers
+});
+
 const Menu = parametrize(DefaultMenu, () => ({
     labels: {
         bookRoom: Translate.string('Book a Desk'),
@@ -62,5 +68,6 @@ export default {
     BookRoom,
     TimeInformation,
     LandingStatistics,
-    Menu
+    Menu,
+    RoomBookingMap
 };
