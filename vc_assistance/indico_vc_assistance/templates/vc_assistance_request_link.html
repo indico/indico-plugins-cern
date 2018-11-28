@@ -2,7 +2,7 @@
 {% if has_vc_room_attached and not request_accepted %}
     {% call message_box('highlight') %}
         {% set link_start -%}
-            <a href="{{ url_for('requests.event_requests_details', req) }}">
+            <a href="{{ url_for('requests.event_requests_details', event, type=name) }}">
         {%- endset %}
         {% set link_end -%}
             </a>

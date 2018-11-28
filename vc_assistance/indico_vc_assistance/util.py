@@ -12,7 +12,9 @@ from sqlalchemy.orm import joinedload
 from indico.core.db.sqlalchemy.util.queries import limit_groups
 from indico.modules.events import Event
 from indico.modules.events.requests.models.requests import Request, RequestState
+from indico.modules.rb_new.operations.rooms import search_for_rooms
 from indico.modules.vc import VCRoomEventAssociation
+from indico.util.caching import memoize_request
 
 
 def can_request_assistance(user):
@@ -34,7 +36,7 @@ def _is_in_acl(user, acl):
 
 def has_room_with_vc_attached(event):
     return any(vc for vc in VCRoomEventAssociation.find_for_event(event, include_hidden=True)
-               if vc.link_object.room.has_vc)
+               if vc.link_object.room is not None and vc.link_object.room in get_vc_capable_rooms())
 
 
 def find_requests(from_dt=None, to_dt=None):
@@ -58,3 +60,13 @@ def find_requests(from_dt=None, to_dt=None):
         if to_dt is not None and event.start_dt > to_dt:
             continue
         yield req
+
+
+@memoize_request
+def get_vc_capable_rooms():
+    """Returns a list of rooms with VC equipment"""
+    from indico_vc_assistance.plugin import VCAssistanceRequestPlugin
+    feature = VCAssistanceRequestPlugin.settings.get('room_feature')
+    if not feature:
+        return set()
+    return set(search_for_rooms({'features': [feature.name]}))

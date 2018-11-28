@@ -9,10 +9,14 @@ from __future__ import unicode_literals
 
 from flask import session
 from flask_pluginengine import render_plugin_template, url_for_plugin
+from wtforms.ext.sqlalchemy.fields import QuerySelectField
+from wtforms.validators import DataRequired
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
+from indico.core.settings.converters import SettingConverter
 from indico.modules.events.requests.models.requests import Request, RequestState
+from indico.modules.rb.models.room_features import RoomFeature
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import PrincipalListField
 from indico.web.menu import TopMenuItem
@@ -25,11 +29,26 @@ from indico_vc_assistance.views import WPVCAssistance
 
 
 class PluginSettingsForm(IndicoForm):
-    managers = PrincipalListField(_('Managers'), groups=True,
-                                  description=_('List of users who can request videoconference assistance.'))
+    authorized = PrincipalListField(_('Authorized users'), groups=True,
+                                    description=_('List of users who can request videoconference assistance.'))
     vc_support = PrincipalListField(_('Videoconference support'), groups=True,
                                     description=_('List of users who can view the list of events with videoconference '
                                                   'assistance.'))
+    room_feature = QuerySelectField(_("Room feature"), [DataRequired()], allow_blank=True,
+                                    query_factory=lambda: RoomFeature.query, get_label='title',
+                                    description=_("The feature indicating that a room supports videoconference."))
+
+
+class RoomFeatureConverter(SettingConverter):
+    """Convert a RoomFeature object to ID and backwards."""
+
+    @staticmethod
+    def from_python(value):
+        return value.id
+
+    @staticmethod
+    def to_python(value):
+        return RoomFeature.get(value)
 
 
 class VCAssistanceRequestPlugin(IndicoPlugin):
@@ -41,7 +60,11 @@ class VCAssistanceRequestPlugin(IndicoPlugin):
 
     configurable = True
     settings_form = PluginSettingsForm
+    default_settings = {'room_feature': None}
     acl_settings = {'authorized', 'vc_support'}
+    settings_converters = {
+        'room_feature': RoomFeatureConverter,
+    }
 
     def init(self):
         super(VCAssistanceRequestPlugin, self).init()
@@ -66,6 +89,6 @@ class VCAssistanceRequestPlugin(IndicoPlugin):
         from definition import VCAssistanceRequest
         req = Request.find_latest_for_event(event, VCAssistanceRequest.name)
         has_vc_room_attached = has_room_with_vc_attached(event)
-        return render_plugin_template('vc_assistance_request_link.html', req=req,
-                                      request_accepted=req.state == RequestState.accepted,
+        return render_plugin_template('vc_assistance_request_link.html', event=event, name=VCAssistanceRequest.name,
+                                      request_accepted=req is not None and req.state == RequestState.accepted,
                                       has_vc_room_attached=has_vc_room_attached)
