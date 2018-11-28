@@ -15,6 +15,7 @@ from wtforms.validators import DataRequired
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
 from indico.core.settings.converters import SettingConverter
+from indico.modules.events import Event
 from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.modules.rb.models.room_features import RoomFeature
 from indico.web.forms.base import IndicoForm
@@ -71,6 +72,7 @@ class VCAssistanceRequestPlugin(IndicoPlugin):
         self.inject_bundle('main.css', WPVCAssistance)
         self.template_hook('before-vc-list', self._get_vc_assistance_request_link)
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
+        self.connect(signals.acl.can_access, self._can_access_event, sender=Event)
         self.connect(signals.menu.items, self._extend_top_menu, sender='top-menu')
 
     def get_blueprints(self):
@@ -78,6 +80,10 @@ class VCAssistanceRequestPlugin(IndicoPlugin):
 
     def _get_event_request_definitions(self, sender, **kwargs):
         return VCAssistanceRequest
+
+    def _can_access_event(self, sender, user, **kwargs):
+        if user is not None and is_vc_support(user):
+            return True
 
     def _extend_top_menu(self, sender, **kwargs):
         if not session.user or not is_vc_support(session.user):
