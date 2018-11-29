@@ -1,6 +1,13 @@
 {% extends 'events/requests/event_request_details.html' %}
 {% from 'message_box.html' import message_box %}
 
+{% set link_start -%}
+    <a href="{{ url_for('vc.manage_vc_rooms', event) }}">
+{%- endset %}
+{% set link_end -%}
+    </a>
+{%- endset %}
+
 {% block content %}
     {% if not user_authorized %}
         {% call message_box('warning') %}
@@ -10,16 +17,10 @@
         {% endcall %}
     {% else %}
         {% if not request_accepted and not has_vc_room_attached %}
-            {% set link_start -%}
-                <a href="{{ url_for('vc.manage_vc_rooms', event) }}">
-            {%- endset %}
-            {% set link_end -%}
-                </a>
-            {%- endset %}
             {% call message_box('warning') %}
                 {% trans -%}
-                    It is not possible to request assistance as no videoconference
-                    equipment has been found in the rooms attached to this event.
+                    This event does not have any rooms attached with videoconference
+                    equipment, so it is not possible to request assistance.
                     {{ link_start }}Manage videoconference rooms{{ link_end }}.
                 {%- endtrans %}
             {% endcall %}
@@ -28,3 +29,16 @@
         {% endif %}
     {% endif %}
 {% endblock %}
+
+{% block warnings %}
+    {{ super() }}
+    {% if request_accepted and not has_vc_room_attached %}
+        {% call message_box('warning') %}
+            {% trans -%}
+                Videoconference assistance won't be provided as this event
+                does not have any room attached with videoconference equipment.
+                {{ link_start }}Manage videoconference rooms{{ link_end }}.
+            {%- endtrans %}
+        {% endcall %}
+    {% endif %}
+{%  endblock %}
