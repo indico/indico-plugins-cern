@@ -24,7 +24,7 @@ from indico_vc_assistance.views import WPVCAssistance
 
 
 class RHRequestList(RHProtected):
-    """Provides a list of webcast/recording requests"""
+    """Provides a list of videoconference assistance requests"""
 
     def _check_access(self):
         RHProtected._check_access(self)

@@ -7,10 +7,20 @@
 
 {% macro result_group_entries(items) %}
     <tr class="result-group-header">
-        <td colspan="2"></td>
+        <td></td>
+        <td>
+            <div class="title">
+                {% trans %}Room{% endtrans %}
+            </div>
+        </td>
         <td>
             <div class="title">
                 {% trans %}Event{% endtrans %}
+            </div>
+        </td>
+        <td>
+            <div class="title">
+                {% trans %}VC room{% endtrans %}
             </div>
         </td>
         <td>
@@ -32,17 +42,42 @@
             </a>
         </td>
         <td class="entry-location">
+        {% if obj.room_name or obj.venue_name %}
             <span class="room">
                 {{ obj.room_name }}
             </span>
-            <span class="location">
-                ({{ obj.venue_name }})
-            </span>
+            {% if obj.venue_name %}
+                <span class="location">
+                    ({{ obj.venue_name }})
+                </span>
+            {% endif %}
+        {% else %}
+            <i class="icon-warning"
+               title="{% trans %}This event seems to have no location associated{% endtrans %}">
+            </i>
+        {% endif %}
         </td>
         <td class="request-event">
             <a href="{{ req.event.url }}">
                 {{ req.event.title }}
             </a>
+        </td>
+        <td class="entry-vc-room">
+            {% if obj.vc_room_associations %}
+                {% for obj_vc_room in obj.vc_room_associations %}
+                    <a class="discreet-link"
+                       data-href="{{ url_for('vc.manage_vc_rooms_modify', obj_vc_room) }}"
+                       data-ajax-dialog
+                       data-reload-after>
+                        {{- obj_vc_room.vc_room.name -}}
+                    </a>
+                    {{- "," if not loop.last -}}
+                {% endfor %}
+            {% else %}
+                <i class="icon-warning"
+                   title="{% trans %}This event seems to have no VC rooms associated{% endtrans %}">
+                </i>
+            {% endif %}
         </td>
         <td class="request-comment">
             {{ req.data.comment }}

@@ -11,4 +11,10 @@
     td.entry-location {
         width: 15% !important;
     }
+
+    td.entry-vc-room, td.entry-location {
+        .icon-warning {
+            color: $yellow;
+        }
+    }
 }
