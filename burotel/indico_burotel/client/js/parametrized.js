@@ -10,9 +10,8 @@ import DefaultBookRoom from 'indico/modules/rb_new/modules/bookRoom/BookRoom';
 import DefaultRoomBookingMap from 'indico/modules/rb_new/common/map/RoomBookingMap';
 import DefaultLandingStatistics from 'indico/modules/rb_new/modules/landing/LandingStatistics';
 import {Translate} from 'indico/react/i18n';
+import {parametrize} from 'indico/react/util';
 import MapMarkers from './components/MapMarkers';
-
-import {parametrize} from './util';
 
 
 const App = parametrize(DefaultApp, {
