@@ -17,4 +17,15 @@
             color: $yellow;
         }
     }
+
+    tbody {
+        &.contrib-details {
+            background-color: $light-gray;
+        }
+
+        &.collapsed {
+            display: none;
+        }
+    }
+
 }

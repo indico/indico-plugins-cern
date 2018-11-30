@@ -7,11 +7,14 @@
 
 from __future__ import unicode_literals
 
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, subqueryload, undefer
 
+from indico.core.db import db
 from indico.core.db.sqlalchemy.util.queries import limit_groups
 from indico.modules.events import Event
+from indico.modules.events.contributions import Contribution
 from indico.modules.events.requests.models.requests import Request, RequestState
+from indico.modules.events.sessions import Session
 from indico.modules.rb_new.operations.rooms import search_for_rooms
 from indico.modules.vc import VCRoomEventAssociation
 from indico.util.caching import memoize_request
@@ -63,7 +66,8 @@ def find_requests(from_dt=None, to_dt=None):
         event = req.event
         if to_dt is not None and event.start_dt > to_dt:
             continue
-        yield req
+        contribs = [x[0] for x in get_selected_contributions(req)]
+        yield req, contribs
 
 
 @memoize_request
@@ -74,3 +78,47 @@ def get_vc_capable_rooms():
     if not feature:
         return set()
     return set(search_for_rooms({'features': [feature.name]}))
+
+
+def _contrib_key(contrib):
+    return (contrib.start_dt,
+            contrib,
+            contrib.title)
+
+
+@memoize_request
+def get_contributions(event):
+    """Returns a list of contributions in rooms with VC equipment
+
+    :return: a list of ``(contribution, capable, custom_room)`` tuples
+    """
+    contribs = (Contribution.query
+                .with_parent(event)
+                .filter(Contribution.is_scheduled)
+                .filter(db.or_(Contribution.session == None,  # noqa
+                               Contribution.session.has(db.or_(Session.type == None,  # noqa
+                                                               Session.type.has(is_poster=False)))))
+                .options(joinedload('timetable_entry').load_only('start_dt'),
+                         joinedload('session_block'),
+                         subqueryload('person_links'),
+                         undefer('is_scheduled'))
+                .all())
+    all_contribs = sorted(contribs, key=_contrib_key)
+    vc_capable_rooms = get_vc_capable_rooms()
+    event_room = event.room
+    return [(c,
+             c.room in vc_capable_rooms,
+             c.room_name if c.room and c.room != event_room else None)
+            for c in all_contribs]
+
+
+def get_selected_contributions(req):
+    """Gets the selected contributions for a request.
+
+    :return: list of ``(contribution, capable, custom_room)`` tuples
+    """
+    if req.event.type == 'lecture':
+        return []
+    contributions = get_contributions(req.event)
+    contributions = [x for x in contributions if x[1] and x[0].vc_room_associations]
+    return contributions

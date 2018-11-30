@@ -15,7 +15,7 @@
         </td>
         <td>
             <div class="title">
-                {% trans %}Event{% endtrans %}
+                {% trans %}Title{% endtrans %}
             </div>
         </td>
         <td>
@@ -28,59 +28,110 @@
                 {% trans %}Comment{% endtrans %}
             </div>
         </td>
+        <td></td>
     </tr>
-    {% for req, obj, start_time in items %}
-        {{ request_entry(req, obj, start_time) }}
+    {% for req, obj, start_time, contribs in items %}
+        {{ request_entry(req, obj, start_time, contribs) }}
     {% endfor %}
 {% endmacro %}
 
-{% macro request_entry(req, obj, start_time) %}
-    <tr class="result-group-entry">
-        <td class="entry-time">
-            <a class="discreet-link" href="{{ url_for('requests.event_requests_details', req) }}">
-                {{ start_time | format_time('HH:mm') }}
-            </a>
-        </td>
-        <td class="entry-location">
-        {% if obj.room_name or obj.venue_name %}
-            <span class="room">
-                {{ obj.room_name }}
-            </span>
-            {% if obj.venue_name %}
-                <span class="location">
-                    ({{ obj.venue_name }})
+{% macro request_entry(req, obj, start_time, contribs) %}
+    <tbody>
+        <tr class="result-group-entry">
+            <td class="entry-time">
+                <a class="discreet-link" href="{{ url_for('requests.event_requests_details', req) }}">
+                    {{ start_time | format_time('HH:mm') }}
+                </a>
+            </td>
+            <td class="entry-location">
+            {% if obj.room_name or obj.venue_name %}
+                <span class="room">
+                    {{ obj.room_name }}
                 </span>
-            {% endif %}
-        {% else %}
-            <i class="icon-warning"
-               title="{% trans %}This event seems to have no location associated{% endtrans %}">
-            </i>
-        {% endif %}
-        </td>
-        <td class="request-event">
-            <a href="{{ req.event.url }}">
-                {{ req.event.title }}
-            </a>
-        </td>
-        <td class="entry-vc-room">
-            {% if obj.vc_room_associations %}
-                {% for obj_vc_room in obj.vc_room_associations %}
-                    <a class="discreet-link"
-                       data-href="{{ url_for('vc.manage_vc_rooms_modify', obj_vc_room) }}"
-                       data-ajax-dialog
-                       data-reload-after>
-                        {{- obj_vc_room.vc_room.name -}}
-                    </a>
-                    {{- "," if not loop.last -}}
-                {% endfor %}
+                {% if obj.venue_name %}
+                    <span class="location">
+                        ({{ obj.venue_name }})
+                    </span>
+                {% endif %}
             {% else %}
                 <i class="icon-warning"
-                   title="{% trans %}This event seems to have no VC rooms associated{% endtrans %}">
+                   title="{% trans %}This event seems to have no location associated{% endtrans %}">
                 </i>
             {% endif %}
-        </td>
-        <td class="request-comment">
-            {{ req.data.comment }}
-        </td>
-    </tr>
+            </td>
+            <td class="request-event">
+                <a href="{{ req.event.url }}">
+                    {{ req.event.title }}
+                </a>
+            </td>
+            <td class="entry-vc-room">
+                {% if obj.vc_room_associations %}
+                    {{ vc_room_links(obj.vc_room_associations) }}
+                {% else %}
+                    <i class="icon-warning"
+                       title="{% trans %}This event seems to have no VC rooms associated{% endtrans %}">
+                    </i>
+                {% endif %}
+            </td>
+            <td class="request-comment">
+                {{ req.data.comment }}
+            </td>
+            <td class="collapse-btn">
+            {% if contribs %} {# TODO: or sessions #}
+                <a class="trigger icon-expand" title="{% trans %}Show contributions{% endtrans %}"></a>
+            {% endif %}
+            </td>
+        </tr>
+    </tbody>
+    <tbody class="contrib-details collapsed">
+        {% for contrib in contribs %}
+            <tr class="result-group-entry">
+                {{ vc_contrib_entry(contrib) }}
+            </tr>
+        {% endfor %}
+    </tbody>
 {% endmacro %}
+
+{% macro vc_contrib_entry(contrib) %}
+    <td>
+        {{ contrib.start_dt | format_time('HH:mm') }}
+    </td>
+    <td class="entry-location">
+        <span>
+            {{ contrib.room_name }}
+        </span>
+        <span>
+            ({{ contrib.venue_name }})
+        </span>
+    </td>
+    <td>
+        {{ contrib.title }}
+    </td>
+    <td>
+        {{ vc_room_links(contrib.vc_room_associations) }}
+    </td>
+    <td colspan="100%"></td>
+{% endmacro %}
+
+{% macro vc_room_links(vc_room_associations) %}
+    {% for obj_vc_room in vc_room_associations %}
+        <a class="discreet-link"
+           data-href="{{ url_for('vc.manage_vc_rooms_modify', obj_vc_room) }}"
+           data-ajax-dialog
+           data-reload-after>
+            {{- obj_vc_room.vc_room.name -}}
+        </a>
+        {{- "," if not loop.last -}}
+    {% endfor %}
+{% endmacro %}
+
+{% block content %}
+    {{ super() }}
+    <script>
+        $('.collapse-btn > .trigger').on('click', function() {
+            var toggler = $(this);
+            toggler.closest('tbody').next('.contrib-details').toggleClass('collapsed');
+            toggler.toggleClass('icon-expand icon-collapse');
+        });
+    </script>
+{% endblock %}
