@@ -15,7 +15,8 @@ from indico.modules.events.requests.models.requests import RequestState
 
 from indico_vc_assistance import _
 from indico_vc_assistance.forms import VCAssistanceRequestForm
-from indico_vc_assistance.util import can_request_assistance, has_room_with_vc_attached
+from indico_vc_assistance.util import (can_request_assistance, has_vc_capable_rooms, has_vc_rooms,
+                                       has_vc_rooms_attached_to_capable)
 
 
 class VCAssistanceRequest(RequestDefinitionBase):
@@ -31,7 +32,9 @@ class VCAssistanceRequest(RequestDefinitionBase):
     def render_form(cls, event, **kwargs):
         req = kwargs['req']
         kwargs['user_authorized'] = can_request_assistance(session.user)
-        kwargs['has_vc_room_attached'] = has_room_with_vc_attached(event)
+        kwargs['has_vc_capable_rooms'] = has_vc_capable_rooms(event)
+        kwargs['has_vc_rooms'] = has_vc_rooms(event)
+        kwargs['has_vc_rooms_attached_to_capable'] = has_vc_rooms_attached_to_capable(event)
         kwargs['request_accepted'] = req is not None and req.state == RequestState.accepted
         return super(VCAssistanceRequest, cls).render_form(event, **kwargs)
 

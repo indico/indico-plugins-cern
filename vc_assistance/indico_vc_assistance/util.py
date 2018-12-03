@@ -38,10 +38,26 @@ def _is_in_acl(user, acl):
     return VCAssistanceRequestPlugin.settings.acls.contains_user(acl, user)
 
 
-def has_room_with_vc_attached(event):
+def has_vc_rooms(event):
+    """Check whether the event or any of its contributions and sessions has some
+    vc room created.
     """
-    Check if an event or any of its contributions and sessions have some
-    vc room attached to a physical room which has videoconference equipment.
+    return any(VCRoomEventAssociation.find_for_event(event, include_hidden=True))
+
+
+def has_vc_capable_rooms(event):
+    """Check whether the event or any of its contributions and sessions has some
+     vc capable room attached.
+     """
+    return (event.room in get_vc_capable_rooms()
+            or any(c.room for c in event.contributions if c.room in get_vc_capable_rooms())
+            or any([(s.room, sb.room) for s in event.sessions for sb in s.blocks
+                    if sb.room in get_vc_capable_rooms() or s.room in get_vc_capable_rooms()]))
+
+
+def has_vc_rooms_attached_to_capable(event):
+    """Check whether the event or any of its contributions and sessions has some
+    vc room created and those are linked to a vc capable room.
     """
     return any(vc for vc in VCRoomEventAssociation.find_for_event(event, include_hidden=True)
                if vc.link_object.room is not None and vc.link_object.room in get_vc_capable_rooms())

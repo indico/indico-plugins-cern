@@ -11,5 +11,6 @@ from indico.core.plugins import IndicoPluginBlueprint
 
 from indico_vc_assistance.controllers import RHRequestList
 
+
 blueprint = IndicoPluginBlueprint('vc_assistance', __name__, url_prefix='/service/vc-assistance')
 blueprint.add_url_rule('/', 'request_list', RHRequestList)

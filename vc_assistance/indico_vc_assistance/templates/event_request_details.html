@@ -1,8 +1,11 @@
 {% extends 'events/requests/event_request_details.html' %}
 {% from 'message_box.html' import message_box %}
 
-{% set link_start -%}
+{% set link_start_vc -%}
     <a href="{{ url_for('vc.manage_vc_rooms', event) }}">
+{%- endset %}
+ {% set link_start_event_settings -%}
+    <a href="{{ url_for('event_management.settings', event) }}">
 {%- endset %}
 {% set link_end -%}
     </a>
@@ -16,12 +19,28 @@
             {%- endtrans %}
         {% endcall %}
     {% else %}
-        {% if not request_accepted and not has_vc_room_attached %}
+        {% if not request_accepted and not has_vc_rooms %}
             {% call message_box('warning') %}
                 {% trans -%}
-                    This event does not have any rooms attached with videoconference
-                    equipment, so it is not possible to request assistance.
-                    {{ link_start }}Manage videoconference rooms{{ link_end }}.
+                    This event doesn't have any videoconference room attached,
+                    so it is not possible to request assistance.
+                    {{ link_start_vc }}Manage videoconference rooms{{ link_end }}.
+                {%- endtrans %}
+            {% endcall %}
+        {% elif not request_accepted and not has_vc_capable_rooms %}
+            {% call message_box('warning') %}
+                {% trans -%}
+                    None of the physical rooms attached to this event have videoconference
+                    capabilities, so it is not possible to request assistance.
+                    {{ link_start_event_settings }}Manage event settings{{ link_end }}.
+                {%- endtrans %}
+            {% endcall %}
+        {% elif not request_accepted and not has_vc_rooms_attached_to_capable %}
+            {% call message_box('warning') %}
+                {% trans -%}
+                    None of the videoconference rooms created are linked to a room with
+                    videoconference capabilities, so it is not possible to request assistance.
+                    {{ link_start_vc }}Manage videoconference rooms{{ link_end }}.
                 {%- endtrans %}
             {% endcall %}
         {% else %}
@@ -32,13 +51,24 @@
 
 {% block warnings %}
     {{ super() }}
-    {% if request_accepted and not has_vc_room_attached %}
-        {% call message_box('warning') %}
-            {% trans -%}
-                Videoconference assistance won't be provided as this event
-                does not have any room attached with videoconference equipment.
-                {{ link_start }}Manage videoconference rooms{{ link_end }}.
-            {%- endtrans %}
-        {% endcall %}
+    {% if request_accepted %}
+        {% if not has_vc_rooms %}
+            {% call message_box('error') %}
+                {% trans -%}
+                    This event doesn't have any videoconference room attached
+                    so assistance won't be provided.
+                    {{ link_start_vc }}Manage videoconference rooms{{ link_end }}.
+                {%- endtrans %}
+            {% endcall %}
+        {%  endif %}
+        {% if not has_vc_capable_rooms %}
+             {% call message_box('error') %}
+                {% trans -%}
+                    This event doesn't have any physical room attached
+                    with videoconference capabilities so assistance won't be provided.
+                    {{ link_start_event_settings }}Manage event settings{{ link_end }}.
+                {%- endtrans %}
+            {% endcall %}
+        {% endif %}
     {% endif %}
-{%  endblock %}
+{% endblock %}

@@ -25,7 +25,7 @@ from indico.web.menu import TopMenuItem
 from indico_vc_assistance import _
 from indico_vc_assistance.blueprint import blueprint
 from indico_vc_assistance.definition import VCAssistanceRequest
-from indico_vc_assistance.util import has_room_with_vc_attached, is_vc_support
+from indico_vc_assistance.util import has_vc_rooms_attached_to_capable, is_vc_support
 from indico_vc_assistance.views import WPVCAssistance
 
 
@@ -94,7 +94,6 @@ class VCAssistanceRequestPlugin(IndicoPlugin):
     def _get_vc_assistance_request_link(self, event):
         from definition import VCAssistanceRequest
         req = Request.find_latest_for_event(event, VCAssistanceRequest.name)
-        has_vc_room_attached = has_room_with_vc_attached(event)
         return render_plugin_template('vc_assistance_request_link.html', event=event, name=VCAssistanceRequest.name,
                                       request_accepted=req is not None and req.state == RequestState.accepted,
-                                      has_vc_room_attached=has_vc_room_attached)
+                                      has_capable_vc_room_attached=has_vc_rooms_attached_to_capable(event))
