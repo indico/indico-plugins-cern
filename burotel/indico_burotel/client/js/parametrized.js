@@ -12,6 +12,8 @@ import DefaultBookRoom from 'indico/modules/rb_new/modules/bookRoom/BookRoom';
 import DefaultRoomBookingMap from 'indico/modules/rb_new/common/map/RoomBookingMap';
 import DefaultRoomDetailsModal from 'indico/modules/rb_new/common/rooms/RoomDetailsModal';
 import DefaultLandingStatistics from 'indico/modules/rb_new/modules/landing/LandingStatistics';
+import DefaultCalendar from 'indico/modules/rb_new/modules/calendar/Calendar';
+import DefaultTimelineItem from 'indico/modules/rb_new/common/timeline/TimelineItem';
 import {Translate} from 'indico/react/i18n';
 import {parametrize} from 'indico/react/util';
 import MapMarkers from './components/MapMarkers';
@@ -45,7 +47,11 @@ const RoomFilterBar = parametrize(RoomFilterBarBase, {
 });
 
 const BookRoom = parametrize(DefaultBookRoom, {
-    showSuggestions: false
+    showSuggestions: false,
+    labels: {
+        bookButton: Translate.string('Book Desk'),
+        detailsButton: Translate.string('See details')
+    }
 });
 
 const TimeInformation = parametrize(DefaultTimeInformation, {
@@ -80,16 +86,26 @@ const BookRoomModal = parametrize(DefaultBookRoomModal, () => ({
     }
 }));
 
+const Calendar = parametrize(DefaultCalendar, {
+    allowDragDrop: false
+});
+
+const TimelineItem = parametrize(DefaultTimelineItem, {
+    dayBased: true
+});
+
 export default {
     App,
     BookingBootstrapForm,
     BookingFilterBar,
-    RoomFilterBar,
     BookRoom,
-    TimeInformation,
+    BookRoomModal,
+    Calendar,
     LandingStatistics,
     Menu,
     RoomBookingMap,
     RoomDetailsModal,
-    BookRoomModal
+    RoomFilterBar,
+    TimelineItem,
+    TimeInformation
 };
