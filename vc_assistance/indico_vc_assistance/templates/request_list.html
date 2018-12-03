@@ -30,12 +30,12 @@
         </td>
         <td></td>
     </tr>
-    {% for req, obj, start_time, contribs in items %}
-        {{ request_entry(req, obj, start_time, contribs) }}
+    {% for req, obj, start_time, contribs, session_blocks in items %}
+        {{ request_entry(req, obj, start_time, contribs, session_blocks) }}
     {% endfor %}
 {% endmacro %}
 
-{% macro request_entry(req, obj, start_time, contribs) %}
+{% macro request_entry(req, obj, start_time, contribs, session_blocks) %}
     <tbody>
         <tr class="result-group-entry">
             <td class="entry-time">
@@ -77,38 +77,47 @@
                 {{ req.data.comment }}
             </td>
             <td class="collapse-btn">
-            {% if contribs %} {# TODO: or sessions #}
-                <a class="trigger icon-expand" title="{% trans %}Show contributions{% endtrans %}"></a>
+            {% if contribs or session_blocks %}
+                <a class="trigger icon-expand" title="{% trans %}Show contributions and sessions{% endtrans %}"></a>
             {% endif %}
             </td>
         </tr>
     </tbody>
-    <tbody class="contrib-details collapsed">
+    <tbody class="extra-entries collapsed">
         {% for contrib in contribs %}
             <tr class="result-group-entry">
-                {{ vc_contrib_entry(contrib) }}
+                {{ vc_extra_entry(contrib) }}
+            </tr>
+        {% endfor %}
+        {% for sb in session_blocks %}
+            <tr class="result-group-entry">
+                {{ vc_extra_entry(sb) }}
             </tr>
         {% endfor %}
     </tbody>
 {% endmacro %}
 
-{% macro vc_contrib_entry(contrib) %}
+{% macro vc_extra_entry(obj) %}
     <td>
-        {{ contrib.start_dt | format_time('HH:mm') }}
+        {{ obj.start_dt | format_time('HH:mm') }}
     </td>
     <td class="entry-location">
         <span>
-            {{ contrib.room_name }}
+            {{ obj.room_name }}
         </span>
         <span>
-            ({{ contrib.venue_name }})
+            ({{ obj.venue_name }})
         </span>
     </td>
     <td>
-        {{ contrib.title }}
+        {% if obj.session %}
+            {{ obj.session.title }}{{ ': {}'.format(obj.title) if obj.title }}
+        {% else %}
+            {{ obj.title }}
+        {% endif %}
     </td>
     <td>
-        {{ vc_room_links(contrib.vc_room_associations) }}
+        {{ vc_room_links(obj.vc_room_associations) }}
     </td>
     <td colspan="100%"></td>
 {% endmacro %}
@@ -130,7 +139,7 @@
     <script>
         $('.collapse-btn > .trigger').on('click', function() {
             var toggler = $(this);
-            toggler.closest('tbody').next('.contrib-details').toggleClass('collapsed');
+            toggler.closest('tbody').next('.extra-entries').toggleClass('collapsed');
             toggler.toggleClass('icon-expand icon-collapse');
         });
     </script>

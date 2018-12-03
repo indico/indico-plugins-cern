@@ -39,7 +39,8 @@ class RHRequestList(RHProtected):
             from_dt = as_utc(get_day_start(form.start_date.data)) if form.start_date.data else None
             to_dt = as_utc(get_day_end(form.end_date.data)) if form.end_date.data else None
             results = find_requests(from_dt=from_dt, to_dt=to_dt)
-            results = [(req, req.event, req.event.start_dt, contribs) for req, contribs in results]
+            results = [(req, req.event, req.event.start_dt, contribs, session_blocks)
+                       for req, contribs, session_blocks in results]
             results = group_list(results, lambda x: x[2].date(), itemgetter(2), sort_reverse=reverse)
             results = OrderedDict(sorted(results.viewitems(), key=itemgetter(0), reverse=reverse))
         return WPVCAssistance.render_template('request_list.html', form=form, results=results,
