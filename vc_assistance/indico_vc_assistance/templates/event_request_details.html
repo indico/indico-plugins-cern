@@ -18,6 +18,14 @@
                 Unfortunately you are not allowed to request videoconference assistance.
             {%- endtrans %}
         {% endcall %}
+    {% elif not within_working_hours %}
+        {% call message_box('warning') %}
+            {% trans -%}
+                This event starts out of working hours, so it is not possible
+                to request assistance.
+                {{ link_start_event_settings }}Manage event settings{{ link_end }}.
+            {%- endtrans %}
+        {% endcall %}
     {% else %}
         {% if not request_accepted and not has_vc_rooms %}
             {% call message_box('warning') %}
