@@ -53,6 +53,11 @@
                         ({{ obj.venue_name }})
                     </span>
                 {% endif %}
+                {% if obj.room not in vc_capable_rooms %}
+                    <i class="icon-warning"
+                       title="{% trans %}This room seems to have no videoconference capabilities{% endtrans %}">
+                    </i>
+                {% endif %}
             {% else %}
                 <i class="icon-warning"
                    title="{% trans %}This event seems to have no location associated{% endtrans %}">

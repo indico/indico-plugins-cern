@@ -19,7 +19,7 @@ from indico.web.flask.util import url_for
 from indico.web.rh import RHProtected
 
 from indico_vc_assistance.forms import RequestListFilterForm
-from indico_vc_assistance.util import find_requests, is_vc_support
+from indico_vc_assistance.util import find_requests, get_vc_capable_rooms, is_vc_support
 from indico_vc_assistance.views import WPVCAssistance
 
 
@@ -44,4 +44,4 @@ class RHRequestList(RHProtected):
             results = group_list(results, lambda x: x[2].date(), itemgetter(2), sort_reverse=reverse)
             results = OrderedDict(sorted(results.viewitems(), key=itemgetter(0), reverse=reverse))
         return WPVCAssistance.render_template('request_list.html', form=form, results=results,
-                                              action=url_for('.request_list'))
+                                              action=url_for('.request_list'), vc_capable_rooms=get_vc_capable_rooms())
