@@ -20,9 +20,11 @@ from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.modules.rb.models.room_features import RoomFeature
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import PrincipalListField
+from indico.web.http_api import HTTPAPIHook
 from indico.web.menu import TopMenuItem
 
 from indico_vc_assistance import _
+from indico_vc_assistance.api import VCAssistanceExportHook
 from indico_vc_assistance.blueprint import blueprint
 from indico_vc_assistance.definition import VCAssistanceRequest
 from indico_vc_assistance.util import has_vc_rooms_attached_to_capable, is_vc_support
@@ -74,6 +76,7 @@ class VCAssistanceRequestPlugin(IndicoPlugin):
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
         self.connect(signals.acl.can_access, self._can_access_event, sender=Event)
         self.connect(signals.menu.items, self._extend_top_menu, sender='top-menu')
+        HTTPAPIHook.register(VCAssistanceExportHook)
 
     def get_blueprints(self):
         return blueprint

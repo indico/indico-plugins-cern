@@ -63,15 +63,16 @@ def has_vc_rooms_attached_to_capable(event):
                if vc.link_object.room is not None and vc.link_object.room in get_vc_capable_rooms())
 
 
-def find_requests(from_dt=None, to_dt=None):
+def find_requests(from_dt=None, to_dt=None, contribs_and_sessions=True):
     """Finds requests matching certain criteria.
 
     :param from_dt: earliest event/contribution to include
     :param to_dt: latest event/contribution to include
+    :param contribs_and_sessions: whether it should return contributions and sessions or only request
     """
     from definition import VCAssistanceRequest
     query = Request.query.filter(Request.type == VCAssistanceRequest.name,
-                                 Request.state != RequestState.withdrawn)
+                                 Request.state == RequestState.accepted)
 
     if from_dt is not None or to_dt is not None:
         query = query.join(Event).filter(Event.happens_between(from_dt, to_dt))
@@ -83,9 +84,12 @@ def find_requests(from_dt=None, to_dt=None):
         event = req.event
         if to_dt is not None and event.start_dt > to_dt:
             continue
-        contribs = [x[0] for x in get_capable(req, get_contributions)]
-        session_blocks = [x[0] for x in get_capable(req, get_session_blocks)]
-        yield req, contribs, session_blocks
+        if not contribs_and_sessions:
+            yield req
+        else:
+            contribs = [x[0] for x in get_capable(req, get_contributions)]
+            session_blocks = [x[0] for x in get_capable(req, get_session_blocks)]
+            yield req, contribs, session_blocks
 
 
 @memoize_request
