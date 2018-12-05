@@ -1,3 +1,4 @@
+# coding=utf-8
 # This file is part of the CERN Indico plugins.
 # Copyright (C) 2014 - 2018 CERN
 #
@@ -15,7 +16,7 @@ from indico.web.http_api import HTTPAPIHook
 from indico.web.http_api.util import get_query_parameter
 
 from indico_vc_assistance.definition import VCAssistanceRequest
-from indico_vc_assistance.util import find_requests, is_vc_support
+from indico_vc_assistance.util import find_requests, get_vc_capable_rooms, is_vc_support
 
 
 class VCAssistanceExportHook(HTTPAPIHook):
@@ -60,6 +61,7 @@ def _serialize_obj(req, alarm):
         'room_full_name': event.get_room_name(full=True) or None,
         'url': url,
         'comment': req.data['comment'],
+        'vc_capable_room': event.room is not None and event.room in get_vc_capable_rooms(),
         '_ical_id': 'indico-vc-assistance-{}@cern.ch'.format(unique_id)
     }
     if alarm:
@@ -87,7 +89,7 @@ def _ical_serialize_vc(cal, record, now):
 
 
 def _ical_summary(record):
-    return '{} - {}'.format('VC Assistance', record['title'])
+    return '{}{} - {}'.format('⚠️' if not record['vc_capable_room'] else '', 'VC Assistance', record['title'])
 
 
 def _ical_serialize_vc_alarm(record):
