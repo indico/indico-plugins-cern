@@ -1,4 +1,3 @@
-# coding=utf-8
 # This file is part of the CERN Indico plugins.
 # Copyright (C) 2014 - 2018 CERN
 #
@@ -16,7 +15,11 @@ from indico.web.http_api import HTTPAPIHook
 from indico.web.http_api.util import get_query_parameter
 
 from indico_vc_assistance.definition import VCAssistanceRequest
-from indico_vc_assistance.util import find_requests, get_vc_capable_rooms, is_vc_support
+from indico_vc_assistance.util import (find_requests, get_vc_capable_rooms, is_vc_support,
+                                       start_time_within_working_hours)
+
+
+WARNING_EMOJI = '\u26a0\ufe0f'
 
 
 class VCAssistanceExportHook(HTTPAPIHook):
@@ -62,6 +65,7 @@ def _serialize_obj(req, alarm):
         'url': url,
         'comment': req.data['comment'],
         'vc_capable_room': event.room is not None and event.room in get_vc_capable_rooms(),
+        'OWH': not start_time_within_working_hours(event),
         '_ical_id': 'indico-vc-assistance-{}@cern.ch'.format(unique_id)
     }
     if alarm:
@@ -80,8 +84,13 @@ def _ical_serialize_vc(cal, record, now):
     event.add('summary', _ical_summary(record))
     location = ': '.join(filter(None, (record['location'], record['room_full_name'])))
     event.add('location', location)
-    description = ['URL: {}'.format(record['url']),
-                   'Comment: {}'.format(record['comment'])]
+    description = ['URL: {}'.format(record['url'])]
+    if record['comment']:
+        description.append('Comment: {}'.format(record['comment']))
+    if not record['vc_capable_room']:
+        description.append('{} Room does not have vc capabilities'.format(WARNING_EMOJI))
+    if record['OWH']:
+        description.append('{} Event starts out of working hours'.format(WARNING_EMOJI))
     event.add('description', '\n'.join(description))
     if '_ical_alarm' in record:
         event.add_component(_ical_serialize_vc_alarm(record))
@@ -89,7 +98,8 @@ def _ical_serialize_vc(cal, record, now):
 
 
 def _ical_summary(record):
-    return '{}{} - {}'.format('⚠️' if not record['vc_capable_room'] else '', 'VC Assistance', record['title'])
+    return '{}{} - {}'.format(WARNING_EMOJI if not record['vc_capable_room'] or record['OWH'] else '',
+                              'VC Assistance', record['title'])
 
 
 def _ical_serialize_vc_alarm(record):

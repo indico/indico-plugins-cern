@@ -16,6 +16,7 @@ from indico.modules.events.contributions import Contribution
 from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.modules.events.sessions import Session
 from indico.modules.events.sessions.models.blocks import SessionBlock
+from indico.modules.rb import Location
 from indico.modules.rb_new.operations.rooms import search_for_rooms
 from indico.modules.vc import VCRoomEventAssociation
 from indico.util.caching import memoize_request
@@ -160,3 +161,8 @@ def get_capable(req, get_contribs_or_session_blocks):
     contribs_or_session_blocks = get_contribs_or_session_blocks(req.event)
     contribs_or_session_blocks = [x for x in contribs_or_session_blocks if x[1] and x[0].vc_room_associations]
     return contribs_or_session_blocks
+
+
+def start_time_within_working_hours(event):
+    return any(period[0] <= event.start_dt_local.time() <= period[1]
+               for period in Location.working_time_periods)

@@ -12,7 +12,17 @@
         width: 15% !important;
     }
 
-    td.entry-vc-room, td.entry-location {
+    td.entry-time {
+        width: 10% !important;
+    }
+
+    td.request-event {
+        width: 18%;
+    }
+
+    td.entry-vc-room,
+    td.entry-location,
+    td.entry-time {
         .icon-warning {
             color: $yellow;
         }

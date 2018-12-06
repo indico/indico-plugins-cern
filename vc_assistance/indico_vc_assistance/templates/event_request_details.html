@@ -15,19 +15,20 @@
     {% if not user_authorized %}
         {% call message_box('warning') %}
             {% trans -%}
-                Unfortunately you are not allowed to request videoconference assistance.
-            {%- endtrans %}
-        {% endcall %}
-    {% elif not within_working_hours %}
-        {% call message_box('warning') %}
-            {% trans -%}
-                This event starts out of working hours, so it is not possible
-                to request assistance.
-                {{ link_start_event_settings }}Manage event settings{{ link_end }}.
+                Unfortunately you are not allowed to use this service.
             {%- endtrans %}
         {% endcall %}
     {% else %}
-        {% if not request_accepted and not has_vc_rooms %}
+        {% if not request_accepted and not within_working_hours %}
+            {% call message_box('warning') %}
+                {% trans -%}
+                    This event starts out of working hours, so it is not possible
+                    to request assistance.
+                    {{ link_start_event_settings }}Manage event settings{{ link_end }} or contact
+                    <a href="mailto:videoconference-support@cern.ch">videoconference-support@cern.ch</a>.
+                {%- endtrans %}
+            {% endcall %}
+        {% elif not request_accepted and not has_vc_rooms %}
             {% call message_box('warning') %}
                 {% trans -%}
                     This event doesn't have any videoconference room attached,
@@ -74,6 +75,14 @@
                 {% trans -%}
                     This event doesn't have any physical room attached
                     with videoconference capabilities so assistance won't be provided.
+                    {{ link_start_event_settings }}Manage event settings{{ link_end }}.
+                {%- endtrans %}
+            {% endcall %}
+        {% endif %}
+        {% if not within_working_hours %}
+            {% call message_box('error') %}
+                {% trans -%}
+                    This event starts out of working hours so assistance won't be provided.
                     {{ link_start_event_settings }}Manage event settings{{ link_end }}.
                 {%- endtrans %}
             {% endcall %}

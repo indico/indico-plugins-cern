@@ -12,12 +12,11 @@ from werkzeug.exceptions import Forbidden
 
 from indico.modules.events.requests import RequestDefinitionBase
 from indico.modules.events.requests.models.requests import RequestState
-from indico.modules.rb import Location
 
 from indico_vc_assistance import _
 from indico_vc_assistance.forms import VCAssistanceRequestForm
 from indico_vc_assistance.util import (can_request_assistance, has_vc_capable_rooms, has_vc_rooms,
-                                       has_vc_rooms_attached_to_capable)
+                                       has_vc_rooms_attached_to_capable, start_time_within_working_hours)
 
 
 class VCAssistanceRequest(RequestDefinitionBase):
@@ -37,8 +36,7 @@ class VCAssistanceRequest(RequestDefinitionBase):
         kwargs['has_vc_rooms'] = has_vc_rooms(event)
         kwargs['has_vc_rooms_attached_to_capable'] = has_vc_rooms_attached_to_capable(event)
         kwargs['request_accepted'] = req is not None and req.state == RequestState.accepted
-        kwargs['within_working_hours'] = any(period[0] <= event.start_dt_local.time() <= period[1]
-                                             for period in Location.working_time_periods)
+        kwargs['within_working_hours'] = start_time_within_working_hours(event)
         return super(VCAssistanceRequest, cls).render_form(event, **kwargs)
 
     @classmethod

@@ -42,6 +42,11 @@
                 <a class="discreet-link" href="{{ url_for('requests.event_requests_details', req) }}">
                     {{ start_time | format_time('HH:mm') }}
                 </a>
+                {% if not within_working_hours(req.event) %}
+                    <i class="icon-warning"
+                       title="{% trans %}This event starts out of working hours{% endtrans %}">
+                    </i>
+                {% endif %}
             </td>
             <td class="entry-location">
             {% if obj.room_name or obj.venue_name %}
