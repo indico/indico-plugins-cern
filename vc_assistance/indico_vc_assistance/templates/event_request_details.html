@@ -39,7 +39,7 @@
         {% elif not request_accepted and not has_vc_capable_rooms %}
             {% call message_box('warning') %}
                 {% trans -%}
-                    None of the physical rooms attached to this event have videoconference
+                    None of the physical meeting rooms attached to this event have videoconference
                     capabilities, so it is not possible to request assistance.
                     {{ link_start_event_settings }}Manage event settings{{ link_end }}.
                 {%- endtrans %}
@@ -53,6 +53,18 @@
                 {%- endtrans %}
             {% endcall %}
         {% else %}
+            {% if not request_accepted %}
+                {% call message_box('info') %}
+                    {% trans -%}
+                        Requesting videoconference assistance will put you in contact with
+                        the videconference support service and one of the operators will start
+                        your meeting for you (please note that by default, this will be done
+                        remotely. If you want to have an operator physically present for the
+                        start of your meeting, please send a mail to
+                        <a href="mailto:videoconference-support@cern.ch">videoconference-support@cern.ch</a>).
+                    {%- endtrans %}
+                {% endcall %}
+            {% endif %}
             {{ super() }}
         {% endif %}
     {% endif %}
@@ -73,7 +85,7 @@
         {% if not has_vc_capable_rooms %}
              {% call message_box('error') %}
                 {% trans -%}
-                    This event doesn't have any physical room attached
+                    This event doesn't have any physical meeting room attached
                     with videoconference capabilities so assistance won't be provided.
                     {{ link_start_event_settings }}Manage event settings{{ link_end }}.
                 {%- endtrans %}
