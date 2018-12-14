@@ -11,6 +11,7 @@ import DefaultTimeInformation from 'indico/modules/rb_new/components/TimeInforma
 import DefaultBookRoom from 'indico/modules/rb_new/modules/bookRoom/BookRoom';
 import DefaultRoomBookingMap from 'indico/modules/rb_new/common/map/RoomBookingMap';
 import DefaultRoomDetailsModal from 'indico/modules/rb_new/common/rooms/RoomDetailsModal';
+import DefaultLanding from 'indico/modules/rb_new/modules/landing/Landing';
 import DefaultLandingStatistics from 'indico/modules/rb_new/modules/landing/LandingStatistics';
 import DefaultCalendar from 'indico/modules/rb_new/modules/calendar/Calendar';
 import DefaultTimelineItem from 'indico/modules/rb_new/common/timeline/TimelineItem';
@@ -58,6 +59,10 @@ const TimeInformation = parametrize(DefaultTimeInformation, {
     timeSlot: null
 });
 
+const Landing = parametrize(DefaultLanding, {
+    showUpcomingBookings: false
+});
+
 const LandingStatistics = parametrize(DefaultLandingStatistics, () => ({
     labels: {
         activeRooms: Translate.string('Desks in use')
@@ -101,6 +106,7 @@ export default {
     BookRoom,
     BookRoomModal,
     Calendar,
+    Landing,
     LandingStatistics,
     Menu,
     RoomBookingMap,
