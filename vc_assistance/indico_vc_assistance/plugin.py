@@ -7,7 +7,7 @@
 
 from __future__ import unicode_literals
 
-from flask import session
+from flask import flash, session
 from flask_pluginengine import render_plugin_template, url_for_plugin
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from wtforms.validators import DataRequired
@@ -27,7 +27,7 @@ from indico_vc_assistance import _
 from indico_vc_assistance.api import VCAssistanceExportHook
 from indico_vc_assistance.blueprint import blueprint
 from indico_vc_assistance.definition import VCAssistanceRequest
-from indico_vc_assistance.util import has_vc_rooms_attached_to_capable, is_vc_support
+from indico_vc_assistance.util import has_vc_rooms_attached_to_capable, is_vc_support, start_time_within_working_hours
 from indico_vc_assistance.views import WPVCAssistance
 
 
@@ -75,6 +75,7 @@ class VCAssistanceRequestPlugin(IndicoPlugin):
         self.template_hook('before-vc-list', self._get_vc_assistance_request_link)
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
         self.connect(signals.acl.can_access, self._can_access_event, sender=Event)
+        self.connect(signals.event.updated, self._event_updated)
         self.connect(signals.menu.items, self._extend_top_menu, sender='top-menu')
         HTTPAPIHook.register(VCAssistanceExportHook)
 
@@ -100,3 +101,13 @@ class VCAssistanceRequestPlugin(IndicoPlugin):
         return render_plugin_template('vc_assistance_request_link.html', event=event, name=VCAssistanceRequest.name,
                                       request_accepted=req is not None and req.state == RequestState.accepted,
                                       has_capable_vc_room_attached=has_vc_rooms_attached_to_capable(event))
+
+    def _event_updated(self, event, changes, **kwargs):
+        req = Request.find_latest_for_event(event, VCAssistanceRequest.name)
+        if req.state == RequestState.accepted:
+            if 'start_dt' in changes and not start_time_within_working_hours(event):
+                flash(_("The new event start time is out of working hours so videoconference assistance cannot be "
+                        "provided."), 'warning')
+            if 'location_data' in changes and not has_vc_rooms_attached_to_capable(event):
+                flash(_("The new event location doesn't have videoconference capabilities so videoconference "
+                        "assistance cannot be provided."), 'warning')
