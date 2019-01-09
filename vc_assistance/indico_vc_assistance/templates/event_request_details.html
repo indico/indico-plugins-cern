@@ -25,7 +25,7 @@
                     This event starts out of working hours, so it is not possible
                     to request assistance.
                     {{ link_start_event_settings }}Manage event settings{{ link_end }} or contact
-                    <a href="mailto:videoconference-support@cern.ch">videoconference-support@cern.ch</a>.
+                    <a href="mailto:{{ support_email }}">{{ support_email }}</a>.
                 {%- endtrans %}
             {% endcall %}
         {% elif not request_accepted and not has_vc_rooms %}
@@ -61,7 +61,7 @@
                         your meeting for you (please note that by default, this will be done
                         remotely. If you need to have an operator physically present for the
                         start of your meeting, please send a mail to
-                        <a href="mailto:videoconference-support@cern.ch">videoconference-support@cern.ch</a>).
+                        <a href="mailto:{{ support_email }}">{{ support_email }}</a>).
                     {%- endtrans %}
                 {% endcall %}
             {% endif %}

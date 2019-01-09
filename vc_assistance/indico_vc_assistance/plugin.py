@@ -10,6 +10,7 @@ from __future__ import unicode_literals
 from flask import flash, session
 from flask_pluginengine import render_plugin_template, url_for_plugin
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
+from wtforms.fields.html5 import EmailField
 from wtforms.validators import DataRequired
 
 from indico.core import signals
@@ -37,6 +38,8 @@ class PluginSettingsForm(IndicoForm):
     vc_support = PrincipalListField(_('Videoconference support'), groups=True,
                                     description=_('List of users who can view the list of events with videoconference '
                                                   'assistance.'))
+    support_email = EmailField(_('Support email'), [DataRequired()],
+                               description=_('Videoconference email support address'))
     room_feature = QuerySelectField(_("Room feature"), [DataRequired()], allow_blank=True,
                                     query_factory=lambda: RoomFeature.query, get_label='title',
                                     description=_("The feature indicating that a room supports videoconference."))
@@ -63,7 +66,10 @@ class VCAssistanceRequestPlugin(IndicoPlugin):
 
     configurable = True
     settings_form = PluginSettingsForm
-    default_settings = {'room_feature': None}
+    default_settings = {
+        'support_email': '',
+        'room_feature': None,
+    }
     acl_settings = {'authorized', 'vc_support'}
     settings_converters = {
         'room_feature': RoomFeatureConverter,
@@ -98,9 +104,11 @@ class VCAssistanceRequestPlugin(IndicoPlugin):
     def _get_vc_assistance_request_link(self, event):
         from definition import VCAssistanceRequest
         req = Request.find_latest_for_event(event, VCAssistanceRequest.name)
+        support_email = VCAssistanceRequestPlugin.settings.get('support_email')
         return render_plugin_template('vc_assistance_request_link.html', event=event, name=VCAssistanceRequest.name,
                                       request_accepted=req is not None and req.state == RequestState.accepted,
-                                      has_capable_vc_room_attached=has_vc_rooms_attached_to_capable(event))
+                                      has_capable_vc_room_attached=has_vc_rooms_attached_to_capable(event),
+                                      support_email=support_email)
 
     def _event_updated(self, event, changes, **kwargs):
         req = Request.find_latest_for_event(event, VCAssistanceRequest.name)

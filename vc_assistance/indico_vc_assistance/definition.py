@@ -30,6 +30,7 @@ class VCAssistanceRequest(RequestDefinitionBase):
 
     @classmethod
     def render_form(cls, event, **kwargs):
+        from indico_vc_assistance.plugin import VCAssistanceRequestPlugin
         req = kwargs['req']
         kwargs['user_authorized'] = can_request_assistance(session.user)
         kwargs['has_vc_capable_rooms'] = has_vc_capable_rooms(event)
@@ -37,6 +38,7 @@ class VCAssistanceRequest(RequestDefinitionBase):
         kwargs['has_vc_rooms_attached_to_capable'] = has_vc_rooms_attached_to_capable(event)
         kwargs['request_accepted'] = req is not None and req.state == RequestState.accepted
         kwargs['within_working_hours'] = start_time_within_working_hours(event)
+        kwargs['support_email'] = VCAssistanceRequestPlugin.settings.get('support_email')
         return super(VCAssistanceRequest, cls).render_form(event, **kwargs)
 
     @classmethod
