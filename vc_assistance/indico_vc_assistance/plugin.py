@@ -101,7 +101,7 @@ class VCAssistanceRequestPlugin(IndicoPlugin):
         return TopMenuItem('services-cern-vc-assistance', _('Videoconference assistance'),
                            url_for_plugin('vc_assistance.request_list'), section='services')
 
-    def _get_vc_assistance_request_link(self, event):
+    def _get_vc_assistance_request_link(self, event, **kwargs):
         from definition import VCAssistanceRequest
         req = Request.find_latest_for_event(event, VCAssistanceRequest.name)
         support_email = VCAssistanceRequestPlugin.settings.get('support_email')
@@ -112,10 +112,11 @@ class VCAssistanceRequestPlugin(IndicoPlugin):
 
     def _event_updated(self, event, changes, **kwargs):
         req = Request.find_latest_for_event(event, VCAssistanceRequest.name)
-        if req.state == RequestState.accepted:
-            if 'start_dt' in changes and not start_time_within_working_hours(event):
-                flash(_("The new event start time is out of working hours so videoconference assistance cannot be "
-                        "provided."), 'warning')
-            if 'location_data' in changes and not has_vc_rooms_attached_to_capable(event):
-                flash(_("The new event location doesn't have videoconference capabilities so videoconference "
-                        "assistance cannot be provided."), 'warning')
+        if not req or req.state != RequestState.accepted:
+            return
+        if 'start_dt' in changes and not start_time_within_working_hours(event):
+            flash(_("The new event start time is out of working hours so videoconference assistance cannot be "
+                    "provided."), 'warning')
+        if 'location_data' in changes and not has_vc_rooms_attached_to_capable(event):
+            flash(_("The new event location doesn't have videoconference capabilities so videoconference "
+                    "assistance cannot be provided."), 'warning')

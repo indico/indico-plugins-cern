@@ -13,6 +13,7 @@ from indico.core.db import db
 from indico.core.db.sqlalchemy.util.queries import limit_groups
 from indico.modules.events import Event
 from indico.modules.events.contributions import Contribution
+from indico.modules.events.models.events import EventType
 from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.modules.events.sessions import Session
 from indico.modules.events.sessions.models.blocks import SessionBlock
@@ -40,20 +41,23 @@ def _is_in_acl(user, acl):
 
 
 def has_vc_rooms(event):
-    """Check whether the event or any of its contributions and sessions has some
+    """
+    Check whether the event or any of its contributions and sessions has some
     vc room created.
     """
     return any(VCRoomEventAssociation.find_for_event(event, include_hidden=True))
 
 
 def has_vc_capable_rooms(event):
-    """Check whether the event or any of its contributions and sessions has some
-     vc capable room attached.
-     """
-    return (event.room in get_vc_capable_rooms()
-            or any(c.room for c in event.contributions if c.room in get_vc_capable_rooms())
+    """
+    Check whether the event or any of its contributions and sessions has some
+    vc capable room attached.
+    """
+    capable_rooms = get_vc_capable_rooms()
+    return (event.room in capable_rooms
+            or any(c.room for c in event.contributions if c.room in capable_rooms)
             or any([(s.room, sb.room) for s in event.sessions for sb in s.blocks
-                    if sb.room in get_vc_capable_rooms() or s.room in get_vc_capable_rooms()]))
+                    if sb.room in capable_rooms or s.room in capable_rooms]))
 
 
 def has_vc_rooms_attached_to_capable(event):
@@ -156,11 +160,9 @@ def get_capable(req, get_contribs_or_session_blocks):
 
     :return: list of ``contribution`` or ``session block``
     """
-    if req.event.type == 'lecture':
+    if req.event.type_ == EventType.lecture:
         return []
-    contribs_or_session_blocks = get_contribs_or_session_blocks(req.event)
-    contribs_or_session_blocks = [x for x in contribs_or_session_blocks if x[1] and x[0].vc_room_associations]
-    return contribs_or_session_blocks
+    return [x for x in get_contribs_or_session_blocks(req.event) if x[1] and x[0].vc_room_associations]
 
 
 def start_time_within_working_hours(event):
