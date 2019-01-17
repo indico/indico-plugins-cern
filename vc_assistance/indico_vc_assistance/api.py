@@ -19,9 +19,6 @@ from indico_vc_assistance.util import (find_requests, get_vc_capable_rooms, is_v
                                        start_time_within_working_hours)
 
 
-WARNING_EMOJI = '\u26a0\ufe0f'
-
-
 class VCAssistanceExportHook(HTTPAPIHook):
     TYPES = (VCAssistanceRequest.name,)
     RE = ''
@@ -88,9 +85,9 @@ def _ical_serialize_vc(cal, record, now):
     if record['comment']:
         description.append('Comment: {}'.format(record['comment']))
     if not record['vc_capable_room']:
-        description.append('{} Room does not have vc capabilities'.format(WARNING_EMOJI))
+        description.append('\N{WARNING SIGN} Room does not have vc capabilities')
     if record['OWH']:
-        description.append('{} Event starts out of working hours'.format(WARNING_EMOJI))
+        description.append('\N{WARNING SIGN} Event starts out of working hours')
     event.add('description', '\n'.join(description))
     if '_ical_alarm' in record:
         event.add_component(_ical_serialize_vc_alarm(record))
@@ -98,7 +95,7 @@ def _ical_serialize_vc(cal, record, now):
 
 
 def _ical_summary(record):
-    return '{}{} - {}'.format(WARNING_EMOJI if not record['vc_capable_room'] or record['OWH'] else '',
+    return '{}{} - {}'.format('\N{WARNING SIGN}' if not record['vc_capable_room'] or record['OWH'] else '',
                               'VC Assistance', record['title'])
 
 
