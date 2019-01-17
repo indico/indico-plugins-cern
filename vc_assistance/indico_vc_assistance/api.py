@@ -85,9 +85,9 @@ def _ical_serialize_vc(cal, record, now):
     if record['comment']:
         description.append('Comment: {}'.format(record['comment']))
     if not record['vc_capable_room']:
-        description.append('\N{WARNING SIGN} Room does not have vc capabilities')
+        description.append('(!) Room does not have vc capabilities')
     if record['OWH']:
-        description.append('\N{WARNING SIGN} Event starts out of working hours')
+        description.append('(!) Event starts out of working hours')
     event.add('description', '\n'.join(description))
     if '_ical_alarm' in record:
         event.add_component(_ical_serialize_vc_alarm(record))
@@ -95,7 +95,7 @@ def _ical_serialize_vc(cal, record, now):
 
 
 def _ical_summary(record):
-    return '{}{} - {}'.format('\N{WARNING SIGN}' if not record['vc_capable_room'] or record['OWH'] else '',
+    return '{}{} - {}'.format('(!) ' if not record['vc_capable_room'] or record['OWH'] else '',
                               'VC Assistance', record['title'])
 
 
