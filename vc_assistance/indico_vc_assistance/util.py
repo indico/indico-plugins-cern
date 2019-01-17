@@ -18,7 +18,9 @@ from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.modules.events.sessions import Session
 from indico.modules.events.sessions.models.blocks import SessionBlock
 from indico.modules.rb import Location
-from indico.modules.rb_new.operations.rooms import search_for_rooms
+from indico.modules.rb.models.equipment import EquipmentType
+from indico.modules.rb.models.room_features import RoomFeature
+from indico.modules.rb.models.rooms import Room
 from indico.modules.vc import VCRoomEventAssociation
 from indico.util.caching import memoize_request
 
@@ -104,7 +106,8 @@ def get_vc_capable_rooms():
     feature = VCAssistanceRequestPlugin.settings.get('room_feature')
     if not feature:
         return set()
-    return set(search_for_rooms({'features': [feature.name]}))
+    feature_criterion = Room.available_equipment.any(EquipmentType.features.any(RoomFeature.name == feature.name))
+    return set(Room.query.filter(Room.is_active, feature_criterion))
 
 
 def _contrib_key(contrib):
