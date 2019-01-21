@@ -47,7 +47,7 @@ def _get_reservations_query(date_filter, room_id=None):
     filters = [
         date_filter,
         ReservationOccurrence.is_valid,
-        Reservation.is_valid,
+        Reservation.is_accepted,
         Reservation.needs_assistance
     ]
     if room_id:
