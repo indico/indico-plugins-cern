@@ -118,6 +118,7 @@ class OutlookPlugin(IndicoPlugin):
         super(OutlookPlugin, self).init()
         self.connect(signals.plugin.cli, self._extend_indico_cli)
         self.connect(signals.users.preferences, self.extend_user_preferences)
+        self.connect(signals.event.registration.registration_form_deleted, self.event_registration_form_deleted)
         self.connect(signals.event.registration.registration_state_updated, self.event_registration_state_changed)
         self.connect(signals.event.registration.registration_deleted, self.event_registration_deleted)
         self.connect(signals.event.updated, self.event_updated)
@@ -147,6 +148,15 @@ class OutlookPlugin(IndicoPlugin):
             event = registration.registration_form.event
             self._record_change(event, registration.user, OutlookAction.remove)
             self.logger.info('Registration removed: removing %s in %r', registration.user, event)
+
+    def event_registration_form_deleted(self, registration_form, **kwargs):
+        """In this case we will emit "remove" actions for all participants in `registration_form`"""
+        event = registration_form.event
+        for registration in registration_form.active_registrations:
+            if not registration.user:
+                continue
+            self._record_change(event, registration.user, OutlookAction.remove)
+            self.logger.info('Registration removed (form deleted): removing %s in %s', registration.user, event)
 
     def event_updated(self, event, changes, **kwargs):
         if not changes.viewkeys() & {'title', 'description', 'location_data'}:
