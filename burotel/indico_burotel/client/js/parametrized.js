@@ -45,7 +45,8 @@ const BookingFilterBar = parametrize(DefaultBookingFilterBar, {
 
 const RoomFilterBar = parametrize(RoomFilterBarBase, {
     hideOptions: {
-        capacity: true
+        capacity: true,
+        favorites: true,
     }
 });
 
