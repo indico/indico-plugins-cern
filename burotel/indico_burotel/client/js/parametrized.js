@@ -15,6 +15,7 @@ import DefaultLanding from 'indico/modules/rb_new/modules/landing/Landing';
 import DefaultLandingStatistics from 'indico/modules/rb_new/modules/landing/LandingStatistics';
 import DefaultCalendar from 'indico/modules/rb_new/modules/calendar/Calendar';
 import DefaultTimelineItem from 'indico/modules/rb_new/common/timeline/TimelineItem';
+import DefaultBookingEditForm from 'indico/modules/rb_new/common/bookings/BookingEditForm';
 import {Translate} from 'indico/react/i18n';
 import {parametrize} from 'indico/react/util';
 import MapMarkers from './components/MapMarkers';
@@ -27,6 +28,7 @@ const App = parametrize(DefaultApp, {
 
 const BookingBootstrapForm = parametrize(DefaultBookingBootstrapForm, () => ({
     dayBased: true,
+    onlyDaily: true,
     defaults: {
         recurrence: {
             type: 'daily'
@@ -38,7 +40,7 @@ const BookingBootstrapForm = parametrize(DefaultBookingBootstrapForm, () => ({
 }));
 
 const BookingFilterBar = parametrize(DefaultBookingFilterBar, {
-    dayBased: true
+    dayBased: true,
 });
 
 const RoomFilterBar = parametrize(RoomFilterBarBase, {
@@ -99,6 +101,14 @@ const TimelineItem = parametrize(DefaultTimelineItem, {
     dayBased: true
 });
 
+const BookingEditForm = parametrize(DefaultBookingEditForm, {
+    hideOptions: {
+        single: true,
+        daily: false,
+        recurring: true,
+    },
+});
+
 export default {
     App,
     BookingBootstrapForm,
@@ -113,5 +123,6 @@ export default {
     RoomDetailsModal,
     RoomFilterBar,
     TimelineItem,
-    TimeInformation
+    TimeInformation,
+    BookingEditForm,
 };
