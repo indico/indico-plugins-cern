@@ -57,14 +57,19 @@ def get_requested_forms(event):
             .all())
 
 
-def get_requested_registrations(event, regform=None):
+def get_requested_registrations(event, regform=None, only_active=False):
     """By default returns a list of requested registrations of an event
 
     :param regform: if specified, returns only registrations with that registration form
     """
     query = (Registration.query.with_parent(event)
-             .join(CERNAccessRequest)
-             .filter(~CERNAccessRequest.is_withdrawn))
+             .join(CERNAccessRequest))
+
+    if only_active:
+        query = query.filter(CERNAccessRequest.is_active)
+    else:
+        query = query.filter(~CERNAccessRequest.is_withdrawn)
+
     if regform:
         query = query.filter(Registration.registration_form_id == regform.id)
     return query.all()
@@ -99,7 +104,7 @@ def send_adams_post_request(event, registrations, update=False):
 def send_adams_delete_request(registrations):
     """Send DELETE request to ADaMS API."""
     data = [generate_access_id(registration.id) for registration in registrations]
-    return _send_adams_http_request('DELETE', data)
+    _send_adams_http_request('DELETE', data)
 
 
 def generate_access_id(registration_id):
@@ -132,7 +137,7 @@ def build_access_request_data(registration, event, generate_code):
 
 def handle_event_time_update(event):
     """Update access requests after an event time change"""
-    registrations = get_requested_registrations(event=event)
+    registrations = get_requested_registrations(event=event, only_active=True)
     if registrations:
         state = send_adams_post_request(event, registrations, update=True)[0]
         if state == CERNAccessRequestState.active:
