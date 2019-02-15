@@ -242,12 +242,15 @@ class CERNAccessPlugin(IndicoPlugin):
         """
         if (registration_form.cern_access_request and registration_form.cern_access_request.is_active and
                 not self._is_past_event(registration_form.event)):
-            registrations = get_requested_registrations(registration_form.event, regform=registration_form)
-            if registrations:
-                deleted = send_adams_delete_request(registrations)
-                if deleted:
-                    withdraw_access_requests(registrations)
-                    notify_access_withdrawn(registrations)
+            requests = get_requested_registrations(registration_form.event, regform=registration_form)
+            if requests:
+                # Notify ADAMS about only requests that it knows about (active)
+                active_requests = [r for r in requests if r.is_active]
+                send_adams_delete_request(active_requests)
+                # Withdraw all requests
+                withdraw_access_requests(requests)
+                # Notify users who have already got a badge
+                notify_access_withdrawn(active_requests)
             registration_form.cern_access_request.request_state = CERNAccessRequestState.withdrawn
 
     def _event_deleted(self, event, **kwargs):
@@ -257,18 +260,22 @@ class CERNAccessPlugin(IndicoPlugin):
         """
         access_requests_forms = get_requested_forms(event)
         if access_requests_forms and not self._is_past_event(event):
-            requested_registrations = get_requested_registrations(event=event)
-            if requested_registrations:
-                deleted = send_adams_delete_request(requested_registrations)
-                if deleted:
-                    withdraw_access_requests(requested_registrations)
-                    notify_access_withdrawn(requested_registrations)
+            requests = get_requested_registrations(event=event)
+            if requests:
+                # Notify ADAMS about only requests that it knows about (active)
+                active_requests = [r for r in requests if r.is_active]
+                send_adams_delete_request(active_requests)
+                # Withdraw all requests
+                withdraw_access_requests(requests)
+                # Notify users who have already got a badge
+                notify_access_withdrawn(active_requests)
             for form in access_requests_forms:
                 form.cern_access_request.request_state = CERNAccessRequestState.withdrawn
 
     def _registration_modified(self, registration, change, **kwargs):
         """If name of registration changed, updates the ADaMS CERN access request."""
-        if registration.cern_access_request and ('first_name' in change or 'last_name' in change):
+        access_request = registration.cern_access_request
+        if access_request and access_request.is_active and ('first_name' in change or 'last_name' in change):
             state = send_adams_post_request(registration.event, [registration], update=True)[0]
             if state == CERNAccessRequestState.active:
                 registration.cern_access_request.request_state = state
@@ -278,7 +285,7 @@ class CERNAccessPlugin(IndicoPlugin):
         if 'title' not in changes:
             return
 
-        requested_registrations = get_requested_registrations(event=event)
+        requested_registrations = get_requested_registrations(event=event, only_active=True)
         if requested_registrations:
             state = send_adams_post_request(event, requested_registrations, update=True)[0]
             if state == CERNAccessRequestState.active:
