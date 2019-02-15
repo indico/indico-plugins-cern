@@ -22,16 +22,19 @@ $highlight-color: #cf816d;
 $dark-highlight-color: #b1604b;
 $primary-color: #2185d0;
 
-$sui-red: #db2828;
-$sui-orange: #f2711c;
-$sui-green: #21ba45;
-$sui-grey: #767676;
-
-$light-red: #ffbdbd;
-
-$pre-booking-stripe-colors: ($sui-orange, lighten($sui-orange, 14%));
-$pre-booking-conflict-stripe-colors: ($sui-red, lighten($sui-red, 14%));
-$blocking-stripe-colors: (lighten($light-red, 10%), $light-red);
+// Timeline colors
+$available-color: #07e04b;
+$booking-color: #fb3;
+$conflict-color: #f44;
+$cancellation-color: #f9e3cf;
+$other-booking-color: #dfdfdf;
+$rejection-color: #f9cebd;
+$unbookable-color: #bbb;
+$pending-cancellation-color: #e2cebc;
+$pre-booking-stripe-colors: ($booking-color, lighten($booking-color, 14%));
+$pre-booking-conflict-stripe-colors: ($conflict-color, lighten($conflict-color, 14%));
+$blocking-stripe-colors: (lighten($conflict-color, 50%), lighten($conflict-color, 20%));
+$unbookable-stripe-colors: (lighten($unbookable-color, 20%), $unbookable-color);
 
 %rb-splash-background {
     background-image: url('burotel:images/splash.png');
