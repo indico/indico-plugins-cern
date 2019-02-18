@@ -229,7 +229,9 @@ class CERNAccessPlugin(IndicoPlugin):
 
         required = req.data['during_registration_required']
         form_cls = AccessIdentityDataForm if required else RegistrationFormPersonalDataForm
-        g.personal_data_form = form = form_cls()
+        # we pass 'csrf_enabled' on to allow unit tests to set it to False
+        g.personal_data_form = form = form_cls(csrf_enabled=form.meta.csrf)
+
         if not form.validate_on_submit():
             return False
 
