@@ -9,5 +9,8 @@ from __future__ import unicode_literals
 
 from indico.core.plugins import IndicoPluginBlueprint
 
+from indico_startup_assistance.controllers import RHRequestList
+
 
 blueprint = IndicoPluginBlueprint('startup_assistance', __name__, url_prefix='/service/startup-assistance')
+blueprint.add_url_rule('/', 'request_list', RHRequestList)
