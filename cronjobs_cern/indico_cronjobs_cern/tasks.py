@@ -115,18 +115,3 @@ def seminar_emails():
     recipients = CERNCronjobsPlugin.settings.get('seminar_recipients')
     if recipients:
         _send_email(recipients, template)
-
-
-@celery.periodic_task(run_every=crontab(minute='0', hour='6'), plugin='cronjobs_cern')
-def startup_assistance_emails():
-    reservations = _get_reservations_query(db.cast(Reservation.start_dt, db.Date) == date.today())
-    reservations_by_room = OrderedDict()
-    for reservation in reservations:
-        if reservation.room in reservations_by_room:
-            reservations_by_room[reservation.room].append(reservation)
-        else:
-            reservations_by_room[reservation.room] = [reservation]
-    template = get_plugin_template_module('startup_assistance_emails.html', reservations_by_room=reservations_by_room)
-    recipients = CERNCronjobsPlugin.settings.get('startup_assistance_recipients')
-    if recipients:
-        _send_email(recipients, template)

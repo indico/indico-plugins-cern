@@ -25,7 +25,6 @@ def _order_func(object_list):
 class SettingsForm(IndicoForm):
     _fieldsets = [
         ('Conference room emails', ['rooms', 'reservation_rooms', 'categories', 'conf_room_recipients']),
-        ('Startup assistance emails', ['startup_assistance_recipients']),
         ('Seminar emails', ['seminar_categories', 'seminar_recipients'])
     ]
 
@@ -35,7 +34,6 @@ class SettingsForm(IndicoForm):
                                                        render_kw={'size': 20}, modify_object_list=_order_func)
     categories = MultipleItemsField('Categories', fields=[{'id': 'id', 'caption': 'Category ID', 'required': True}])
     conf_room_recipients = EmailListField('Recipients')
-    startup_assistance_recipients = EmailListField('Recipients')
     seminar_categories = MultipleItemsField('Seminar categories',
                                             fields=[{'id': 'id', 'caption': 'Category ID', 'required': True}])
     seminar_recipients = EmailListField('Recipients')
@@ -66,8 +64,7 @@ class RoomConverter(SettingConverter):
 class CERNCronjobsPlugin(IndicoPlugin):
     """CERN cronjobs
 
-    This plugin sends email notifications in regular intervals, informing people about upcoming events, events that
-    require startup assistance, etc.
+    This plugin sends email notifications in regular intervals, informing people about upcoming events etc.
     """
     configurable = True
     settings_form = SettingsForm
@@ -81,6 +78,5 @@ class CERNCronjobsPlugin(IndicoPlugin):
         'categories': set(),
         'seminar_categories': set(),
         'conf_room_recipients': set(),
-        'startup_assistance_recipients': set(),
         'seminar_recipients': set()
     }
