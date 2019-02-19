@@ -1,0 +1,5 @@
+{
+    "entry": {
+        "startup_assistance": "./js/index.js"
+    }
+}

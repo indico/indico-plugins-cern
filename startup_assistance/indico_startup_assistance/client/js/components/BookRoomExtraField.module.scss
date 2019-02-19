@@ -1,0 +1,23 @@
+// This file is part of the CERN Indico plugins.
+// Copyright (C) 2014 - 2018 CERN
+//
+// The CERN Indico plugins are free software; you can redistribute
+// them and/or modify them under the terms of the MIT License; see
+// the LICENSE file for more details.
+
+@import 'base/palette';
+
+
+.assistance-toggle {
+    &:not(:global(.checked)) {
+        label::before {
+            background-color: $pastel-gray !important;
+        }
+    }
+
+    &:global(.checked) {
+        label::before {
+            background-color: $pastel-green !important;
+        }
+    }
+}
