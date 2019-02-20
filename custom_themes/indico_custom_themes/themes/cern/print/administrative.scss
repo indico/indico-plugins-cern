@@ -6,9 +6,18 @@
 .eventHeaderButtonBar,
 .js-go-to-day,
 .trigger.icon-expand,
-.itemHeaderDocuments,
-.materialDisplayName {
+.itemHeaderDocuments {
     display: none !important;
+}
+
+.materialDisplayName {
+    display: block;
+    text-align: left;
+    white-space: nowrap;
+
+    & > a {
+        display: none !important;
+    }
 }
 
 .flexrow, .flexcol {
