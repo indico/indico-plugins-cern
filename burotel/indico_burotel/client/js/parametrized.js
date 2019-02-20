@@ -54,6 +54,7 @@ const BookRoom = parametrize(DefaultBookRoom, {
     showSuggestions: false,
     labels: {
         bookButton: Translate.string('Book Desk'),
+        preBookButton: Translate.string('Pre-Book Desk'),
         detailsButton: Translate.string('See details')
     }
 });

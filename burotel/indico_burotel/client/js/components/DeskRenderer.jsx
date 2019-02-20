@@ -21,7 +21,7 @@ function Desk({desk: {fullName, division}, desk, actionRenderer, ...rest}) {
                     {division}
                 </Card.Meta>
             </Card.Content>
-            <Card.Content extra>
+            <Card.Content extra styleName="extra-content">
                 {actions}
             </Card.Content>
         </Card>
