@@ -16,6 +16,7 @@ import DefaultLandingStatistics from 'indico/modules/rb_new/modules/landing/Land
 import DefaultCalendar from 'indico/modules/rb_new/modules/calendar/Calendar';
 import DefaultTimelineItem from 'indico/modules/rb_new/common/timeline/TimelineItem';
 import DefaultBookingEditForm from 'indico/modules/rb_new/common/bookings/BookingEditForm';
+import DefaultSidebarMenu from 'indico/modules/rb_new/components/SidebarMenu';
 import {Translate} from 'indico/react/i18n';
 import {parametrize} from 'indico/react/util';
 import MapMarkers from './components/MapMarkers';
@@ -111,6 +112,12 @@ const BookingEditForm = parametrize(DefaultBookingEditForm, {
     },
 });
 
+const SidebarMenu = parametrize(DefaultSidebarMenu, {
+    hideOptions: {
+        myBlockings: true,
+    },
+});
+
 export default {
     App,
     BookingBootstrapForm,
@@ -127,4 +134,5 @@ export default {
     TimelineItem,
     TimeInformation,
     BookingEditForm,
+    SidebarMenu,
 };
