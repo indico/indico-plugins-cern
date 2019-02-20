@@ -182,7 +182,8 @@ class CERNAccessPlugin(IndicoPlugin):
     def _registration_deleted(self, registration, **kwargs):
         """Withdraw CERN access request for deleted registrations."""
         if registration.cern_access_request and not self._is_past_event(registration.event):
-            send_adams_delete_request([registration])
+            if registration.cern_access_request.is_active:
+                send_adams_delete_request([registration])
             registration.cern_access_request.request_state = CERNAccessRequestState.withdrawn
 
     def _registration_created(self, registration, management, **kwargs):
