@@ -1,6 +1,16 @@
 {% if registration %}
     {% set access_requested = registration.cern_access_request and registration.cern_access_request.is_active %}
-    <td class="i-table id-column" id="cern-access-status-{{ registration.id }}">
+    {% if access_requested and not registration.cern_access_request.has_identity_info %}
+        {% set sort_text = '2-data-missing' %}
+    {% elif not access_requested and registration.cern_access_request.has_identity_info %}
+        {% set sort_text = '0-has-data' %}
+    {% elif access_requested and registration.cern_access_request.is_active %}
+        {% set sort_text = '1-has-access' %}
+    {% else %}
+        {% set sort_text = '3-no-access' %}
+    {% endif %}
+
+    <td class="i-table id-column" id="cern-access-status-{{ registration.id }}" data-text="{{ sort_text }}">
         {% if access_requested and not registration.cern_access_request.has_identity_info %}
             <a class="icon-user-check semantic-text warning"
                title="{% trans %}Needs additional data. Click to enter it on behalf of the user{% endtrans %}"
@@ -22,7 +32,8 @@
         {% endif %}
     </td>
 {% elif header %}
-    <th class="i-table id-column sorter-false">
+    <th class="i-table id-column">
+        <i class="icon-id-badge" title="{% trans %}CERN site access{% endtrans %}"></i>
         <script>
             $('#registration-list .js-list-table-wrapper').on('click', '.js-copy-cern-access-code', function() {
                 var $this = $(this);
