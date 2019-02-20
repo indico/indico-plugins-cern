@@ -165,11 +165,15 @@ class CERNAccessPlugin(IndicoPlugin):
         if regform.cern_access_request and regform.cern_access_request.is_active:
             req = get_last_request(event)
             mode = req.data.get('regform_data_mode')
-            if mode not in (RegformDataMode.during_registration, RegformDataMode.during_registration_required):
+            if not RegformDataMode.is_during(mode):
                 return
             required = mode == RegformDataMode.during_registration_required
             form_cls = AccessIdentityDataForm if required else RegistrationFormPersonalDataForm
-            form = g.get('personal_data_form') or form_cls()
+            form = g.get('personal_data_form')
+            if not form:
+                form = form_cls()
+                if mode == RegformDataMode.during_registration_default:
+                    form.request_cern_access.data = True
             start_dt, end_dt = get_access_dates(req)
             return render_plugin_template('regform_identity_data_section.html', event=event, form=form,
                                           start_dt=start_dt, end_dt=end_dt, registration=registration,
@@ -198,10 +202,10 @@ class CERNAccessPlugin(IndicoPlugin):
 
         req = get_last_request(registration.event)
         mode = req.data.get('regform_data_mode')
-        if mode not in (RegformDataMode.during_registration, RegformDataMode.during_registration_required):
+        if not RegformDataMode.is_during(mode):
             return
 
-        required = req.data.get('regform_data_mode') == RegformDataMode.during_registration_required
+        required = mode == RegformDataMode.during_registration_required
         if not required and not personal_data_form.request_cern_access.data:
             return
 
@@ -223,10 +227,10 @@ class CERNAccessPlugin(IndicoPlugin):
             return
 
         mode = req.data.get('regform_data_mode')
-        if mode not in (RegformDataMode.during_registration, RegformDataMode.during_registration_required):
+        if not RegformDataMode.is_during(mode):
             return
 
-        required = req.data.get('regform_data_mode') == RegformDataMode.during_registration_required
+        required = mode == RegformDataMode.during_registration_required
         form_cls = AccessIdentityDataForm if required else RegistrationFormPersonalDataForm
         g.personal_data_form = form = form_cls()
         if not form.validate_on_submit():

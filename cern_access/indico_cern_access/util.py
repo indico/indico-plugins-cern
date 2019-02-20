@@ -37,10 +37,15 @@ from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAcc
 
 
 class RegformDataMode(RichIntEnum):
-    __titles__ = [_('No'), _('Yes'), _('Yes (required)')]
+    __titles__ = [_('No'), _('Yes'), _('Yes (required)'), _('Yes (default)')]
     after_registration = 0
     during_registration = 1
     during_registration_required = 2
+    during_registration_default = 3
+
+    @classmethod
+    def is_during(cls, value):
+        return value in (cls.during_registration, cls.during_registration_required, cls.during_registration_default)
 
 
 def get_last_request(event):
