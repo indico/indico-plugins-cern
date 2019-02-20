@@ -29,7 +29,7 @@
         {% if not item.attached_items.get('folders', [])|selectattr('title', 'equalto', 'document')|list
               and item.references %}
             {% for reference in item.references|sort(attribute='value') %}
-                {{ reference.value }}
+                {{ reference.value }}{% if not loop.last %}<br>{% endif %}
             {% endfor %}
         {% endif %}
 
