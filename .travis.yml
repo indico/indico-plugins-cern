@@ -7,6 +7,7 @@ addons:
 env:
   - PLUGIN=payment_cern
   - PLUGIN=ravem
+  - PLUGIN=cern_access
 before_install:
   - pip install -U pip setuptools
   - pip install https://github.com/indico/indico/archive/${TRAVIS_BRANCH}.zip
