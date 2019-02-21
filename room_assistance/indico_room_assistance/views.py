@@ -11,12 +11,12 @@ from indico.core.plugins import WPJinjaMixinPlugin
 from indico.web.breadcrumbs import render_breadcrumbs
 from indico.web.views import WPDecorated
 
-from indico_startup_assistance import _
+from indico_room_assistance import _
 
 
-class WPStartupAssistance(WPJinjaMixinPlugin, WPDecorated):
+class WPRoomAssistance(WPJinjaMixinPlugin, WPDecorated):
     def _get_breadcrumbs(self):
-        return render_breadcrumbs(_('Startup assistance'))
+        return render_breadcrumbs(_('Room assistance'))
 
     def _getBody(self, params):
         return self._getPageContent(params)

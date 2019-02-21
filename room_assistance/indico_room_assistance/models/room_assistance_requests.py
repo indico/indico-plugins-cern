@@ -11,11 +11,11 @@ from indico.core.db.sqlalchemy import db
 from indico.util.string import format_repr
 
 
-class StartupAssistanceRequest(db.Model):
-    """Startup assistance requests"""
+class RoomAssistanceRequest(db.Model):
+    """Room assistance requests"""
 
-    __tablename__ = 'startup_assistance_requests'
-    __table_args__ = {'schema': 'plugin_startup_assistance'}
+    __tablename__ = 'room_assistance_requests'
+    __table_args__ = {'schema': 'plugin_room_assistance'}
 
     reservation_id = db.Column(
         db.ForeignKey('roombooking.reservations.id'),
@@ -27,7 +27,8 @@ class StartupAssistanceRequest(db.Model):
         uselist=False,
         lazy=False,
         backref=db.backref(
-            'startup_assistance_request',
+            'room_assistance_request',
+            cascade='all, delete-orphan',
             uselist=False,
             lazy=True
         )

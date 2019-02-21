@@ -9,7 +9,7 @@ from __future__ import unicode_literals
 
 from indico.web.rh import RHProtected
 
-from indico_startup_assistance.views import WPStartupAssistance
+from indico_room_assistance.views import WPRoomAssistance
 
 
 class RHRequestList(RHProtected):
@@ -19,4 +19,4 @@ class RHRequestList(RHProtected):
         RHProtected._check_access(self)
 
     def _process(self):
-        return WPStartupAssistance.render_template('request_list.html')
+        return WPRoomAssistance.render_template('request_list.html')

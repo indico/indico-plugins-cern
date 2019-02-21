@@ -7,10 +7,10 @@
 
 from __future__ import unicode_literals
 
+from indico.core.plugins import IndicoPluginBlueprint
 
-def create_startup_assistance_request(reservation):
-    pass
+from indico_room_assistance.controllers import RHRequestList
 
 
-def cancel_startup_assistance_request(reservation):
-    pass
+blueprint = IndicoPluginBlueprint('room_assistance', __name__, url_prefix='/service/room-assistance')
+blueprint.add_url_rule('/', 'request_list', RHRequestList)

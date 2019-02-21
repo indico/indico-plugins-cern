@@ -11,7 +11,7 @@ from setuptools import find_packages, setup
 
 
 setup(
-    name='indico-plugin-startup-assistance',
+    name='indico-plugin-room-assistance',
     version='3.0-dev',
     url='https://github.com/indico/indico-plugins-cern',
     license='MIT',
@@ -24,7 +24,7 @@ setup(
         'indico>=2.2.dev0'
     ],
     entry_points={
-        'indico.plugins': {'startup_assistance = indico_startup_assistance.plugin:StartupAssistanceRequestPlugin'},
+        'indico.plugins': {'room_assistance = indico_room_assistance.plugin:RoomAssistanceRequestPlugin'},
     },
     classifiers=[
         'Environment :: Plugins',

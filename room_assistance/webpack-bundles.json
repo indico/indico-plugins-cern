@@ -1,0 +1,5 @@
+{
+    "entry": {
+        "room_assistance": "./js/index.js"
+    }
+}

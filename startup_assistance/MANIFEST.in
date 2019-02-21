@@ -1,6 +1,0 @@
-graft indico_startup_assistance/migrations
-graft indico_startup_assistance/static
-graft indico_startup_assistance/templates
-graft indico_startup_assistance/translations
-
-global-exclude *.pyc __pycache__ .keep

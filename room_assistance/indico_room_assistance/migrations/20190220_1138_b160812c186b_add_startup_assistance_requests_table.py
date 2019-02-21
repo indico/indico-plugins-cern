@@ -23,13 +23,13 @@ def upgrade():
     if context.is_offline_mode():
         raise Exception('This upgrade is only possible in online mode')
 
-    op.execute(CreateSchema('plugin_startup_assistance'))
+    op.execute(CreateSchema('plugin_room_assistance'))
     op.create_table(
-        'startup_assistance_requests',
+        'room_assistance_requests',
         sa.Column('reservation_id', sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(['reservation_id'], ['roombooking.reservations.id']),
         sa.PrimaryKeyConstraint('reservation_id'),
-        schema='plugin_startup_assistance'
+        schema='plugin_room_assistance'
     )
 
     conn = op.get_bind()
@@ -41,7 +41,7 @@ def upgrade():
     ''')
     for row in res:
         conn.execute('''
-            INSERT INTO plugin_startup_assistance.startup_assistance_requests
+            INSERT INTO plugin_room_assistance.room_assistance_requests
             VALUES (%s)
         ''', (row.id,))
 
@@ -57,12 +57,12 @@ def downgrade():
                   schema='roombooking')
 
     conn = op.get_bind()
-    res = conn.execute('SELECT reservation_id FROM plugin_startup_assistance.startup_assistance_requests')
+    res = conn.execute('SELECT reservation_id FROM plugin_room_assistance.room_assistance_requests')
     for row in res:
         resv = conn.execute('SELECT TRUE FROM roombooking.reservations WHERE id = %s', (row.reservation_id,)).scalar()
         if not bool(resv):
             continue
         conn.execute('UPDATE roombooking.reservations SET needs_assistance = TRUE WHERE id = %s', (row.reservation_id,))
 
-    op.drop_table('startup_assistance_requests', schema='plugin_startup_assistance')
-    op.execute(DropSchema('plugin_startup_assistance'))
+    op.drop_table('room_assistance_requests', schema='plugin_room_assistance')
+    op.execute(DropSchema('plugin_room_assistance'))

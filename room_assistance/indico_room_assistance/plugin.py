@@ -10,52 +10,58 @@ from __future__ import unicode_literals
 from flask_pluginengine import url_for_plugin
 
 from indico.core import signals
+from indico.core.db import db
 from indico.core.plugins import IndicoPlugin
 from indico.modules.rb_new.views.base import WPRoomBookingBase
+from indico.web.forms.base import IndicoForm
+from indico.web.forms.fields import EmailListField
 from indico.web.menu import TopMenuItem
 
-from indico_startup_assistance import _
-from indico_startup_assistance.blueprint import blueprint
-from indico_startup_assistance.forms import StartupAssistanceForm
-from indico_startup_assistance.operations import cancel_startup_assistance_request, create_startup_assistance_request
+from indico_room_assistance import _
+from indico_room_assistance.blueprint import blueprint
+from indico_room_assistance.models.room_assistance_requests import RoomAssistanceRequest
 
 
-class StartupAssistanceRequestPlugin(IndicoPlugin):
-    """Startup assistance request
+class RoomAssistanceForm(IndicoForm):
+    room_assistance_recipients = EmailListField(_('Recipients'))
+
+
+class RoomAssistanceRequestPlugin(IndicoPlugin):
+    """Room assistance request
 
     Provides a service request where users can ask
     for startup assistance with their booking.
     """
 
     configurable = True
-    settings_form = StartupAssistanceForm
+    settings_form = RoomAssistanceForm
     default_settings = {
-        'startup_assistance_recipients': [],
+        'room_assistance_recipients': [],
     }
 
     def init(self):
-        super(StartupAssistanceRequestPlugin, self).init()
+        super(RoomAssistanceRequestPlugin, self).init()
         self.connect(signals.menu.items, self._extend_services_menu, sender='top-menu')
         self.connect(signals.rb.booking_created, self._create_request_if_necessary)
         self.inject_bundle('react.js', WPRoomBookingBase)
         self.inject_bundle('semantic-ui.js', WPRoomBookingBase)
-        self.inject_bundle('startup_assistance.js', WPRoomBookingBase)
-        self.inject_bundle('startup_assistance.css', WPRoomBookingBase)
+        self.inject_bundle('room_assistance.js', WPRoomBookingBase)
+        self.inject_bundle('room_assistance.css', WPRoomBookingBase)
 
     def get_blueprints(self):
         return blueprint
 
     def _extend_services_menu(self, reservation, **kwargs):
-        return TopMenuItem('services-cern-startup-assistance', _('Startup assistance'),
-                           url_for_plugin('startup_assistance.request_list'), section='services')
+        return TopMenuItem('services-cern-room-assistance', _('Room assistance'),
+                           url_for_plugin('room_assistance.request_list'), section='services')
 
-    def _create_request_if_necessary(self, reservation, **kwargs):
-        extra_fields = kwargs.get('extra_fields', {})
+    def _create_request_if_necessary(self, reservation, extra_fields, **kwargs):
         if not extra_fields:
             return
 
-        should_create_request = extra_fields.get('notificationForAssistance')
+        should_create_request = extra_fields.get('notification_for_assistance')
         if not should_create_request:
             return
 
-        create_startup_assistance_request(reservation)
+        reservation.room_assistance_request = RoomAssistanceRequest()
+        db.session.flush()

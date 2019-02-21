@@ -19,7 +19,7 @@ from indico.core.plugins import get_plugin_template_module
 from indico.modules.rb.models.reservation_occurrences import ReservationOccurrence
 from indico.modules.rb.models.reservations import Reservation
 
-from indico_startup_assistance.plugin import StartupAssistanceRequestPlugin
+from indico_room_assistance.plugin import RoomAssistanceRequestPlugin
 
 
 def _send_email(recipients, template):
@@ -38,8 +38,8 @@ def _get_reservations():
             .all())
 
 
-@celery.periodic_task(run_every=crontab(minute='0', hour='6'), plugin='startup_assistance')
-def startup_assistance_emails():
+@celery.periodic_task(run_every=crontab(minute='0', hour='6'), plugin='room_assistance')
+def room_assistance_emails():
     reservations = _get_reservations()
     reservations_by_room = OrderedDict()
     for reservation in reservations:
@@ -47,7 +47,7 @@ def startup_assistance_emails():
             reservations_by_room[reservation.room].append(reservation)
         else:
             reservations_by_room[reservation.room] = [reservation]
-    template = get_plugin_template_module('startup_assistance_emails.html', reservations_by_room=reservations_by_room)
-    recipients = StartupAssistanceRequestPlugin.settings.get('startup_assistance_recipients')
+    template = get_plugin_template_module('room_assistance_emails.html', reservations_by_room=reservations_by_room)
+    recipients = RoomAssistanceRequestPlugin.settings.get('room_assistance_recipients')
     if recipients:
         _send_email(recipients, template)
