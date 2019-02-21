@@ -93,6 +93,9 @@ const BookRoomModal = parametrize(DefaultBookRoomModal, () => ({
     defaultTitles: {
         booking: Translate.string('Book a Desk'),
         preBooking: Translate.string('Pre-book a Desk')
+    },
+    optionalFields: {
+        reason: true,
     }
 }));
 
@@ -110,6 +113,9 @@ const BookingEditForm = parametrize(DefaultBookingEditForm, {
         daily: false,
         recurring: true,
     },
+    optionalFields: {
+        reason: true,
+    }
 });
 
 const SidebarMenu = parametrize(DefaultSidebarMenu, {
