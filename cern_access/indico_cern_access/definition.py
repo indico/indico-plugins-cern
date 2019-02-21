@@ -17,7 +17,7 @@ from indico.modules.events.requests.models.requests import RequestState
 from indico.web.forms.base import FormDefaults
 
 from indico_cern_access import _
-from indico_cern_access.forms import CERNAccessForm, RegformDataMode
+from indico_cern_access.forms import CERNAccessForm
 from indico_cern_access.util import (check_access, get_access_dates, handle_event_time_update, is_authorized_user,
                                      is_category_blacklisted, is_event_too_early, update_access_request,
                                      withdraw_event_access_request)
@@ -27,14 +27,15 @@ class CERNAccessRequestDefinition(RequestDefinitionBase):
     name = 'cern-access'
     title = _('CERN Visitor Badges')
     form = CERNAccessForm
-    form_defaults = {'regform_data_mode': RegformDataMode.during_registration}
+    form_defaults = {'during_registration': True,
+                     'during_registration_preselected': False,
+                     'during_registration_required': False}
 
     @classmethod
     def create_form(cls, event, existing_request=None):
         default_data = cls.form_defaults
         if existing_request:
             default_data = dict(existing_request.data)
-            default_data.setdefault('regform_data_mode', RegformDataMode.after_registration)
             if default_data['start_dt_override']:
                 default_data['start_dt_override'] = dateutil.parser.parse(default_data['start_dt_override'])
             if default_data['end_dt_override']:
