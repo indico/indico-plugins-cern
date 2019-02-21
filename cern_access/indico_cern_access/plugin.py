@@ -40,10 +40,10 @@ from indico_cern_access.definition import CERNAccessRequestDefinition
 from indico_cern_access.forms import AccessIdentityDataForm, RegistrationFormPersonalDataForm
 from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState
 from indico_cern_access.placeholders import AccessPeriodPlaceholder, FormLinkPlaceholder, TicketAccessDatesPlaceholder
-from indico_cern_access.util import (RegformDataMode, build_access_request_data, get_access_dates, get_last_request,
-                                     get_requested_forms, get_requested_registrations, handle_event_time_update,
-                                     notify_access_withdrawn, send_adams_delete_request, send_adams_post_request,
-                                     update_access_requests, withdraw_access_requests)
+from indico_cern_access.util import (build_access_request_data, get_access_dates, get_last_request, get_requested_forms,
+                                     get_requested_registrations, handle_event_time_update, notify_access_withdrawn,
+                                     send_adams_delete_request, send_adams_post_request, update_access_requests,
+                                     withdraw_access_requests)
 
 
 class PluginSettingsForm(IndicoForm):
@@ -164,15 +164,14 @@ class CERNAccessPlugin(IndicoPlugin):
 
         if regform.cern_access_request and regform.cern_access_request.is_active:
             req = get_last_request(event)
-            mode = req.data.get('regform_data_mode')
-            if not RegformDataMode.is_during(mode):
+            if not req.data['during_registration']:
                 return
-            required = mode == RegformDataMode.during_registration_required
+            required = req.data['during_registration_required']
             form_cls = AccessIdentityDataForm if required else RegistrationFormPersonalDataForm
             form = g.get('personal_data_form')
             if not form:
                 form = form_cls()
-                if mode == RegformDataMode.during_registration_default:
+                if req.data['during_registration_preselected'] and not required:
                     form.request_cern_access.data = True
             start_dt, end_dt = get_access_dates(req)
             return render_plugin_template('regform_identity_data_section.html', event=event, form=form,
@@ -201,11 +200,10 @@ class CERNAccessPlugin(IndicoPlugin):
             return
 
         req = get_last_request(registration.event)
-        mode = req.data.get('regform_data_mode')
-        if not RegformDataMode.is_during(mode):
+        if not req.data['during_registration']:
             return
 
-        required = mode == RegformDataMode.during_registration_required
+        required = req.data['during_registration_required']
         if not required and not personal_data_form.request_cern_access.data:
             return
 
@@ -226,11 +224,10 @@ class CERNAccessPlugin(IndicoPlugin):
         if not req:
             return
 
-        mode = req.data.get('regform_data_mode')
-        if not RegformDataMode.is_during(mode):
+        if not req.data['during_registration']:
             return
 
-        required = mode == RegformDataMode.during_registration_required
+        required = req.data['during_registration_required']
         form_cls = AccessIdentityDataForm if required else RegistrationFormPersonalDataForm
         g.personal_data_form = form = form_cls()
         if not form.validate_on_submit():

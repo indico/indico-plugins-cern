@@ -48,3 +48,18 @@
         {{ super() }}
     {% endif %}
 {% endblock %}
+
+{% block scripts %}
+    <script>
+        $('#request-during_registration').on('change', function() {
+            if (!this.checked) {
+                $('#request-during_registration_preselected').prop('checked', false).trigger('change');
+            }
+        });
+        $('#request-during_registration_preselected').on('change', function() {
+            if (!this.checked) {
+                $('#request-during_registration_required').prop('checked', false).trigger('change');
+            }
+        });
+    </script>
+{% endblock %}

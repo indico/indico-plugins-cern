@@ -21,14 +21,12 @@ from indico.modules.events.requests import RequestFormBase
 from indico.util.countries import get_countries
 from indico.util.placeholders import get_missing_placeholders, render_placeholder_info
 from indico.web.forms.base import IndicoForm
-from indico.web.forms.fields import (IndicoDateField, IndicoDateTimeField, IndicoEnumSelectField,
-                                     IndicoSelectMultipleCheckboxField)
+from indico.web.forms.fields import IndicoDateField, IndicoDateTimeField, IndicoSelectMultipleCheckboxField
 from indico.web.forms.util import inject_validators
-from indico.web.forms.validators import LinkedDateTime, UsedIf
+from indico.web.forms.validators import HiddenUnless, LinkedDateTime, UsedIf
 from indico.web.forms.widgets import JinjaWidget, SwitchWidget
 
 from indico_cern_access import _
-from indico_cern_access.util import RegformDataMode
 
 
 class GrantAccessEmailForm(EmailRegistrantsForm):
@@ -57,14 +55,22 @@ class CERNAccessForm(RequestFormBase):
     regforms = IndicoSelectMultipleCheckboxField(_('Registration forms'),
                                                  [DataRequired(_('At least one registration form has to be selected'))],
                                                  widget=JinjaWidget('regform_list_widget.html', 'cern_access'))
-    regform_data_mode = IndicoEnumSelectField(_('Show during user registration'),
-                                              enum=RegformDataMode, keep_enum=False,
-                                              description=_("When enabled, users can request site access while "
-                                                            "registering and provide their additional personal data "
-                                                            "in the registration form. When set to required, the user "
-                                                            "cannot register without providing this data. In any case, "
-                                                            "site access is only granted after a manager explicitly "
-                                                            "enables it for the registrations."))
+    during_registration = BooleanField(_('Show during user registration'), widget=SwitchWidget(),
+                                       description=_("When enabled, users can request site access while registering "
+                                                     "and provide their additional personal data in the registration "
+                                                     "form. In any case, site access is only granted after a manager "
+                                                     "explicitly enables it for the registrants."))
+    during_registration_preselected = BooleanField(_('Preselect during user registration'),
+                                                   [HiddenUnless('during_registration')], widget=SwitchWidget(),
+                                                   description=_("Preselect the option to request site access during "
+                                                                 "registration. Recommended if most registrants will "
+                                                                 "need it."))
+    during_registration_required = BooleanField(_('Require during user registration'),
+                                                [HiddenUnless('during_registration_preselected')],
+                                                widget=SwitchWidget(),
+                                                description=_("Require all users to provide data for site access. "
+                                                              "Registration without entering the data will not be "
+                                                              "possible."))
     start_dt_override = IndicoDateTimeField(_('Start date override'), [Optional()],
                                             description=_("If set, CERN access will be granted starting at the "
                                                           "specified date instead of the event's start date"))
