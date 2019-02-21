@@ -8,7 +8,7 @@ Create Date: 2019-02-20 11:38:08.691528
 from __future__ import unicode_literals
 
 import sqlalchemy as sa
-from alembic import context, op
+from alembic import op
 from sqlalchemy.sql.ddl import CreateSchema, DropSchema
 
 
@@ -20,9 +20,6 @@ depends_on = None
 
 
 def upgrade():
-    if context.is_offline_mode():
-        raise Exception('This upgrade is only possible in online mode')
-
     op.execute(CreateSchema('plugin_room_assistance'))
     op.create_table(
         'room_assistance_requests',
@@ -33,36 +30,54 @@ def upgrade():
     )
 
     conn = op.get_bind()
-    res = conn.execute('''
-        SELECT id FROM roombooking.reservations
-        WHERE needs_assistance
-        AND end_dt > NOW()::TIMESTAMP
-        AND state IN (1, 2)
+    conn.execute('''
+        INSERT INTO plugin_room_assistance.room_assistance_requests
+        SELECT id FROM roombooking.reservations WHERE needs_assistance
     ''')
-    for row in res:
-        conn.execute('''
-            INSERT INTO plugin_room_assistance.room_assistance_requests
-            VALUES (%s)
-        ''', (row.id,))
 
-    op.drop_column('reservations', 'needs_assistance', schema='roombooking')
+    conn.execute('''
+        UPDATE settings SET module = 'plugin_room_assistance', name = 'room_assistance_recipients'
+        WHERE module = 'plugin_cronjobs_cern' AND name = 'startup_assistance_recipients'
+    ''')
+    conn.execute('''
+        UPDATE settings SET module = 'plugin_room_assistance'
+        WHERE module = 'plugin_cronjobs_cern'
+        AND name IN ('rooms', 'reservation_rooms', 'categories', 'conf_room_recipients')
+    ''')
+    conn.execute('''
+        INSERT INTO settings (module, name, value)
+        VALUES (
+            'plugin_room_assistance',
+            'rooms_with_assistance',
+            array_to_json(ARRAY(SELECT id FROM roombooking.rooms WHERE notification_for_assistance))
+        )
+    ''')
 
 
 def downgrade():
-    if context.is_offline_mode():
-        raise Exception('This downgrade is only possible in online mode')
-
-    op.add_column('reservations',
-                  sa.Column('needs_assistance', sa.Boolean(), nullable=False, server_default='false'),
-                  schema='roombooking')
-
     conn = op.get_bind()
-    res = conn.execute('SELECT reservation_id FROM plugin_room_assistance.room_assistance_requests')
-    for row in res:
-        resv = conn.execute('SELECT TRUE FROM roombooking.reservations WHERE id = %s', (row.reservation_id,)).scalar()
-        if not bool(resv):
-            continue
-        conn.execute('UPDATE roombooking.reservations SET needs_assistance = TRUE WHERE id = %s', (row.reservation_id,))
+    conn.execute('''
+        UPDATE roombooking.reservations SET needs_assistance = TRUE
+        WHERE id IN (SELECT reservation_id FROM plugin_room_assistance.room_assistance_requests)
+    ''')
+    conn.execute('''
+        UPDATE roombooking.rooms SET notification_for_assistance = TRUE
+        WHERE id::TEXT IN (
+            SELECT json_array_elements_text(value) FROM settings
+            WHERE module = 'plugin_room_assistance' AND name = 'rooms_with_assistance'
+        )
+    ''')
+
+    conn.execute('''
+        UPDATE settings SET module = 'plugin_cronjobs_cern', name = 'startup_assistance_recipients'
+        WHERE module = 'plugin_room_assistance' AND name = 'room_assistance_recipients'
+    ''')
+    conn.execute('''
+        UPDATE settings SET module = 'plugin_cronjobs_cern'
+        WHERE module = 'plugin_room_assistance'
+        AND name IN ('rooms', 'reservation_rooms', 'categories', 'conf_room_recipients')
+    ''')
+    conn.execute("DELETE FROM settings WHERE module = 'plugin_room_assistance' and name = 'rooms_with_assistance'")
 
     op.drop_table('room_assistance_requests', schema='plugin_room_assistance')
     op.execute(DropSchema('plugin_room_assistance'))
