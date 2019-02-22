@@ -73,7 +73,7 @@ class BurotelPlugin(IndicoPlugin):
             request.args = ImmutableMultiDict(patch_time(request.args.to_dict()))
         if request.json and 'start_dt' in request.json:
             data = patch_time(request.json)
-            request.data = json.dumps(data)
+            request.data = request._cached_data = json.dumps(data)
             request._cached_json = data
         if request.endpoint in {'categories.display', 'rooms_new.roombooking'}:
             return redirect(url_for_plugin('burotel.landing'))
