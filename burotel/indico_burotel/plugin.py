@@ -9,14 +9,15 @@ from __future__ import unicode_literals
 
 from datetime import datetime, time
 
-from flask import current_app, json, redirect, request
+from flask import current_app, json, redirect, request, url_for
 from marshmallow import Schema, fields
 from werkzeug.datastructures import ImmutableMultiDict
 
-from indico.core.plugins import IndicoPlugin, url_for_plugin
+from indico.core.plugins import IndicoPlugin
 from indico.util.marshmallow import NaiveDateTime
+from indico.web.flask.util import make_view_func
 
-from indico_burotel.controllers import WPBurotelBase
+from indico_burotel.controllers import RHLanding, WPBurotelBase
 
 
 class DateSchema(Schema):
@@ -64,16 +65,18 @@ class BurotelPlugin(IndicoPlugin):
         self.inject_bundle('burotel.js', WPBurotelBase)
         self.inject_bundle('burotel.css', WPBurotelBase)
 
-    def get_blueprints(self):
-        from indico_burotel.blueprint import blueprint
-        return blueprint
-
     def _before_request(self):
-        if 'start_dt' in request.args:
-            request.args = ImmutableMultiDict(patch_time(request.args.to_dict()))
-        if request.json and 'start_dt' in request.json:
-            data = patch_time(request.json)
-            request.data = request._cached_data = json.dumps(data)
-            request._cached_json = data
-        if request.endpoint in {'categories.display', 'rooms_new.roombooking'}:
-            return redirect(url_for_plugin('burotel.landing'))
+        if request.endpoint == 'categories.display':
+            return redirect(url_for('rooms_new.roombooking'))
+        elif request.endpoint == 'rooms_new.roombooking':
+            # render our own landing page instead of the original RH
+            return make_view_func(RHLanding)()
+
+        # convert dates to datetimes
+        if request.blueprint == 'rooms_new':
+            if 'start_dt' in request.args:
+                request.args = ImmutableMultiDict(patch_time(request.args.to_dict()))
+            if request.json and 'start_dt' in request.json:
+                data = patch_time(request.json)
+                request.data = request._cached_data = json.dumps(data)
+                request._cached_json = data
