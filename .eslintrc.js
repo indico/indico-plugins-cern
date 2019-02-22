@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const path = require('path');
-const fs = require('fs')
-const yaml = require('js-yaml')
+const fs = require('fs');
+const yaml = require('js-yaml');
 const {execSync} = require('child_process');
 
 // Returns the path to the Indico source package/repo

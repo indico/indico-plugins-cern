@@ -15,3 +15,5 @@ wheelhouse/
 webpack-build-config.json
 .indico_source
 .jsconfig.json
+node_modules/
+package-lock.json
