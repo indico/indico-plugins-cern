@@ -7,15 +7,10 @@
 
 from __future__ import unicode_literals
 
-from datetime import datetime, time
-
-from marshmallow_enum import EnumField
-from webargs import fields
-from webargs.flaskparser import use_args
-
-from indico_burotel import _
 from indico.modules.rb.controllers import RHRoomBookingBase
 from indico.web.views import WPNewBase
+
+from indico_burotel import _
 
 
 class WPBurotelBase(WPNewBase):
