@@ -80,3 +80,9 @@ class BurotelPlugin(IndicoPlugin):
                 data = patch_time(request.json)
                 request.data = request._cached_data = json.dumps(data)
                 request._cached_json = data
+
+        if request.endpoint == 'rooms_new.create_booking':
+            # inject default booking reason if there's none
+            if 'reason' not in request.json:
+                request._cached_json['reason'] = 'Burotel booking'
+                request.data = request._cached_data = json.dumps(request._cached_json)
