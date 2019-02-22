@@ -23,10 +23,16 @@ class DateSchema(Schema):
     start_dt = fields.Date()
     end_dt = fields.Date()
 
+    class Meta:
+        strict = True  # TODO: remove with marshmallow 3
+
 
 class DateTimeSchema(Schema):
     start_dt = NaiveDateTime()
     end_dt = NaiveDateTime()
+
+    class Meta:
+        strict = True  # TODO: remove with marshmallow 3
 
 
 def patch_time(args):
