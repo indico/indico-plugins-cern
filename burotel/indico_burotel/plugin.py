@@ -13,9 +13,9 @@ from flask import current_app, json, redirect, request
 from marshmallow import Schema, fields
 from werkzeug.datastructures import ImmutableMultiDict
 
-from indico.core.plugins import IndicoPlugin
+from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.util.marshmallow import NaiveDateTime
-from indico.web.flask.util import url_for
+
 from indico_burotel.controllers import WPBurotelBase
 
 
@@ -70,4 +70,4 @@ class BurotelPlugin(IndicoPlugin):
             request.data = json.dumps(data)
             request._cached_json = data
         if request.endpoint in {'categories.display', 'rooms_new.roombooking'}:
-            return redirect(url_for('plugin_burotel.landing'))
+            return redirect(url_for_plugin('burotel.landing'))
