@@ -7,7 +7,10 @@
 
 from __future__ import unicode_literals
 
+from flask import jsonify, session
+
 from indico.modules.rb.controllers import RHRoomBookingBase
+from indico.web.rh import RHProtected
 from indico.web.views import WPNewBase
 
 from indico_burotel import _
@@ -22,3 +25,9 @@ class WPBurotelBase(WPNewBase):
 class RHLanding(RHRoomBookingBase):
     def _process(self):
         return WPBurotelBase.display('room_booking.html')
+
+
+class RHUserExperiment(RHProtected):
+    def _process(self):
+        from indico_burotel.plugin import BurotelPlugin
+        return jsonify(default_experiment=BurotelPlugin.user_settings.get(session.user, 'default_experiment'))
