@@ -7,6 +7,9 @@
 
 from __future__ import unicode_literals
 
+from flask import jsonify
+
+from indico.util.caching import memoize_redis
 from indico.web.rh import RHProtected
 
 from indico_room_assistance.views import WPRoomAssistance
@@ -15,8 +18,16 @@ from indico_room_assistance.views import WPRoomAssistance
 class RHRequestList(RHProtected):
     """Provides a list of videoconference assistance requests"""
 
-    def _check_access(self):
-        RHProtected._check_access(self)
-
     def _process(self):
         return WPRoomAssistance.render_template('request_list.html')
+
+
+class RHRoomsWithAssistance(RHProtected):
+    @memoize_redis(900)
+    def _jsonify_rooms_with_assistance(self):
+        from indico_room_assistance.plugin import RoomAssistancePlugin
+        rooms = RoomAssistancePlugin.settings.get('rooms_with_assistance')
+        return jsonify([room.id for room in rooms])
+
+    def _process(self):
+        return self._jsonify_rooms_with_assistance()

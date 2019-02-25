@@ -6,14 +6,28 @@
  * the LICENSE file for more details.
  */
 
+import fetchRoomsWithAssistanceURL from 'indico-url:plugin_room_assistance.rooms';
 import React from 'react';
 import PropTypes from 'prop-types';
 import {Field} from 'react-final-form';
 
 import {Translate} from 'indico/react/i18n';
 import {ReduxCheckboxField} from 'indico/react/forms';
+import {indicoAxios, handleAxiosError} from 'indico/utils/axios';
 
 import './BookRoomExtraField.module.scss';
+
+
+async function getListOfRoomsWithAssistance() {
+    let response;
+    try {
+        response = await indicoAxios.get(fetchRoomsWithAssistanceURL());
+    } catch (error) {
+        handleAxiosError(error);
+        return;
+    }
+    return response.data;
+}
 
 
 export default class BookRoomExtraField extends React.Component {
@@ -27,9 +41,20 @@ export default class BookRoomExtraField extends React.Component {
         disabled: false,
     };
 
+    state = {
+        roomsWithAssistance: [],
+    };
+
+    async componentDidMount() {
+        const roomsWithAssistance = await getListOfRoomsWithAssistance();
+        this.setState({roomsWithAssistance});
+    }
+
     render() {
-        const {room: {notificationForAssistance}, disabled} = this.props;
-        if (!notificationForAssistance) {
+        const {room: {id}, disabled, form} = this.props;
+        const {roomsWithAssistance} = this.state;
+
+        if (!roomsWithAssistance.includes(id)) {
             return null;
         }
 

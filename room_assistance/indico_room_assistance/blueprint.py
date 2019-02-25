@@ -9,8 +9,9 @@ from __future__ import unicode_literals
 
 from indico.core.plugins import IndicoPluginBlueprint
 
-from indico_room_assistance.controllers import RHRequestList
+from indico_room_assistance.controllers import RHRequestList, RHRoomsWithAssistance
 
 
 blueprint = IndicoPluginBlueprint('room_assistance', __name__, url_prefix='/service/room-assistance')
 blueprint.add_url_rule('/', 'request_list', RHRequestList)
+blueprint.add_url_rule('/api/rooms', 'rooms', RHRoomsWithAssistance)
