@@ -39,6 +39,7 @@ export default class BookRoomExtraField extends React.Component {
                    component={ReduxCheckboxField}
                    componentLabel={Translate.string('Request startup assistance before the booking')}
                    disabled={disabled}
+                   reactFinalForm={form}
                    toggle />
         );
     }
