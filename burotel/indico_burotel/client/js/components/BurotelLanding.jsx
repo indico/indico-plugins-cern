@@ -27,7 +27,7 @@ export default class BurotelLanding extends React.Component {
             handleAxiosError(error);
             return;
         }
-        const experiment = response.data.default_experiment;
+        const experiment = response.data.value;
         if (this.landing.current && experiment) {
             this.landing.current.setExtraState({division: 'ATLAS'});
         }

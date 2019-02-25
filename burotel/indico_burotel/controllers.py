@@ -8,6 +8,8 @@
 from __future__ import unicode_literals
 
 from flask import jsonify, session
+from webargs import fields, validate
+from webargs.flaskparser import use_kwargs
 
 from indico.modules.rb.controllers import RHRoomBookingBase
 from indico.web.rh import RHProtected
@@ -28,6 +30,13 @@ class RHLanding(RHRoomBookingBase):
 
 
 class RHUserExperiment(RHProtected):
-    def _process(self):
+    def _process_GET(self):
         from indico_burotel.plugin import BurotelPlugin
-        return jsonify(default_experiment=BurotelPlugin.user_settings.get(session.user, 'default_experiment'))
+        return jsonify(value=BurotelPlugin.user_settings.get(session.user, 'default_experiment'))
+
+    @use_kwargs({
+        'value': fields.String(validate=validate.OneOf({'ATLAS', 'CMS', 'ALICE'}), allow_none=True)
+    })
+    def _process_POST(self, value):
+        from indico_burotel.plugin import BurotelPlugin
+        BurotelPlugin.user_settings.set(session.user, 'default_experiment', value)

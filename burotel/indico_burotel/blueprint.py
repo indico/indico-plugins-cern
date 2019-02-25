@@ -14,6 +14,6 @@ from indico_burotel.controllers import RHUserExperiment
 
 blueprint = IndicoPluginBlueprint('burotel', __name__, url_prefix='/rooms-new')
 
-blueprint.add_url_rule('/api/user/experiment', 'user_experiment', RHUserExperiment)
+blueprint.add_url_rule('/api/user/experiment', 'user_experiment', RHUserExperiment, methods=('GET', 'POST'))
 
 # XXX: RHLanding is not handled here on purpose!

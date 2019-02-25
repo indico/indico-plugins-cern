@@ -9,21 +9,16 @@ from __future__ import unicode_literals
 
 from datetime import datetime, time
 
-from flask import current_app, json, redirect, request, session, url_for
+from flask import current_app, json, redirect, request, url_for
 from marshmallow import Schema, fields
 from werkzeug.datastructures import ImmutableMultiDict
 
-from indico.core import signals
 from indico.core.plugins import IndicoPlugin
-from indico.modules.rb_new.controllers.backend.rooms import RHSearchRooms
 from indico.util.marshmallow import NaiveDateTime
 from indico.web.flask.util import make_view_func
 
 from indico_burotel.blueprint import blueprint
 from indico_burotel.controllers import RHLanding, WPBurotelBase
-
-
-EXPERIMENTS = ['ATLAS', 'CMS', 'ALICE']
 
 
 class DateSchema(Schema):
@@ -68,7 +63,6 @@ class BurotelPlugin(IndicoPlugin):
     def init(self):
         super(BurotelPlugin, self).init()
         current_app.before_request(self._before_request)
-        self.connect(signals.rh.process, self._search_rooms_processed, sender=RHSearchRooms)
         self.inject_bundle('react.js', WPBurotelBase)
         self.inject_bundle('react.css', WPBurotelBase)
         self.inject_bundle('semantic-ui.js', WPBurotelBase)
@@ -100,9 +94,3 @@ class BurotelPlugin(IndicoPlugin):
             if 'reason' not in request.json:
                 request._cached_json['reason'] = 'Burotel booking'
                 request.data = request._cached_data = json.dumps(request._cached_json)
-
-    def _search_rooms_processed(self, sender, rh, result, **kwargs):
-        division = request.args.get('division')
-        if division not in EXPERIMENTS:
-            division = None
-        self.user_settings.set(session.user, 'default_experiment', division)
