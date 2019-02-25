@@ -8,13 +8,18 @@
 from __future__ import unicode_literals
 
 from flask_pluginengine import url_for_plugin
+from wtforms import ValidationError
 
 from indico.core import signals
 from indico.core.db import db
 from indico.core.plugins import IndicoPlugin
+from indico.core.settings.converters import SettingConverter
+from indico.modules.categories.models.categories import Category
+from indico.modules.rb.models.rooms import Room
 from indico.modules.rb_new.views.base import WPRoomBookingBase
+from indico.util.string import natural_sort_key
 from indico.web.forms.base import IndicoForm
-from indico.web.forms.fields import EmailListField
+from indico.web.forms.fields import EmailListField, IndicoQuerySelectMultipleField, MultipleItemsField
 from indico.web.menu import TopMenuItem
 
 from indico_room_assistance import _
@@ -22,21 +27,70 @@ from indico_room_assistance.blueprint import blueprint
 from indico_room_assistance.models.room_assistance_requests import RoomAssistanceRequest
 
 
+def _order_func(object_list):
+    return sorted(object_list, key=lambda r: natural_sort_key(r[1].full_name))
+
+
 class RoomAssistanceForm(IndicoForm):
+    _fieldsets = [
+        ('Conference room emails', ['rooms', 'reservation_rooms', 'categories', 'conf_room_recipients']),
+        ('Startup assistance emails', ['room_assistance_recipients', 'rooms_with_assistance']),
+    ]
+
+    rooms = IndicoQuerySelectMultipleField('Rooms', get_label='full_name', collection_class=set, render_kw={'size': 20},
+                                           modify_object_list=_order_func)
+    reservation_rooms = IndicoQuerySelectMultipleField('Reservation rooms', get_label='full_name', collection_class=set,
+                                                       render_kw={'size': 20}, modify_object_list=_order_func)
+    categories = MultipleItemsField('Categories', fields=[{'id': 'id', 'caption': 'Category ID', 'required': True}])
+    conf_room_recipients = EmailListField('Recipients')
+
     room_assistance_recipients = EmailListField(_('Recipients'))
+    rooms_with_assistance = IndicoQuerySelectMultipleField('Rooms', get_label='full_name', collection_class=set,
+                                                           render_kw={'size': 20}, modify_object_list=_order_func)
+
+    def __init__(self, *args, **kwargs):
+        super(RoomAssistanceForm, self).__init__(*args, **kwargs)
+        self.rooms.query = Room.query
+        self.reservation_rooms.query = Room.query
+        self.rooms_with_assistance.query = Room.query
+
+    def validate_categories(self, field):
+        ids = [x['id'] for x in field.data]
+        if Category.query.filter(Category.id.in_(ids)).count() != len(ids):
+            raise ValidationError('Not a valid category ID.')
+
+
+class RoomConverter(SettingConverter):
+    @staticmethod
+    def from_python(value):
+        return sorted(room.id for room in value)
+
+    @staticmethod
+    def to_python(value):
+        return Room.query.filter(Room.id.in_(value)).all()
 
 
 class RoomAssistanceRequestPlugin(IndicoPlugin):
     """Room assistance request
 
-    Provides a service request where users can ask
-    for startup assistance with their booking.
+    This plugin sends email notifications with information about reservations
+    for which their creators asked for assistance with the room.
     """
 
     configurable = True
     settings_form = RoomAssistanceForm
+    settings_converters = {
+        'rooms': RoomConverter,
+        'reservation_rooms': RoomConverter,
+        'rooms_with_assistance': RoomConverter
+    }
     default_settings = {
+        'rooms': set(),
+        'reservation_rooms': set(),
+        'categories': set(),
+        'conf_room_recipients': set(),
         'room_assistance_recipients': [],
+        'rooms_with_assistance': set(),
     }
 
     def init(self):
