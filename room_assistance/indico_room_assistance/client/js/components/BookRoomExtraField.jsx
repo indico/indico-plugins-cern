@@ -20,6 +20,7 @@ export default class BookRoomExtraField extends React.Component {
     static defaultProps = {
         room: PropTypes.object.isRequired,
         disabled: PropTypes.object,
+        form: PropTypes.object.isRequired,
     };
 
     static defaultProps = {

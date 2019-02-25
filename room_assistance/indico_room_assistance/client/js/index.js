@@ -6,8 +6,11 @@
  * the LICENSE file for more details.
  */
 
-import setup from 'indico/modules/rb_new/setup';
+import BookRoomExtraField from './components/BookRoomExtraField';
 
-import overrides from './overrides';
 
-setup({...overrides});
+document.addEventListener('DOMContentLoaded', () => {
+    window.registerOverride({
+        'BookRoomModal.extraFields': BookRoomExtraField
+    });
+});
