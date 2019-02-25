@@ -110,6 +110,7 @@ const BookingEditForm = parametrize(DefaultBookingEditForm, {
         single: true,
         daily: false,
         recurring: true,
+        timeSlot: true,
     }
 });
 
