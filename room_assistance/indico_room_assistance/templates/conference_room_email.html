@@ -1,5 +1,5 @@
 {% extends 'emails/base.html' %}
-{% from 'cronjobs_cern:_lists.html' import render_event_list, render_reservation_list %}
+{% from 'room_assistance:_lists.html' import render_event_list, render_reservation_list %}
 
 {% block subject %}Indico events requiring support for the coming two weeks{% endblock %}
 
@@ -10,11 +10,11 @@
 
     {% for room, events_by_date in events_by_room.iteritems() %}
         <p>Events in {{ room.name }}:</p>
-        {{ render_event_list(events_by_date, show_location=false) }}
+        {{ render_event_list(events_by_date) }}
     {% endfor %}
 
     <p>Committees:</p>
-    {{ render_event_list(committees_by_date, show_location=false) }}
+    {{ render_event_list(committees_by_date) }}
 
     {% for room, reservations_by_date in res_events_by_room.iteritems() %}
         <p>Events in {{ room.name }}:</p>

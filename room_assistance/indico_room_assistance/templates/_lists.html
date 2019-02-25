@@ -18,10 +18,25 @@
                                 <a href="{{ event.url }}">
                                     <span>{{ event.title }}</span>
                                 </a>
-                                <span> {{ event.get_room_name(full=false) }} </span>
                             </li>
                         {% endfor %}
                     </ul>
+                </li>
+            {% endfor %}
+        {% else %}
+            <li>No events</li>
+        {% endif %}
+    </ul>
+{% endmacro %}
+
+{% macro render_reservation_list(reservations) %}
+    <ul>
+        {% if reservations %}
+            {% for rsv in reservations %}
+                <li>
+                    {{ _format_time(rsv.start_dt) }} ⟶ {{ _format_time(rsv.end_dt) }}
+                    <a href="{{ rsv.details_url }}">{{ rsv.booking_reason }}</a>
+                    (Booked for: {{ rsv.booked_for_name }})
                 </li>
             {% endfor %}
         {% else %}

@@ -13,12 +13,9 @@ from datetime import date, datetime, time, timedelta
 from celery.schedules import crontab
 
 from indico.core.celery import celery
-from indico.core.db import db
 from indico.core.notifications import make_email, send_email
 from indico.core.plugins import get_plugin_template_module
 from indico.modules.events.models.events import Event
-from indico.modules.rb.models.reservation_occurrences import ReservationOccurrence
-from indico.modules.rb.models.reservations import Reservation
 from indico.util.date_time import as_utc, format_date
 from indico.util.string import to_unicode
 
@@ -43,19 +40,6 @@ def _group_by_date(object_list):
     return objects_grouped_by_date
 
 
-def _get_reservations_query(date_filter, room_id=None):
-    filters = [
-        date_filter,
-        ReservationOccurrence.is_valid,
-        Reservation.is_accepted,
-        Reservation.needs_assistance
-    ]
-    if room_id:
-        filters.append(Reservation.room_id == room_id)
-
-    return Reservation.query.filter(*filters).join(ReservationOccurrence).order_by(Reservation.start_dt)
-
-
 def _get_category_events_query(start_dt, end_dt, category_ids):
     return (Event.query
             .filter(~Event.is_deleted,
@@ -67,38 +51,6 @@ def _get_category_events_query(start_dt, end_dt, category_ids):
 def _send_email(recipients, template):
     email = make_email(from_address='noreply-indico-team@cern.ch', to_list=recipients, template=template, html=True)
     send_email(email, module='Indico Cronjobs CERN')
-
-
-@celery.periodic_task(run_every=crontab(minute='0', hour='8', day_of_week='friday'), plugin='cronjobs_cern')
-def conference_room_emails():
-    start_date, end_date = _get_start_end_date()
-    date_filter = db.and_(db.cast(Reservation.start_dt, db.Date) >= start_date,
-                          db.cast(Reservation.start_dt, db.Date) <= end_date)
-    start_dt = as_utc(datetime.combine(start_date, time()))
-    end_dt = as_utc(datetime.combine(end_date, time()))
-    events_by_room = {}
-    for room in CERNCronjobsPlugin.settings.get('rooms'):
-        query = (Event.query
-                 .filter(~Event.is_deleted,
-                         Event.happens_between(start_dt, end_dt),
-                         Event.own_room_id == room.id)
-                 .order_by(Event.start_dt))
-        events_by_room[room] = _group_by_date(query)
-
-    res_events_by_room = {}
-    for room in CERNCronjobsPlugin.settings.get('reservation_rooms'):
-        res_events_by_room[room] = _group_by_date(_get_reservations_query(date_filter, room_id=room.id))
-
-    category_ids = [int(category['id']) for category in CERNCronjobsPlugin.settings.get('categories')]
-    committees = _get_category_events_query(start_dt, end_dt, category_ids)
-
-    template = get_plugin_template_module('conference_room_email.html',
-                                          events_by_room=events_by_room,
-                                          res_events_by_room=res_events_by_room,
-                                          committees_by_date=_group_by_date(committees))
-    recipients = CERNCronjobsPlugin.settings.get('conf_room_recipients')
-    if recipients:
-        _send_email(recipients, template)
 
 
 @celery.periodic_task(run_every=crontab(minute='0', hour='8', day_of_week='monday'), plugin='cronjobs_cern')
