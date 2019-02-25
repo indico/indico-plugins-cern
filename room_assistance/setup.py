@@ -24,7 +24,7 @@ setup(
         'indico>=2.2.dev0'
     ],
     entry_points={
-        'indico.plugins': {'room_assistance = indico_room_assistance.plugin:RoomAssistanceRequestPlugin'},
+        'indico.plugins': {'room_assistance = indico_room_assistance.plugin:RoomAssistancePlugin'},
     },
     classifiers=[
         'Environment :: Plugins',

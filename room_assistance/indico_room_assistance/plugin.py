@@ -25,6 +25,9 @@ from indico.web.menu import TopMenuItem
 from indico_room_assistance import _
 from indico_room_assistance.blueprint import blueprint
 from indico_room_assistance.models.room_assistance_requests import RoomAssistanceRequest
+from indico_room_assistance.notifications import (notify_cancellation, notify_confirmation, notify_creation,
+                                                  notify_occurrence_cancellation, notify_occurrence_rejection,
+                                                  notify_rejection)
 
 
 def _order_func(object_list):
@@ -70,7 +73,7 @@ class RoomConverter(SettingConverter):
         return Room.query.filter(Room.id.in_(value)).all()
 
 
-class RoomAssistanceRequestPlugin(IndicoPlugin):
+class RoomAssistancePlugin(IndicoPlugin):
     """Room assistance request
 
     This plugin sends email notifications with information about reservations
@@ -94,9 +97,11 @@ class RoomAssistanceRequestPlugin(IndicoPlugin):
     }
 
     def init(self):
-        super(RoomAssistanceRequestPlugin, self).init()
+        super(RoomAssistancePlugin, self).init()
         self.connect(signals.menu.items, self._extend_services_menu, sender='top-menu')
         self.connect(signals.rb.booking_created, self._create_request_if_necessary)
+        self.connect(signals.rb.booking_state_changed, self._notify_on_booking_state_change)
+        self.connect(signals.rb.booking_occurrence_state_changed, self._notify_on_booking_occurrence_state_change)
         self.inject_bundle('react.js', WPRoomBookingBase)
         self.inject_bundle('semantic-ui.js', WPRoomBookingBase)
         self.inject_bundle('room_assistance.js', WPRoomBookingBase)
@@ -119,3 +124,26 @@ class RoomAssistanceRequestPlugin(IndicoPlugin):
 
         reservation.room_assistance_request = RoomAssistanceRequest()
         db.session.flush()
+
+        notify_creation(reservation)
+
+    def _notify_on_booking_state_change(self, reservation, **kwargs):
+        if reservation.room_assistance_request is None:
+            return
+
+        if reservation.is_cancelled:
+            notify_cancellation(reservation)
+        elif reservation.is_accepted:
+            notify_confirmation(reservation)
+        elif reservation.is_rejected:
+            notify_rejection(reservation)
+
+    def _notify_on_booking_occurrence_state_change(self, occurrence, **kwargs):
+        reservation = occurrence.reservation
+        if reservation.room_assistance_request is None:
+            return
+
+        if occurrence.is_cancelled:
+            notify_occurrence_cancellation(occurrence)
+        elif occurrence.is_rejected:
+            notify_occurrence_rejection(occurrence)
