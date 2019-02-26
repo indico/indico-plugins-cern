@@ -29,7 +29,7 @@ export default class BurotelLanding extends React.Component {
         }
         const experiment = response.data.value;
         if (this.landing.current && experiment) {
-            this.landing.current.setExtraState({division: 'ATLAS'});
+            this.landing.current.setExtraState({division: experiment});
         }
     }
 
