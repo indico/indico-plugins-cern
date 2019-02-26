@@ -17,6 +17,7 @@ import DefaultCalendar from 'indico/modules/rb_new/modules/calendar/Calendar';
 import DefaultTimelineItem from 'indico/modules/rb_new/common/timeline/TimelineItem';
 import DefaultBookingEditForm from 'indico/modules/rb_new/common/bookings/BookingEditForm';
 import DefaultSidebarMenu from 'indico/modules/rb_new/components/SidebarMenu';
+import DefaultRoomList from 'indico/modules/rb_new/modules/roomList/RoomList';
 import {Translate} from 'indico/react/i18n';
 import {parametrize} from 'indico/react/util';
 import MapMarkers from './components/MapMarkers';
@@ -120,6 +121,10 @@ const SidebarMenu = parametrize(DefaultSidebarMenu, {
     },
 });
 
+const RoomList = parametrize(DefaultRoomList, {
+    hideActionsDropdown: true
+});
+
 export default {
     App,
     BookingBootstrapForm,
@@ -137,4 +142,5 @@ export default {
     TimeInformation,
     BookingEditForm,
     SidebarMenu,
+    RoomList,
 };
