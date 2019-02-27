@@ -9,10 +9,11 @@
 import fetchRoomsWithAssistanceURL from 'indico-url:plugin_room_assistance.rooms';
 import React from 'react';
 import PropTypes from 'prop-types';
+import {TextArea} from 'semantic-ui-react';
 import {Field} from 'react-final-form';
 
 import {Translate} from 'indico/react/i18n';
-import {ReduxCheckboxField} from 'indico/react/forms';
+import {ReduxCheckboxField, ReduxFormField, formatters, validators as v} from 'indico/react/forms';
 import {indicoAxios, handleAxiosError} from 'indico/utils/axios';
 
 import './BookRoomExtraField.module.scss';
@@ -58,14 +59,32 @@ export default class BookRoomExtraField extends React.Component {
             return null;
         }
 
-        return (
-            <Field name="notificationForAssistance"
-                   styleName="assistance-toggle"
-                   component={ReduxCheckboxField}
-                   componentLabel={Translate.string('Request startup assistance before the booking')}
+        const assistanceRequestReasonField = (
+            <Field name="assistanceReason"
+                   component={ReduxFormField}
+                   as={TextArea}
                    disabled={disabled}
                    reactFinalForm={form}
-                   toggle />
+                   validate={v.required}
+                   format={formatters.trim}
+                   placeholder={Translate.string('Tell us exactly why you request the assistance')}
+                   formatOnBlur
+                   required />
+        );
+
+        return (
+            <>
+                <Field name="notificationForAssistance"
+                       styleName="assistance-toggle"
+                       component={ReduxCheckboxField}
+                       componentLabel={Translate.string('Request startup assistance before the booking')}
+                       disabled={disabled}
+                       reactFinalForm={form}
+                       toggle />
+                <Field name="notificationForAssistance" reactFinalForm={form}>
+                    {({input: {value}}) => value ? assistanceRequestReasonField : null}
+                </Field>
+            </>
         );
     }
 }

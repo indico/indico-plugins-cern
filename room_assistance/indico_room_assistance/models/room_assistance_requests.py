@@ -22,6 +22,11 @@ class RoomAssistanceRequest(db.Model):
         primary_key=True
     )
 
+    reason = db.Column(
+        db.String,
+        nullable=False
+    )
+
     reservation = db.relationship(
         'Reservation',
         uselist=False,

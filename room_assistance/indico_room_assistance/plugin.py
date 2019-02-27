@@ -122,7 +122,7 @@ class RoomAssistancePlugin(IndicoPlugin):
         if not should_create_request:
             return
 
-        reservation.room_assistance_request = RoomAssistanceRequest()
+        reservation.room_assistance_request = RoomAssistanceRequest(reason=extra_fields['assistance_reason'])
         db.session.flush()
 
         notify_creation(reservation)

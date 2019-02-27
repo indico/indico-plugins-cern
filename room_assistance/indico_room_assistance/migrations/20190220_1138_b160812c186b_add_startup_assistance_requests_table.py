@@ -24,6 +24,7 @@ def upgrade():
     op.create_table(
         'room_assistance_requests',
         sa.Column('reservation_id', sa.Integer(), nullable=False),
+        sa.Column('reason', sa.String(), nullable=False),
         sa.ForeignKeyConstraint(['reservation_id'], ['roombooking.reservations.id']),
         sa.PrimaryKeyConstraint('reservation_id'),
         schema='plugin_room_assistance'
@@ -32,7 +33,7 @@ def upgrade():
     conn = op.get_bind()
     conn.execute('''
         INSERT INTO plugin_room_assistance.room_assistance_requests
-        SELECT id FROM roombooking.reservations WHERE needs_assistance
+        SELECT id, '' FROM roombooking.reservations WHERE needs_assistance
     ''')
 
     conn.execute('''
