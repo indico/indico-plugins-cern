@@ -7,12 +7,14 @@
 
 from __future__ import unicode_literals
 
+import os
 from datetime import datetime, time
 
 from flask import current_app, json, redirect, request, url_for
 from marshmallow import Schema, fields
 from werkzeug.datastructures import ImmutableMultiDict
 
+from indico.core import signals
 from indico.core.plugins import IndicoPlugin
 from indico.util.marshmallow import NaiveDateTime
 from indico.web.flask.util import make_view_func
@@ -63,6 +65,7 @@ class BurotelPlugin(IndicoPlugin):
     def init(self):
         super(BurotelPlugin, self).init()
         current_app.before_request(self._before_request)
+        self.connect(signals.plugin.get_template_customization_paths, self._override_templates)
         self.inject_bundle('react.js', WPBurotelBase)
         self.inject_bundle('react.css', WPBurotelBase)
         self.inject_bundle('semantic-ui.js', WPBurotelBase)
@@ -94,3 +97,6 @@ class BurotelPlugin(IndicoPlugin):
             if 'reason' not in request.json:
                 request._cached_json['reason'] = 'Burotel booking'
                 request.data = request._cached_data = json.dumps(request._cached_json)
+
+    def _override_templates(self, sender, **kwargs):
+        return os.path.join(self.root_path, 'template_overrides')
