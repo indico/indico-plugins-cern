@@ -200,7 +200,7 @@ class CERNAccessPlugin(IndicoPlugin):
             return
 
         req = get_last_request(registration.event)
-        if not req.data['during_registration']:
+        if not req or not req.data['during_registration']:
             return
 
         required = req.data['during_registration_required']
@@ -220,11 +220,12 @@ class CERNAccessPlugin(IndicoPlugin):
         if type(g.rh) is not RHRegistrationForm:
             return
 
-        req = get_last_request(g.rh.regform.event)
-        if not req:
+        regform = g.rh.regform
+        if not regform.cern_access_request or not regform.cern_access_request.is_active:
             return
 
-        if not req.data['during_registration']:
+        req = get_last_request(regform.event)
+        if not req or not req.data['during_registration']:
             return
 
         required = req.data['during_registration_required']
