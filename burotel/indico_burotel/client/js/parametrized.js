@@ -30,7 +30,12 @@ const App = parametrize(DefaultApp, {
 
 const BookingBootstrapForm = parametrize(DefaultBookingBootstrapForm, () => ({
     dayBased: true,
-    onlyDaily: true,
+    hideOptions: {
+        single: true,
+        daily: false,
+        recurring: true,
+        timeSlot: true,
+    },
     defaults: {
         recurrence: {
             type: 'daily'
