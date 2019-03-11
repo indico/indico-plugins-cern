@@ -3,6 +3,7 @@
     "burotel": "./js/index.js"
   },
   "sassOverrides": {
-    "rb_new:styles/palette": "./styles/palette.scss"
+    "rb_new:styles/palette": "./styles/palette.scss",
+    "base/palette": "./styles/basePalette.scss"
   }
 }
