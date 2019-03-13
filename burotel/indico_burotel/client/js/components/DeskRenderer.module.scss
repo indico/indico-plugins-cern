@@ -36,4 +36,16 @@
     .extra-content {
         display: flex;
     }
+
+    :global(.ui.card).long-term-desk {
+        box-shadow: 0 2px 0 0 $highlight-color, 0 0 0 1px #d4d4d5;
+
+        .long-term-label {
+            color: $highlight-color;
+            position: absolute;
+            right: 0.5em;
+            bottom: 0.5em;
+            font-size: 0.9em;
+        }
+    }
 }

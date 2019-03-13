@@ -10,17 +10,19 @@ import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 import {Icon, Card} from 'semantic-ui-react';
+
+import {Translate} from 'indico/react/i18n';
 import {withHoverListener} from 'indico/modules/rb_new/common/map/util';
 import {Slot} from 'indico/react/util';
 
 import './DeskRenderer.module.scss';
 
 
-function Desk({desk: {fullName, division}, desk, actionRenderer, ...rest}) {
+function Desk({desk: {fullName, division, isLongTerm}, desk, actionRenderer, ...rest}) {
     const {actions} = Slot.split(actionRenderer(desk));
 
     return (
-        <Card {...rest}>
+        <Card {...rest} styleName={isLongTerm && 'long-term-desk'}>
             <Card.Content>
                 <Card.Header>
                     {fullName}
@@ -31,6 +33,11 @@ function Desk({desk: {fullName, division}, desk, actionRenderer, ...rest}) {
             </Card.Content>
             <Card.Content extra styleName="extra-content">
                 {actions}
+                {isLongTerm && (
+                    <span styleName="long-term-label">
+                        <Translate>Long term</Translate>
+                    </span>
+                )}
             </Card.Content>
         </Card>
     );
