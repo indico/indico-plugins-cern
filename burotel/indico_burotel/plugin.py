@@ -16,6 +16,7 @@ from werkzeug.datastructures import ImmutableMultiDict
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
+from indico.modules.rb import Room
 from indico.util.marshmallow import NaiveDateTime
 from indico.web.flask.util import make_view_func
 
@@ -60,6 +61,7 @@ class BurotelPlugin(IndicoPlugin):
         super(BurotelPlugin, self).init()
         current_app.before_request(self._before_request)
         self.connect(signals.plugin.get_template_customization_paths, self._override_templates)
+        self.connect(signals.rb.rooms_fetched, self._inject_long_term_attribute)
         self.inject_bundle('react.js', WPBurotelBase)
         self.inject_bundle('react.css', WPBurotelBase)
         self.inject_bundle('semantic-ui.js', WPBurotelBase)
@@ -94,3 +96,7 @@ class BurotelPlugin(IndicoPlugin):
 
     def _override_templates(self, sender, **kwargs):
         return os.path.join(self.root_path, 'template_overrides')
+
+    def _inject_long_term_attribute(self, rooms):
+        for room in rooms:
+            room['is_long_term'] = Room.get(room['id']).get_attribute_value('long-term', False)
