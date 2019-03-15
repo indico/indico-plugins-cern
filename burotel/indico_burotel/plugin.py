@@ -11,7 +11,7 @@ import os
 from datetime import datetime, time
 
 from flask import current_app, json, redirect, request, url_for
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, EXCLUDE
 from werkzeug.datastructures import ImmutableMultiDict
 
 from indico.core import signals
@@ -37,7 +37,7 @@ class DateTimeSchema(Schema):
 def patch_time(args):
     """Patch `request.args` to add a time component."""
     dts = DateTimeSchema()
-    ds = DateSchema()
+    ds = DateSchema(unknown=EXCLUDE)
     res = {}
     unserialized_args = ds.load(args)
     res['start_dt'] = datetime.combine(unserialized_args['start_dt'], time(0, 0))
