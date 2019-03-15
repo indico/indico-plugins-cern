@@ -27,16 +27,10 @@ class DateSchema(Schema):
     start_dt = fields.Date()
     end_dt = fields.Date()
 
-    class Meta:
-        strict = True  # TODO: remove with marshmallow 3
-
 
 class DateTimeSchema(Schema):
     start_dt = NaiveDateTime()
     end_dt = NaiveDateTime()
-
-    class Meta:
-        strict = True  # TODO: remove with marshmallow 3
 
 
 def patch_time(args):
@@ -44,12 +38,12 @@ def patch_time(args):
     dts = DateTimeSchema()
     ds = DateSchema()
     res = {}
-    unserialized_args = ds.load(args).data
+    unserialized_args = ds.load(args)
     res['start_dt'] = datetime.combine(unserialized_args['start_dt'], time(0, 0))
     if 'end_dt' in unserialized_args:
         res['end_dt'] = datetime.combine(unserialized_args['end_dt'], time(23, 59))
     # Replace request args with updated version
-    return dict(args, **dts.dump(res).data)
+    return dict(args, **dts.dump(res))
 
 
 class BurotelPlugin(IndicoPlugin):
