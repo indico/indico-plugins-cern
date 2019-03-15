@@ -11,12 +11,13 @@ import os
 from datetime import datetime, time
 
 from flask import current_app, json, redirect, request, url_for
-from marshmallow import Schema, fields, EXCLUDE
+from marshmallow import EXCLUDE, Schema, fields
 from werkzeug.datastructures import ImmutableMultiDict
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
 from indico.modules.rb import Room
+from indico.modules.rb_new.schemas import RoomSchema
 from indico.util.marshmallow import NaiveDateTime
 from indico.web.flask.util import make_view_func
 
@@ -61,7 +62,7 @@ class BurotelPlugin(IndicoPlugin):
         super(BurotelPlugin, self).init()
         current_app.before_request(self._before_request)
         self.connect(signals.plugin.get_template_customization_paths, self._override_templates)
-        self.connect(signals.rb.rooms_fetched, self._inject_long_term_attribute)
+        self.connect(signals.plugin.schema_post_dump, self._inject_long_term_attribute, sender=RoomSchema)
         self.inject_bundle('react.js', WPBurotelBase)
         self.inject_bundle('react.css', WPBurotelBase)
         self.inject_bundle('semantic-ui.js', WPBurotelBase)
@@ -97,6 +98,8 @@ class BurotelPlugin(IndicoPlugin):
     def _override_templates(self, sender, **kwargs):
         return os.path.join(self.root_path, 'template_overrides')
 
-    def _inject_long_term_attribute(self, rooms):
-        for room in rooms:
-            room['is_long_term'] = Room.get(room['id']).get_attribute_value('long-term', False)
+    def _inject_long_term_attribute(self, sender, data, **kwargs):
+        long_term_room_ids = {room.id for room, value in Room.find_with_attribute('long-term')
+                              if value.lower() in ('true', '1', 'yes')}
+        for room in data:
+            room['is_long_term'] = room['id'] in long_term_room_ids
