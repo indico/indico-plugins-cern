@@ -1,0 +1,5 @@
+{% extends 'rb/emails/base_email.html' %}
+
+{% block subject -%}
+    [Room Assistance Request][{{ event.room.full_name }}] {% block subject_text %}{% endblock %}
+{%- endblock %}

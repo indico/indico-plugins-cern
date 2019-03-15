@@ -1,5 +1,4 @@
 {% extends 'emails/base.html' %}
-{% from 'room_assistance:_lists.html' import render_reservation_list %}
 
 {% block subject %}Indico events requiring *startup* support for today{% endblock %}
 
@@ -9,15 +8,15 @@
     <p>Please find below the Indico events requiring *startup* support for today:</p>
 
     <ul>
-        {% if reservations_by_room %}
-            {% for room, reservations in reservations_by_room.iteritems() %}
-                <li>
-                    <span>{{ room.name }}</span>
-                    {{ render_reservation_list(reservations) }}
-                </li>
-            {% endfor %}
+        {% for request in requests %}
+            <li>
+                <div>Event: {{ request.event.title }}</div>
+                <div>Room: {{ request.event.room.full_name }}</div>
+                <div>When: {{ parse_dt(request.data.start_dt) | format_datetime }}</div>
+            </li>
+            <br>
         {% else %}
             <li>No events</li>
-        {% endif %}
+        {% endfor %}
     </ul>
 {%- endblock %}

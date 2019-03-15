@@ -1,0 +1,25 @@
+{% if can_request_assistance %}
+    <div class="action-box highlight">
+        <div class="section">
+            <div class="icon icon-play"></div>
+            <div class="text">
+                <div class="label">
+                    {% trans room_name=event.room_name -%}
+                        Request room assistance for {{ room_name }}
+                    {%- endtrans %}
+                </div>
+                {% trans %}
+                    Click the button on the right side if you need help setting up the event location.
+                {% endtrans %}
+            </div>
+            <div class="toolbar">
+                <div class="group">
+                    <a href="{{ url_for('requests.event_requests_details', event, type='room-assistance') }}"
+                       class="i-button icon-settings">
+                        {% trans %}Request room assistance{% endtrans %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}

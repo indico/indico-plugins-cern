@@ -1,6 +1,54 @@
 {% extends 'overview/base.html' %}
-{% block title %}Startup assistance{% endblock %}
 
-{% block content %}
-    Content
+{% block title %}
+    {% trans %}Startup assistance{% endtrans %}
 {% endblock %}
+
+{% macro result_group_title(key) %}
+    {{ key | format_human_date(format='full') | title }}
+{% endmacro %}
+
+{% macro result_group_entries(items) %}
+    <tr class="result-group-header">
+        <td>
+            <div class="title">
+                {% trans %}Room{% endtrans %}
+            </div>
+        </td>
+        <td>
+            <div class="title">
+                {% trans %}Event{% endtrans %}
+            </div>
+        </td>
+        <td>
+            <div class="title">
+                {% trans %}Assistance needed on{% endtrans %}
+            </div>
+        </td>
+        <td>
+            <div class="title">
+                {% trans %}Reason of the request{% endtrans %}
+            </div>
+        </td>
+    </tr>
+    {% for item in items %}
+        {{ room_assistance_request_entry(item) }}
+    {% endfor %}
+{% endmacro %}
+
+{% macro room_assistance_request_entry(request) %}
+    <tbody>
+        <tr class="result-group-entry">
+            <td>{{ request.event.room.full_name }}</td>
+            <td>
+                <a href="{{ request.event.url }}">
+                    {{ request.event.title }}
+                </a>
+            </td>
+            <td>
+                {{ parse_dt(request.data.start_dt) | format_datetime }}
+            </td>
+            <td>{{ request.data.reason }}</td>
+        </tr>
+    </tbody>
+{% endmacro %}

@@ -1,0 +1,12 @@
+{% extends 'room_assistance:emails/base_email_to_assistance.html' %}
+
+{% block header_recipient %}Conference Rooms Service{% endblock %}
+
+{% block subject_text -%}
+    Room assistance request has been withdrawn
+{%- endblock %}
+
+{% block body -%}
+    Startup assistance for the event {{ event.title }} at {{ request_data.start_dt | format_datetime }} has been withdrawn.<br>
+    Support is not needed anymore.
+{%- endblock %}

@@ -1,0 +1,21 @@
+{% extends 'room_assistance:emails/base_email_to_assistance.html' %}
+
+{% block header_recipient %}Conference Rooms Service{% endblock %}
+
+{% block subject_text -%}
+    Room assistance request has been modified
+{%- endblock %}
+
+{% block body -%}
+    <p>Startup assistance for the event {{ event.title }} has been modified.</p>
+
+    <div>
+        {% if changes.start_dt -%}
+            <strong>When:</strong>
+            {{ changes.start_dt.old|format_datetime }} → {{ changes.start_dt.new|format_datetime }}<br>
+        {%- endif %}
+        {% if changes.reason -%}
+            <strong>Reason:</strong> {{ changes.reason.old }} → {{ changes.reason.new }}<br>
+        {%- endif %}
+    </div>
+{%- endblock %}

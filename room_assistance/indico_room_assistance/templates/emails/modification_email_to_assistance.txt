@@ -1,6 +1,0 @@
-{% extends 'room_assistance:emails/base_email_to_assistance.txt' %}
-
-{% block body -%}
-{{ session.user.full_name }} {{ 'has cancelled' if assistance_cancelled else 'requested' }}
-ASSISTANCE for the meeting startup.
-{%- endblock %}

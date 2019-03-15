@@ -7,27 +7,22 @@
 
 from __future__ import unicode_literals
 
-from flask_pluginengine import url_for_plugin
-from wtforms import ValidationError
+from flask import session
+from flask_pluginengine import render_plugin_template, url_for_plugin
 
 from indico.core import signals
-from indico.core.db import db
 from indico.core.plugins import IndicoPlugin
 from indico.core.settings.converters import SettingConverter
-from indico.modules.categories.models.categories import Category
 from indico.modules.rb.models.rooms import Room
-from indico.modules.rb_new.views.base import WPRoomBookingBase
 from indico.util.string import natural_sort_key
 from indico.web.forms.base import IndicoForm
-from indico.web.forms.fields import EmailListField, IndicoQuerySelectMultipleField, MultipleItemsField
+from indico.web.forms.fields import EmailListField, IndicoQuerySelectMultipleField, PrincipalListField
 from indico.web.menu import TopMenuItem
 
 from indico_room_assistance import _
 from indico_room_assistance.blueprint import blueprint
-from indico_room_assistance.models.room_assistance_requests import RoomAssistanceRequest
-from indico_room_assistance.notifications import (notify_cancellation, notify_confirmation, notify_creation,
-                                                  notify_occurrence_cancellation, notify_occurrence_rejection,
-                                                  notify_rejection)
+from indico_room_assistance.definition import RoomAssistanceRequest
+from indico_room_assistance.util import is_room_assistance_support
 
 
 def _order_func(object_list):
@@ -36,31 +31,22 @@ def _order_func(object_list):
 
 class RoomAssistanceForm(IndicoForm):
     _fieldsets = [
-        ('Conference room emails', ['rooms', 'reservation_rooms', 'categories', 'conf_room_recipients']),
-        ('Startup assistance emails', ['room_assistance_recipients', 'rooms_with_assistance']),
+        ('Startup assistance emails', ['room_assistance_recipients', 'rooms_with_assistance',
+                                       'room_assistance_support']),
     ]
 
-    rooms = IndicoQuerySelectMultipleField('Rooms', get_label='full_name', collection_class=set, render_kw={'size': 20},
-                                           modify_object_list=_order_func)
-    reservation_rooms = IndicoQuerySelectMultipleField('Reservation rooms', get_label='full_name', collection_class=set,
-                                                       render_kw={'size': 20}, modify_object_list=_order_func)
-    categories = MultipleItemsField('Categories', fields=[{'id': 'id', 'caption': 'Category ID', 'required': True}])
-    conf_room_recipients = EmailListField('Recipients')
-
-    room_assistance_recipients = EmailListField(_('Recipients'))
-    rooms_with_assistance = IndicoQuerySelectMultipleField('Rooms', get_label='full_name', collection_class=set,
+    room_assistance_recipients = EmailListField(_('Recipients'),
+                                                description=_('Notifications about room assistance requests are sent '
+                                                              'to these email addresses (one per line)'))
+    rooms_with_assistance = IndicoQuerySelectMultipleField('Rooms',
+                                                           query_factory=lambda: Room.query,
+                                                           description=_('Rooms for which users can request startup '
+                                                                         'assistance'),
+                                                           get_label='full_name', collection_class=set,
                                                            render_kw={'size': 20}, modify_object_list=_order_func)
-
-    def __init__(self, *args, **kwargs):
-        super(RoomAssistanceForm, self).__init__(*args, **kwargs)
-        self.rooms.query = Room.query
-        self.reservation_rooms.query = Room.query
-        self.rooms_with_assistance.query = Room.query
-
-    def validate_categories(self, field):
-        ids = [x['id'] for x in field.data]
-        if Category.query.filter(Category.id.in_(ids)).count() != len(ids):
-            raise ValidationError('Not a valid category ID.')
+    room_assistance_support = PrincipalListField(_('Room assistance support'), groups=True,
+                                                 description=_('List of users who can view the list of events with '
+                                                               'room startup assistance.'))
 
 
 class RoomConverter(SettingConverter):
@@ -76,74 +62,42 @@ class RoomConverter(SettingConverter):
 class RoomAssistancePlugin(IndicoPlugin):
     """Room assistance request
 
-    This plugin sends email notifications with information about reservations
-    for which their creators asked for assistance with the room.
+    This plugin sends email notifications with information about room assistance requests.
     """
 
     configurable = True
     settings_form = RoomAssistanceForm
     settings_converters = {
-        'rooms': RoomConverter,
-        'reservation_rooms': RoomConverter,
         'rooms_with_assistance': RoomConverter
     }
+    acl_settings = {'room_assistance_support'}
     default_settings = {
-        'rooms': set(),
-        'reservation_rooms': set(),
-        'categories': set(),
-        'conf_room_recipients': set(),
         'room_assistance_recipients': [],
-        'rooms_with_assistance': set(),
+        'rooms_with_assistance': [],
     }
 
     def init(self):
         super(RoomAssistancePlugin, self).init()
+        self.template_hook('event-actions', self._room_assistance_action)
         self.connect(signals.menu.items, self._extend_services_menu, sender='top-menu')
-        self.connect(signals.rb.booking_created, self._create_request_if_necessary)
-        self.connect(signals.rb.booking_state_changed, self._notify_on_booking_state_change)
-        self.connect(signals.rb.booking_occurrence_state_changed, self._notify_on_booking_occurrence_state_change)
-        self.inject_bundle('react.js', WPRoomBookingBase)
-        self.inject_bundle('semantic-ui.js', WPRoomBookingBase)
-        self.inject_bundle('room_assistance.js', WPRoomBookingBase)
-        self.inject_bundle('room_assistance.css', WPRoomBookingBase)
+        self.connect(signals.plugin.get_event_request_definitions, self._get_room_assistance_request)
 
     def get_blueprints(self):
         return blueprint
 
+    def _room_assistance_action(self, event, **kwargs):
+        has_room_assistance_request = event.requests.filter_by(type='room-assistance').has_rows()
+        room_allows_assistance = event.room is not None and event.room in self.settings.get('rooms_with_assistance')
+        can_request_assistance = not event.has_ended and not has_room_assistance_request and room_allows_assistance
+        return render_plugin_template('room_assistance_action.html', event=event,
+                                      can_request_assistance=can_request_assistance)
+
     def _extend_services_menu(self, reservation, **kwargs):
+        if not session.user or not is_room_assistance_support(session.user):
+            return
+
         return TopMenuItem('services-cern-room-assistance', _('Room assistance'),
                            url_for_plugin('room_assistance.request_list'), section='services')
 
-    def _create_request_if_necessary(self, reservation, extra_fields, **kwargs):
-        if not extra_fields:
-            return
-
-        should_create_request = extra_fields.get('notification_for_assistance')
-        if not should_create_request:
-            return
-
-        reservation.room_assistance_request = RoomAssistanceRequest(reason=extra_fields['assistance_reason'])
-        db.session.flush()
-
-        notify_creation(reservation)
-
-    def _notify_on_booking_state_change(self, reservation, **kwargs):
-        if reservation.room_assistance_request is None:
-            return
-
-        if reservation.is_cancelled:
-            notify_cancellation(reservation)
-        elif reservation.is_accepted:
-            notify_confirmation(reservation)
-        elif reservation.is_rejected:
-            notify_rejection(reservation)
-
-    def _notify_on_booking_occurrence_state_change(self, occurrence, **kwargs):
-        reservation = occurrence.reservation
-        if reservation.room_assistance_request is None:
-            return
-
-        if occurrence.is_cancelled:
-            notify_occurrence_cancellation(occurrence)
-        elif occurrence.is_rejected:
-            notify_occurrence_rejection(occurrence)
+    def _get_room_assistance_request(self, sender, **kwargs):
+        return RoomAssistanceRequest

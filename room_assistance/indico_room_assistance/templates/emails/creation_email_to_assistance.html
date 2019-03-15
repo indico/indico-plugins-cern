@@ -1,0 +1,18 @@
+{% extends 'room_assistance:emails/base_email_to_assistance.html' %}
+
+{% block header_recipient %}Conference Rooms Service{% endblock %}
+
+{% block subject_text -%}
+    New room assistance request
+{%- endblock %}
+
+{% block body -%}
+    <p>
+        {{ requested_by.full_name }} requested assistance to setup {{ event.room.full_name }} before the start of the event.
+    </p>
+    <div>
+        <strong>Event:</strong> {{ event.title }}<br>
+        <strong>When:</strong> {{ request_data.start_dt | format_datetime }}<br>
+        <strong>Reason for requesting assistance:</strong> {{ request_data.reason }}<br>
+    </div>
+{%- endblock %}

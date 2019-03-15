@@ -7,90 +7,38 @@
 
 from __future__ import unicode_literals
 
-from flask_pluginengine import render_plugin_template
+import dateutil.parser
 
+from indico.core.config import config
 from indico.core.notifications import make_email, send_email
-from indico.modules.rb import rb_settings
-from indico.util.date_time import format_datetime
-from indico.util.string import to_unicode
+from indico.core.plugins import get_plugin_template_module
+from indico.modules.events.requests.models.requests import RequestState
 
 
-def _get_email_subject(reservation, mail_params):
-    return u'{prefix}[{room}] {subject} {date} {suffix}'.format(
-        prefix=to_unicode(mail_params.get('subject_prefix', '')),
-        room=reservation.room.full_name,
-        subject=to_unicode(mail_params.get('subject', '')),
-        date=to_unicode(format_datetime(reservation.start_dt)),
-        suffix=to_unicode(mail_params.get('subject_suffix', ''))
-    ).strip()
+def send_email_to_assistance(request, template_name, **template_params):
+    from indico_room_assistance.plugin import RoomAssistancePlugin
 
-
-def _make_body(mail_params, **body_params):
-    from indico.modules.rb.models.reservations import RepeatFrequency, RepeatMapping
-    template_params = dict(mail_params, **body_params)
-    template_params['RepeatFrequency'] = RepeatFrequency
-    template_params['RepeatMapping'] = RepeatMapping
-    return render_plugin_template('emails/{}.txt'.format(mail_params['template_name']), **template_params)
-
-
-def send_email_to_assistance(reservation=None, occurrence=None, **mail_params):
-    reservation = reservation or occurrence.reservation
-    if reservation.room_assistance_request is None:
-        return
-
-    to_list = rb_settings.get('assistance_emails')
+    to_list = RoomAssistancePlugin.settings.get('room_assistance_recipients')
     if to_list:
-        subject = _get_email_subject(reservation, mail_params)
-        body = _make_body(mail_params, reservation=reservation, occurrence=occurrence)
-        send_email(make_email(to_list=to_list, subject=subject, body=body))
+        request_start_dt = request.data['start_dt']
+        request_data = dict(request.data, start_dt=dateutil.parser.parse(request_start_dt))
+        template = get_plugin_template_module('emails/{}.html'.format(template_name), event=request.event,
+                                              requested_by=request.created_by_user, request_data=request_data,
+                                              **template_params)
+        send_email(make_email(from_address=config.NO_REPLY_EMAIL, to_list=to_list, template=template, html=True))
 
 
-def notify_confirmation(reservation):
-    if not reservation.is_accepted:
+def notify_about_new_request(request):
+    send_email_to_assistance(request, template_name='creation_email_to_assistance')
+
+
+def notify_about_request_modification(request, changes):
+    if not request.state == RequestState.accepted:
         return
-    send_email_to_assistance(reservation=reservation, subject_prefix='[Support Request]', subject='New Support on',
-                             template_name='creation_email_to_assistance')
+    send_email_to_assistance(request, template_name='modified_request_email_to_assistance', changes=changes)
 
 
-def notify_creation(reservation):
-    send_email_to_assistance(reservation=reservation, subject_prefix='[Support Request]', subject='New Booking on',
-                             template_name='creation_email_to_assistance')
-
-
-def notify_cancellation(reservation):
-    if not reservation.is_cancelled:
+def notify_about_withdrawn_request(request):
+    if not request.state == RequestState.withdrawn:
         return
-    send_email_to_assistance(reservation=reservation, subject_prefix='[Support Request Cancellation]',
-                             subject='Request cancelled for', template_name='cancellation_email_to_assistance')
-
-
-def notify_rejection(reservation):
-    if not reservation.is_rejected:
-        return
-    send_email_to_assistance(reservation=reservation, subject_prefix='[Support Request Cancellation]',
-                             subject='Request cancelled for', template_name='rejection_email_to_assistance')
-
-
-def notify_modification(reservation, changes):
-    assistance_change = changes.get('needs_assistance')
-    assistance_cancelled = assistance_change and assistance_change['old'] and not assistance_change['new']
-    subject_prefix = '[Support Request {}]'.format('Cancelled' if assistance_cancelled else 'Modification')
-    send_email_to_assistance(reservation=reservation, subject_prefix=subject_prefix, subject='Modified request on',
-                             template_name='modification_email_to_assistance',
-                             assistance_cancelled=assistance_cancelled)
-
-
-def notify_occurrence_cancellation(occurrence):
-    if not occurrence.is_cancelled:
-        return
-    send_email_to_assistance(occurrence=occurrence, subject_prefix='[Support Request Cancellation]',
-                             subject='Request cancelled for',
-                             template_name='occurrence_cancellation_email_to_assistance')
-
-
-def notify_occurrence_rejection(occurrence):
-    if not occurrence.is_rejected:
-        return
-    send_email_to_assistance(occurrence=occurrence, subject_prefix='[Support Request Cancellation]',
-                             subject='Request cancelled for',
-                             template_name='occurrence_rejection_email_to_assistance')
+    send_email_to_assistance(request, template_name='withdrawn_email_to_assistance')
