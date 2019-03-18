@@ -12,7 +12,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='indico-plugin-outlook',
-    version='1.0.1',
+    version='2.3',
     url='https://github.com/indico/indico-plugins-cern',
     license='MIT',
     author='Indico Team',
@@ -21,7 +21,7 @@ setup(
     zip_safe=False,
     include_package_data=True,
     install_requires=[
-        'indico>=2.0'
+        'indico>=2.3'
     ],
     entry_points={
         'indico.plugins': {'outlook = indico_outlook.plugin:OutlookPlugin'},
