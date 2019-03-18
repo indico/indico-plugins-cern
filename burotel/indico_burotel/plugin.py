@@ -10,14 +10,14 @@ from __future__ import unicode_literals
 import os
 from datetime import datetime, time
 
-from flask import current_app, json, redirect, request, url_for
-from marshmallow import EXCLUDE, Schema, fields
-from werkzeug.datastructures import ImmutableMultiDict
+from flask import current_app, redirect, request, url_for
+from marshmallow import ValidationError, fields
+from webargs import dict2schema
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
 from indico.modules.rb import Room
-from indico.modules.rb_new.schemas import RoomSchema
+from indico.modules.rb_new.schemas import CreateBookingSchema, RoomSchema
 from indico.util.marshmallow import NaiveDateTime
 from indico.web.flask.util import make_view_func
 
@@ -25,27 +25,16 @@ from indico_burotel.blueprint import blueprint
 from indico_burotel.controllers import RHLanding, WPBurotelBase
 
 
-class DateSchema(Schema):
-    start_dt = fields.Date()
-    end_dt = fields.Date()
-
-
-class DateTimeSchema(Schema):
-    start_dt = NaiveDateTime()
-    end_dt = NaiveDateTime()
-
-
-def patch_time(args):
-    """Patch `request.args` to add a time component."""
-    dts = DateTimeSchema()
-    ds = DateSchema(unknown=EXCLUDE)
-    res = {}
-    unserialized_args = ds.load(args)
-    res['start_dt'] = datetime.combine(unserialized_args['start_dt'], time(0, 0))
-    if 'end_dt' in unserialized_args:
-        res['end_dt'] = datetime.combine(unserialized_args['end_dt'], time(23, 59))
-    # Replace request args with updated version
-    return dict(args, **dts.dump(res))
+def _add_missing_time(field, data, time_):
+    ds = dict2schema({field: fields.Date()})()
+    dts = dict2schema({field: NaiveDateTime()})()
+    try:
+        # let's see if we can load this as a DateTime
+        dts.load({field: data[field]})
+    except ValidationError:
+        # if not, we assume it's a valid date and append the time
+        date = ds.load({field: data[field]})[field]
+        data[field] = dts.dump({field: datetime.combine(date, time_)})[field]
 
 
 class BurotelPlugin(IndicoPlugin):
@@ -63,6 +52,8 @@ class BurotelPlugin(IndicoPlugin):
         current_app.before_request(self._before_request)
         self.connect(signals.plugin.get_template_customization_paths, self._override_templates)
         self.connect(signals.plugin.schema_post_dump, self._inject_long_term_attribute, sender=RoomSchema)
+        self.connect(signals.plugin.schema_pre_load, self._inject_reason, sender=CreateBookingSchema)
+        self.connect(signals.plugin.schema_pre_load, self._inject_time)
         self.inject_bundle('react.js', WPBurotelBase)
         self.inject_bundle('react.css', WPBurotelBase)
         self.inject_bundle('semantic-ui.js', WPBurotelBase)
@@ -80,21 +71,6 @@ class BurotelPlugin(IndicoPlugin):
             # render our own landing page instead of the original RH
             return make_view_func(RHLanding)()
 
-        # convert dates to datetimes
-        if request.blueprint == 'rooms_new':
-            if 'start_dt' in request.args:
-                request.args = ImmutableMultiDict(patch_time(request.args.to_dict()))
-            if request.json and 'start_dt' in request.json:
-                data = patch_time(request.json)
-                request.data = request._cached_data = json.dumps(data)
-                request._cached_json = data
-
-        if request.endpoint == 'rooms_new.create_booking':
-            # inject default booking reason if there's none
-            if 'reason' not in request.json:
-                request._cached_json['reason'] = 'Burotel booking'
-                request.data = request._cached_data = json.dumps(request._cached_json)
-
     def _override_templates(self, sender, **kwargs):
         return os.path.join(self.root_path, 'template_overrides')
 
@@ -103,3 +79,14 @@ class BurotelPlugin(IndicoPlugin):
                               if value.lower() in ('true', '1', 'yes')}
         for room in data:
             room['is_long_term'] = room['id'] in long_term_room_ids
+
+    def _inject_reason(self, sender, data, **kwargs):
+        data.setdefault('reason', 'Burotel booking')
+
+    def _inject_time(self, sender, data, **kwargs):
+        if request.blueprint != 'rooms_new':
+            return
+        if 'start_dt' in data:
+            _add_missing_time('start_dt', data, time(0, 0))
+        if 'end_dt' in data:
+            _add_missing_time('end_dt', data, time(23, 59))
