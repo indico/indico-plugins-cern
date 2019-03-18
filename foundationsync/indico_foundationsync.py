@@ -11,6 +11,7 @@ Synchronizes rooms and equipment with the CERN Foundation Database.
 
 from __future__ import unicode_literals
 
+import re
 import sys
 from collections import Counter, defaultdict
 from contextlib import contextmanager
@@ -18,6 +19,7 @@ from logging import StreamHandler
 
 import click
 from celery.schedules import crontab
+from html2text import HTML2Text
 from sqlalchemy.orm.exc import NoResultFound
 from wtforms import StringField
 
@@ -25,7 +27,9 @@ from indico.cli.core import cli_command
 from indico.core import signals
 from indico.core.celery import celery
 from indico.core.db.sqlalchemy import db
+from indico.core.db.sqlalchemy.protection import ProtectionMode
 from indico.core.plugins import IndicoPlugin
+from indico.modules.groups import GroupProxy
 from indico.modules.rb.models.equipment import EquipmentType
 from indico.modules.rb.models.locations import Location
 from indico.modules.rb.models.rooms import Room
@@ -80,6 +84,10 @@ class FoundationSync(object):
     def _get_room_attrs(self, raw_data):
         return {'manager-group': raw_data.get('EMAIL_LIST')}
 
+    def _html_to_markdown(self, s):
+        s = re.sub(r'<font color=[^> ]+>(.+?)</font>', r'<strong>\1</strong>', s)
+        return HTML2Text(bodywidth=0).handle(s).strip()
+
     def _parse_room_data(self, raw_data, coordinates, room_id):
         data = {}
         data['building'] = raw_data['BUILDING']
@@ -104,12 +112,12 @@ class FoundationSync(object):
         data['capacity'] = int(raw_data['CAPACITY']) if raw_data['CAPACITY'] else None
         data['surface_area'] = int(raw_data['SURFACE']) if raw_data['SURFACE'] else None
         data['division'] = raw_data.get('DEPARTMENT')
-        data['telephone'] = raw_data.get('TELEPHONE')
-        data['key_location'] = raw_data.get('WHERE_IS_KEY')
-        data['comments'] = raw_data.get('COMMENTS')
-        data['is_reservable'] = raw_data['IS_RESERVABLE'] != 'N'
+        data['telephone'] = raw_data.get('TELEPHONE') or ''
+        data['key_location'] = self._html_to_markdown(raw_data.get('WHERE_IS_KEY') or '')
+        data['comments'] = self._html_to_markdown(raw_data.get('COMMENTS')) if raw_data.get('COMMENTS') else ''
         data['reservations_need_confirmation'] = raw_data['BOOKINGS_NEED_CONFIRMATION'] != 'N'
 
+        is_reservable = raw_data['IS_RESERVABLE'] != 'N'
         site = raw_data.get('SITE')
         site_map = {'MEYR': 'Meyrin', 'PREV': 'Prevessin'}
         data['site'] = site_map.get(site, site)
@@ -119,7 +127,7 @@ class FoundationSync(object):
             data['latitude'] = building_coordinates['latitude']
             data['longitude'] = building_coordinates['longitude']
 
-        return data, email_warning
+        return data, is_reservable, email_warning
 
     def _prepare_row(self, row, cursor):
         return dict(zip([d[0] for d in cursor.description], row))
@@ -200,7 +208,7 @@ class FoundationSync(object):
             room_id = data['ID']
 
             try:
-                room_data, email_warning = self._parse_room_data(data, coordinates, room_id)
+                room_data, is_reservable, email_warning = self._parse_room_data(data, coordinates, room_id)
                 room_attrs = self._get_room_attrs(data)
                 self._logger.debug("Fetched data for room with id='%s'", room_id)
             except SkipRoom as e:
@@ -231,8 +239,21 @@ class FoundationSync(object):
 
             # Update room data
             room = self._update_room(room, room_data, room_attrs)
-            self._logger.info("Updated room '%s' information", room_id)
+            # Remove all existing full_access acl entries before adding the new ones
+            # otherwise changing the room owner/manager-group wont remove the old one
+            if room_data.get('owner') is not None:
+                for manager in room.get_manager_list():
+                    room.update_principal(manager, full_access=False)
+                room.update_principal(room_data['owner'], full_access=True)
+            manager_group = room_attrs.get('manager-group')
+            if manager_group is not None:
+                group = GroupProxy(manager_group, provider='cern-ldap')
+                if group.group is None:
+                    self._logger.warning("Group '%s' does not exist in cern-ldap", manager_group)
+                room.update_principal(group, full_access=True)
+            room.protection_mode = ProtectionMode.public if is_reservable else ProtectionMode.protected
 
+            self._logger.info("Updated room '%s' information", room_id)
             foundation_rooms.append(room)
 
         # Deactivate rooms not found in Foundation
