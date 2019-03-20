@@ -18,6 +18,7 @@ setup(
     author='Indico Team',
     author_email='indico-team@cern.ch',
     packages=find_packages(),
+    include_package_data=True,
     zip_safe=False,
     install_requires=[
         'indico>=2.2.dev0'
