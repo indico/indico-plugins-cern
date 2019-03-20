@@ -1,5 +1,5 @@
 # This file is part of the CERN Indico plugins.
-# Copyright (C) 2014 - 2018 CERN
+# Copyright (C) 2014 - 2019 CERN
 #
 # The CERN Indico plugins are free software; you can redistribute
 # them and/or modify them under the terms of the MIT License; see
@@ -7,7 +7,7 @@
 
 from __future__ import unicode_literals
 
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta
 
 from flask import request, session
 from wtforms import SelectField
@@ -16,22 +16,27 @@ from wtforms.fields.simple import TextAreaField
 from wtforms.validators import DataRequired, NumberRange, Optional, ValidationError
 
 from indico.modules.events.requests import RequestFormBase
-from indico.modules.rb import Location
+from indico.util.date_time import now_utc
 from indico.web.forms.base import IndicoForm, generated_data
 from indico.web.forms.fields import IndicoDateField, IndicoDateTimeField
-from indico.web.forms.validators import Exclusive
+from indico.web.forms.validators import DateTimeRange, Exclusive
 
 from indico_room_assistance import _
 
 
+WORKING_TIME_PERIODS = ((time(8, 30), time(12, 30)), (time(13, 30), time(17, 30)))
+
+
 class RoomAssistanceRequestForm(RequestFormBase):
-    start_dt = IndicoDateTimeField(_('When'), [DataRequired()], description=_('When do you need the assistance?'))
+    start_dt = IndicoDateTimeField(_('When'), [DataRequired(),
+                                               DateTimeRange(earliest=now_utc())],
+                                   description=_('When do you need the assistance?'))
     reason = TextAreaField(_('Reason'), [DataRequired()], description=_('Why are you requesting assistance?'))
 
     def validate_start_dt(self, field):
         localized_time = field.data.astimezone(session.tzinfo).time()
-        is_valid = any(period[0] <= localized_time <= period[1] for period in Location.working_time_periods)
-        if not is_valid:
+        is_in_working_hours = any(period[0] <= localized_time <= period[1] for period in WORKING_TIME_PERIODS)
+        if not is_in_working_hours:
             raise ValidationError('Specified datetime is not within the working hours')
 
 

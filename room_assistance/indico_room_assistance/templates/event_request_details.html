@@ -1,23 +1,32 @@
 {% extends 'events/requests/event_request_details.html' %}
 {% from 'message_box.html' import message_box %}
 
+{% set link_event_settings -%}
+    <a href="{{ url_for('event_management.settings', event) }}">
+{%- endset %}
+
+{% set link_end -%}
+    </a>
+{%- endset %}
+
 {% block content %}
     {% if event.has_ended %}
         {% call message_box('error') %}
             {% trans -%}
-                This event has ended thus it is not possible to request room assistance
+                This event has ended thus it is not possible to request room assistance.
             {%- endtrans %}
         {% endcall %}
     {% elif not event_has_room_attached %}
         {% call message_box('error') %}
             {% trans -%}
-                This event does not have a location specified thus you cannot request room assistance
+                This event does not have a location specified thus you cannot request room assistance.
+                {{ link_event_settings }}Manage event settings{{ link_end }}
             {%- endtrans %}
         {% endcall %}
     {% elif not room_allows_assistance %}
         {% call message_box('error') %}
             {% trans room_name=event.room.full_name -%}
-                Room assistance cannot be requested for the event location (<strong>{{ room_name }}</strong>)
+                Room assistance cannot be requested for the event location (<strong>{{ room_name }}</strong>).
             {%- endtrans %}
         {% endcall %}
     {% else %}
