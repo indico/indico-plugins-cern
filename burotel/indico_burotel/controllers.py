@@ -19,7 +19,7 @@ from indico_burotel import _
 
 
 class WPBurotelBase(WPNewBase):
-    template_prefix = 'rb_new/'
+    template_prefix = 'rb/'
     title = _('Burotel')
     bundles = ('common.js',)
 
