@@ -44,7 +44,7 @@
                 </p>
                 <ul>
                     {% for room in definition.util.get_av_capable_rooms()|natsort(attribute='full_name') -%}
-                        <li><a href="{{ url_for('event_mgmt.rooms_room_details', event, room) }}">{{ room.full_name }}</a></li>
+                        <li><a href="{{ room.details_url }}">{{ room.full_name }}</a></li>
                     {% endfor %}
                 </ul>
             {% endcall %}
