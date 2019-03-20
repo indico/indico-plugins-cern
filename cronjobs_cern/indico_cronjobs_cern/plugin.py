@@ -8,8 +8,6 @@
 from __future__ import unicode_literals
 
 from indico.core.plugins import IndicoPlugin
-from indico.core.settings.converters import SettingConverter
-from indico.modules.rb.models.rooms import Room
 from indico.util.string import natural_sort_key
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import EmailListField, MultipleItemsField
@@ -27,18 +25,6 @@ class SettingsForm(IndicoForm):
     seminar_categories = MultipleItemsField('Seminar categories',
                                             fields=[{'id': 'id', 'caption': 'Category ID', 'required': True}])
     seminar_recipients = EmailListField('Recipients')
-
-
-class RoomConverter(SettingConverter):
-    """Convert a list of room objects to a list of room IDs and backwards."""
-
-    @staticmethod
-    def from_python(value):
-        return sorted(room.id for room in value)
-
-    @staticmethod
-    def to_python(value):
-        return Room.query.filter(Room.id.in_(value)).all()
 
 
 class CERNCronjobsPlugin(IndicoPlugin):

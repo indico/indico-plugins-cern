@@ -12,7 +12,7 @@ from flask_pluginengine import render_plugin_template, url_for_plugin
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
-from indico.core.settings.converters import SettingConverter
+from indico.core.settings.converters import ModelListConverter
 from indico.modules.rb.models.rooms import Room
 from indico.util.string import natural_sort_key
 from indico.web.forms.base import IndicoForm
@@ -49,16 +49,6 @@ class RoomAssistanceForm(IndicoForm):
                                                                'room startup assistance.'))
 
 
-class RoomConverter(SettingConverter):
-    @staticmethod
-    def from_python(value):
-        return sorted(room.id for room in value)
-
-    @staticmethod
-    def to_python(value):
-        return Room.query.filter(Room.id.in_(value)).all()
-
-
 class RoomAssistancePlugin(IndicoPlugin):
     """Room assistance request
 
@@ -68,7 +58,7 @@ class RoomAssistancePlugin(IndicoPlugin):
     configurable = True
     settings_form = RoomAssistanceForm
     settings_converters = {
-        'rooms_with_assistance': RoomConverter
+        'rooms_with_assistance': ModelListConverter(Room)
     }
     acl_settings = {'room_assistance_support'}
     default_settings = {
