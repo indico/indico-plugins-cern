@@ -22,6 +22,7 @@ from indico.util.marshmallow import NaiveDateTime
 from indico.web.flask.util import make_view_func
 
 from indico_burotel.blueprint import blueprint
+from indico_burotel.cli import cli
 from indico_burotel.controllers import RHLanding, WPBurotelBase
 
 
@@ -50,6 +51,7 @@ class BurotelPlugin(IndicoPlugin):
     def init(self):
         super(BurotelPlugin, self).init()
         current_app.before_request(self._before_request)
+        self.connect(signals.plugin.cli, self._extend_indico_cli)
         self.connect(signals.plugin.get_template_customization_paths, self._override_templates)
         self.connect(signals.plugin.schema_post_dump, self._inject_long_term_attribute, sender=RoomSchema)
         self.connect(signals.plugin.schema_pre_load, self._inject_reason, sender=CreateBookingSchema)
@@ -70,6 +72,9 @@ class BurotelPlugin(IndicoPlugin):
         elif request.endpoint == 'rooms_new.roombooking':
             # render our own landing page instead of the original RH
             return make_view_func(RHLanding)()
+
+    def _extend_indico_cli(self, sender, **kwargs):
+        return cli
 
     def _override_templates(self, sender, **kwargs):
         return os.path.join(self.root_path, 'template_overrides')
