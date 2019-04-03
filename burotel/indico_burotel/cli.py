@@ -58,7 +58,11 @@ def get_location(building):
     return location
 
 
-def get_group(name):
+def get_principal(name):
+    if '@' in name:
+        return get_user_by_email(name)
+
+    # otherwise we assume it's a group's name
     group = group_cache.setdefault(name, GroupProxy(name, provider='cern-ldap'))
     if not group or not group.group:
         group = None
@@ -94,6 +98,10 @@ def _print_changes(room, changes):
         print (cformat(' %{yellow}>%{reset} %{cyan}{}%{reset}: %{red}{}%{reset} -> %{green}{}%{reset}')
                .format(field, old, new))
     print
+
+
+def _principal_repr(p):
+    return getattr(p.principal, 'email', p.principal.name)
 
 
 def get_latlon_building(building_num):
@@ -139,9 +147,9 @@ def update(csv_file, dry_run):
     num_removes = 0
     r = csv.reader(csv_file)
 
-    for room_id, division, building, floor, number, verbose_name, owner_email, egroup, action in r:
+    for room_id, division, building, floor, number, verbose_name, owner_email, acl_row, action in r:
         owner = get_user_by_email(owner_email)
-        group = get_group(egroup) if egroup else None
+        acl = {get_principal(principal) for principal in acl_row.split(';')} if acl_row else None
 
         data = {
             'id': int(room_id.decode('utf-8-sig')) if room_id else None,
@@ -151,7 +159,7 @@ def update(csv_file, dry_run):
             'number': number,
             'verbose_name': verbose_name,
             'owner': owner,
-            'acl_entries': {owner, group} if group else {owner},
+            'acl_entries': ({owner} | acl) if acl else {owner},
             'action': action or 'UPDATE'
         }
         if not data['id'] and action != 'ADD':
@@ -185,8 +193,9 @@ def update(csv_file, dry_run):
                             verbose_name=verbose_name, owner=owner, location=get_location(building),
                             protection_mode=ProtectionMode.protected)
                 room.update_principal(owner, full_access=True)
-                if group:
-                    room.update_principal(group, full_access=True)
+                if acl:
+                    for principal in acl:
+                        room.update_principal(principal, full_access=True)
                 db.session.add(room)
         elif data['action'] == 'REMOVE':
             room = get_room(room_id)
