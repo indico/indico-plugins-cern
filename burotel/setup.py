@@ -21,7 +21,8 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'indico>=2.2.dev0'
+        'indico>=2.2.dev0',
+        'pyproj>=2.1.2'
     ],
     entry_points={
         'indico.plugins': {'burotel = indico_burotel.plugin:BurotelPlugin'}
