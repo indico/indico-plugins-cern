@@ -61,6 +61,13 @@ def get_group(name):
     return group
 
 
+def get_room(room_id):
+    room = Room.get(room_id)
+    if not room:
+        print cformat("%{yellow}! Desk with ID {} not found.").format(room_id)
+    return room
+
+
 def change_room(room, changes):
     for field, _, new_value in changes:
         if field == 'acl_entries':
@@ -113,9 +120,8 @@ def update(csv_file, dry_run):
             print cformat("%{yellow}! Only ADD lines can have an empty Desk ID. Ignoring line.")
             continue
         elif data['action'] == 'UPDATE':
-            room = Room.get(room_id)
+            room = get_room(room_id)
             if not room:
-                print cformat("%{yellow}! Desk with ID {} not found.").format(room_id)
                 continue
             changes = check_changed_fields(room, data)
             if changes:
@@ -131,7 +137,7 @@ def update(csv_file, dry_run):
             if existing_room:
                 # a room with the exact same designation already exists
                 print (cformat("%{yellow}!%{reset} A desk with the name %{cyan}{}%{reset} already exists")
-                       .format(existing_room.name))
+                       .format(existing_room.full_name))
                 continue
             print cformat("%{green!}+%{reset} New desk %{cyan}{}/{}-{} {}").format(
                 building, floor, number, verbose_name)
@@ -140,10 +146,15 @@ def update(csv_file, dry_run):
                 room = Room(building=building, floor=floor, number=number, division=division,
                             verbose_name=verbose_name, owner=owner, location=get_location(building),
                             protection_mode=ProtectionMode.protected)
+                room.update_principal(owner, full_access=True)
+                if group:
+                    room.update_principal(group, full_access=True)
                 db.session.add(room)
         elif data['action'] == 'REMOVE':
-            room = Room.get(room_id)
-            print cformat("%{red}-%{reset} {}").format(room.name)
+            room = get_room(room_id)
+            if not room:
+                continue
+            print cformat("%{red}-%{reset} {}").format(room.full_name)
             if not dry_run:
                 room.is_active = False
             num_removes += 1
