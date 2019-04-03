@@ -214,6 +214,17 @@ def update(csv_file, dry_run):
 
 
 @cli.command()
+@click.argument('csv_file', type=click.File('w'))
+def export_csv(csv_file):
+    "Export desk list to a CSV file."
+    writer = csv.writer(csv_file)
+    for desk in Room.query.filter(Room.is_active).order_by(Room.building, Room.floor, Room.number, Room.verbose_name):
+        groups = ';'.join(_principal_repr(p) for p in desk.acl_entries)
+        writer.writerow((desk.id, desk.division, desk.building, desk.floor, desk.number, desk.verbose_name,
+                         desk.owner.email, groups, ''))
+
+
+@cli.command()
 @click.option('--dry-run', is_flag=True, help="Don't actually change the database, just report on the changes")
 def geocode(dry_run):
     """Set geographical location for all desks/buildings."""
