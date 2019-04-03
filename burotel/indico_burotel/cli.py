@@ -7,8 +7,11 @@
 
 from __future__ import unicode_literals
 
-import click
 import csv
+
+import click
+import requests
+from pyproj import transform, Proj
 
 from indico.core.db import db
 from indico.core.db.sqlalchemy.protection import ProtectionMode
@@ -20,8 +23,10 @@ from indico.modules.users.util import get_user_by_email
 from indico.util.console import cformat
 
 
+GIS_URL = 'https://maps.cern.ch/arcgis/rest/services/Batiments/GeocodeServer/findAddressCandidates?ZIP={}&f=json'
 ROOM_FIELDS = ('id', 'division', 'building', 'floor', 'number', 'verbose_name', 'owner', 'acl_entries')
 group_cache = {}
+latlon_cache = {}
 
 
 @cli_group(name='burotel')
@@ -89,6 +94,39 @@ def _print_changes(room, changes):
         print (cformat(' %{yellow}>%{reset} %{cyan}{}%{reset}: %{red}{}%{reset} -> %{green}{}%{reset}')
                .format(field, old, new))
     print
+
+
+def get_latlon_building(building_num):
+    if building_num in latlon_cache:
+        return latlon_cache[building_num]
+
+    # this API request should get the positions of a building's
+    # entrance doors
+    r = requests.get(GIS_URL.format(building_num))
+    x, y = 0, 0
+    data = r.json()
+
+    # local EPSG reference used in results
+    epsg_ref = Proj(init="epsg:{}".format(data['spatialReference']['wkid']))
+
+    counter = 0
+    for c in data['candidates']:
+        x += c['location']['x']
+        y += c['location']['y']
+        counter += 1
+
+    # average position of entrance doors
+    x /= counter
+    y /= counter
+
+    # these coordinates are relative to a local EPSG reference.
+    # we'll have to convert them to EPSG:4326, used by GPS
+    latlon_ref = Proj(init="epsg:4326")
+    lon, lat = transform(epsg_ref, latlon_ref, x, y)
+
+    latlon_cache[building_num] = (lat, lon)
+    print cformat("%{cyan}{}%{reset}: %{green}{}%{reset}, %{green}{}%{reset}").format(building_num, lat, lon)
+    return (lat, lon)
 
 
 @cli.command()
@@ -162,5 +200,17 @@ def update(csv_file, dry_run):
     print (cformat("\n%{cyan}Total:%{reset} %{green}+%{reset}{}  %{yellow}\u00b1%{reset}{}  %{red}-%{reset}{} ")
            .format(num_adds, num_changes, num_removes))
 
+    if not dry_run:
+        db.session.commit()
+
+
+@cli.command()
+@click.option('--dry-run', is_flag=True, help="Don't actually change the database, just report on the changes")
+def geocode(dry_run):
+    """Set geographical location for all desks/buildings."""
+    for desk in Room.query.filter(Room.is_active):
+        latlon = get_latlon_building(desk.building)
+        if not dry_run:
+            desk.latitude, desk.longitude = latlon
     if not dry_run:
         db.session.commit()
