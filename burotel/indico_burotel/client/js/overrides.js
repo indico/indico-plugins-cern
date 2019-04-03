@@ -4,6 +4,8 @@ import ExtraFilters from './components/ExtraFilters';
 import DailyButton from './components/DailyButton';
 import BurotelLanding from './components/BurotelLanding';
 import RowLabel from './components/RowLabel';
+import DeskInfoBoxes from './components/DeskInfoBoxes';
+
 
 export default {
     'Landing': BurotelLanding,
@@ -12,4 +14,5 @@ export default {
     'RoomFilterBar.extraFilters': ExtraFilters,
     'BookingFilterBar.recurrence': DailyButton,
     'TimelineContent.rowLabel': RowLabel,
+    'RoomDetails.infoBoxes': DeskInfoBoxes,
 };

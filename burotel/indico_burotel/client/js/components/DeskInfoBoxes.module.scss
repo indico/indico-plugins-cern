@@ -1,0 +1,19 @@
+/* This file is part of the CERN Indico plugins.
+ * Copyright (C) 2014 - 2019 CERN
+ *
+ * The CERN Indico plugins are free software; you can redistribute
+ * them and/or modify them under the terms of the MIT License; see
+ * the LICENSE file for more details.
+ */
+
+@import 'rb_new:styles/palette';
+
+:global(.ui.icon.message).message-icon {
+    color: $dark-highlight-color;
+    box-shadow: 0 0 0 1px $dark-highlight-color;
+    background-color: lighten($highlight-color, 35%);
+
+    :global(.icon) {
+        font-size: 2em;
+    }
+}
