@@ -50,12 +50,10 @@ class ExtraFilterForm extends FilterFormComponent {
                                         this.setDivision(div);
                                     }} />
                     ))}
-                    {division && (
-                        <Form.Radio checked={!division}
-                                    key="all"
-                                    label={Translate.string('All')}
-                                    onClick={() => this.setDivision(null)} />
-                    )}
+                    <Form.Radio checked={!division}
+                                key="all"
+                                label={Translate.string('All')}
+                                onClick={() => this.setDivision(null)} />
                 </Form.Group>
             </>
         );
