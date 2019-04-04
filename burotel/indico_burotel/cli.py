@@ -112,36 +112,34 @@ def _principal_repr(p):
 
 
 def get_latlon_building(building_num):
-    if building_num in latlon_cache:
-        return latlon_cache[building_num]
+    if building_num not in latlon_cache:
+        # this API request should get the positions of a building's
+        # entrance doors
+        data = requests.get(GIS_URL.format(building_num)).json()
 
-    # this API request should get the positions of a building's
-    # entrance doors
-    r = requests.get(GIS_URL.format(building_num))
-    x, y = 0, 0
-    data = r.json()
+        # local EPSG reference used in results
+        epsg_ref = Proj(init="epsg:{}".format(data['spatialReference']['wkid']))
 
-    # local EPSG reference used in results
-    epsg_ref = Proj(init="epsg:{}".format(data['spatialReference']['wkid']))
+        counter = 0
+        x, y = 0, 0
 
-    counter = 0
-    for c in data['candidates']:
-        x += c['location']['x']
-        y += c['location']['y']
-        counter += 1
+        for c in data['candidates']:
+            x += c['location']['x']
+            y += c['location']['y']
+            counter += 1
 
-    # average position of entrance doors
-    x /= counter
-    y /= counter
+        # average position of entrance doors
+        x /= counter
+        y /= counter
 
-    # these coordinates are relative to a local EPSG reference.
-    # we'll have to convert them to EPSG:4326, used by GPS
-    latlon_ref = Proj(init="epsg:4326")
-    lon, lat = transform(epsg_ref, latlon_ref, x, y)
+        # these coordinates are relative to a local EPSG reference.
+        # we'll have to convert them to EPSG:4326, used by GPS
+        latlon_ref = Proj(init="epsg:4326")
+        lon, lat = transform(epsg_ref, latlon_ref, x, y)
 
-    latlon_cache[building_num] = (lat, lon)
-    print cformat("%{cyan}{}%{reset}: %{green}{}%{reset}, %{green}{}%{reset}").format(building_num, lat, lon)
-    return (lat, lon)
+        latlon_cache[building_num] = (lat, lon)
+        print cformat("%{cyan}{}%{reset}: %{green}{}%{reset}, %{green}{}%{reset}").format(building_num, lat, lon)
+    return latlon_cache[building_num]
 
 
 @cli.command()
@@ -222,7 +220,7 @@ def update(csv_file, dry_run):
 
 @cli.command()
 @click.argument('csv_file', type=click.File('w'))
-def export_csv(csv_file):
+def export(csv_file):
     "Export desk list to a CSV file."
     writer = csv.writer(csv_file)
     for desk in Room.query.filter(Room.is_active).order_by(Room.building, Room.floor, Room.number, Room.verbose_name):
