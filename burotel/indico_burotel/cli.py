@@ -27,6 +27,7 @@ GIS_URL = 'https://maps.cern.ch/arcgis/rest/services/Batiments/GeocodeServer/fin
 ROOM_FIELDS = ('id', 'division', 'building', 'floor', 'number', 'verbose_name', 'owner', 'acl_entries')
 group_cache = {}
 latlon_cache = {}
+user_cache = {}
 
 
 @cli_group(name='burotel')
@@ -58,9 +59,15 @@ def get_location(building):
     return location
 
 
+def get_user(email):
+    if email not in user_cache:
+        user_cache[email] = get_user_by_email(email)
+    return user_cache[email]
+
+
 def get_principal(name):
     if '@' in name:
-        return get_user_by_email(name)
+        return get_user(name)
 
     # otherwise we assume it's a group's name
     group = group_cache.setdefault(name, GroupProxy(name, provider='cern-ldap'))
@@ -148,7 +155,7 @@ def update(csv_file, dry_run):
     r = csv.reader(csv_file)
 
     for room_id, division, building, floor, number, verbose_name, owner_email, acl_row, action in r:
-        owner = get_user_by_email(owner_email)
+        owner = get_user(owner_email)
         acl = {get_principal(principal) for principal in acl_row.split(';')} if acl_row else None
 
         data = {
