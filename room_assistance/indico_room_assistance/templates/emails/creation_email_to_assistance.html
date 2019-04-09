@@ -12,7 +12,7 @@
     </p>
     <div>
         <strong>Event:</strong> {{ event.title }}<br>
-        <strong>When:</strong> {{ request_data.start_dt | format_datetime }}<br>
+        <strong>When:</strong> {{ request_data.start_dt|format_datetime }}<br>
         <strong>Reason for requesting assistance:</strong> {{ request_data.reason }}<br>
     </div>
 {%- endblock %}

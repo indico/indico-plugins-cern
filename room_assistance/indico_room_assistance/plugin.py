@@ -52,7 +52,7 @@ class RoomAssistanceForm(IndicoForm):
 class RoomAssistancePlugin(IndicoPlugin):
     """Room assistance request
 
-    This plugin sends email notifications with information about room assistance requests.
+    This plugin lets users request assistance for meeting rooms.
     """
 
     configurable = True

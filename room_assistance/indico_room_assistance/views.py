@@ -18,5 +18,5 @@ class WPRoomAssistance(WPJinjaMixinPlugin, WPDecorated):
     def _get_breadcrumbs(self):
         return render_breadcrumbs(_('Room assistance'))
 
-    def _getBody(self, params):
-        return self._getPageContent(params)
+    def _get_body(self, params):
+        return self._get_page_content(params)
