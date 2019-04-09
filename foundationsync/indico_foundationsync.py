@@ -264,7 +264,6 @@ class FoundationSync(object):
         for room in rooms_to_deactivate:
             self._logger.info("Deactivated room '%s'", room.full_name)
             room.is_active = False
-            room.is_reservable = False
             counter['deactivated'] += 1
         self._logger.info("Deactivated %d rooms not found in Foundation", counter['deactivated'])
 
