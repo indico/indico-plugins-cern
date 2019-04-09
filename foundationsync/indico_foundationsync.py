@@ -81,9 +81,6 @@ class FoundationSync(object):
             self._logger.exception("Problem connecting to DB")
             raise
 
-    def _get_room_attrs(self, raw_data):
-        return {'manager-group': raw_data.get('EMAIL_LIST')}
-
     def _html_to_markdown(self, s):
         s = re.sub(r'<font color=[^> ]+>(.+?)</font>', r'<strong>\1</strong>', s)
         return HTML2Text(bodywidth=0).handle(s).strip()
@@ -133,17 +130,12 @@ class FoundationSync(object):
     def _prepare_row(self, row, cursor):
         return dict(zip([d[0] for d in cursor.description], row))
 
-    def _update_room(self, room, room_data, room_attrs):
+    def _update_room(self, room, room_data):
         room.is_active = True
         room.is_reservable = True
         for k, v in room_data.iteritems():
             if getattr(room, k) != v:
                 setattr(room, k, v)
-        for attribute, value in room_attrs.iteritems():
-            if value:
-                value = value.strip()
-            if room.get_attribute_value(attribute) != value:
-                room.set_attribute_value(attribute, value)
         db.session.flush()
 
     def fetch_buildings_coordinates(self, connection):
@@ -211,7 +203,7 @@ class FoundationSync(object):
 
             try:
                 room_data, email_warning = self._parse_room_data(data, coordinates, room_id)
-                room_attrs = self._get_room_attrs(data)
+                manager_group = data.get('EMAIL_LIST')
                 self._logger.debug("Fetched data for room with id='%s'", room_id)
             except SkipRoom as e:
                 counter['skipped'] += 1
@@ -240,11 +232,10 @@ class FoundationSync(object):
                 counter['updated'] += 1
 
             # Update room data
-            self._update_room(room, room_data, room_attrs)
+            self._update_room(room, room_data)
             new_managers = set()
             if room_data.get('owner') is not None:
                 new_managers.add(room_data['owner'])
-            manager_group = room_attrs.get('manager-group')
             if manager_group is not None:
                 group = GroupProxy(manager_group, provider='cern-ldap')
                 if group.group is None:
