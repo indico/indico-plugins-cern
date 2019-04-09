@@ -118,6 +118,7 @@ class FoundationSync(object):
         data['reservations_need_confirmation'] = raw_data['BOOKINGS_NEED_CONFIRMATION'] != 'N'
 
         is_reservable = raw_data['IS_RESERVABLE'] != 'N'
+        data['protection_mode'] = ProtectionMode.public if is_reservable else ProtectionMode.protected
         site = raw_data.get('SITE')
         site_map = {'MEYR': 'Meyrin', 'PREV': 'Prevessin'}
         data['site'] = site_map.get(site, site)
@@ -127,13 +128,14 @@ class FoundationSync(object):
             data['latitude'] = building_coordinates['latitude']
             data['longitude'] = building_coordinates['longitude']
 
-        return data, is_reservable, email_warning
+        return data, email_warning
 
     def _prepare_row(self, row, cursor):
         return dict(zip([d[0] for d in cursor.description], row))
 
     def _update_room(self, room, room_data, room_attrs):
         room.is_active = True
+        room.is_reservable = True
         for k, v in room_data.iteritems():
             if getattr(room, k) != v:
                 setattr(room, k, v)
@@ -208,7 +210,7 @@ class FoundationSync(object):
             room_id = data['ID']
 
             try:
-                room_data, is_reservable, email_warning = self._parse_room_data(data, coordinates, room_id)
+                room_data, email_warning = self._parse_room_data(data, coordinates, room_id)
                 room_attrs = self._get_room_attrs(data)
                 self._logger.debug("Fetched data for room with id='%s'", room_id)
             except SkipRoom as e:
@@ -253,7 +255,6 @@ class FoundationSync(object):
                 room.update_principal(principal, full_access=False)
             for principal in new_managers - current_managers:
                 room.update_principal(principal, full_access=True)
-            room.protection_mode = ProtectionMode.public if is_reservable else ProtectionMode.protected
 
             self._logger.info("Updated room '%s' information", room_id)
             foundation_rooms.append(room)
