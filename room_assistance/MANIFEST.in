@@ -1,4 +1,3 @@
-graft indico_room_assistance/migrations
 graft indico_room_assistance/templates
 graft indico_room_assistance/translations
 

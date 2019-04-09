@@ -7,7 +7,7 @@
 
 from __future__ import unicode_literals
 
-from datetime import date, datetime, time, timedelta
+from datetime import date, time, timedelta
 
 from flask import request, session
 from wtforms import SelectField
