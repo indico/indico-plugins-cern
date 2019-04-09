@@ -30,6 +30,11 @@
             {%- endtrans %}
         {% endcall %}
     {% else %}
+        {%- call message_box('info') -%}
+            {% trans room_name=event.room.full_name %}
+                Assistance will be provided for the room <strong>{{ room_name }}</strong>
+            {% endtrans %}
+        {%- endcall -%}
         {{ super() }}
     {% endif %}
 {% endblock %}
