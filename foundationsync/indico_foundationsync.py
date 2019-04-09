@@ -142,7 +142,7 @@ class FoundationSync(object):
                 value = value.strip()
             if room.get_attribute_value(attribute) != value:
                 room.set_attribute_value(attribute, value)
-        return room
+        db.session.flush()
 
     def fetch_buildings_coordinates(self, connection):
         self._logger.debug("Fetching the building geocoordinates...")
@@ -238,19 +238,21 @@ class FoundationSync(object):
                 counter['updated'] += 1
 
             # Update room data
-            room = self._update_room(room, room_data, room_attrs)
-            # Remove all existing full_access acl entries before adding the new ones
-            # otherwise changing the room owner/manager-group wont remove the old one
+            self._update_room(room, room_data, room_attrs)
+            new_managers = set()
             if room_data.get('owner') is not None:
-                for manager in room.get_manager_list():
-                    room.update_principal(manager, full_access=False)
-                room.update_principal(room_data['owner'], full_access=True)
+                new_managers.add(room_data['owner'])
             manager_group = room_attrs.get('manager-group')
             if manager_group is not None:
                 group = GroupProxy(manager_group, provider='cern-ldap')
                 if group.group is None:
-                    self._logger.warning("Group '%s' does not exist in cern-ldap", manager_group)
-                room.update_principal(group, full_access=True)
+                    self._logger.warning("Group '%s' does not exist in LDAP", manager_group)
+                new_managers.add(group)
+            current_managers = room.get_manager_list()
+            for principal in current_managers - new_managers:
+                room.update_principal(principal, full_access=False)
+            for principal in new_managers - current_managers:
+                room.update_principal(principal, full_access=True)
             room.protection_mode = ProtectionMode.public if is_reservable else ProtectionMode.protected
 
             self._logger.info("Updated room '%s' information", room_id)
