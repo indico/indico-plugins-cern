@@ -196,7 +196,7 @@ def update(csv_file, dry_run):
             if not dry_run:
                 room = Room(building=building, floor=floor, number=number, division=division,
                             verbose_name=verbose_name, owner=owner, location=get_location(building),
-                            protection_mode=ProtectionMode.public, reservations_need_confirmation=True)
+                            protection_mode=ProtectionMode.protected, reservations_need_confirmation=True)
                 room.update_principal(owner, full_access=True)
                 if acl:
                     for principal in acl:
