@@ -16,7 +16,7 @@ from wtforms.validators import DataRequired, ValidationError
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
-from indico.core.settings.converters import SettingConverter
+from indico.core.settings.converters import ModelConverter
 from indico.modules.events import Event
 from indico.modules.events.contributions import Contribution
 from indico.modules.events.requests.models.requests import Request, RequestState
@@ -69,18 +69,6 @@ class PluginSettingsForm(IndicoForm):
             raise ValidationError('{cds_id} placeholder is missing')
 
 
-class RoomFeatureConverter(SettingConverter):
-    """Convert a RoomFeature object to ID and backwards."""
-
-    @staticmethod
-    def from_python(value):
-        return value.id
-
-    @staticmethod
-    def to_python(value):
-        return RoomFeature.get(value)
-
-
 class AVRequestsPlugin(IndicoPlugin):
     """Webcast & Recording Request
 
@@ -98,7 +86,7 @@ class AVRequestsPlugin(IndicoPlugin):
                         'recording_cds_url': 'https://cds.cern.ch/record/{cds_id}',
                         'room_feature': None}
     settings_converters = {
-        'room_feature': RoomFeatureConverter,
+        'room_feature': ModelConverter(RoomFeature),
     }
     acl_settings = {'managers'}
 

@@ -20,7 +20,7 @@ from wtforms.validators import DataRequired, Optional
 from indico.core import signals
 from indico.core.db import db
 from indico.core.plugins import IndicoPlugin
-from indico.core.settings.converters import DatetimeConverter, SettingConverter, TimedeltaConverter
+from indico.core.settings.converters import DatetimeConverter, ModelConverter, TimedeltaConverter
 from indico.modules.designer import TemplateType
 from indico.modules.designer.models.templates import DesignerTemplate
 from indico.modules.events import Event
@@ -78,18 +78,6 @@ class PluginSettingsForm(IndicoForm):
                                              .order_by(db.func.lower(DesignerTemplate.title)))
 
 
-class DesignerTemplateConverter(SettingConverter):
-    """Convert a DesignerTemplate object to ID and backwards."""
-
-    @staticmethod
-    def from_python(value):
-        return value.id
-
-    @staticmethod
-    def to_python(value):
-        return DesignerTemplate.get(value)
-
-
 class CERNAccessPlugin(IndicoPlugin):
     """CERN Access Request
 
@@ -110,7 +98,7 @@ class CERNAccessPlugin(IndicoPlugin):
         'delete_personal_data_after': timedelta(days=180),
     }
     settings_converters = {
-        'access_ticket_template': DesignerTemplateConverter,
+        'access_ticket_template': ModelConverter(DesignerTemplate),
         'earliest_start_dt': DatetimeConverter,
         'delete_personal_data_after': TimedeltaConverter,
     }
