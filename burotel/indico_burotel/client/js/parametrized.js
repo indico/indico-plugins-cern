@@ -18,6 +18,7 @@ import DefaultTimelineItem from 'indico/modules/rb_new/common/timeline/TimelineI
 import DefaultBookingEditForm from 'indico/modules/rb_new/common/bookings/BookingEditForm';
 import DefaultSidebarMenu from 'indico/modules/rb_new/components/SidebarMenu';
 import DefaultRoomList from 'indico/modules/rb_new/modules/roomList/RoomList';
+import {UserSearch as DefaultUserSearch} from 'indico/react/components/principals/Search';
 import {Translate} from 'indico/react/i18n';
 import {parametrize} from 'indico/react/util';
 import MapMarkers from './components/MapMarkers';
@@ -130,6 +131,10 @@ const RoomList = parametrize(DefaultRoomList, {
     hideActionsDropdown: true
 });
 
+const UserSearch = parametrize(DefaultUserSearch, {
+    initialFormValues: {exact: true, external: true}
+});
+
 export default {
     App,
     BookingBootstrapForm,
@@ -148,4 +153,5 @@ export default {
     BookingEditForm,
     SidebarMenu,
     RoomList,
+    UserSearch,
 };
