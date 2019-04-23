@@ -234,8 +234,6 @@ class FoundationSync(object):
             # Update room data
             self._update_room(room, room_data)
             new_managers = set()
-            if room_data.get('owner') is not None:
-                new_managers.add(room_data['owner'])
             if manager_group is not None:
                 group = GroupProxy(manager_group, provider='cern-ldap')
                 if group.group is None:
