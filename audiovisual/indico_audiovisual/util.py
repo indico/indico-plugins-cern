@@ -46,7 +46,7 @@ def get_av_capable_rooms():
     if not feature:
         return set()
     feature_criterion = Room.available_equipment.any(EquipmentType.features.any(RoomFeature.name == feature.name))
-    return set(Room.query.filter(Room.is_active, feature_criterion))
+    return set(Room.query.filter(~Room.is_deleted, feature_criterion))
 
 
 def _get_contrib(contrib_or_subcontrib):

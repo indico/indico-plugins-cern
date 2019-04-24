@@ -64,7 +64,7 @@ class FoundationSync(object):
         self.db_name = db_name
         self._logger = logger
         try:
-            self._location = Location.find_one(name='CERN')
+            self._location = Location.query.filter_by(name='CERN', is_deleted=False).one()
         except NoResultFound:
             self._logger.exception("Synchronization failed: Location CERN not found in Indico DB")
             raise
@@ -131,7 +131,7 @@ class FoundationSync(object):
         return dict(zip([d[0] for d in cursor.description], row))
 
     def _update_room(self, room, room_data):
-        room.is_active = True
+        room.is_deleted = False
         room.is_reservable = True
         for k, v in room_data.iteritems():
             if getattr(room, k) != v:
@@ -219,7 +219,7 @@ class FoundationSync(object):
                     counter['skipped'] += 1
                     self._logger.info("Skipped room %s: %s", room_id, email_warning[0] % email_warning[1:])
                     continue
-                elif room.is_active:
+                elif not room.is_deleted:
                     self._logger.warning(*email_warning)
 
             # Insert new room
@@ -250,10 +250,10 @@ class FoundationSync(object):
 
         # Deactivate rooms not found in Foundation
         indico_rooms = Room.find(Room.name == room_name) if room_name else Room.find(location=self._location)
-        rooms_to_deactivate = (room for room in indico_rooms if room not in foundation_rooms and room.is_active)
+        rooms_to_deactivate = (room for room in indico_rooms if room not in foundation_rooms and not room.is_deleted)
         for room in rooms_to_deactivate:
             self._logger.info("Deactivated room '%s'", room.full_name)
-            room.is_active = False
+            room.is_deleted = True
             counter['deactivated'] += 1
         self._logger.info("Deactivated %d rooms not found in Foundation", counter['deactivated'])
 

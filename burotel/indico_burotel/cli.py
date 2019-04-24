@@ -50,7 +50,7 @@ def check_changed_fields(original, new):
 
 
 def get_location(building):
-    location = Location.query.filter(Location.name == "Area {}".format(building)).first()
+    location = Location.query.filter(Location.name == "Area {}".format(building), ~Location.is_deleted).first()
     if not location:
         location = Location(name="Area {}".format(building))
         print(cformat("%{green!}+%{reset} Adding new location for building {}").format(building))
@@ -208,7 +208,7 @@ def update(csv_file, dry_run):
                 continue
             print cformat("%{red}-%{reset} {}").format(room.full_name)
             if not dry_run:
-                room.is_active = False
+                room.is_deleted = True
             num_removes += 1
 
     print (cformat("\n%{cyan}Total:%{reset} %{green}+%{reset}{}  %{yellow}\u00b1%{reset}{}  %{red}-%{reset}{} ")
@@ -223,7 +223,7 @@ def update(csv_file, dry_run):
 def export(csv_file):
     "Export desk list to a CSV file."
     writer = csv.writer(csv_file)
-    for desk in Room.query.filter(Room.is_active).order_by(Room.building, Room.floor, Room.number, Room.verbose_name):
+    for desk in Room.query.filter(~Room.is_deleted).order_by(Room.building, Room.floor, Room.number, Room.verbose_name):
         groups = ';'.join(_principal_repr(p) for p in desk.acl_entries)
         writer.writerow((desk.id, desk.division, desk.building, desk.floor, desk.number, desk.verbose_name,
                          desk.owner.email, groups, ''))
@@ -233,7 +233,7 @@ def export(csv_file):
 @click.option('--dry-run', is_flag=True, help="Don't actually change the database, just report on the changes")
 def geocode(dry_run):
     """Set geographical location for all desks/buildings."""
-    for desk in Room.query.filter(Room.is_active):
+    for desk in Room.query.filter(~Room.is_deleted):
         latlon = get_latlon_building(desk.building)
         if not dry_run:
             desk.latitude, desk.longitude = latlon
