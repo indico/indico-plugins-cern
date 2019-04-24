@@ -11,11 +11,11 @@ import csv
 
 import click
 import requests
-from pyproj import transform, Proj
+from pyproj import Proj, transform
 
+from indico.cli.core import cli_group
 from indico.core.db import db
 from indico.core.db.sqlalchemy.protection import ProtectionMode
-from indico.cli.core import cli_group
 from indico.modules.groups import GroupProxy
 from indico.modules.rb.models.locations import Location
 from indico.modules.rb.models.rooms import Room
