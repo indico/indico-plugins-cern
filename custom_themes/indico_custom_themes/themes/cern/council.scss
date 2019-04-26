@@ -1,0 +1,22 @@
+@import 'base/palette';
+
+$header-bg-color: #0084be;
+$header-icon-color: #f0f0f0;
+$header-text-color: #f0f0f0;
+
+@import 'themes/indico';
+
+div.event-header {
+    background-image: url('/static/plugins/themes_cern/council_banner.png');
+    background-size: cover;
+}
+
+.timetable-item-body .timetable-item-header .timetable-title.top-level {
+    font-size: 1.5em;
+    font-weight: normal;
+    text-align: center;
+}
+
+.timetable-item .timetable-time.nested .start-time {
+    min-width: 1.2em;
+}

@@ -149,6 +149,16 @@ definitions:
     stylesheet: cern/rucio.scss
     title: Rucio
 
+  council:
+    <<: *standard_themes_cern
+    stylesheet: cern/council.scss
+    title: Council Meetings
+    tt_template: :cern/council.html
+    settings:
+      hide_duration: true
+      hide_session_block_time: true
+      number_contributions: true
+
   # Meetings - CERN Administrative
   administrative: &administrative
     event_types: [conference, meeting]
