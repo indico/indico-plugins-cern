@@ -5,7 +5,7 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
+from __future__ import print_function, unicode_literals
 
 import csv
 
@@ -73,14 +73,14 @@ def get_principal(name):
     group = group_cache.setdefault(name, GroupProxy(name, provider='cern-ldap'))
     if not group or not group.group:
         group = None
-        print cformat("%{red}!%{reset} Group %{cyan}{}%{reset} doesn't seem to exist!").format(name)
+        print(cformat("%{red}!%{reset} Group %{cyan}{}%{reset} doesn't seem to exist!").format(name))
     return group
 
 
 def get_room(room_id):
     room = Room.get(room_id)
     if not room:
-        print cformat("%{yellow}! Desk with ID {} not found.").format(room_id)
+        print(cformat("%{yellow}! Desk with ID {} not found.").format(room_id))
     return room
 
 
@@ -97,14 +97,14 @@ def change_room(room, changes):
 
 
 def _print_changes(room, changes):
-    print '[{}]:'.format(room)
+    print('[{}]:'.format(room))
     for field, old, new in changes:
         if field == 'acl_entries':
             old = {e.name for e in old}
             new = {e.name for e in new}
-        print (cformat(' %{yellow}>%{reset} %{cyan}{}%{reset}: %{red}{}%{reset} -> %{green}{}%{reset}')
-               .format(field, old, new))
-    print
+        print((cformat(' %{yellow}>%{reset} %{cyan}{}%{reset}: %{red}{}%{reset} -> %{green}{}%{reset}')
+               .format(field, old, new)))
+    print()
 
 
 def _principal_repr(p):
@@ -118,7 +118,7 @@ def get_latlon_building(building_num):
         data = requests.get(GIS_URL.format(building_num)).json()
 
         # local EPSG reference used in results
-        epsg_ref = Proj(init="epsg:{}".format(data['spatialReference']['wkid']))
+        epsg_ref = Proj(init='epsg:{}'.format(data['spatialReference']['wkid']))
 
         counter = 0
         x, y = 0, 0
@@ -138,7 +138,7 @@ def get_latlon_building(building_num):
         lon, lat = transform(epsg_ref, latlon_ref, x, y)
 
         latlon_cache[building_num] = (lat, lon)
-        print cformat("%{cyan}{}%{reset}: %{green}{}%{reset}, %{green}{}%{reset}").format(building_num, lat, lon)
+        print(cformat('%{cyan}{}%{reset}: %{green}{}%{reset}, %{green}{}%{reset}').format(building_num, lat, lon))
     return latlon_cache[building_num]
 
 
@@ -168,7 +168,7 @@ def update(csv_file, dry_run):
             'action': action or 'UPDATE'
         }
         if not data['id'] and action != 'ADD':
-            print cformat("%{yellow}! Only ADD lines can have an empty Desk ID. Ignoring line.")
+            print(cformat('%{yellow}! Only ADD lines can have an empty Desk ID. Ignoring line.'))
             continue
         elif data['action'] == 'UPDATE':
             room = get_room(room_id)
@@ -187,11 +187,11 @@ def update(csv_file, dry_run):
                                               Room.verbose_name == verbose_name).first()
             if existing_room:
                 # a room with the exact same designation already exists
-                print (cformat("%{yellow}!%{reset} A desk with the name %{cyan}{}%{reset} already exists")
-                       .format(existing_room.full_name))
+                print(cformat("%{yellow}!%{reset} A desk with the name %{cyan}{}%{reset} already exists")
+                      .format(existing_room.full_name))
                 continue
-            print cformat("%{green!}+%{reset} New desk %{cyan}{}/{}-{} {}").format(
-                building, floor, number, verbose_name)
+            print(cformat("%{green!}+%{reset} New desk %{cyan}{}/{}-{} {}").format(
+                building, floor, number, verbose_name))
             num_adds += 1
             if not dry_run:
                 room = Room(building=building, floor=floor, number=number, division=division,
@@ -206,13 +206,13 @@ def update(csv_file, dry_run):
             room = get_room(room_id)
             if not room:
                 continue
-            print cformat("%{red}-%{reset} {}").format(room.full_name)
+            print(cformat('%{red}-%{reset} {}').format(room.full_name))
             if not dry_run:
                 room.is_deleted = True
             num_removes += 1
 
-    print (cformat("\n%{cyan}Total:%{reset} %{green}+%{reset}{}  %{yellow}\u00b1%{reset}{}  %{red}-%{reset}{} ")
-           .format(num_adds, num_changes, num_removes))
+    print((cformat('\n%{cyan}Total:%{reset} %{green}+%{reset}{}  %{yellow}\u00b1%{reset}{}  %{red}-%{reset}{} ')
+           .format(num_adds, num_changes, num_removes)))
 
     if not dry_run:
         db.session.commit()
@@ -221,7 +221,7 @@ def update(csv_file, dry_run):
 @cli.command()
 @click.argument('csv_file', type=click.File('w'))
 def export(csv_file):
-    "Export desk list to a CSV file."
+    """Export desk list to a CSV file."""
     writer = csv.writer(csv_file)
     for desk in Room.query.filter(~Room.is_deleted).order_by(Room.building, Room.floor, Room.number, Room.verbose_name):
         groups = ';'.join(_principal_repr(p) for p in desk.acl_entries)
