@@ -144,14 +144,16 @@ def get_latlon_building(building_num):
 
 @cli.command()
 @click.argument('csv_file', type=click.File('rb'))
+@click.option('--add-missing', is_flag=True, help="Add UPDATE rooms that do not exist locally")
 @click.option('--dry-run', is_flag=True, help="Don't actually change the database, just report on the changes")
-def update(csv_file, dry_run):
+def update(csv_file, add_missing, dry_run):
     """Update the Burotels from a CSV file."""
     num_changes = 0
     num_adds = 0
     num_removes = 0
     r = csv.reader(csv_file)
 
+    valid_ids = {id_ for id_, in db.session.query(Room.id)}
     for room_id, division, building, floor, number, verbose_name, owner_email, acl_row, action in r:
         owner = get_user(owner_email)
         acl = {get_principal(principal) for principal in acl_row.split(';')} if acl_row else None
@@ -170,7 +172,12 @@ def update(csv_file, dry_run):
         if not data['id'] and action != 'ADD':
             print(cformat('%{yellow}! Only ADD lines can have an empty Desk ID. Ignoring line.'))
             continue
-        elif data['action'] == 'UPDATE':
+
+        if add_missing and data['action'] == 'UPDATE' and data['id'] not in valid_ids:
+            data['action'] = 'ADD'
+            print(cformat('%{yellow}! Desk with ID {} not found; adding it.').format(room_id))
+
+        if data['action'] == 'UPDATE':
             room = get_room(room_id)
             if not room:
                 continue
