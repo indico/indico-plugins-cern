@@ -12,7 +12,7 @@ from setuptools import setup
 
 setup(
     name='indico-plugin-foundationsync',
-    version='3.0-dev',
+    version='2.2-dev',
     url='https://github.com/indico/indico-plugins-cern',
     license='MIT',
     author='Indico Team',
