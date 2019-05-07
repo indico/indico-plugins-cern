@@ -68,8 +68,8 @@ class BurotelPlugin(IndicoPlugin):
 
     def _before_request(self):
         if request.endpoint == 'categories.display':
-            return redirect(url_for('rooms_new.roombooking'))
-        elif request.endpoint == 'rooms_new.roombooking':
+            return redirect(url_for('rb.roombooking'))
+        elif request.endpoint == 'rb.roombooking':
             # render our own landing page instead of the original RH
             return make_view_func(RHLanding)()
 
@@ -89,7 +89,7 @@ class BurotelPlugin(IndicoPlugin):
         data.setdefault('reason', 'Burotel booking')
 
     def _inject_time(self, sender, data, **kwargs):
-        if request.blueprint != 'rooms_new':
+        if request.blueprint != 'rb':
             return
         if 'start_dt' in data:
             _add_missing_time('start_dt', data, time(0, 0))
