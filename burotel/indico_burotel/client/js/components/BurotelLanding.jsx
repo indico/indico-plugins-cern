@@ -10,7 +10,7 @@ import defaultExperimentURL from 'indico-url:plugin_burotel.user_experiment';
 
 import React from 'react';
 import {indicoAxios, handleAxiosError} from 'indico/utils/axios';
-import {Landing} from 'indico/modules/rb_new/modules/landing/Landing';
+import {Landing} from 'indico/modules/rb/modules/landing/Landing';
 
 
 export default class BurotelLanding extends React.Component {

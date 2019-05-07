@@ -17,7 +17,7 @@ from webargs import dict2schema
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
 from indico.modules.rb.models.rooms import Room
-from indico.modules.rb_new.schemas import CreateBookingSchema, RoomSchema
+from indico.modules.rb.schemas import CreateBookingSchema, RoomSchema
 from indico.util.marshmallow import NaiveDateTime
 from indico.web.flask.util import make_view_func
 

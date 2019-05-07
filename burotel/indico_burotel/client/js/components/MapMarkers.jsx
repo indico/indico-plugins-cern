@@ -15,7 +15,7 @@ import {Marker, Tooltip} from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
 import {PluralTranslate, Singular, Plural, Param} from 'indico/react/i18n';
 
-import {selectors as mapSelectors} from 'indico/modules/rb_new/common/map';
+import {selectors as mapSelectors} from 'indico/modules/rb/common/map';
 
 import styles from './MapMarkers.module.scss';
 

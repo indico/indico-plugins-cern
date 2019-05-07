@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import {RESET_PAGE_STATE, INIT} from 'indico/modules/rb_new/actions';
+import {RESET_PAGE_STATE, INIT} from 'indico/modules/rb/actions';
 
 
 export default [(state, action) => {

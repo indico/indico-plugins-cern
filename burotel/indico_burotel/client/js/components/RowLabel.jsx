@@ -11,7 +11,7 @@ import PropTypes from 'prop-types';
 
 import {Translate} from 'indico/react/i18n';
 
-import {TimelineRowLabel} from 'indico/modules/rb_new/common/timeline/DailyTimelineContent';
+import {TimelineRowLabel} from 'indico/modules/rb/common/timeline/DailyTimelineContent';
 
 
 const RowLabel = ({room, ...props}) => (

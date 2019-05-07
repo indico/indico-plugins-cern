@@ -1,4 +1,4 @@
-import setup from 'indico/modules/rb_new/setup';
+import setup from 'indico/modules/rb/setup';
 
 import parametrized from './parametrized';
 import overrides from './overrides';

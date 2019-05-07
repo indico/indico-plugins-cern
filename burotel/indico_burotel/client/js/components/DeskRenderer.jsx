@@ -12,7 +12,7 @@ import PropTypes from 'prop-types';
 import {Icon, Card} from 'semantic-ui-react';
 
 import {Translate} from 'indico/react/i18n';
-import {withHoverListener} from 'indico/modules/rb_new/common/map/util';
+import {withHoverListener} from 'indico/modules/rb/common/map/util';
 import {Slot} from 'indico/react/util';
 
 import './DeskRenderer.module.scss';
