@@ -63,11 +63,12 @@ class ExtraFilterForm extends FilterFormComponent {
 export default class ExtraFilters extends React.Component {
     static propTypes = {
         setFilter: PropTypes.func.isRequired,
-        filters: PropTypes.object.isRequired
+        filters: PropTypes.object.isRequired,
+        disabled: PropTypes.bool.isRequired,
     };
 
     render() {
-        const {setFilter, filters} = this.props;
+        const {setFilter, filters, disabled} = this.props;
         return (
             <FilterDropdownFactory name="division"
                                    title={<Translate>Experiment</Translate>}
@@ -77,7 +78,8 @@ export default class ExtraFilters extends React.Component {
                                    )}
                                    setGlobalState={({division}) => setFilter('division', division)}
                                    initialValues={filters}
-                                   renderValue={divisionRenderer} />
+                                   renderValue={divisionRenderer}
+                                   disabled={disabled} />
         );
     }
 }
