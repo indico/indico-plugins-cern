@@ -1,10 +1,9 @@
-/* This file is part of the CERN Indico plugins.
- * Copyright (C) 2014 - 2019 CERN
- *
- * The CERN Indico plugins are free software; you can redistribute
- * them and/or modify them under the terms of the MIT License; see
- * the LICENSE file for more details.
- */
+// This file is part of the CERN Indico plugins.
+// Copyright (C) 2014 - 2019 CERN
+//
+// The CERN Indico plugins are free software; you can redistribute
+// them and/or modify them under the terms of the MIT License; see
+// the LICENSE file for more details.
 
 import _ from 'lodash';
 import {RESET_PAGE_STATE, INIT} from 'indico/modules/rb/actions';
