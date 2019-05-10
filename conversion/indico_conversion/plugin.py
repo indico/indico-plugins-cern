@@ -63,7 +63,7 @@ class ConversionPlugin(IndicoPlugin):
         self.connect(signals.add_form_fields, self._add_form_fields, sender=AddAttachmentFilesForm)
         self.connect(signals.form_validated, self._form_validated)
         self.connect(signals.attachments.attachment_created, self._attachment_created)
-        self.connect(signals.model_committed, self._attachment_committed, sender=Attachment)
+        self.connect(signals.after_commit, self._after_commit)
         self.template_hook('event-display-after-attachment', self._event_display_after_attachment)
         self.inject_bundle('main.css', WPSimpleEventDisplay)
         self.inject_bundle('main.js', WPSimpleEventDisplay)
@@ -94,9 +94,9 @@ class ConversionPlugin(IndicoPlugin):
         if ext not in self.settings.get('valid_extensions'):
             return
         # Prepare for submission (after commit)
-        if 'convert_attachments_ids' not in g:
-            g.convert_attachments_ids = set()
-        g.convert_attachments_ids.add(attachment.id)
+        if 'convert_attachments' not in g:
+            g.convert_attachments = set()
+        g.convert_attachments.add(attachment)
         # Set cache entry to show the pending attachment
         cache.set(unicode(attachment.id), 'pending', info_ttl)
         if not g.get('attachment_conversion_msg_displayed'):
@@ -104,9 +104,9 @@ class ConversionPlugin(IndicoPlugin):
             flash(_('Your file(s) have been sent to the conversion system. The PDF file(s) will be attached '
                     'automatically once the conversion finished.').format(file=attachment.file.filename))
 
-    def _attachment_committed(self, sender, obj, change, **kwargs):
-        if change == 'insert' and obj.id in g.get('convert_attachments_ids', {}):
-            submit_attachment.delay(obj)
+    def _after_commit(self, sender, **kwargs):
+        for attachment in g.get('convert_attachments', ()):
+            submit_attachment.delay(attachment)
 
     def _event_display_after_attachment(self, attachment, top_level, has_label, **kwargs):
         if attachment.type != AttachmentType.file:
