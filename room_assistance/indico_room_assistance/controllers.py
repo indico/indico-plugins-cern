@@ -11,7 +11,6 @@ from collections import OrderedDict
 
 import dateutil.parser
 from flask import request, session
-from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import joinedload
 from werkzeug.exceptions import Forbidden
 
@@ -31,7 +30,7 @@ def _find_requests(from_dt=None, to_dt=None):
              .options(joinedload(Request.event))
              .filter(Request.type == 'room-assistance',
                      Request.state == RequestState.accepted,
-                     db.cast(Request.data, postgresql.JSONB).has_key('start_dt')))  # noqa
+                     Request.data.has_key('start_dt')))  # noqa
 
     if from_dt:
         query = query.filter(db.cast(Request.data['start_dt'].astext, db.DateTime) >= from_dt)

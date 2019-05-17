@@ -7,7 +7,6 @@
 
 from __future__ import unicode_literals
 
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import joinedload
 
 from indico.core.db import db
@@ -42,8 +41,7 @@ def get_participating_users(event):
                              .filter(UserSetting.user_id == Registration.user_id,
                                      UserSetting.module == 'plugin_outlook',
                                      UserSetting.name == 'enabled',
-                                     db.func.cast(UserSetting.value, JSONB) == db.func.cast(db.func.to_json(False),
-                                                                                            JSONB))
+                                     UserSetting.value == db.func.to_jsonb(False))
                              .correlate(Registration)
                              .exists())
                      .join(Registration.registration_form)
