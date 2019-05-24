@@ -52,6 +52,11 @@ class AVRequest(RequestDefinitionBase):
         return set(current_plugin.settings.get('notification_emails'))
 
     @classmethod
+    def get_notification_reply_email(cls):
+        return (current_plugin.settings.get('notification_reply_email') or
+                super(AVRequest, cls).get_notification_reply_email())
+
+    @classmethod
     def get_notification_template(cls, name, **context):
         context['SubContribution'] = SubContribution
         return super(AVRequest, cls).get_notification_template(name, **context)

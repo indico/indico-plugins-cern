@@ -11,6 +11,7 @@ from flask import g, request, session
 from flask_pluginengine import render_plugin_template, url_for_plugin
 from sqlalchemy.orm.attributes import flag_modified
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
+from wtforms.fields.core import StringField
 from wtforms.fields.html5 import URLField
 from wtforms.validators import DataRequired, ValidationError
 
@@ -25,6 +26,7 @@ from indico.modules.rb.models.room_features import RoomFeature
 from indico.modules.users import User
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import EmailListField, MultipleItemsField, PrincipalListField
+from indico.web.forms.validators import IndicoEmail
 from indico.web.http_api import HTTPAPIHook
 from indico.web.menu import TopMenuItem
 
@@ -45,6 +47,10 @@ class PluginSettingsForm(IndicoForm):
     notification_emails = EmailListField(_('Notification email addresses'),
                                          description=_('Notifications about recording/webcast requests are sent to '
                                                        'these email addresses (one per line).'))
+    notification_reply_email = StringField(_('E-mail notification "reply" address'),
+                                           [IndicoEmail()],
+                                           description=_('Notifications that are sent to event managers will use '
+                                                         'this address in their "Reply-To:" fields.'))
     webcast_audiences = MultipleItemsField(_('Webcast Audiences'),
                                            fields=[{'id': 'audience', 'caption': _('Audience'), 'required': True}],
                                            unique_field='audience',
@@ -79,8 +85,9 @@ class AVRequestsPlugin(IndicoPlugin):
     configurable = True
     settings_form = PluginSettingsForm
     default_settings = {'webcast_audiences': [],
+                        'notification_reply_email': '',
                         'notification_emails': [],
-                        'webcast_ping_url': None,
+                        'webcast_ping_url': '',
                         'webcast_url': '',
                         'agreement_paper_url': None,
                         'recording_cds_url': 'https://cds.cern.ch/record/{cds_id}',
