@@ -11,10 +11,30 @@ div.event-header {
     background-size: cover;
 }
 
-.timetable-item-body .timetable-item-header .timetable-title.top-level {
-    font-size: 1.5em;
-    font-weight: normal;
-    text-align: center;
+// Make top level items bigger and non-bold
+.timetable-item-body .timetable-item-header {
+    .timetable-title.top-level, .timetable-title.break {
+        font-size: 1.5em;
+        font-weight: normal;
+        text-align: center;
+    }
+}
+
+// This just makes nested breaks look like top-level ones.
+.timetable-time.break.nested {
+    border: 0;
+    margin-right: 0;
+
+    .start-time {
+        background-color: $tt-primary-color;
+        font-weight: bold;
+        box-shadow: 1px 1px 2px 1px rgba(0, 0, 0, 0.1);
+        margin-left: calc(-1em - 10px);
+        padding: 0 10px 0 20px;
+        position: relative;
+
+        @include ribbon($tt-secondary-color);
+    }
 }
 
 .timetable-item .timetable-time.nested .start-time {
