@@ -158,6 +158,7 @@ definitions:
       hide_duration: true
       hide_session_block_time: true
       number_contributions: true
+      hide_end_time: true
 
   # Meetings - CERN Administrative
   administrative: &administrative
