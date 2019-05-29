@@ -2,3 +2,28 @@
 
 {# Hide location #}
 {% set show_siblings_location = false %}
+
+{# Customize "day header" to add time information #}
+{% block day_header %}
+    <div class="day-header" style="width: 100%;">
+        <div class="day-title" data-anchor="{{ anchor }}">
+            {% trans start_date=item.start_dt|format_date(format='EEEE, d MMMM', timezone=timezone),
+                     start_time=item.start_dt | format_time(format='short') -%}
+                {{ start_date }} at {{ start_time }}
+            {%- endtrans %}
+        </div>
+        {% if days %}
+            <a class="js-go-to-day icon-calendar arrow js-dropdown" data-toggle="dropdown"></a>
+
+            <ul class="dropdown days-dropdown">
+                {% for day, _ in days %}
+                    <li>
+                        <a href="#day-{{ day.isoformat() }}">
+                            {{ day | format_date(format='EEE, d MMM', timezone=timezone) }}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+{% endblock %}
