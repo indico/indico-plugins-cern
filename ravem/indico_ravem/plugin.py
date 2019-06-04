@@ -7,6 +7,7 @@
 
 from __future__ import unicode_literals
 
+import os
 from functools import partial
 
 from flask_pluginengine import depends, render_plugin_template
@@ -72,7 +73,7 @@ class RavemPlugin(IndicoPlugin):
 
     def init(self):
         super(RavemPlugin, self).init()
-        if not config.ENABLE_ROOMBOOKING:
+        if not config.ENABLE_ROOMBOOKING and 'INDICO_DUMPING_URLS' not in os.environ:
             from indico_ravem.util import RavemException
             raise RavemException('RoomBooking is inactive.')
 
