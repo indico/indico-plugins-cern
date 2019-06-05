@@ -82,11 +82,12 @@ def find_requests(from_dt=None, to_dt=None, contribs_and_sessions=True):
     :param contribs_and_sessions: whether it should return contributions and sessions or only request
     """
     from definition import VCAssistanceRequest
-    query = Request.query.filter(Request.type == VCAssistanceRequest.name,
-                                 Request.state == RequestState.accepted)
+    query = Request.query.join(Event).filter(~Event.is_deleted,
+                                             Request.type == VCAssistanceRequest.name,
+                                             Request.state == RequestState.accepted)
 
     if from_dt is not None or to_dt is not None:
-        query = query.join(Event).filter(Event.happens_between(from_dt, to_dt))
+        query = query.filter(Event.happens_between(from_dt, to_dt))
 
     # We only want the latest one for each event
     query = limit_groups(query, Request, Request.event_id, Request.created_dt.desc(), 1)
