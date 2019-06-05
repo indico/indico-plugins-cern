@@ -21,6 +21,7 @@ def get_endpoint_status(room_name):
     :returns: dict -- the status of the room as a JSON response according to the
         RAVEM API.
     """
+    room_name = room_name.replace('/', '-', 1)
     return ravem_api_call('getstatus', method='GET', service_name='videoconference', where='room_name', value=room_name)
 
 
@@ -42,6 +43,7 @@ def disconnect_endpoint(room_name, vc_room_name, service_type):
     :returns: dict -- {'result': 'OK'} if the operation "succeeds", raises a
         RavemAPIException otherwise.
     """
+    room_name = room_name.replace('/', '-', 1)
     params = {
         'method': 'POST',
         'where': 'room_name',
