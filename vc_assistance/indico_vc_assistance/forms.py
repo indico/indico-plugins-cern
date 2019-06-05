@@ -25,7 +25,7 @@ from indico_vc_assistance import _
 
 class VCAssistanceRequestForm(RequestFormBase):
     comment = TextAreaField(_('Comment'),
-                            description=_('If you have any additional comments or instructions,'
+                            description=_('If you have any additional comments or instructions, '
                                           'please write them down here.'))
 
 
