@@ -176,8 +176,8 @@ def _serialize_obj(req, obj, alarm):
         'endDate': date_source.end_dt,
         'title': title,
         'location': location_source.venue_name or None,
-        'room': location_source.get_room_name(full=False) or None,
-        'room_full_name': location_source.get_room_name(full=True) or None,
+        'room': location_source.get_room_name(full=False).replace('/', '-', 1) or None,
+        'room_full_name': location_source.get_room_name(full=True).replace('/', '-', 1) or None,
         'url': url,
         'audience': audience,
         '_ical_id': 'indico-audiovisual-{}@cern.ch'.format(unique_id)
