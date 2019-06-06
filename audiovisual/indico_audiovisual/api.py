@@ -144,6 +144,17 @@ class AVExportHook(HTTPAPIHook):
             yield _serialize_obj(req, contrib, self._alarm)
 
 
+def _get_room_name(obj, full=True):
+    if obj.inherit_location and obj.location_parent is None:
+        return ''
+    room = obj.room
+    if room is not None:
+        name = room.full_name if full else (room.verbose_name or room.name)
+    else:
+        name = (obj.own_room_name if not obj.inherit_location else obj.location_parent.room_name)
+    return name.replace('/', '-', 1)
+
+
 def _serialize_obj(req, obj, alarm):
     # Util to serialize an event, contribution or subcontribution
     # in the context of a webcast/recording request
@@ -176,8 +187,8 @@ def _serialize_obj(req, obj, alarm):
         'endDate': date_source.end_dt,
         'title': title,
         'location': location_source.venue_name or None,
-        'room': location_source.get_room_name(full=False).replace('/', '-', 1) or None,
-        'room_full_name': location_source.get_room_name(full=True).replace('/', '-', 1) or None,
+        'room': _get_room_name(location_source, full=False) or None,
+        'room_full_name': _get_room_name(location_source, full=True) or None,
         'url': url,
         'audience': audience,
         '_ical_id': 'indico-audiovisual-{}@cern.ch'.format(unique_id)
