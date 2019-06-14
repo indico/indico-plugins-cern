@@ -110,14 +110,14 @@ def build_access_request_data(registration, event, generate_code):
     from indico_cern_access.plugin import CERNAccessPlugin
     start_dt, end_dt = get_access_dates(get_last_request(event))
     tz = timezone('Europe/Zurich')
-    title = do_truncate(None, event.title, 100, leeway=0)
+    title = do_truncate(None, unicode_to_ascii(remove_accents(event.title)), 100, leeway=0)
     if generate_code:
         reservation_code = get_random_reservation_code()
     else:
         reservation_code = registration.cern_access_request.reservation_code
     data = {'$id': generate_access_id(registration.id),
             '$rc': reservation_code,
-            '$gn': unicode_to_ascii(remove_accents(title)),
+            '$gn': title,
             '$fn': unicode_to_ascii(remove_accents(registration.first_name)),
             '$ln': unicode_to_ascii(remove_accents(registration.last_name)),
             '$sd': start_dt.astimezone(tz).strftime('%Y-%m-%dT%H:%M'),
