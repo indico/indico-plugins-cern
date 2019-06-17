@@ -29,14 +29,14 @@ def room_assistance_emails():
     inner = (Request.query
              .filter(Request.type == 'room-assistance',
                      Request.state == RequestState.accepted)
-             .add_columns(func.jsonb_array_elements(Request.data['occurrences']).label('requested_at'))
+             .add_columns(func.jsonb_array_elements_text(Request.data['occurrences']).label('requested_at'))
              .subquery())
 
     aliased_event = aliased(Event, name='event')
     requests = (db.session.query(inner, aliased_event)
                 .join(aliased_event, aliased_event.id == inner.c.event_id)
                 .filter(aliased_event.own_room_id.isnot(None))
-                .filter(db.cast(db.cast(inner.c.requested_at, db.String), db.Date) == db.cast(now_utc(), db.Date))
+                .filter(db.cast(inner.c.requested_at, db.Date) == db.cast(now_utc(), db.Date))
                 .all())
 
     requests = [req._asdict() for req in requests]

@@ -7,12 +7,12 @@
 
 from __future__ import unicode_literals
 
-from datetime import timedelta
-
 import dateutil.parser
+import pytz
 from flask_pluginengine import plugin_context
 from werkzeug.exceptions import Forbidden
 
+from indico.core.config import config
 from indico.modules.events.requests import RequestDefinitionBase
 from indico.modules.events.requests.models.requests import RequestState
 from indico.web.forms.base import FormDefaults
@@ -36,11 +36,11 @@ class RoomAssistanceRequest(RequestDefinitionBase):
 
     @classmethod
     def create_form(cls, event, existing_request=None):
-        form_data = {'start_dt': event.start_dt_local - timedelta(minutes=30)}
+        form_data = {'occurrences': None}
         if existing_request:
+            tz = pytz.timezone(config.DEFAULT_TIMEZONE)
             form_data = dict(existing_request.data)
-            if form_data['start_dt']:
-                form_data['start_dt'] = dateutil.parser.parse(form_data['start_dt'])
+            form_data['occurrences'] = [dateutil.parser.parse(occ).astimezone(tz) for occ in form_data['occurrences']]
         with plugin_context(cls.plugin):
             return cls.form(prefix='request-', obj=FormDefaults(form_data), event=event, request=existing_request)
 
@@ -54,10 +54,10 @@ class RoomAssistanceRequest(RequestDefinitionBase):
         if room is None or room not in cls.plugin.settings.get('rooms_with_assistance'):
             raise Forbidden
 
-        data['start_dt'] = data['start_dt'].isoformat()
         is_new = req.id is None
         req.state = RequestState.accepted
         old_data = {} if is_new else req.data
+        data['occurrences'] = [occ.astimezone(pytz.utc).isoformat() for occ in data['occurrences']]
 
         super(RoomAssistanceRequest, cls).send(req, data)
         with plugin_context(cls.plugin):
@@ -67,9 +67,8 @@ class RoomAssistanceRequest(RequestDefinitionBase):
                 changes = {}
                 if data['reason'] != old_data['reason']:
                     changes['reason'] = {'old': old_data['reason'], 'new': data['reason']}
-                if data['start_dt'] != old_data['start_dt']:
-                    changes['start_dt'] = {'old': dateutil.parser.parse(old_data['start_dt']),
-                                           'new': dateutil.parser.parse(data['start_dt'])}
+                if data['occurrences'] != old_data['occurrences']:
+                    changes['occurrences'] = [dateutil.parser.parse(occ) for occ in data['occurrences']]
                 if changes:
                     notify_about_request_modification(req, changes)
 

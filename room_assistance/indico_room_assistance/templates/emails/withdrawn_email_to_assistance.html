@@ -7,6 +7,11 @@
 {%- endblock %}
 
 {% block body -%}
-    Startup assistance for the event {{ event.title }} at {{ request_data.start_dt|format_datetime }} has been withdrawn.<br>
-    Support is not needed anymore.
+    Startup assistance for the event {{ event.title }} on the following days is not needed anymore.<br>
+
+    <ul>
+        {% for occ in request_data.occurrences %}
+            <li>{{ occ|format_datetime }}</li>
+        {% endfor %}
+    </ul>
 {%- endblock %}

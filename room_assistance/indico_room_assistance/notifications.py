@@ -21,8 +21,9 @@ def send_email_to_assistance(request, template_name, **template_params):
     to_list = RoomAssistancePlugin.settings.get('room_assistance_recipients')
     if not to_list:
         return
-    request_start_dt = request.data['start_dt']
-    request_data = dict(request.data, start_dt=dateutil.parser.parse(request_start_dt))
+
+    occurrences = [dateutil.parser.parse(occ) for occ in request.data['occurrences']]
+    request_data = dict(request.data, occurrences=occurrences)
     template = get_plugin_template_module('emails/{}.html'.format(template_name), event=request.event,
                                           requested_by=request.created_by_user, request_data=request_data,
                                           **template_params)
