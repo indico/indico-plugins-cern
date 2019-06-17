@@ -13,6 +13,7 @@ from flask_pluginengine import render_plugin_template, url_for_plugin
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
 from indico.core.settings.converters import ModelListConverter
+from indico.modules.events.requests.views import WPRequestsEventManagement
 from indico.modules.rb.models.rooms import Room
 from indico.util.string import natural_sort_key
 from indico.web.forms.base import IndicoForm
@@ -68,6 +69,7 @@ class RoomAssistancePlugin(IndicoPlugin):
 
     def init(self):
         super(RoomAssistancePlugin, self).init()
+        self.inject_bundle('main.css', WPRequestsEventManagement)
         self.template_hook('event-actions', self._room_assistance_action)
         self.connect(signals.menu.items, self._extend_services_menu, sender='top-menu')
         self.connect(signals.plugin.get_event_request_definitions, self._get_room_assistance_request)

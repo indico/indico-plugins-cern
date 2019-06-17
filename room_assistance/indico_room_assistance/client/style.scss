@@ -1,0 +1,32 @@
+// This file is part of the CERN Indico plugins.
+// Copyright (C) 2014 - 2019 CERN
+//
+// The CERN Indico plugins are free software; you can redistribute
+// them and/or modify them under the terms of the MIT License; see
+// the LICENSE file for more details.
+
+.assistance-occurrences-widget {
+  display: flex;
+  flex-direction: column;
+
+  .occurrence + .occurrence {
+    margin-top: 5px;
+  }
+
+  input ~ input {
+    margin-right: 1em;
+  }
+
+  .occurrence {
+    align-items: center;
+    display: inline-flex;
+
+    .datepicker {
+      width: 40% !important; // sass-lint:disable-line no-important
+    }
+
+    .timepicker {
+      width: 20% !important; // sass-lint:disable-line no-important
+    }
+  }
+}
