@@ -1,0 +1,66 @@
+{% extends 'forms/base_widget.html' %}
+
+{% from 'forms/_form.html' import form_field %}
+{% from '_switch.html' import switch %}
+
+{% block html %}
+    <div class="assistance-occurrences-widget i-form-field-fixed-width" id="{{ field.id }}-container">
+        <input type="hidden" name="{{ field.name }}" id="{{ field.id }}"
+               value="{{ field._value()|tojson|forceescape }}"
+               autofocus>
+        {%- for day in field.event.iter_days() -%}
+            <div class="occurrence">
+                <input type="text" class="datepicker" value="{{ day|format_date(format='code') }}"
+                       data-value="{{ day }}"
+                       disabled>
+                <input type="time" class="timepicker" placeholder="HH:MM" pattern="{{ time_regex_hhmm }}"
+                       value="{{ field._value()[day.isoformat()] or field.event.start_dt_local.time() }}"
+                       {{ 'disabled' if day.isoformat() not in field._value() }}>
+                {{ switch(checked=(day.isoformat() in field._value())) }}
+            </div>
+        {%- endfor -%}
+    </div>
+{% endblock %}
+
+{% block javascript -%}
+    <script>
+        const $field = $('#{{ field.id }}');
+        const $occurrences = $('#{{ field.id }}-container .occurrence');
+
+        $occurrences
+            .find('.datepicker')
+            .datepicker({
+                dateFormat: 'dd/mm/yy',
+                disabled: true
+            })
+            .end()
+            .find('.timepicker')
+            .on('change', function() {
+                const $this = $(this);
+                const timeValue = $this.val();
+                const date = $this.siblings('.datepicker').data('value');
+                const fieldVal = JSON.parse($field.val());
+                const newFieldVal = Object.assign({}, fieldVal, {[date]: timeValue});
+
+                $field.val(JSON.stringify(newFieldVal));
+            })
+            .end()
+            .find('.switch .switch-input').on('change', function() {
+                const $this = $(this);
+                const isChecked = $this.prop('checked');
+                const $fieldContainer = $this.closest('.occurrence');
+                const $timePicker = $fieldContainer.find('.timepicker');
+                const dateValue = $fieldContainer.find('.datepicker').data('value');
+                const fieldVal = JSON.parse($field.val());
+
+                if (isChecked) {
+                    fieldVal[dateValue] = $timePicker.val();
+                } else {
+                    delete fieldVal[dateValue];
+                }
+
+                $field.val(JSON.stringify(fieldVal));
+                $timePicker.attr('disabled', !isChecked);
+            });
+    </script>
+{%- endblock %}

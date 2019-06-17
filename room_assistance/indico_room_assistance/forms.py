@@ -9,6 +9,7 @@ from __future__ import unicode_literals
 
 from datetime import date, time, timedelta
 
+import dateutil.parser
 from flask import request, session
 from wtforms import SelectField
 from wtforms.fields.html5 import IntegerField
@@ -16,10 +17,10 @@ from wtforms.fields.simple import TextAreaField
 from wtforms.validators import DataRequired, NumberRange, Optional, ValidationError
 
 from indico.modules.events.requests import RequestFormBase
-from indico.util.date_time import now_utc
 from indico.web.forms.base import IndicoForm, generated_data
-from indico.web.forms.fields import IndicoDateField, IndicoDateTimeField
-from indico.web.forms.validators import DateTimeRange, Exclusive
+from indico.web.forms.fields import IndicoDateField, JSONField
+from indico.web.forms.validators import Exclusive
+from indico.web.forms.widgets import JinjaWidget
 
 from indico_room_assistance import _
 
@@ -27,17 +28,38 @@ from indico_room_assistance import _
 WORKING_TIME_PERIOD = (time(8, 30), time(17, 30))
 
 
+class _RequestOccurrencesField(JSONField):
+    widget = JinjaWidget('assistance_request_occurrences.html', 'room_assistance', single_line=True)
+
+    def process_formdata(self, valuelist):
+        super(_RequestOccurrencesField, self).process_formdata(valuelist)
+
+        dts = []
+        tzinfo = self.get_form().event.tzinfo
+        for req_date, req_time in self.data.iteritems():
+            dt = tzinfo.localize(dateutil.parser.parse('{} {}'.format(req_date, req_time)))
+            dts.append(dt)
+        self.data = dts
+
+    def _value(self):
+        return {dt.date().isoformat(): dt.time().isoformat() for dt in self.data} if self.data else {}
+
+
 class RoomAssistanceRequestForm(RequestFormBase):
-    start_dt = IndicoDateTimeField(_('When'), [DataRequired(),
-                                               DateTimeRange(earliest=now_utc())],
-                                   description=_('When do you need the assistance?'))
+    occurrences = _RequestOccurrencesField(_('When'), [DataRequired()],
+                                           description=_('When do you need the assistance?'))
     reason = TextAreaField(_('Reason'), [DataRequired()], description=_('Why are you requesting assistance?'))
 
-    def validate_start_dt(self, field):
-        localized_time = field.data.astimezone(session.tzinfo).time()
-        is_in_working_hours = WORKING_TIME_PERIOD[0] <= localized_time <= WORKING_TIME_PERIOD[1]
-        if not is_in_working_hours:
-            raise ValidationError('Specified datetime is not within the working hours')
+    def __init__(self, *args, **kwargs):
+        super(RoomAssistanceRequestForm, self).__init__(*args, **kwargs)
+        self.occurrences.event = kwargs['event']
+
+    def validate_occurrences(self, field):
+        for req_dt in field.data:
+            localized_time = req_dt.astimezone(session.tzinfo).time()
+            is_in_working_hours = WORKING_TIME_PERIOD[0] <= localized_time <= WORKING_TIME_PERIOD[1]
+            if not is_in_working_hours:
+                raise ValidationError('One of the specified times is not within the working hours')
 
 
 class RequestListFilterForm(IndicoForm):
