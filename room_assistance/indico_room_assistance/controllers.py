@@ -11,10 +11,12 @@ from collections import OrderedDict
 
 import dateutil.parser
 from flask import request, session
-from sqlalchemy.orm import joinedload
+from sqlalchemy import func
+from sqlalchemy.orm import aliased
 from werkzeug.exceptions import Forbidden
 
 from indico.core.db import db
+from indico.modules.events import Event
 from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.util.date_time import as_utc, get_day_end, get_day_start
 from indico.util.struct.iterables import group_list
@@ -26,17 +28,19 @@ from indico_room_assistance.views import WPRoomAssistance
 
 
 def _find_requests(from_dt=None, to_dt=None):
-    query = (Request.query
-             .options(joinedload(Request.event))
+    inner = (Request.query
              .filter(Request.type == 'room-assistance',
-                     Request.state == RequestState.accepted,
-                     Request.data.has_key('start_dt')))  # noqa
+                     Request.state == RequestState.accepted)
+             .add_columns(func.jsonb_array_elements_text(Request.data['occurrences']).label('requested_at'))
+             .subquery())
 
+    aliased_event = aliased(Event, name='event')
+    query = db.session.query(inner, aliased_event).join(aliased_event, aliased_event.id == inner.c.event_id)
     if from_dt:
-        query = query.filter(db.cast(Request.data['start_dt'].astext, db.DateTime) >= from_dt)
+        query = query.filter(db.cast(inner.c.requested_at, db.DateTime) >= from_dt)
     if to_dt:
-        query = query.filter(db.cast(Request.data['start_dt'].astext, db.DateTime) <= to_dt)
-    return query.all()
+        query = query.filter(db.cast(inner.c.requested_at, db.DateTime) <= to_dt)
+    return [req._asdict() for req in query]
 
 
 class RHRequestList(RHProtected):
@@ -55,7 +59,7 @@ class RHRequestList(RHProtected):
             from_dt = as_utc(get_day_start(form.start_date.data)) if form.start_date.data else None
             to_dt = as_utc(get_day_end(form.end_date.data)) if form.end_date.data else None
             results = _find_requests(from_dt=from_dt, to_dt=to_dt)
-            results = group_list(results, lambda req: dateutil.parser.parse(req.data['start_dt']).date(),
+            results = group_list(results, lambda req: dateutil.parser.parse(req['requested_at']).date(),
                                  sort_reverse=reverse)
             results = OrderedDict(sorted(results.viewitems(), reverse=reverse))
         return WPRoomAssistance.render_template('request_list.html', form=form, results=results,

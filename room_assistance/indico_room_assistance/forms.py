@@ -10,12 +10,14 @@ from __future__ import unicode_literals
 from datetime import date, time, timedelta
 
 import dateutil.parser
-from flask import request, session
+import pytz
+from flask import request
 from wtforms import SelectField
 from wtforms.fields.html5 import IntegerField
 from wtforms.fields.simple import TextAreaField
 from wtforms.validators import DataRequired, NumberRange, Optional, ValidationError
 
+from indico.core.config import config
 from indico.modules.events.requests import RequestFormBase
 from indico.web.forms.base import IndicoForm, generated_data
 from indico.web.forms.fields import IndicoDateField, JSONField
@@ -35,14 +37,18 @@ class _RequestOccurrencesField(JSONField):
         super(_RequestOccurrencesField, self).process_formdata(valuelist)
 
         dts = []
-        tzinfo = self.get_form().event.tzinfo
+        tzinfo = pytz.timezone(config.DEFAULT_TIMEZONE)
         for req_date, req_time in self.data.iteritems():
             dt = tzinfo.localize(dateutil.parser.parse('{} {}'.format(req_date, req_time)))
             dts.append(dt)
         self.data = dts
 
     def _value(self):
-        return {dt.date().isoformat(): dt.time().isoformat() for dt in self.data} if self.data else {}
+        return {dt.date().isoformat(): dt.strftime('%H:%M') for dt in self.data} if self.data else {}
+
+    @property
+    def event_start_dt(self):
+        return self.event.start_dt.astimezone(pytz.timezone(config.DEFAULT_TIMEZONE))
 
 
 class RoomAssistanceRequestForm(RequestFormBase):
@@ -56,10 +62,9 @@ class RoomAssistanceRequestForm(RequestFormBase):
 
     def validate_occurrences(self, field):
         for req_dt in field.data:
-            localized_time = req_dt.astimezone(session.tzinfo).time()
-            is_in_working_hours = WORKING_TIME_PERIOD[0] <= localized_time <= WORKING_TIME_PERIOD[1]
+            is_in_working_hours = WORKING_TIME_PERIOD[0] <= req_dt.time() <= WORKING_TIME_PERIOD[1]
             if not is_in_working_hours:
-                raise ValidationError('One of the specified times is not within the working hours')
+                raise ValidationError(_('One of the specified times is not within the working hours'))
 
 
 class RequestListFilterForm(IndicoForm):

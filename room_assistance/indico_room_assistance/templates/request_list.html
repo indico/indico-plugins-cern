@@ -46,7 +46,7 @@
                 </a>
             </td>
             <td>
-                {{ parse_dt(request.data.start_dt) | format_datetime }}
+                {{ parse_dt(request.requested_at) | format_datetime }}
             </td>
             <td>{{ request.data.reason }}</td>
         </tr>
