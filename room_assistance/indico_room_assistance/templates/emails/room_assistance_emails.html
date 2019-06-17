@@ -12,7 +12,7 @@
             <li>
                 <div>Event: {{ request.event.title }}</div>
                 <div>Room: {{ request.event.room.full_name }}</div>
-                <div>When: {{ parse_dt(request.data.start_dt)|format_datetime(timezone=indico_config.DEFAULT_TIMEZONE) }}</div>
+                <div>When: {{ parse_dt(request.requested_at)|format_datetime(timezone=indico_config.DEFAULT_TIMEZONE) }}</div>
             </li>
             <br>
         {% else %}
