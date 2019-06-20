@@ -24,7 +24,7 @@ from indico.web.forms.validators import DateTimeRange, Exclusive
 from indico_room_assistance import _
 
 
-WORKING_TIME_PERIODS = ((time(8, 30), time(12, 30)), (time(13, 30), time(17, 30)))
+WORKING_TIME_PERIOD = (time(8, 30), time(17, 30))
 
 
 class RoomAssistanceRequestForm(RequestFormBase):
@@ -35,7 +35,7 @@ class RoomAssistanceRequestForm(RequestFormBase):
 
     def validate_start_dt(self, field):
         localized_time = field.data.astimezone(session.tzinfo).time()
-        is_in_working_hours = any(period[0] <= localized_time <= period[1] for period in WORKING_TIME_PERIODS)
+        is_in_working_hours = WORKING_TIME_PERIOD[0] <= localized_time <= WORKING_TIME_PERIOD[1]
         if not is_in_working_hours:
             raise ValidationError('Specified datetime is not within the working hours')
 
