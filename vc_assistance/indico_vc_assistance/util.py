@@ -26,7 +26,7 @@ from indico.modules.vc import VCRoomEventAssociation
 from indico.util.caching import memoize_request
 
 
-WORKING_TIME_PERIODS = ((time(8, 30), time(12, 30)), (time(13, 30), time(17, 30)))
+WORKING_TIME_PERIOD = (time(8, 30), time(17, 30))
 
 
 def can_request_assistance(user):
@@ -174,4 +174,4 @@ def get_capable(req, get_contribs_or_session_blocks):
 
 
 def start_time_within_working_hours(event):
-    return any(period[0] <= event.start_dt_local.time() <= period[1] for period in WORKING_TIME_PERIODS)
+    return WORKING_TIME_PERIOD[0] <= event.start_dt_local.time() <= WORKING_TIME_PERIOD[1]
