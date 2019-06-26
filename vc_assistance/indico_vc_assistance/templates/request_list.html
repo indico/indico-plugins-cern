@@ -121,7 +121,7 @@
     </td>
     <td>
         {% if obj.session %}
-            {{ obj.session.title }}{{ ': {}'.format(obj.title) if obj.title }}
+            {{ obj.session.title }}{{ ': %s'|format(obj.title) if obj.title }}
         {% else %}
             {{ obj.title }}
         {% endif %}
