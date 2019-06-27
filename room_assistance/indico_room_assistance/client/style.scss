@@ -22,11 +22,11 @@
         display: inline-flex;
 
         .datepicker {
-            width: 40% !important; // sass-lint:disable-line no-important
+            width: 40% !important;
         }
 
         .timepicker {
-            width: 20% !important; // sass-lint:disable-line no-important
+            display: flex;
         }
     }
 }

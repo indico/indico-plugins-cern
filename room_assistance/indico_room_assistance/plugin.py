@@ -7,14 +7,21 @@
 
 from __future__ import unicode_literals
 
-from flask import session
+from datetime import datetime
+
+import dateutil.parser
+import pytz
+from flask import flash, request, session
 from flask_pluginengine import render_plugin_template, url_for_plugin
 
 from indico.core import signals
+from indico.core.config import config
 from indico.core.plugins import IndicoPlugin
 from indico.core.settings.converters import ModelListConverter
+from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.modules.events.requests.views import WPRequestsEventManagement
 from indico.modules.rb.models.rooms import Room
+from indico.modules.users import User
 from indico.util.string import natural_sort_key
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import EmailListField, IndicoQuerySelectMultipleField, PrincipalListField
@@ -23,7 +30,8 @@ from indico.web.menu import TopMenuItem
 from indico_room_assistance import _
 from indico_room_assistance.blueprint import blueprint
 from indico_room_assistance.definition import RoomAssistanceRequest
-from indico_room_assistance.util import is_room_assistance_support
+from indico_room_assistance.util import (can_request_assistance_for_event, event_has_room_with_support_attached,
+                                         is_room_assistance_support)
 
 
 def _order_func(object_list):
@@ -69,20 +77,19 @@ class RoomAssistancePlugin(IndicoPlugin):
 
     def init(self):
         super(RoomAssistancePlugin, self).init()
-        self.inject_bundle('main.css', WPRequestsEventManagement)
+        self.inject_bundle('main.css', WPRequestsEventManagement, subclasses=False,
+                           condition=lambda: request.view_args.get('type') == RoomAssistanceRequest.name)
         self.template_hook('event-actions', self._room_assistance_action)
         self.connect(signals.menu.items, self._extend_services_menu, sender='top-menu')
         self.connect(signals.plugin.get_event_request_definitions, self._get_room_assistance_request)
+        self.connect(signals.event.updated, self._on_event_update)
 
     def get_blueprints(self):
         return blueprint
 
     def _room_assistance_action(self, event, **kwargs):
-        has_room_assistance_request = event.requests.filter_by(type='room-assistance').has_rows()
-        room_allows_assistance = event.room is not None and event.room in self.settings.get('rooms_with_assistance')
-        can_request_assistance = not event.has_ended and not has_room_assistance_request and room_allows_assistance
         return render_plugin_template('room_assistance_action.html', event=event,
-                                      can_request_assistance=can_request_assistance)
+                                      can_request_assistance=can_request_assistance_for_event(event))
 
     def _extend_services_menu(self, reservation, **kwargs):
         if not session.user or not is_room_assistance_support(session.user):
@@ -93,3 +100,40 @@ class RoomAssistancePlugin(IndicoPlugin):
 
     def _get_room_assistance_request(self, sender, **kwargs):
         return RoomAssistanceRequest
+
+    def _on_event_update(self, event, **kwargs):
+        changes = kwargs['changes']
+        if not changes.viewkeys() & {'location_data', 'start_dt', 'end_dt'}:
+            return
+
+        request = Request.find_latest_for_event(event, RoomAssistanceRequest.name)
+        if not request or request.state != RequestState.accepted:
+            return
+
+        if 'location_data' in changes and not event_has_room_with_support_attached(event):
+            data = dict(request.data, comment=render_plugin_template('auto_reject_no_supported_room.txt'))
+            request.definition.reject(request, data, User.get_system_user())
+            flash(_("The new event location is not in the list of the rooms supported by the room assistance team. "
+                    "Room assistance request has been rejected and support will not be provided."), 'warning')
+        if changes.viewkeys() & {'start_dt', 'end_dt'}:
+            tz = pytz.timezone(config.DEFAULT_TIMEZONE)
+            req_dates = {dateutil.parser.parse(occ).astimezone(tz).date() for occ in request.data['occurrences']}
+            event_dates = set(event.iter_days())
+            old_dates = req_dates - event_dates
+            has_overlapping_dates = req_dates & event_dates
+
+            if not has_overlapping_dates:
+                request.definition.reject(request,
+                                          {'comment': render_plugin_template('auto_reject_no_overlapping_dates.txt')},
+                                          User.get_system_user())
+                request.data = dict(request.data, occurrences=[])
+                flash(_("The new event dates don't overlap with the existing room assistance request for this event. "
+                        "Room assistance request has been rejected and support will not be provided."), 'warning')
+            elif old_dates and has_overlapping_dates:
+                new_data = dict(request.data)
+                start_time = event.start_dt.time()
+                new_data['occurrences'] = [pytz.utc.localize(datetime.combine(occ, start_time)).isoformat()
+                                           for occ in event_dates & req_dates]
+                request.data = new_data
+                flash(_("Room assistance had been requested for days that are not between the updated start/end "
+                        "dates. Support will not be provided on these days anymore."), 'warning')

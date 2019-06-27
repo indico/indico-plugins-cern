@@ -9,9 +9,10 @@
 
     <ul>
         {% for request in requests %}
+            {%- set event = request.event -%}
             <li>
-                <div>Event: {{ request.event.title }} ({{ request.event.external_url }})</div>
-                <div>Room: {{ request.event.room.full_name }}</div>
+                <div>Event: <a href="{{ event.external_url }}">{{ event.title }}</a></div>
+                <div>Room: {{ event.room.full_name }}</div>
                 <div>When: {{ parse_dt(request.requested_at)|format_datetime(timezone=indico_config.DEFAULT_TIMEZONE) }}</div>
             </li>
             <br>
