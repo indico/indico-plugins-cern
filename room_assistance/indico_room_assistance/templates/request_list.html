@@ -39,7 +39,9 @@
 {% macro room_assistance_request_entry(request) %}
     <tbody>
         <tr class="result-group-entry">
-            <td>{{ request.event.room.full_name }}</td>
+            <td>
+                {{ request.event.room.full_name }}
+            </td>
             <td>
                 <a href="{{ request.event.url }}">
                     {{ request.event.title }}

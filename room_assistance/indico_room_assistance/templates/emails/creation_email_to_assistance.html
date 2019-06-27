@@ -11,7 +11,7 @@
         {{ requested_by.full_name }} requested assistance to setup {{ event.room.full_name }} before the start of the event.
     </p>
     <div>
-        <strong>Event:</strong> {{ event.title }}<br>
+        <strong>Event:</strong> <a href="{{ event.external_url }}">{{ event.title }}</a><br>
         <strong>Reason for requesting assistance:</strong> {{ request_data.reason }}<br>
         <strong>When:</strong>
         <ul>
