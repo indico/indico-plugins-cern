@@ -90,7 +90,7 @@ class ConversionPlugin(IndicoPlugin):
     def _attachment_created(self, attachment, **kwargs):
         if not g.get('convert_attachments_pdf') or attachment.type != AttachmentType.file:
             return
-        ext = os.path.splitext(attachment.file.filename)[1].lstrip('.')
+        ext = os.path.splitext(attachment.file.filename)[1].lstrip('.').lower()
         if ext not in self.settings.get('valid_extensions'):
             return
         # Prepare for submission (after commit)
