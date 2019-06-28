@@ -235,7 +235,7 @@ class FoundationSync(object):
             self._update_room(room, room_data)
             new_managers = set()
             if manager_group is not None:
-                group = GroupProxy(manager_group, provider='cern-ldap')
+                group = GroupProxy(manager_group.strip(), provider='cern-ldap')
                 if group.group is None:
                     self._logger.warning("Group '%s' does not exist in LDAP", manager_group)
                 new_managers.add(group)
