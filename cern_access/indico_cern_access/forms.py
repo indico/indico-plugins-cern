@@ -12,7 +12,7 @@ from operator import itemgetter
 
 from markupsafe import Markup
 from wtforms.fields import BooleanField, SelectField, StringField
-from wtforms.validators import DataRequired, Optional, ValidationError
+from wtforms.validators import DataRequired, Optional, ValidationError, Length, Regexp
 
 from indico.core.db import db
 from indico.modules.events.registration.forms import EmailRegistrantsForm
@@ -27,6 +27,7 @@ from indico.web.forms.validators import HiddenUnless, LinkedDateTime, UsedIf
 from indico.web.forms.widgets import JinjaWidget, SwitchWidget
 
 from indico_cern_access import _
+from indico_cern_access.util import sanitize_license_plate
 
 
 class GrantAccessEmailForm(EmailRegistrantsForm):
@@ -105,6 +106,16 @@ class AccessIdentityDataForm(IndicoForm):
     birth_date = IndicoDateField(_('Birth date'), [DataRequired()])
     nationality = SelectField(_('Country of birth'), [DataRequired()])
     birth_place = StringField(_('Place of birth'), [DataRequired()])
+    by_car = BooleanField(_('Are you bringing your own car?'), [Optional()], widget=SwitchWidget(_('Yes'), _('No')),)
+    license_plate = StringField(
+        _('License plate'),
+        [
+            HiddenUnless('by_car'),
+            Length(min=3),
+            Regexp(r'^[0-9A-Za-z]+([- ][ ]*[0-9A-Za-z]+)*$',
+                   message=_('Wrong format. Only letters and numbers separated by dashes (-) or spaces allowed'))
+        ]
+    )
 
     def __init__(self, *args, **kwargs):
         super(AccessIdentityDataForm, self).__init__(*args, **kwargs)
@@ -113,6 +124,12 @@ class AccessIdentityDataForm(IndicoForm):
     def validate_birth_date(self, field):
         if field.data > datetime.now().date():
             raise ValidationError(_('The specified date is in the future'))
+
+    def validate_license_plate(self, field):
+        if self.by_car.data:
+            return
+        if not sanitize_license_plate(field.data).strip():
+            raise ValidationError(_('Please insert a valid license plate number!'))
 
 
 class RegistrationFormPersonalDataForm(AccessIdentityDataForm):

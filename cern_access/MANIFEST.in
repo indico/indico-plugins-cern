@@ -1,4 +1,5 @@
 graft indico_cern_access/migrations
 graft indico_cern_access/templates
+graft indico_cern_access/static
 
 global-exclude *.pyc __pycache__ .keep
