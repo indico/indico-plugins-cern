@@ -28,12 +28,12 @@
             <div class="message-box-content">
                 <span class="icon"></span>
                 <div class="message-text">
-                    {% trans -%}
-                        By sending this request you are giving event participants access to the CERN site.
-                        Please note that after the request is accepted, you will need to grant the access to every participant
-                        manually on the registration list page. By default the tickets will be sent to them automatically afterwards.<br>
-                        <strong>Before granting access to any user please make sure that the event is in its final form.</strong>
-                        If you change the:
+                    {% trans link='<a href="https://indico-user-docs.web.cern.ch/indico-user-docs/cern/cern_access/#granting-access-to-participants">'|safe, endlink='</a>'|safe-%}
+                        After filling in this form, {{link}}<strong>you will need to grant the access
+                        to every participant manually</strong>{{endlink}} on the registration list page. By default the
+                        tickets will be sent to them automatically afterwards.<br>
+                        <strong>Before granting access to any user please make sure that the event is in its final
+                        form.</strong> If you change the:
                         <ul>
                             <li><strong>starting or ending time of the event</strong></li>
                             <li><strong>title of the event</strong></li>
