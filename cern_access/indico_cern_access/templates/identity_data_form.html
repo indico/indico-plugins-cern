@@ -1,6 +1,6 @@
 {% extends 'layout/base.html' %}
 
-{% from 'cern_access:_common.html' import render_access_dates, render_security_policy %}
+{% from 'cern_access:_common.html' import render_access_dates, render_security_policy, render_identity_form %}
 {% from 'forms/_form.html' import simple_form, form_rows, form_row_static %}
 {% from 'message_box.html' import message_box %}
 
@@ -34,7 +34,7 @@
             {% endcall %}
             {% call simple_form(form, back_button=false) %}
                 {{ form_row_static(_('Name'), access_request.registration.full_name) }}
-                {{ form_rows(form) }}
+                {{ render_identity_form(form) }}
             {% endcall %}
         {% endif %}
     {% else %}

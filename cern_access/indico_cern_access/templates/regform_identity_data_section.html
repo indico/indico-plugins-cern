@@ -1,4 +1,4 @@
-{% from 'cern_access:_common.html' import render_access_dates, render_security_policy %}
+{% from 'cern_access:_common.html' import render_access_dates, render_security_policy, render_identity_form %}
 {% from 'forms/_form.html' import form_rows, form_row %}
 
 {% set access_request = registration.cern_access_request %}
@@ -34,7 +34,7 @@
             </div>
             <div class="i-box-content">
                 <div class="i-form">
-                    {{ form_rows(form, orientation='horizontal', fields=('birth_date', 'nationality', 'birth_place')) }}
+                    {{ render_identity_form(form) }}
                 </div>
             </div>
         </div>
@@ -49,6 +49,7 @@
                     personalDataForm = $('.personal-data-form').detach();
 
                 registrationForm.find('.regform-section-list').append(personalDataForm);
+                window.initForms($('.regform-section-list .personal-data-form'));
             });
 
             {% if not required %}

@@ -11,6 +11,7 @@ import hashlib
 import hmac
 import json
 import random
+import re
 
 import dateutil.parser
 import requests
@@ -122,6 +123,10 @@ def build_access_request_data(registration, event, generate_code):
             '$ln': unicode_to_ascii(remove_accents(registration.last_name)),
             '$sd': start_dt.astimezone(tz).strftime('%Y-%m-%dT%H:%M'),
             '$ed': end_dt.astimezone(tz).strftime('%Y-%m-%dT%H:%M')}
+
+    if registration.cern_access_request and registration.cern_access_request.license_plate:
+        data['$lp'] = registration.cern_access_request.license_plate
+
     checksum = ';;'.join('{}:{}'.format(key, value) for key, value in sorted(data.viewitems()))
     signature = hmac.new(str(CERNAccessPlugin.settings.get('secret_key')), checksum, hashlib.sha256)
     data['$si'] = signature.hexdigest()
@@ -356,6 +361,12 @@ def sanitize_personal_data():
         req.clear_identity_data()
         CERNAccessPlugin.logger.info('Removing personal data for registrant %d', req.registration_id)
     db.session.flush()
+
+
+def sanitize_license_plate(number):
+    """Sanitize a license plate number to [A-Z0-9]+, no dashes/spaces."""
+    number = re.sub(r'[ -]', '', number.upper())
+    return number if re.match(r'^[A-Z0-9]+$', number) else None
 
 
 class AdamsError(Exception):

@@ -28,7 +28,8 @@ from indico.web.util import jsonify_data, jsonify_template
 
 from indico_cern_access import _
 from indico_cern_access.forms import AccessIdentityDataForm, GrantAccessEmailForm
-from indico_cern_access.util import get_access_dates, get_last_request, grant_access, revoke_access, send_ticket
+from indico_cern_access.util import (get_access_dates, get_last_request, grant_access, revoke_access,
+                                     sanitize_license_plate, send_ticket, send_adams_post_request)
 from indico_cern_access.views import WPAccessRequestDetails
 
 
@@ -112,8 +113,18 @@ class RHRegistrationAccessIdentityData(RHRegistrationFormRegistrationBase):
         if access_request is not None and not access_request.has_identity_info and form.validate_on_submit():
             if expired:
                 raise Forbidden
-            form.populate_obj(access_request)
+
+            form.populate_obj(access_request, skip={'license_plate'})
+            access_request.license_plate = (
+                sanitize_license_plate(form.license_plate.data) if form.by_car.data and form.license_plate.data
+                else None
+            )
+
             db.session.flush()
+
+            # if the user has entered car plate info, we have to provide it to ADAMS
+            if form.by_car.data:
+                send_adams_post_request(self.event, [self.registration], update=True)
             if email_ticket:
                 send_ticket(self.registration)
             return redirect(url_for('.access_identity_data', self.registration.locator.uuid))
