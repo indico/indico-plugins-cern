@@ -15,7 +15,7 @@ from indico.modules.events.registration.util import create_registration, make_re
 from indico_cern_access.models.access_requests import CERNAccessRequestState
 from indico_cern_access.util import grant_access
 
-from .conftest import PERSONAL_DATA
+from conftest import PERSONAL_DATA
 
 
 @pytest.fixture

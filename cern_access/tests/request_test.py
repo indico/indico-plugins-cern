@@ -13,7 +13,7 @@ import pytest
 
 from indico.modules.events.registration.util import create_registration, make_registration_form
 
-from .conftest import PERSONAL_DATA
+from conftest import PERSONAL_DATA
 
 
 @pytest.mark.parametrize('mock_access_request',
