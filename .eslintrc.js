@@ -14,9 +14,12 @@ const PATH_COMMAND = `python -c 'from flask.helpers import get_root_path; print 
 let indicoBaseDir = null;
 const indicoPathFile = path.join(__dirname, '.indico_source');
 
-// If there's an .indicosource symlink in the same dir, let's use it
+// If there's an .indico_source file in the same dir, let's use it
 if (fs.existsSync(indicoPathFile)) {
-  indicoBaseDir = fs.realpathSync(indicoPathFile);
+  indicoBaseDir = fs
+    .readFileSync(indicoPathFile)
+    .toString()
+    .trim();
 }
 
 // Otherwise, let's use Python to figure it out
