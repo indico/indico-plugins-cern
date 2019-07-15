@@ -30,135 +30,134 @@ import {Translate} from 'indico/react/i18n';
 import {parametrize} from 'indico/react/util';
 import MapMarkers from './components/MapMarkers';
 
-
 const App = parametrize(DefaultApp, {
-    title: Translate.string('Burotel'),
-    iconName: 'keyboard'
+  title: Translate.string('Burotel'),
+  iconName: 'keyboard',
 });
 
 const BookingBootstrapForm = parametrize(DefaultBookingBootstrapForm, () => ({
-    dayBased: true,
-    hideOptions: {
-        single: true,
-        daily: false,
-        recurring: true,
-        timeSlot: true,
+  dayBased: true,
+  hideOptions: {
+    single: true,
+    daily: false,
+    recurring: true,
+    timeSlot: true,
+  },
+  defaults: {
+    recurrence: {
+      type: 'daily',
     },
-    defaults: {
-        recurrence: {
-            type: 'daily'
-        },
-        dates: {
-            endDate: moment().add(7, 'd')
-        }
-    }
+    dates: {
+      endDate: moment().add(7, 'd'),
+    },
+  },
 }));
 
 const BookingFilterBar = parametrize(DefaultBookingFilterBar, {
-    dayBased: true,
+  dayBased: true,
 });
 
 const RoomFilterBar = parametrize(RoomFilterBarBase, {
-    hideOptions: {
-        capacity: true,
-        favorites: true,
-    }
+  hideOptions: {
+    capacity: true,
+    favorites: true,
+  },
 });
 
 const BookRoom = parametrize(DefaultBookRoom, {
-    showSuggestions: false,
-    labels: {
-        bookButton: Translate.string('Book Desk'),
-        preBookButton: Translate.string('Pre-Book Desk'),
-        detailsButton: Translate.string('See details')
-    }
+  showSuggestions: false,
+  labels: {
+    bookButton: Translate.string('Book Desk'),
+    preBookButton: Translate.string('Pre-Book Desk'),
+    detailsButton: Translate.string('See details'),
+  },
 });
 
 const TimeInformation = parametrize(DefaultTimeInformation, {
-    timeSlot: null
+  timeSlot: null,
 });
 
 const Landing = parametrize(DefaultLanding, {
-    showUpcomingBookings: false
+  showUpcomingBookings: false,
 });
 
 const LandingStatistics = parametrize(DefaultLandingStatistics, () => ({
-    labels: {
-        activeRooms: Translate.string('Desks in use')
-    }
+  labels: {
+    activeRooms: Translate.string('Desks in use'),
+  },
 }));
 
 const RoomBookingMap = parametrize(DefaultRoomBookingMap, {
-    markerComponent: MapMarkers
+  markerComponent: MapMarkers,
 });
 
 const Menu = parametrize(DefaultMenu, () => ({
-    labels: {
-        bookRoom: Translate.string('Book a Desk'),
-        roomList: Translate.string('List of Spaces')
-    }
+  labels: {
+    bookRoom: Translate.string('Book a Desk'),
+    roomList: Translate.string('List of Spaces'),
+  },
 }));
 
 const RoomDetailsModal = parametrize(DefaultRoomDetailsModal, () => ({
-    title: Translate.string('Desk Details')
+  title: Translate.string('Desk Details'),
 }));
 
 const BookRoomModal = parametrize(DefaultBookRoomModal, () => ({
-    defaultTitles: {
-        booking: Translate.string('Book a Desk'),
-        preBooking: Translate.string('Pre-book a Desk')
-    },
-    reasonRequired: false,
+  defaultTitles: {
+    booking: Translate.string('Book a Desk'),
+    preBooking: Translate.string('Pre-book a Desk'),
+  },
+  reasonRequired: false,
 }));
 
 const Calendar = parametrize(DefaultCalendar, {
-    allowDragDrop: false
+  allowDragDrop: false,
 });
 
 const TimelineItem = parametrize(DefaultTimelineItem, {
-    dayBased: true
+  dayBased: true,
 });
 
 const BookingEditForm = parametrize(DefaultBookingEditForm, {
-    hideOptions: {
-        single: true,
-        daily: false,
-        recurring: true,
-        timeSlot: true,
-    }
+  hideOptions: {
+    single: true,
+    daily: false,
+    recurring: true,
+    timeSlot: true,
+  },
 });
 
 const SidebarMenu = parametrize(DefaultSidebarMenu, {
-    hideOptions: {
-        myBlockings: true,
-    },
+  hideOptions: {
+    myBlockings: true,
+  },
 });
 
 const RoomList = parametrize(DefaultRoomList, {
-    hideActionsDropdown: true
+  hideActionsDropdown: true,
 });
 
 const UserSearch = parametrize(DefaultUserSearch, {
-    initialFormValues: {exact: true, external: true}
+  initialFormValues: {exact: true, external: true},
 });
 
 export default {
-    App,
-    BookingBootstrapForm,
-    BookingFilterBar,
-    BookRoom,
-    BookRoomModal,
-    Calendar,
-    Landing,
-    LandingStatistics,
-    Menu,
-    RoomBookingMap,
-    RoomDetailsModal,
-    RoomFilterBar,
-    TimelineItem,
-    TimeInformation,
-    BookingEditForm,
-    SidebarMenu,
-    RoomList,
-    UserSearch,
+  App,
+  BookingBootstrapForm,
+  BookingFilterBar,
+  BookRoom,
+  BookRoomModal,
+  Calendar,
+  Landing,
+  LandingStatistics,
+  Menu,
+  RoomBookingMap,
+  RoomDetailsModal,
+  RoomFilterBar,
+  TimelineItem,
+  TimeInformation,
+  BookingEditForm,
+  SidebarMenu,
+  RoomList,
+  UserSearch,
 };
