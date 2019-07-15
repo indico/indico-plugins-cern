@@ -1,6 +1,9 @@
+/* eslint-disable import/no-commonjs, import/unambiguous */
+
 const _ = require('lodash');
 const path = require('path');
 const fs = require('fs');
+const resolve = require('resolve');
 const yaml = require('js-yaml');
 const {execSync} = require('child_process');
 
@@ -36,10 +39,16 @@ try {
   console.error(e);
 }
 
+const reactPath = resolve.sync('react', {basedir: indicoBaseDir});
+const react = require(reactPath);
+
 module.exports = _.merge(
   defaultConfig,
   {
     settings: {
+      react: {
+        version: react.version,
+      },
       'import/resolver': {
         alias: {
           map: currentMap.map(([k, v]) => [k, path.resolve(indicoBaseDir, v)])
