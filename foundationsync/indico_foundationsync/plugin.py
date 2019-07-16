@@ -341,6 +341,10 @@ class FoundationSyncPlugin(IndicoPlugin):
         super(FoundationSyncPlugin, self).init()
         self.connect(signals.plugin.cli, self._extend_indico_cli)
 
+    def get_blueprints(self):
+        from indico_foundationsync.blueprint import blueprint
+        return blueprint
+
     def _extend_indico_cli(self, sender, **kwargs):
         @cli_command()
         @click.option('--room', 'room_name', metavar='ROOM', help="Synchronize only a given room (e.g. '513 R-055')")
