@@ -7,7 +7,7 @@
 
 from __future__ import unicode_literals
 
-from setuptools import setup
+from setuptools import find_packages, setup
 
 
 setup(
@@ -17,14 +17,14 @@ setup(
     license='MIT',
     author='Indico Team',
     author_email='indico-team@cern.ch',
-    py_modules=('indico_foundationsync',),
+    packages=find_packages(),
     zip_safe=False,
     install_requires=[
         'indico>=2.2.dev0',
         'cx_Oracle',
     ],
     entry_points={
-        'indico.plugins': {'foundationsync = indico_foundationsync:FoundationSyncPlugin'}
+        'indico.plugins': {'foundationsync = indico_foundationsync.plugin:FoundationSyncPlugin'}
     },
     classifiers=[
         'Environment :: Plugins',
