@@ -14,7 +14,7 @@
                        data-value="{{ day }}"
                        disabled>
                 <input type="time" class="timepicker" placeholder="hh:mm" pattern="{{ time_regex_hhmm }}"
-                       value="{{ field._value()[day.isoformat()] or field.event_start_dt.strftime('%H:%M') }}"
+                       value="{{ field._value()[day.isoformat()] }}"
                        {{ 'disabled' if day.isoformat() not in field._value() }}
                        required>
                 {{ switch(checked=(day.isoformat() in field._value())) }}
