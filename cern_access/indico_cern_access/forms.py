@@ -23,7 +23,7 @@ from indico.util.placeholders import get_missing_placeholders, render_placeholde
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import IndicoDateField, IndicoDateTimeField, IndicoSelectMultipleCheckboxField
 from indico.web.forms.util import inject_validators
-from indico.web.forms.validators import HiddenUnless, LinkedDateTime, UsedIf
+from indico.web.forms.validators import HiddenUnless, IndicoRegexp, LinkedDateTime, UsedIf
 from indico.web.forms.widgets import JinjaWidget, SwitchWidget
 
 from indico_cern_access import _
@@ -112,8 +112,8 @@ class AccessIdentityDataForm(IndicoForm):
         [
             HiddenUnless('by_car'),
             Length(min=3),
-            Regexp(r'^[0-9A-Za-z]+([- ][ ]*[0-9A-Za-z]+)*$',
-                   message=_('Wrong format. Only letters and numbers separated by dashes (-) or spaces allowed'))
+            IndicoRegexp(r'^[0-9A-Za-z]+([- ][ ]*[0-9A-Za-z]+)*$',
+                         message=_('Wrong format. Only letters and numbers separated by dashes (-) or spaces allowed'))
         ]
     )
 
