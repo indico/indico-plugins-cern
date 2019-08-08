@@ -152,7 +152,7 @@ class RHExportCERNAccessBase(RHRequestsEventRequestDetailsBase):
         if not self.regform.cern_access_request or not self.regform.cern_access_request.is_active:
             return 'n/a'
         access_request = registration.cern_access_request
-        if not access_request:
+        if not access_request or access_request.is_not_requested:
             return 'Not requested'
         elif access_request.is_withdrawn:
             return 'Revoked'

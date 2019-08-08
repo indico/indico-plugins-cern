@@ -64,6 +64,10 @@ class CERNAccessRequest(db.Model):
     )
 
     @hybrid_property
+    def is_not_requested(self):
+        return self.request_state == CERNAccessRequestState.not_requested
+
+    @hybrid_property
     def is_withdrawn(self):
         return self.request_state == CERNAccessRequestState.withdrawn
 
