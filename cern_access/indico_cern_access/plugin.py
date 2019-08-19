@@ -41,8 +41,8 @@ from indico_cern_access.blueprint import blueprint
 from indico_cern_access.definition import CERNAccessRequestDefinition
 from indico_cern_access.forms import AccessIdentityDataForm, RegistrationFormPersonalDataForm
 from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState
-from indico_cern_access.placeholders import (AccessPeriodPlaceholder, FormLinkPlaceholder,
-                                             TicketAccessDatesPlaceholder, TicketLicensePlatePlaceholder)
+from indico_cern_access.placeholders import (AccessPeriodPlaceholder, FormLinkPlaceholder, TicketAccessDatesPlaceholder,
+                                             TicketLicensePlatePlaceholder)
 from indico_cern_access.util import (build_access_request_data, get_access_dates, get_last_request, get_requested_forms,
                                      get_requested_registrations, handle_event_time_update, notify_access_withdrawn,
                                      sanitize_license_plate, send_adams_delete_request, send_adams_post_request,

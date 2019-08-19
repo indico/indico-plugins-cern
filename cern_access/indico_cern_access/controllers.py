@@ -29,7 +29,7 @@ from indico.web.util import jsonify_data, jsonify_template
 from indico_cern_access import _
 from indico_cern_access.forms import AccessIdentityDataForm, GrantAccessEmailForm
 from indico_cern_access.util import (get_access_dates, get_last_request, grant_access, revoke_access,
-                                     sanitize_license_plate, send_ticket, send_adams_post_request)
+                                     sanitize_license_plate, send_adams_post_request, send_ticket)
 from indico_cern_access.views import WPAccessRequestDetails
 
 
