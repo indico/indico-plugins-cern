@@ -31,7 +31,7 @@ import './style.scss';
             const newContainer = $(data.containers[id]);
             placeholder.closest('.attachments-display-container').replaceWith(newContainer);
             newContainer
-              .find('.attachments > .dropdown')
+              .find('.attachments > .i-dropdown')
               .parent()
               .dropdown();
           }
