@@ -7,7 +7,7 @@
 
 from __future__ import unicode_literals
 
-from datetime import date, time, timedelta
+from datetime import date, datetime, time, timedelta
 
 import dateutil.parser
 import pytz
@@ -39,12 +39,24 @@ class _RequestOccurrencesField(JSONField):
         dts = []
         tzinfo = pytz.timezone(config.DEFAULT_TIMEZONE)
         for req_date, req_time in self.data.iteritems():
-            dt = tzinfo.localize(dateutil.parser.parse('{} {}'.format(req_date, req_time)))
+            if not req_time:
+                dt = datetime.strptime(req_date, '%Y-%m-%d').date()
+            else:
+                dt = tzinfo.localize(dateutil.parser.parse('{} {}'.format(req_date, req_time)))
             dts.append(dt)
         self.data = dts
 
     def _value(self):
-        return {dt.date().isoformat(): dt.strftime('%H:%M') for dt in self.data} if self.data else {}
+        if not self.data:
+            return {}
+
+        data = {}
+        for dt in self.data:
+            if type(dt) is datetime:
+                data[dt.date().isoformat()] = dt.strftime('%H:%M')
+            elif type(dt) is date:
+                data[dt.isoformat()] = None
+        return data
 
     @property
     def event_start_dt(self):
@@ -62,6 +74,8 @@ class RoomAssistanceRequestForm(RequestFormBase):
 
     def validate_occurrences(self, field):
         for req_dt in field.data:
+            if not isinstance(req_dt, datetime):
+                raise ValidationError(_('You have to explicitly specify the time for the assistance request'))
             is_in_working_hours = WORKING_TIME_PERIOD[0] <= req_dt.time() <= WORKING_TIME_PERIOD[1]
             if not is_in_working_hours:
                 raise ValidationError(_('One of the specified times is not within the working hours'))

@@ -111,13 +111,15 @@ class RoomAssistancePlugin(IndicoPlugin):
             return
 
         if 'location_data' in changes and not event_has_room_with_support_attached(event):
-            data = dict(request.data, comment=render_plugin_template('auto_reject_no_supported_room.txt'))
-            request.definition.reject(request, data, User.get_system_user())
+            request.definition.reject(request, {'comment': render_plugin_template('auto_reject_no_supported_room.txt')},
+                                      User.get_system_user())
+            request.data = dict(request.data, occurrences=[])
             flash(_("The new event location is not in the list of the rooms supported by the room assistance team. "
                     "Room assistance request has been rejected and support will not be provided."), 'warning')
         if changes.viewkeys() & {'start_dt', 'end_dt'}:
             tz = pytz.timezone(config.DEFAULT_TIMEZONE)
-            req_dates = {dateutil.parser.parse(occ).astimezone(tz).date() for occ in request.data['occurrences']}
+            occurrences = {dateutil.parser.parse(occ).astimezone(tz) for occ in request.data['occurrences']}
+            req_dates = {occ.date() for occ in occurrences}
             event_dates = set(event.iter_days())
             old_dates = req_dates - event_dates
             has_overlapping_dates = req_dates & event_dates
@@ -131,9 +133,8 @@ class RoomAssistancePlugin(IndicoPlugin):
                         "Room assistance request has been rejected and support will not be provided."), 'warning')
             elif old_dates and has_overlapping_dates:
                 new_data = dict(request.data)
-                start_time = event.start_dt.time()
-                new_data['occurrences'] = [pytz.utc.localize(datetime.combine(occ, start_time)).isoformat()
-                                           for occ in event_dates & req_dates]
+                new_data['occurrences'] = [occ.astimezone(pytz.utc).isoformat() for occ in occurrences
+                                           if occ.date() in req_dates & event_dates]
                 request.data = new_data
                 flash(_("Room assistance had been requested for days that are not between the updated start/end "
                         "dates. Support will not be provided on these days anymore."), 'warning')
