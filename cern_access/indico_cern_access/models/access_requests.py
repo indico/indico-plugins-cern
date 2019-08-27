@@ -51,6 +51,10 @@ class CERNAccessRequest(db.Model):
         db.String,
         nullable=True
     )
+    license_plate = db.Column(
+        db.String,
+        nullable=True
+    )
 
     registration = db.relationship(
         'Registration',
@@ -87,3 +91,4 @@ class CERNAccessRequest(db.Model):
         self.birth_date = None
         self.nationality = None
         self.birth_place = None
+        self.license_plate = None

@@ -29,6 +29,8 @@ from indico.modules.events.registration.forms import TicketsForm
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.registration.placeholders.registrations import (EventTitlePlaceholder, FirstNamePlaceholder,
                                                                            LastNamePlaceholder)
+from indico.modules.events.registration.views import (WPDisplayRegistrationFormConference,
+                                                      WPDisplayRegistrationFormSimpleEvent)
 from indico.util.date_time import now_utc
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import (IndicoDateTimeField, IndicoPasswordField, MultipleItemsField, PrincipalListField,
@@ -39,11 +41,13 @@ from indico_cern_access.blueprint import blueprint
 from indico_cern_access.definition import CERNAccessRequestDefinition
 from indico_cern_access.forms import AccessIdentityDataForm, RegistrationFormPersonalDataForm
 from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState
-from indico_cern_access.placeholders import AccessPeriodPlaceholder, FormLinkPlaceholder, TicketAccessDatesPlaceholder
+from indico_cern_access.placeholders import (AccessPeriodPlaceholder, FormLinkPlaceholder, TicketAccessDatesPlaceholder,
+                                             TicketLicensePlatePlaceholder)
 from indico_cern_access.util import (build_access_request_data, get_access_dates, get_last_request, get_requested_forms,
                                      get_requested_registrations, handle_event_time_update, notify_access_withdrawn,
-                                     send_adams_delete_request, send_adams_post_request, update_access_requests,
-                                     withdraw_access_requests)
+                                     sanitize_license_plate, send_adams_delete_request, send_adams_post_request,
+                                     update_access_requests, withdraw_access_requests)
+from indico_cern_access.views import WPAccessRequestDetails
 
 
 class PluginSettingsForm(IndicoForm):
@@ -129,6 +133,9 @@ class CERNAccessPlugin(IndicoPlugin):
         self.connect(signals.event.registration.generate_ticket_qr_code, self._generate_ticket_qr_code)
         self.connect(signals.get_placeholders, self._get_designer_placeholders, sender='designer-fields')
         self.connect(signals.get_placeholders, self._get_email_placeholders, sender='cern-access-email')
+        self.inject_bundle('main.css', WPDisplayRegistrationFormConference)
+        self.inject_bundle('main.css', WPDisplayRegistrationFormSimpleEvent)
+        self.inject_bundle('main.css', WPAccessRequestDetails)
 
     def get_blueprints(self):
         return blueprint
@@ -195,9 +202,16 @@ class CERNAccessPlugin(IndicoPlugin):
         if not required and not personal_data_form.request_cern_access.data:
             return
 
+        license_plate = (
+            sanitize_license_plate(personal_data_form.license_plate.data)
+            if personal_data_form.license_plate.data
+            else None
+        )
+
         registration.cern_access_request = CERNAccessRequest(birth_date=personal_data_form.birth_date.data,
                                                              nationality=personal_data_form.nationality.data,
                                                              birth_place=personal_data_form.birth_place.data,
+                                                             license_plate=license_plate,
                                                              request_state=CERNAccessRequestState.not_requested,
                                                              reservation_code='')
 
@@ -353,6 +367,7 @@ class CERNAccessPlugin(IndicoPlugin):
 
     def _get_designer_placeholders(self, sender, **kwargs):
         yield TicketAccessDatesPlaceholder
+        yield TicketLicensePlatePlaceholder
 
     def _get_email_placeholders(self, sender, **kwargs):
         yield FirstNamePlaceholder

@@ -36,6 +36,17 @@ class TicketAccessDatesPlaceholder(DesignerPlaceholder):
                                     to_unicode(format_datetime(end_dt, format='d MMM YYY', locale='en_GB')))
 
 
+class TicketLicensePlatePlaceholder(DesignerPlaceholder):
+    group = 'registrant'
+    name = 'cern_access_plate'
+    description = _("CERN Badges - License Plate")
+    admin_only = True
+
+    @classmethod
+    def render(cls, registration):
+        return registration.cern_access_request.license_plate
+
+
 class FormLinkPlaceholder(ParametrizedPlaceholder):
     name = 'form_link'
     required = True

@@ -1,4 +1,4 @@
-{% from 'cern_access:_common.html' import render_access_dates, render_security_policy %}
+{% from 'cern_access:_common.html' import render_access_dates, render_security_policy, render_identity_form %}
 {% from 'forms/_form.html' import form_rows, form_row %}
 
 {% set access_request = registration.cern_access_request %}
@@ -34,7 +34,7 @@
             </div>
             <div class="i-box-content">
                 <div class="i-form">
-                    {{ form_rows(form, orientation='horizontal', fields=('birth_date', 'nationality', 'birth_place')) }}
+                    {{ render_identity_form(form) }}
                 </div>
             </div>
         </div>
@@ -44,11 +44,60 @@
         (function() {
             'use strict';
 
-            $(document).on('indico:registration-form-loaded', function() {
-                var registrationForm = $('#registrationForm'),
-                    personalDataForm = $('.personal-data-form').detach();
+            function clearFieldState(elem) {
+                $(elem).qtip('destroy');
+                elem.closest('.form-group').classList.remove('has-error');
+            }
+
+            function setErrorState(elem) {
+                elem.closest('.form-group').classList.add('has-error');
+            }
+
+            $(document).on('indico:registration-form-loaded', () => {
+                const registrationForm = $('#registrationForm');
+                const personalDataForm = $('.personal-data-form').detach();
 
                 registrationForm.find('.regform-section-list').append(personalDataForm);
+
+                const licensePlate = document.querySelector('#license_plate');
+                const birthDate = document.querySelector('#birth_date');
+                const nationality = document.querySelector('#nationality');
+                const birthPlace = document.querySelector('#birth_place');
+                const byCar = document.querySelector('#by_car');
+
+                window.initForms($('.regform-section-list .personal-data-form'));
+
+                // Rudimentary client-side check, to avoid to go server-side
+                // (which would reset the form and thus cause UX trouble)
+                document.querySelector('#registrationForm').addEventListener('submit', e => {
+                    [licensePlate, birthDate, nationality, birthPlace].forEach(clearFieldState);
+
+                    const switchLabel = document.querySelector('#form-group-request_cern_access .switch-input');
+                    if (!switchLabel || !switchLabel.checked) {
+                        return;
+                    }
+
+                    licensePlate.checkValidity();
+                    const birthDateValid = moment(birthDate.value, birthDate.placeholder)
+                        .isBefore(moment().startOf('day'));
+
+                    [nationality, birthPlace].forEach(input => {
+                        if (!input.value) {
+                            setErrorState(input);
+                            e.preventDefault();
+                        }
+                    });
+
+                    if (byCar.checked && (!licensePlate.value || !licensePlate.validity.valid)) {
+                        setErrorState(licensePlate);
+                        e.preventDefault();
+                    }
+                    if (!birthDateValid) {
+                        setErrorState(birthDate);
+                        e.preventDefault();
+                    }
+                    document.querySelector('#regformSubmit').disabled = false;
+                });
             });
 
             {% if not required %}

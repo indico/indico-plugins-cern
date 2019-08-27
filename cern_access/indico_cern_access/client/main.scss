@@ -1,0 +1,16 @@
+@import 'base/palette';
+
+.car-icon {
+    display: inline-block;
+    width: 1.4em;
+    height: 1.4em;
+    background-image: url('cern_access:car-solid.svg');
+    background-size: contain;
+    vertical-align: middle;
+    margin: 0 1em;
+    opacity: 0.3;
+}
+
+.vehicle-section-title h2 {
+    vertical-align: middle;
+}
