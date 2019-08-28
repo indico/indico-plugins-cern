@@ -106,7 +106,7 @@ class AccessIdentityDataForm(IndicoForm):
     birth_date = IndicoDateField(_('Birth date'), [DataRequired()])
     nationality = SelectField(_('Country of birth'), [DataRequired()])
     birth_place = StringField(_('Place of birth'), [DataRequired()])
-    by_car = BooleanField(_('Are you bringing your own car?'), [Optional()], widget=SwitchWidget(_('Yes'), _('No')),)
+    by_car = BooleanField(_('Are you bringing your own car?'), [Optional()], widget=SwitchWidget(_('Yes'), _('No')))
     license_plate = StringField(
         _('License plate'),
         [
@@ -126,9 +126,7 @@ class AccessIdentityDataForm(IndicoForm):
             raise ValidationError(_('The specified date is in the future'))
 
     def validate_license_plate(self, field):
-        if self.by_car.data:
-            return
-        if not sanitize_license_plate(field.data).strip():
+        if self.by_car.data and not sanitize_license_plate(field.data):
             raise ValidationError(_('Please insert a valid license plate number!'))
 
 
