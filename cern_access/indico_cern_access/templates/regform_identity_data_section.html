@@ -102,7 +102,7 @@
 
             {% if not required %}
                 $(document).ready(function() {
-                    var personalDataForm = $('.personal-data-form').find('.i-box');
+                    const personalDataForm = $('.personal-data-form').find('.i-box');
 
                     $('#request_cern_access').on('change', function() {
                         personalDataForm.toggle(this.checked);
