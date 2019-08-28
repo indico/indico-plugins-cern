@@ -44,7 +44,7 @@ class TicketLicensePlatePlaceholder(DesignerPlaceholder):
 
     @classmethod
     def render(cls, registration):
-        return registration.cern_access_request.license_plate
+        return registration.cern_access_request.license_plate or ''
 
 
 class FormLinkPlaceholder(ParametrizedPlaceholder):

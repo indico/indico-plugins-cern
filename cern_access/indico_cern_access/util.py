@@ -365,7 +365,7 @@ def sanitize_personal_data():
 
 def sanitize_license_plate(number):
     """Sanitize a license plate number to [A-Z0-9]+, no dashes/spaces."""
-    number = re.sub(r'[ -]', '', number.upper())
+    number = re.sub(r'[ -]', '', number.strip().upper())
     return number if re.match(r'^[A-Z0-9]+$', number) else None
 
 
