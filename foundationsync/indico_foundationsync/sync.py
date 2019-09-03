@@ -41,6 +41,15 @@ def OutputTypeHandler(cursor, name, defaultType, size, precision, scale):
         return cursor.var(unicode, size, cursor.arraysize)
 
 
+def _get_room_role_map(connection, logger):
+    roles = defaultdict(set)
+    cursor = connection.cursor()
+    cursor.execute('SELECT BUILDING, FLOOR, ROOM_NUMBER, EMAIL FROM aispub.app_indico_space_managers')
+    for row in cursor:
+        roles[row[:3]].add(row['EMAIL'])
+    return roles
+
+
 class FoundationSync(object):
     def __init__(self, db_name, logger):
         self.db_name = db_name
@@ -124,6 +133,20 @@ class FoundationSync(object):
                 setattr(room, k, v)
         db.session.flush()
 
+    def _update_managers(self, room, room_data, room_role_map):
+        new_managers = {room.owner}
+
+        # add managers from aisroles (DKMs + DKAs)
+        new_managers |= {get_user_by_email(email, create_pending=True)
+                         for email in room_role_map[(room.building, room.floor, room.number)]}
+
+        # compute the "diff" and update the principals accordingly (ignore groups)
+        current_managers = {p for p in room.get_manager_list() if not isinstance(p, GroupProxy)}
+        for principal in current_managers - new_managers:
+            room.update_principal(principal, full_access=False)
+        for principal in new_managers - current_managers:
+            room.update_principal(principal, full_access=True)
+
     def fetch_buildings_coordinates(self, connection):
         self._logger.debug("Fetching the building geocoordinates...")
 
@@ -144,6 +167,9 @@ class FoundationSync(object):
         return coordinates
 
     def fetch_rooms(self, connection, room_name=None):
+        self._logger.debug("Fetching AIS Role information...")
+        room_role_map = _get_room_role_map(connection, self._logger)
+
         self._logger.debug("Fetching room information...")
 
         counter = Counter()
@@ -164,7 +190,6 @@ class FoundationSync(object):
 
             try:
                 room_data, email_warning = self._parse_room_data(data, coordinates, room_id)
-                manager_group = data.get('EMAIL_LIST')
                 self._logger.debug("Fetched data for room with id='%s'", room_id)
             except SkipRoom as e:
                 counter['skipped'] += 1
@@ -194,17 +219,8 @@ class FoundationSync(object):
 
             # Update room data
             self._update_room(room, room_data)
-            new_managers = set()
-            if manager_group is not None:
-                group = GroupProxy(manager_group.strip(), provider='cern-ldap')
-                if group.group is None:
-                    self._logger.warning("Group '%s' does not exist in LDAP", manager_group)
-                new_managers.add(group)
-            current_managers = room.get_manager_list()
-            for principal in current_managers - new_managers:
-                room.update_principal(principal, full_access=False)
-            for principal in new_managers - current_managers:
-                room.update_principal(principal, full_access=True)
+            # Update managers
+            self._update_managers(room, room_data, room_role_map)
 
             self._logger.info("Updated room '%s' information", room_id)
             foundation_rooms.append(room)
