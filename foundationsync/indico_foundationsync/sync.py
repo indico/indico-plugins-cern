@@ -8,7 +8,6 @@
 from __future__ import unicode_literals
 
 import re
-import sys
 from collections import Counter, defaultdict
 from contextlib import contextmanager
 
@@ -18,7 +17,6 @@ from sqlalchemy.orm.exc import NoResultFound
 from indico.core.db.sqlalchemy import db
 from indico.core.db.sqlalchemy.protection import ProtectionMode
 from indico.modules.groups import GroupProxy
-from indico.modules.rb.models.equipment import EquipmentType
 from indico.modules.rb.models.locations import Location
 from indico.modules.rb.models.rooms import Room
 from indico.modules.users.util import get_user_by_email
@@ -28,9 +26,6 @@ try:
     import cx_Oracle
 except ImportError:
     cx_Oracle = None
-
-
-DEFAULT_VC_EQUIPMENT = {'Vidyo'}
 
 
 class SkipRoom(Exception):
@@ -148,31 +143,6 @@ class FoundationSync(object):
         self._logger.debug("Fetched geocoordinates for %d buildings", len(coordinates))
         return coordinates
 
-    def fetch_equipment(self, connection):
-        self._logger.debug("Fetching equipment list...")
-
-        counter = Counter()
-        foundation_equipment_ids = []
-        cursor = connection.cursor()
-        cursor.execute('SELECT * FROM foundation_pub.equipment ORDER BY NAME')
-
-        for row in cursor:
-            row = self._prepare_row(row, cursor)
-            counter['found'] += 1
-            equipment = EquipmentType.find_first(EquipmentType.name == row['NAME'])
-            if not equipment:
-                equipment = EquipmentType(name=row['NAME'])
-                db.session.add(equipment)
-                counter['added'] += 1
-                self._logger.info(u"Added equipment '%s'", equipment)
-            foundation_equipment_ids.append(equipment.id)
-
-        for equipment in EquipmentType.find(~EquipmentType.id.in_(foundation_equipment_ids)):
-            self._logger.info("Mismatch: Equipment '%s' found in Indico but not in Foundation", equipment.name)
-
-        db.session.commit()
-        self._logger.info("Equipment objects summary: %d found - %d new added", counter['found'], counter['added'])
-
     def fetch_rooms(self, connection, room_name=None):
         self._logger.debug("Fetching room information...")
 
@@ -253,63 +223,11 @@ class FoundationSync(object):
                           counter['found'], counter['skipped'], counter['inserted'], counter['updated'],
                           counter['deactivated'])
 
-    def fetch_room_equipment(self, connection, room_name=None):
-        self._logger.debug("Fetching rooms equipment...")
-
-        cursor = connection.cursor()
-        if room_name:
-            cursor.execute('SELECT * FROM foundation_pub.room_equipment WHERE MEETING_ROOM_ID = :room_name',
-                           room_name=room_name)
-        else:
-            cursor.execute('SELECT * FROM foundation_pub.room_equipment ORDER BY MEETING_ROOM_ID')
-
-        counter = Counter()
-        foundation_room_equipment = defaultdict(list)
-        for row in cursor:
-            row = self._prepare_row(row, cursor)
-            counter['found'] += 1
-
-            room_id = row['MEETING_ROOM_ID'].strip().replace(' ', '-')
-            equipment_name = row['EQUIPMENT_NAME']
-            if equipment_name == 'Video conference':
-                equipment_name = 'Vidyo'
-            building, floor, number = room_id.split('-')
-
-            equipment = EquipmentType.query.filter_by(name=equipment_name).first()
-            room = Room.query.filter_by(building=building, floor=floor, number=number).first()
-            try:
-                if not room:
-                    raise SkipRoom('Room not found in Indico DB')
-                if not equipment:
-                    raise SkipRoom('Equipment %s not found in Indico DB', equipment_name)
-                if equipment not in room.available_equipment:
-                    room.available_equipment.append(equipment)
-                    counter['added'] += 1
-                    self._logger.info("Added equipment '%s' to room '%s'", equipment.name, room.full_name)
-                foundation_room_equipment[room].append(equipment.id)
-            except SkipRoom as e:
-                counter['skipped'] += 1
-                self._logger.info("Skipped room %s: %s", room_id, e)
-
-        for room, equipment_types in foundation_room_equipment.iteritems():
-            foundation_equipment_ids = set(equipment_types)
-            for equipment in room.available_equipment:
-                if equipment.id in foundation_equipment_ids:
-                    continue
-                room.available_equipment.remove(equipment)
-                counter['deleted'] += 1
-                self._logger.info("Deleted equipment '%s' from room '%s'", equipment.name, room.full_name)
-
-        db.session.commit()
-        self._logger.info("Equipment associations summary: %d found - %d new added - %d skipped - %d deleted",
-                          counter['found'], counter['added'], counter['skipped'], counter['deleted'])
 
     def run_all(self, room_name=None):
         with self.connect_to_foundation() as connection:
             try:
                 self.fetch_rooms(connection, room_name)
-                self.fetch_equipment(connection)
-                self.fetch_room_equipment(connection, room_name)
             except Exception:
                 self._logger.exception("Synchronization with Foundation failed")
                 raise
