@@ -15,7 +15,6 @@ from html2text import HTML2Text
 from sqlalchemy.orm.exc import NoResultFound
 
 from indico.core.db.sqlalchemy import db
-from indico.core.db.sqlalchemy.protection import ProtectionMode
 from indico.modules.groups import GroupProxy
 from indico.modules.rb.models.locations import Location
 from indico.modules.rb.models.rooms import Room
@@ -107,10 +106,7 @@ class FoundationSync(object):
         data['telephone'] = raw_data.get('TELEPHONE') or ''
         data['key_location'] = self._html_to_markdown(raw_data.get('WHERE_IS_KEY') or '')
         data['comments'] = self._html_to_markdown(raw_data.get('COMMENTS')) if raw_data.get('COMMENTS') else ''
-        data['reservations_need_confirmation'] = raw_data['BOOKINGS_NEED_CONFIRMATION'] != 'N'
 
-        is_reservable = raw_data['IS_RESERVABLE'] != 'N'
-        data['protection_mode'] = ProtectionMode.public if is_reservable else ProtectionMode.protected
         site = raw_data.get('SITE')
         site_map = {'MEYR': 'Meyrin', 'PREV': 'Prevessin'}
         data['site'] = site_map.get(site, site)
