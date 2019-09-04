@@ -64,7 +64,7 @@ class FoundationSyncPlugin(IndicoPlugin):
         return foundationsync
 
 
-@celery.periodic_task(run_every=crontab(minute='0', hour='8'))
+@celery.periodic_task(run_every=crontab(minute='0'))
 def scheduled_update(room_name=None):
     db_name = FoundationSyncPlugin.settings.get('connection_string')
     if not db_name:
