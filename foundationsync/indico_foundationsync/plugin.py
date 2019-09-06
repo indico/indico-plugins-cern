@@ -16,15 +16,24 @@ from logging import StreamHandler
 
 import click
 from celery.schedules import crontab
+from flask import g, session
+from webargs import flaskparser
 from wtforms import StringField
 
 from indico.cli.core import cli_command
 from indico.core import signals
 from indico.core.celery import celery
 from indico.core.plugins import IndicoPlugin
+from indico.modules.rb.schemas import RoomUpdateArgsSchema
+from indico.util.i18n import _
 from indico.web.forms.base import IndicoForm
 
 from indico_foundationsync.sync import FoundationSync
+
+
+SYNCED_FIELDS = {'building', 'floor', 'number', 'verbose_name', 'site', 'key_location', 'capacity', 'surface_area',
+                 'telephone', 'division', 'comments', 'latitude', 'longitude', 'owner'}
+BLOCKED_FIELDS = {'protection_mode'}
 
 
 class SettingsForm(IndicoForm):
@@ -43,10 +52,38 @@ class FoundationSyncPlugin(IndicoPlugin):
     def init(self):
         super(FoundationSyncPlugin, self).init()
         self.connect(signals.plugin.cli, self._extend_indico_cli)
+        self.connect(signals.plugin.schema_post_load, self._check_forbidden_fields, sender=RoomUpdateArgsSchema)
 
     def get_blueprints(self):
         from indico_foundationsync.blueprint import blueprint
         return blueprint
+
+    def _check_forbidden_fields(self, sender, data, **kwargs):
+        """Check that no one is trying to edit fields that come from Gesloc."""
+        sync_collisions = set(data) & SYNCED_FIELDS
+        blocked_collisions = set(data) & BLOCKED_FIELDS
+        messages = {}
+
+        messages.update({
+            k: [_('This field is managed by Gesloc. You cannot change it from here.')] for k in sync_collisions
+        })
+
+        if blocked_collisions and not session.user.is_admin:
+            messages.update({
+                k: [_('This field can only be changed by an administrator.')] for k in blocked_collisions
+            })
+
+        if 'acl_entries' in data:
+            old_managers = g.rh.room.get_manager_list()
+            new_managers = set(
+                k for k, v in data['acl_entries'].viewitems() if '_full_access' in v
+            )
+            if old_managers != new_managers:
+                messages['acl_entries'] = [_('You cannot add/remove any managers')]
+
+        if messages:
+            # our UI will be expecting code 422 for form validation errors
+            flaskparser.abort(422, messages=messages)
 
     def _extend_indico_cli(self, sender, **kwargs):
         @cli_command()
