@@ -45,7 +45,7 @@ def _get_room_role_map(connection, logger):
     cursor = connection.cursor()
     cursor.execute('SELECT BUILDING, FLOOR, ROOM_NUMBER, EMAIL FROM aispub.app_indico_space_managers')
     for row in cursor:
-        roles[row[:3]].add(row['EMAIL'])
+        roles[row[:3]].add(row[3])
     return roles
 
 
