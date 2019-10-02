@@ -25,6 +25,7 @@ from indico.core import signals
 from indico.core.celery import celery
 from indico.core.plugins import IndicoPlugin
 from indico.modules.rb.schemas import RoomUpdateArgsSchema
+from indico.modules.rb.util import rb_is_admin
 from indico.util.i18n import _
 from indico.web.forms.base import IndicoForm
 
@@ -68,7 +69,7 @@ class FoundationSyncPlugin(IndicoPlugin):
             k: [_('This field is managed by Gesloc. You cannot change it from here.')] for k in sync_collisions
         })
 
-        if blocked_collisions and not session.user.is_admin:
+        if blocked_collisions and not rb_is_admin(session.user):
             messages.update({
                 k: [_('This field can only be changed by an administrator.')] for k in blocked_collisions
             })
