@@ -96,7 +96,7 @@ class FoundationSync(object):
             user = get_user_by_email(email, create_pending=True)
             if not user:
                 email_warning = ('[%s] Bad RESPONSIBLE_EMAIL in Foundation: no user found with email %s',
-                                 email, room_id)
+                                 room_id, email)
 
         data['owner'] = user
         data['verbose_name'] = (raw_data.get('FRIENDLY_NAME') or '').strip() or None
