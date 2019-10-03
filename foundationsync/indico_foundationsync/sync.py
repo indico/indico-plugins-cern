@@ -238,15 +238,18 @@ class FoundationSync(object):
             counter['deactivated'] += 1
         self._logger.info("Deactivated %d rooms not found in Foundation", counter['deactivated'])
 
-        db.session.commit()
         self._logger.info("Rooms summary: %d in Foundation - %d skipped - %d inserted - %d updated - %d deactivated",
                           counter['found'], counter['skipped'], counter['inserted'], counter['updated'],
                           counter['deactivated'])
 
-    def run_all(self, room_name=None):
+    def run_all(self, room_name=None, dry_run=False):
         with self.connect_to_foundation() as connection:
             try:
                 self.fetch_rooms(connection, room_name)
             except Exception:
                 self._logger.exception("Synchronization with Foundation failed")
                 raise
+            if dry_run:
+                db.session.rollback()
+            else:
+                db.session.commit()

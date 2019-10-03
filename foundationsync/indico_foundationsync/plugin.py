@@ -91,7 +91,8 @@ class FoundationSyncPlugin(IndicoPlugin):
     def _extend_indico_cli(self, sender, **kwargs):
         @cli_command()
         @click.option('--room', 'room_name', metavar='ROOM', help="Synchronize only a given room (e.g. '513 R-055')")
-        def foundationsync(room_name):
+        @click.option('--dry-run', '-n', is_flag=True, help='Do not commit the changes to the database')
+        def foundationsync(room_name, dry_run):
             """Synchronize rooms and equipment with the CERN Foundation Database"""
             db_name = self.settings.get('connection_string')
             if not db_name:
@@ -102,7 +103,7 @@ class FoundationSyncPlugin(IndicoPlugin):
             handler = StreamHandler()
             handler.setLevel(logging.INFO)
             self.logger.addHandler(handler)
-            FoundationSync(db_name, self.logger).run_all(room_name)
+            FoundationSync(db_name, self.logger).run_all(room_name, dry_run=dry_run)
         return foundationsync
 
 
