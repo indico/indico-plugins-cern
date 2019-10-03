@@ -90,13 +90,12 @@ class FoundationSync(object):
 
         email_warning = None
         if not email:
-            email_warning = ('[%s] No value for RESPONSIBLE_EMAIL in Foundation', room_id)
+            email_warning = 'No value for RESPONSIBLE_EMAIL in Foundation'
             user = None
         else:
             user = get_user_by_email(email, create_pending=True)
             if not user:
-                email_warning = ('[%s] Bad RESPONSIBLE_EMAIL in Foundation: no user found with email %s',
-                                 room_id, email)
+                email_warning = 'Bad RESPONSIBLE_EMAIL in Foundation: no user found with email {}'.format(email)
 
         data['owner'] = user
         data['verbose_name'] = (raw_data.get('FRIENDLY_NAME') or '').strip() or None
@@ -203,10 +202,10 @@ class FoundationSync(object):
                 del room_data['owner']
                 if room is None:
                     counter['skipped'] += 1
-                    self._logger.info("Skipped room %s: %s", room_id, email_warning[0] % email_warning[1:])
+                    self._logger.info("Skipped room %s: %s", room_id, email_warning)
                     continue
                 elif not room.is_deleted:
-                    self._logger.warning(*email_warning)
+                    self._logger.warning("Problem with room %s: %s", room_id, email_warning)
 
             # Insert new room
             new_room = False
