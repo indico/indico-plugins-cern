@@ -11,6 +11,7 @@ Synchronizes rooms and equipment with the CERN Foundation Database.
 
 from __future__ import unicode_literals
 
+import logging
 import sys
 from logging import StreamHandler
 
@@ -98,7 +99,9 @@ class FoundationSyncPlugin(IndicoPlugin):
                 sys.exit(1)
 
             # Log to stdout
-            self.logger.addHandler(StreamHandler())
+            handler = StreamHandler()
+            handler.setLevel(logging.INFO)
+            self.logger.addHandler(handler)
             FoundationSync(db_name, self.logger).run_all(room_name)
         return foundationsync
 
