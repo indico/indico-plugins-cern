@@ -243,7 +243,6 @@ class FoundationSync(object):
                           counter['found'], counter['skipped'], counter['inserted'], counter['updated'],
                           counter['deactivated'])
 
-
     def run_all(self, room_name=None):
         with self.connect_to_foundation() as connection:
             try:
