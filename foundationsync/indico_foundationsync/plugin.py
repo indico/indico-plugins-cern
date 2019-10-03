@@ -26,6 +26,7 @@ from indico.core.celery import celery
 from indico.core.plugins import IndicoPlugin
 from indico.modules.rb.schemas import RoomUpdateArgsSchema
 from indico.modules.rb.util import rb_is_admin
+from indico.modules.users.models.users import User
 from indico.util.i18n import _
 from indico.web.forms.base import IndicoForm
 
@@ -75,12 +76,12 @@ class FoundationSyncPlugin(IndicoPlugin):
             })
 
         if 'acl_entries' in data:
-            old_managers = g.rh.room.get_manager_list()
+            old_managers = g.rh.room.get_manager_list(include_groups=False)
             new_managers = set(
-                k for k, v in data['acl_entries'].viewitems() if '_full_access' in v
+                k for k, v in data['acl_entries'].viewitems() if '_full_access' in v and isinstance(k, User)
             )
             if old_managers != new_managers:
-                messages['acl_entries'] = [_('You cannot add/remove any managers')]
+                messages['acl_entries'] = [_('You cannot add/remove any individual managers. Please use an e-group.')]
 
         if messages:
             # our UI will be expecting code 422 for form validation errors
