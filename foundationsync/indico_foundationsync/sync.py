@@ -121,15 +121,17 @@ class FoundationSync(object):
     def _prepare_row(self, row, cursor):
         return dict(zip([d[0] for d in cursor.description], row))
 
-    def _update_room(self, room, room_data):
+    def _update_room(self, room, room_data, changes):
         room.is_deleted = False
         room.is_reservable = True
-        for k, v in room_data.iteritems():
-            if getattr(room, k) != v:
-                setattr(room, k, v)
+        for attr, new in room_data.iteritems():
+            old = getattr(room, attr)
+            if old != new:
+                setattr(room, attr, new)
+                changes.append('{}: {} -> {}'.format(attr, old, new))
         db.session.flush()
 
-    def _update_managers(self, room, room_role_map):
+    def _update_managers(self, room, room_role_map, changes):
         new_managers = {room.owner}
 
         # add managers from aisroles (DKMs + DKAs)
@@ -139,8 +141,10 @@ class FoundationSync(object):
         # compute the "diff" and update the principals accordingly (ignore groups)
         current_managers = {p for p in room.get_manager_list() if not isinstance(p, GroupProxy)}
         for principal in current_managers - new_managers:
+            changes.append('Manager removed: {}'.format(principal))
             room.update_principal(principal, full_access=False)
         for principal in new_managers - current_managers:
+            changes.append('Manager added: {}'.format(principal))
             room.update_principal(principal, full_access=True)
 
     def fetch_buildings_coordinates(self, connection):
@@ -205,20 +209,24 @@ class FoundationSync(object):
                     self._logger.warning(*email_warning)
 
             # Insert new room
+            new_room = False
             if room is None:
+                new_room = True
                 room = Room()
                 self._location.rooms.append(room)
                 counter['inserted'] += 1
                 self._logger.info("Created new room '%s'", room_id)
-            else:
-                counter['updated'] += 1
 
+            changes = []
             # Update room data
-            self._update_room(room, room_data)
+            self._update_room(room, room_data, changes)
             # Update managers
-            self._update_managers(room, room_role_map)
+            self._update_managers(room, room_role_map, changes)
 
-            self._logger.info("Updated room '%s' information", room_id)
+            if changes and not new_room:
+                counter['updated'] += 1
+                for change in changes:
+                    self._logger.info("Updated room %s: %s", room_id, change)
             foundation_rooms.append(room)
 
         # Deactivate rooms not found in Foundation
