@@ -129,7 +129,7 @@ class FoundationSync(object):
                 setattr(room, k, v)
         db.session.flush()
 
-    def _update_managers(self, room, room_data, room_role_map):
+    def _update_managers(self, room, room_role_map):
         new_managers = {room.owner}
 
         # add managers from aisroles (DKMs + DKAs)
@@ -216,7 +216,7 @@ class FoundationSync(object):
             # Update room data
             self._update_room(room, room_data)
             # Update managers
-            self._update_managers(room, room_data, room_role_map)
+            self._update_managers(room, room_role_map)
 
             self._logger.info("Updated room '%s' information", room_id)
             foundation_rooms.append(room)
