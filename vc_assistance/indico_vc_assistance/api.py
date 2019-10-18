@@ -186,6 +186,7 @@ class RoomVCListHook(HTTPAPIHook):
                 'vc_room': {
                     'url': vc_data['url'],
                     'vidyo_id': vc_data['vidyo_id'],
-                    'description': vc_data['description']
+                    'description': vc_data['description'],
+                    'extension': assoc.vc_room.vidyo_extension.extension
                 } if vc_data else None
             }
