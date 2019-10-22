@@ -25,7 +25,7 @@ from indico.web.http_api import HTTPAPIHook
 from indico.web.menu import TopMenuItem
 
 from indico_vc_assistance import _
-from indico_vc_assistance.api import VCAssistanceExportHook
+from indico_vc_assistance.api import RoomVCListHook, VCAssistanceExportHook
 from indico_vc_assistance.blueprint import blueprint
 from indico_vc_assistance.definition import VCAssistanceRequest
 from indico_vc_assistance.util import has_vc_rooms_attached_to_capable, is_vc_support, start_time_within_working_hours
@@ -72,6 +72,7 @@ class VCAssistanceRequestPlugin(IndicoPlugin):
         self.connect(signals.event.updated, self._event_updated)
         self.connect(signals.menu.items, self._extend_top_menu, sender='top-menu')
         HTTPAPIHook.register(VCAssistanceExportHook)
+        HTTPAPIHook.register(RoomVCListHook)
 
     def get_blueprints(self):
         return blueprint
