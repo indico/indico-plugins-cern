@@ -14,12 +14,22 @@
 {% block scripts %}
     <script>
         window.addEventListener('message', function(e) {
+            if (e.origin !== 'https://search.cern.ch') {
+                return;
+            }
+
             var iframe = $('#search-results');
             var data = e.data.split(';');
-            iframe.attr({
-                width: (25 + parseInt(data[1], 10)) + 'px',
-                height: (25 + parseInt(data[0], 10)) + 'px'
-            });
+            var height = parseInt(data[0], 10);
+            var width = parseInt(data[1], 10);
+
+            if (width) {
+                iframe.attr('width', (25 + width) + 'px');
+            }
+
+            if (height && height > 1500) {
+                iframe.attr('height', (25 + height) + 'px');
+            }
         }, false);
     </script>
 {% endblock %}
