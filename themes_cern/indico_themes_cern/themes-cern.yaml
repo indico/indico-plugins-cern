@@ -184,13 +184,16 @@ definitions:
   cern_committees: &cern_committees
     event_types: [meeting]
     stylesheet: cern_committees.scss
+    print_stylesheet: print/cern_committees.scss
     template: :cern_committees.html
     tt_template: :administrative/timetable.html
     title: CERN Committees
     settings:
       session_attachments: true
-      hide_time: false
-      show_numerals: false
+      hide_time: true
+      show_numerals: true
+      show_location: false
+      show_block_times: true
       print_mode: true
 
   lhcrrb:
@@ -202,6 +205,8 @@ definitions:
       session_attachments: true
       hide_time: false
       show_numerals: false
+      show_location: true
+      show_block_times: false
 
   pf:
     event_types: [meeting]
