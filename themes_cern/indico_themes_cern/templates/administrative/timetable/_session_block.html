@@ -5,7 +5,8 @@
 {% from 'themes_cern:administrative/timetable/_common.html' import render_attachments %}
 
 {% macro render_session_block(block, event, timezone=none, show_notes=false, link_documents=true, hide_time=false,
-                              session_attachments=true, print_mode=false, show_numerals=true) %}
+                              session_attachments=true, print_mode=false, show_numerals=true, show_location=true,
+                              show_block_times=false) %}
     {% set session_ = block.session %}
     {% set entries = block.timetable_entry.children %}
 
@@ -14,13 +15,21 @@
             <span class="sessionTitle">
                 {{ session_.title }}
             </span>
-            <span class="locationInfo">
-                {% if block.inherits_location %}
-                    ({{ render_location(event) }})
-                {% elif block.has_location_info %}
-                    ({{ render_location(block) }})
-                {% endif %}
-            </span>
+            {% if show_location %}
+                <span class="locationInfo">
+                    {% if block.inherits_location %}
+                        ({{ render_location(event) }})
+                    {% elif block.has_location_info %}
+                        ({{ render_location(block) }})
+                    {% endif %}
+                </span>
+            {% endif %}
+            {% if show_block_times %}
+                <span class="blockTimeInfo">
+                    {{ block.start_dt | format_time(timezone=timezone) }} -
+                    {{ block.end_dt | format_time(timezone=timezone) }}
+                </span>
+            {% endif %}
         </td>
         <td class="itemRightAlign" >
             <span class="materialDisplayName">

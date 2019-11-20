@@ -33,6 +33,8 @@
         {% set session_attachments = theme_settings.session_attachments|default(false) %}
         {% set print_mode = theme_settings.print_mode|default(false) %}
         {% set show_numerals = theme_settings.show_numerals|default(true) %}
+        {% set show_location = theme_settings.show_location|default(true) %}
+        {% set show_block_times = theme_settings.show_block_times|default(false) %}
         {% if item.type.name != 'BREAK' %}
             {% set ns.index = ns.index + 1 %}
         {% endif %}
@@ -52,6 +54,8 @@
                                     link_documents=link_documents,
                                     session_attachments=session_attachments,
                                     show_numerals=show_numerals,
+                                    show_location=show_location,
+                                    show_block_times=show_block_times,
                                     print_mode=print_mode) }}
         {%- elif item.type.name == 'BREAK' -%}
             {{ render_break(item.object) }}

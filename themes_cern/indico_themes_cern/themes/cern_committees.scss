@@ -6,7 +6,7 @@ body {
     background: white;
 }
 
-p, br, dl, strong, em, h1, h2, h3, h4, h5, h6, blockquote, ol, ul, a {
+p, br, dl, em, h1, h2, h3, h4, h5, h6, blockquote, ol, ul, a {
     font-family: verdana, sans-serif;
     font-size: 12px;
     color: #000000;
@@ -47,15 +47,18 @@ table.event-wrapper > tbody > tr > td > br {
     display: none;
 }
 
-table.eventHeader {
+.eventHeader {
+    display: flex;
+    align-items: center;
     border-spacing: 0;
     padding: 0;
-    text-align: center;
     width: 100%;
-}
 
-table.eventHeader img {
-    position: absolute;
+    span {
+        text-align: center;
+        flex-grow: 1;
+        line-height: 1.2em;
+    }
 }
 
 table.dayList {
@@ -96,10 +99,6 @@ table.dayList {
     display: none;
 }
 
-.descriptionText {
-    display: none;
-}
-
 .subItemText {
     font-size: medium;
     font-family: Verdana;
@@ -133,9 +132,9 @@ td.itemRightAlign {
 
 td.itemHeaderDate {
     font-family: Verdana;
-    font-size: medium;
+    font-size: large;
     font-style: italic;
-    padding-top: 3em;
+    padding-top: 1.5em;
     text-align: left;
 }
 
@@ -181,11 +180,7 @@ td.subItemOrder {
     display: none;
 }
 
-.itemIndex {
-    display: none;
-}
-
-.locationInfo {
+.blockTimeInfo, .locationInfo {
     float: right;
     font-size: 0.9em;
     color: #555;
