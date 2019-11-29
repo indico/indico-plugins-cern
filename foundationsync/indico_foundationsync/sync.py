@@ -136,6 +136,7 @@ class FoundationSync(object):
         # add managers from aisroles (DKMs + DKAs)
         new_managers |= {get_user_by_email(email, create_pending=True)
                          for email in room_role_map[(room.building, room.floor, room.number)]}
+        new_managers.discard(None)
 
         # compute the "diff" and update the principals accordingly (ignore groups)
         current_managers = {p for p in room.get_manager_list() if not isinstance(p, GroupProxy)}
