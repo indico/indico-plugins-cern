@@ -32,7 +32,8 @@
     {% else %}
         {%- call message_box('info') -%}
             {% trans room_name=event.room.full_name %}
-                Assistance will be provided for the room <strong>{{ room_name }}</strong>
+                A support technician can come to room <strong>{{ room_name }}</strong> in order to help you with the
+                audio-visual setup of your event.
             {% endtrans %}
         {%- endcall -%}
         {{ super() }}
