@@ -31,7 +31,7 @@ from indico_conversion import cache
 from indico_conversion.util import get_pdf_title
 
 
-MAX_TRIES = 10
+MAX_TRIES = 20
 DELAYS = [30, 60, 120, 300, 600, 1800, 3600, 3600, 7200]
 
 
@@ -59,7 +59,11 @@ def submit_attachment(task, attachment):
                 raise requests.RequestException('Unexpected response from server: {}'.format(response.text))
         except requests.RequestException as exc:
             attempt = task.request.retries + 1
-            delay = (DELAYS + [0])[task.request.retries] if not config.DEBUG else 1
+            try:
+                delay = DELAYS[task.request.retries] if not config.DEBUG else 1
+            except IndexError:
+                # like this we can safely bump MAX_TRIES manually if necessary
+                delay = DELAYS[-1]
             try:
                 task.retry(countdown=delay, max_retries=(MAX_TRIES - 1))
             except MaxRetriesExceededError:
