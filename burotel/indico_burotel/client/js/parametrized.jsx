@@ -5,7 +5,9 @@
 // them and/or modify them under the terms of the MIT License; see
 // the LICENSE file for more details.
 
+import React from 'react';
 import moment from 'moment';
+import {push as pushRoute} from 'connected-react-router';
 
 // Import defaults that will be parametrized
 import DefaultApp from 'indico/modules/rb/components/App';
@@ -27,12 +29,17 @@ import DefaultSidebarMenu from 'indico/modules/rb/components/SidebarMenu';
 import DefaultRoomList from 'indico/modules/rb/modules/roomList/RoomList';
 import {UserSearch as DefaultUserSearch} from 'indico/react/components/principals/Search';
 import {Translate} from 'indico/react/i18n';
-import {parametrize} from 'indico/react/util';
+import {parametrize, ConditionalRoute} from 'indico/react/util';
 import MapMarkers from './components/MapMarkers';
+import StatsPage from './components/StatsPage';
 
 const App = parametrize(DefaultApp, {
   title: Translate.string('Burotel'),
   iconName: 'keyboard',
+  renderExtraRoutes(isInitializing) {
+    // add statistics page
+    return <ConditionalRoute path="/stats" component={StatsPage} active={!isInitializing} />;
+  },
 });
 
 const BookingBootstrapForm = parametrize(DefaultBookingBootstrapForm, () => ({
@@ -127,11 +134,21 @@ const BookingEditForm = parametrize(DefaultBookingEditForm, {
   },
 });
 
-const SidebarMenu = parametrize(DefaultSidebarMenu, {
+const SidebarMenu = parametrize(DefaultSidebarMenu, ({dispatch}) => ({
   hideOptions: {
     myBlockings: true,
   },
-});
+  extraOptions: [
+    {
+      key: 'stats',
+      icon: 'chart bar outline',
+      text: Translate.string('Statistics'),
+      onClick: () => {
+        dispatch(pushRoute('/stats'));
+      },
+    },
+  ],
+}));
 
 const RoomList = parametrize(DefaultRoomList, {
   hideActionsDropdown: true,

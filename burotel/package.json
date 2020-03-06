@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "name": "indico-plugin-burotel",
+  "main": "indico_burotel/client/index.js",
+  "dependencies": {
+    "react-charts": "^2.0.0-beta.6"
+  }
+}
