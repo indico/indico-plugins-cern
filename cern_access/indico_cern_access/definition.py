@@ -76,7 +76,7 @@ class CERNAccessRequestDefinition(RequestDefinitionBase):
         if times_changed:
             handle_event_time_update(req.event)
 
-        link = "https://indico-user-docs.web.cern.ch/indico-user-docs/cern/cern_access/#granting-access-to-participants"
+        link = "https://indico.docs.cern.ch/cern/cern_access/#granting-access-to-participants"
         message = _('Please note that even though your request has been accepted, you still have to '
                     'request badges for each one of your participants. {link}More details here.{endlink}').format(
                         link='<a href="{}">'.format(link),
