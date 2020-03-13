@@ -6,7 +6,7 @@
 # the LICENSE file for more details.
 
 """
-Synchronizes rooms and equipment with the CERN Foundation Database.
+Synchronizes rooms with the CERN Foundation Database.
 """
 
 from __future__ import unicode_literals
@@ -46,7 +46,7 @@ class SettingsForm(IndicoForm):
 class FoundationSyncPlugin(IndicoPlugin):
     """Foundation Sync
 
-    Synchronizes rooms and equipment with the CERN Foundation Database.
+    Synchronizes rooms with the CERN Foundation Database.
     """
     configurable = True
     settings_form = SettingsForm
@@ -93,7 +93,7 @@ class FoundationSyncPlugin(IndicoPlugin):
         @click.option('--room', 'room_name', metavar='ROOM', help="Synchronize only a given room (e.g. '513 R-055')")
         @click.option('--dry-run', '-n', is_flag=True, help='Do not commit the changes to the database')
         def foundationsync(room_name, dry_run):
-            """Synchronize rooms and equipment with the CERN Foundation Database"""
+            """Synchronize rooms with the CERN Foundation Database"""
             db_name = self.settings.get('connection_string')
             if not db_name:
                 print 'Foundation DB connection string is not set'
