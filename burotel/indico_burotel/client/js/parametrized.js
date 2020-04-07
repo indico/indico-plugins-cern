@@ -138,6 +138,7 @@ const RoomList = parametrize(DefaultRoomList, {
 });
 
 const UserSearch = parametrize(DefaultUserSearch, {
+  withExternalUsers: true,
   initialFormValues: {exact: true, external: true},
 });
 
