@@ -106,7 +106,7 @@ class AccessIdentityDataForm(IndicoForm):
     birth_date = IndicoDateField(_('Birth date'), [DataRequired()])
     nationality = SelectField(_('Country of birth'), [DataRequired()])
     birth_place = StringField(_('Place of birth'), [DataRequired()])
-    by_car = BooleanField(_('Are you bringing your own car?'), [Optional()], widget=SwitchWidget(_('Yes'), _('No')))
+    by_car = BooleanField(_('Are you bringing your own car?'), [Optional()], widget=SwitchWidget())
     license_plate = StringField(
         _('License plate'),
         [
