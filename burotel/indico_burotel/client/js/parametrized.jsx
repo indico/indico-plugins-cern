@@ -7,6 +7,7 @@
 
 import React from 'react';
 import moment from 'moment';
+import {parametrize} from 'react-overridable';
 import {push as pushRoute} from 'connected-react-router';
 
 // Import defaults that will be parametrized
@@ -29,7 +30,7 @@ import DefaultSidebarMenu from 'indico/modules/rb/components/SidebarMenu';
 import DefaultRoomList from 'indico/modules/rb/modules/roomList/RoomList';
 import {UserSearch as DefaultUserSearch} from 'indico/react/components/principals/Search';
 import {Translate} from 'indico/react/i18n';
-import {parametrize, ConditionalRoute} from 'indico/react/util';
+import {ConditionalRoute} from 'indico/react/util';
 import MapMarkers from './components/MapMarkers';
 import StatsPage from './components/StatsPage';
 
