@@ -331,13 +331,13 @@ class CERNAccessPlugin(IndicoPlugin):
         if not isinstance(form, TicketsForm):
             return
 
-        regform = RegistrationForm.get_one(request.view_args['reg_form_id'])
+        regform = RegistrationForm.get_or_404(request.view_args['reg_form_id'])
         if regform.cern_access_request and regform.cern_access_request.is_active and not form.tickets_enabled.data:
             err = _('This form is used to grant CERN site access so ticketing must be enabled')
             form.tickets_enabled.errors.append(err)
             return False
         access_tpl = self.settings.get('access_ticket_template')
-        ticket_template = DesignerTemplate.get_one(form.ticket_template_id.data)
+        ticket_template = DesignerTemplate.get_or_404(form.ticket_template_id.data)
         if not access_tpl:
             return
         if ticket_template == access_tpl or ticket_template.backside_template == access_tpl:
