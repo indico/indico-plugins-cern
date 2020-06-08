@@ -73,6 +73,9 @@ class PluginSettingsForm(IndicoForm):
                                                               'finished and the duration specified here has been '
                                                               'exceeded. Once the data has been deleted, access badges '
                                                               'will not be accessible anymore.'))
+    api_username = StringField(_('Username'), [DataRequired()], description=_('The username to access the API'))
+    api_password = IndicoPasswordField(_('Password'), [DataRequired()], toggle=True,
+                                       description=_('The password to access the API'))
 
     def __init__(self, *args, **kwargs):
         super(PluginSettingsForm, self).__init__(*args, **kwargs)
@@ -100,6 +103,8 @@ class CERNAccessPlugin(IndicoPlugin):
         'access_ticket_template': None,
         'earliest_start_dt': None,
         'delete_personal_data_after': timedelta(days=180),
+        'api_username': '',
+        'api_password': '',
     }
     settings_converters = {
         'access_ticket_template': ModelConverter(DesignerTemplate),

@@ -12,7 +12,7 @@ from indico.core.plugins import IndicoPluginBlueprint
 from indico_cern_access.controllers import (RHExportCERNAccessCSV, RHExportCERNAccessExcel,
                                             RHRegistrationAccessIdentityData, RHRegistrationEnterIdentityData,
                                             RHRegistrationGrantCERNAccess, RHRegistrationPreviewCERNAccessEmail,
-                                            RHRegistrationRevokeCERNAccess)
+                                            RHRegistrationRevokeCERNAccess, RHStatsAPI)
 
 
 blueprint = IndicoPluginBlueprint('cern_access', __name__, url_prefix='/event/<confId>')
@@ -32,3 +32,5 @@ blueprint.add_url_rule('/manage/registration/<int:reg_form_id>/registrations/<in
                        'enter_identity_data', RHRegistrationEnterIdentityData, methods=('GET', 'POST'))
 blueprint.add_url_rule('/registrations/<int:reg_form_id>/access-identity-data', 'access_identity_data',
                        RHRegistrationAccessIdentityData, methods=('GET', 'POST'))
+
+blueprint.add_url_rule('!/api/plugin/cern-access/visitors', 'api_stats', RHStatsAPI)
