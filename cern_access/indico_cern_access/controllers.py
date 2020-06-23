@@ -7,27 +7,38 @@
 
 from __future__ import unicode_literals
 
-from flask import jsonify, redirect, render_template, request
+from collections import Counter
+from datetime import timedelta
+
+from flask import current_app, jsonify, redirect, render_template, request
 from flask_pluginengine import current_plugin, render_plugin_template
-from werkzeug.exceptions import BadRequest, Forbidden, NotFound
+from webargs import fields
+from webargs.flaskparser import abort
+from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
 
 from indico.core.db import db
+from indico.core.db.sqlalchemy.custom import UTCDateTime
 from indico.core.errors import NoReportError, UserValueError
+from indico.modules.events.models.events import Event
 from indico.modules.events.registration.controllers.display import RHRegistrationFormRegistrationBase
 from indico.modules.events.registration.controllers.management import RHManageRegistrationBase
 from indico.modules.events.registration.controllers.management.reglists import RHRegistrationsActionBase
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.registration.models.registrations import Registration
 from indico.modules.events.requests.controllers import RHRequestsEventRequestDetailsBase
+from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.util.date_time import now_utc
 from indico.util.placeholders import replace_placeholders
 from indico.util.spreadsheets import send_csv, send_xlsx
+from indico.web.args import use_args
 from indico.web.flask.templating import get_template_module
 from indico.web.flask.util import url_for
+from indico.web.rh import RH
 from indico.web.util import jsonify_data, jsonify_template
 
 from indico_cern_access import _
 from indico_cern_access.forms import AccessIdentityDataForm, GrantAccessEmailForm
+from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState
 from indico_cern_access.util import (get_access_dates, get_last_request, grant_access, revoke_access,
                                      sanitize_license_plate, send_adams_post_request, send_ticket)
 from indico_cern_access.views import WPAccessRequestDetails
@@ -194,3 +205,69 @@ class RHExportCERNAccessCSV(RHExportCERNAccessBase):
     def _process(self):
         headers, rows = self._generate_spreadsheet()
         return send_csv('CERN_Access.csv', headers, rows)
+
+
+def _db_dates_overlap(start1, end1, start2, end2):
+    return (start1 <= end2) & (start2 <= end1)
+
+
+class RHStatsAPI(RH):
+    """Provide statistics on daily visitors"""
+
+    def _check_access(self):
+        from indico_cern_access.plugin import CERNAccessPlugin
+        auth = request.authorization
+        username = CERNAccessPlugin.settings.get('api_username')
+        password = CERNAccessPlugin.settings.get('api_password')
+        if not auth or not auth.password or auth.username != username or auth.password != password:
+            response = current_app.response_class('Authorization required', 401,
+                                                  {'WWW-Authenticate': 'Basic realm="Indico - CERN Access Stats"'})
+            raise Unauthorized(response=response)
+
+    def _get_stats(self, start_date, end_date):
+        access_start = db.cast(
+            db.func.coalesce(
+                db.cast(Request.data['start_dt_override'].astext, UTCDateTime()),
+                Event.start_dt
+            ).astimezone('Europe/Zurich'),
+            db.Date
+        )
+        access_end = db.cast(
+            db.func.coalesce(
+                db.cast(Request.data['end_dt_override'].astext, UTCDateTime()),
+                Event.end_dt
+            ).astimezone('Europe/Zurich'),
+            db.Date
+        )
+
+        query = (db.session.query(access_start, access_end, db.func.count('*'))
+                 .filter(CERNAccessRequest.request_state == CERNAccessRequestState.active)
+                 .join(CERNAccessRequest.registration)
+                 .join(Registration.event)
+                 .join(Request, db.and_(Request.event_id == Event.id,
+                                        Request.type == 'cern-access',
+                                        Request.state == RequestState.accepted))
+                 .filter(_db_dates_overlap(access_start, access_end, start_date, end_date))
+                 .group_by(access_start, access_end))
+
+        counts = Counter()
+        for start, end, count in query:
+            for offset in range((end - start).days + 1):
+                day = start + timedelta(days=offset)
+                counts[day] += count
+        return dict(counts)
+
+    @use_args({
+        'from': fields.Date(required=True),
+        'to': fields.Date(required=True),
+    })
+    def _process(self, args):
+        start_date = args['from']
+        end_date = args['to']
+        if start_date > end_date:
+            abort(422, messages={'from': ['start date cannot be after end date']})
+
+        stats = self._get_stats(start_date, end_date)
+        days = [start_date + timedelta(days=offset) for offset in xrange((end_date - start_date).days + 1)]
+        data = {day.isoformat(): stats.get(day, 0) for day in days}
+        return jsonify(data)
