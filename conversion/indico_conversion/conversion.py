@@ -23,6 +23,7 @@ from indico.core.config import config
 from indico.core.db import db
 from indico.core.plugins import url_for_plugin
 from indico.modules.attachments.models.attachments import Attachment, AttachmentFile, AttachmentType
+from indico.util.fs import secure_filename
 from indico.util.signing import secure_serializer
 from indico.web.flask.templating import get_template_module
 from indico.web.rh import RH
@@ -51,9 +52,13 @@ def submit_attachment(task, attachment):
         'dirresponse': secure_serializer.dumps(payload, salt='pdf-conversion')
     }
     file = attachment.file
+    name, ext = os.path.splitext(file.filename)
+    # we know ext is safe since it's based on a whitelist. the name part may be fully
+    # non-ascii so we sanitize that to a generic name if necessary
+    filename = secure_filename(name, 'attachment') + ext
     with file.open() as fd:
         try:
-            response = requests.post(url, data=data, files={'uploadedfile': (file.filename, fd, file.content_type)})
+            response = requests.post(url, data=data, files={'uploadedfile': (filename, fd, file.content_type)})
             response.raise_for_status()
             if 'ok' not in response.text:
                 raise requests.RequestException('Unexpected response from server: {}'.format(response.text))
