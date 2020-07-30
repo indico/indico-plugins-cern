@@ -12,7 +12,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='indico-plugin-foundationsync',
-    version='2.2.3',
+    version='2.2.4',
     url='https://github.com/indico/indico-plugins-cern',
     license='MIT',
     author='Indico Team',
@@ -21,7 +21,7 @@ setup(
     zip_safe=False,
     install_requires=[
         'indico>=2.2.dev0',
-        'cx_Oracle',
+        'cx_Oracle<8',
     ],
     entry_points={
         'indico.plugins': {'foundationsync = indico_foundationsync.plugin:FoundationSyncPlugin'}
