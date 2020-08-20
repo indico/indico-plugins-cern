@@ -12,7 +12,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='indico-plugin-room-assistance',
-    version='2.2.2',
+    version='2.3',
     url='https://github.com/indico/indico-plugins-cern',
     license='MIT',
     author='Indico Team',
@@ -21,7 +21,7 @@ setup(
     zip_safe=False,
     include_package_data=True,
     install_requires=[
-        'indico>=2.2.dev0'
+        'indico>=2.3.dev0'
     ],
     entry_points={
         'indico.plugins': {'room_assistance = indico_room_assistance.plugin:RoomAssistancePlugin'},

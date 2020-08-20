@@ -46,7 +46,7 @@
                 $field.val(JSON.stringify(newFieldVal));
             })
             .end()
-            .find('.switch .switch-input').on('change', function() {
+            .find('input:checkbox').on('change', function() {
                 const $this = $(this);
                 const isChecked = $this.prop('checked');
                 const $fieldContainer = $this.closest('.occurrence');
@@ -61,7 +61,7 @@
                 }
 
                 $field.val(JSON.stringify(fieldVal));
-                $timePicker.attr('disabled', !isChecked);
+                $timePicker.prop('disabled', !isChecked);
             });
     </script>
 {%- endblock %}
