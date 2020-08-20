@@ -60,7 +60,7 @@
                 registrationForm.find('.regform-section-list').append(personalDataForm);
 
                 const licensePlate = document.querySelector('#license_plate');
-                const birthDate = document.querySelector('#birth_date');
+                const birthDate = document.querySelector('#birth_date .DateInput_input');
                 const nationality = document.querySelector('#nationality');
                 const birthPlace = document.querySelector('#birth_place');
                 const byCar = document.querySelector('#by_car');
@@ -72,7 +72,7 @@
                 document.querySelector('#registrationForm').addEventListener('submit', e => {
                     [licensePlate, birthDate, nationality, birthPlace].forEach(clearFieldState);
 
-                    const switchLabel = document.querySelector('#form-group-request_cern_access .switch-input');
+                    const switchLabel = document.querySelector('#request_cern_access');
                     if (!switchLabel || !switchLabel.checked) {
                         return;
                     }
