@@ -14,3 +14,12 @@
 .vehicle-section-title h2 {
     vertical-align: middle;
 }
+
+.site-access-box-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+
+    .policy-text-box {
+        margin-top: 0.5em;
+    }
+}

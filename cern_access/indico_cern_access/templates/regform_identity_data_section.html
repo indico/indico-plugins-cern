@@ -26,9 +26,9 @@
             </div>
         {% endif %}
         <div class="i-box" style="{% if required %}margin-top: 15px;{% endif %}">
-            <div class="i-box-header">
+            <div class="i-box-header site-access-box-header">
                 <div class="i-box-title">{% trans %}Request access to the CERN site{% endtrans %}</div>
-                <div class="i-box-header-text">
+                <div class="policy-text-box">
                     {{ render_security_policy(start_dt, end_dt) }}
                 </div>
             </div>
