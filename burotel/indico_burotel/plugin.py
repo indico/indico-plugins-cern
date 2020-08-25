@@ -56,10 +56,6 @@ class BurotelPlugin(IndicoPlugin):
         self.connect(signals.plugin.schema_post_dump, self._inject_long_term_attribute, sender=RoomSchema)
         self.connect(signals.plugin.schema_pre_load, self._inject_reason, sender=CreateBookingSchema)
         self.connect(signals.plugin.schema_pre_load, self._inject_time)
-        self.inject_bundle('react.js', WPBurotelBase)
-        self.inject_bundle('react.css', WPBurotelBase)
-        self.inject_bundle('semantic-ui.js', WPBurotelBase)
-        self.inject_bundle('semantic-ui.css', WPBurotelBase)
         self.inject_bundle('burotel.js', WPBurotelBase)
         self.inject_bundle('burotel.css', WPBurotelBase)
 

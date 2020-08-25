@@ -31,7 +31,7 @@ def get_month_dates(start_month, end_month):
 class WPBurotelBase(WPNewBase):
     template_prefix = 'rb/'
     title = _('Burotel')
-    bundles = ('common.js',)
+    bundles = ('common.js', 'common.css', 'react.js', 'react.css', 'semantic-ui.js', 'semantic-ui.css')
 
 
 class RHLanding(RHRoomBookingBase):
