@@ -12,7 +12,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='indico-plugin-burotel',
-    version='2.3-dev',
+    version='2.3',
     url='https://github.com/indico/indico-plugins-cern',
     license='MIT',
     author='Indico Team',
