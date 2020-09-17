@@ -82,8 +82,10 @@ PercentCell.defaultProps = {
 function StatsTable({data, numDays, months}) {
   return (
     <div>
-      <div styleName="stats-chart">
-        <Chart data={calculateChartData(data, months)} axes={AXES} tooltip dark />
+      <div styleName="stats-chart-wrapper">
+        <div styleName="stats-chart">
+          <Chart data={calculateChartData(data, months)} axes={AXES} tooltip dark />
+        </div>
       </div>
       <Table striped>
         <Table.Header>
