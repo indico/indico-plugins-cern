@@ -20,12 +20,12 @@
 .attachment.pdf-pending,
 .attachment.pdf-pending:hover {
   .title,
-  &:before,
+  &::before,
   &:link {
     color: $light-black;
   }
 
-  &:before {
+  &::before {
     @include indico-animation(pdf-conversion-blinker, 2s, ease-in-out, infinite);
   }
 }
@@ -34,9 +34,11 @@
   0% {
     color: $light-black;
   }
+
   50% {
     color: $red;
   }
+
   100% {
     color: $light-black;
   }
@@ -46,9 +48,11 @@
   0% {
     color: $light-black;
   }
+
   50% {
     color: $red;
   }
+
   100% {
     color: $light-black;
   }
@@ -58,9 +62,11 @@
   0% {
     color: $light-black;
   }
+
   50% {
     color: $red;
   }
+
   100% {
     color: $light-black;
   }

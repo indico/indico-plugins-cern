@@ -4,7 +4,7 @@
 body {
   font-family: verdana, arial, sans-serif;
   font-size: 12px;
-  color: #000000;
+  color: #000;
 }
 
 .manage-button-container .manage-button {
@@ -40,7 +40,7 @@ table.dayList td:not(.actions) {
 /* Footer */
 
 .footerDark {
-  color: #444444;
+  color: #444;
 }
 
 .footerDark a {
@@ -49,8 +49,8 @@ table.dayList td:not(.actions) {
 
 table.event-wrapper {
   width: 650px;
-  margin-top: 0px;
-  margin-bottom: 0px;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 table.dayList {
@@ -98,8 +98,8 @@ table.dayList {
   text-transform: uppercase;
 
   width: 100%;
-  border-spacing: 0px;
-  padding: 0px;
+  border-spacing: 0;
+  padding: 0;
 }
 
 .CERNTitle {

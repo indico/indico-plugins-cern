@@ -1,6 +1,6 @@
 @import 'base/palette';
 
-$header-bg-color: #006699;
+$header-bg-color: #069;
 
 @import 'themes/indico';
 
@@ -15,5 +15,5 @@ a.logo {
   display: block;
   width: 170px;
   height: 54px;
-  background: #006699 url('themes_cern:openlab_logo.png') left top no-repeat;
+  background: #069 url('themes_cern:openlab_logo.png') left top no-repeat;
 }

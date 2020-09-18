@@ -11,6 +11,7 @@
   .edit-link {
     display: none;
   }
+
   &:hover .edit-link {
     display: inline;
   }
@@ -21,6 +22,7 @@
     .icon-disable {
       color: $red;
     }
+
     .icon-checkmark {
       color: $green;
     }
