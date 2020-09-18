@@ -7,41 +7,43 @@
 .js-go-to-day,
 .trigger.icon-expand,
 .itemHeaderDocuments {
-    display: none !important;
+  display: none !important;
 }
 
 .materialDisplayName {
-    display: block;
-    text-align: left;
-    white-space: nowrap;
+  display: block;
+  text-align: left;
+  white-space: nowrap;
 
-    & > a {
-        display: none !important;
-    }
+  & > a {
+    display: none !important;
+  }
 }
 
-.flexrow, .flexcol {
-    // XXX: this is awful and while making some things in the header look
-    // slightly ugly, it fixes both the IE11 crash and firefox only printing
-    // the first page.
-    display: block !important;
+.flexrow,
+.flexcol {
+  // XXX: this is awful and while making some things in the header look
+  // slightly ugly, it fixes both the IE11 crash and firefox only printing
+  // the first page.
+  display: block !important;
 }
 
 .event-date > * {
-    float: left;
+  float: left;
 }
 
 .event-location {
-    clear: both;
+  clear: both;
 }
 
 // this would re-introduce the IE crash so we limit it to modern browsers
 // http://browserhacks.com/#hack-8a0d11a6b2e3d172711eed35cb7237b9
-@supports (-webkit-appearance:none) {
-    .timetable-item-body {
-        margin-top: 0.5em;
-    }
+@supports (-webkit-appearance: none) {
+  .timetable-item-body {
+    margin-top: 0.5em;
+  }
 }
-.main-action-bar, .footer {
-    display: none !important;
+.main-action-bar,
+.footer {
+  display: none !important;
 }

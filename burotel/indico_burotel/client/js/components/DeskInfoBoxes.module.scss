@@ -8,11 +8,11 @@
 @import 'rb:styles/palette';
 
 :global(.ui.icon.message).message-icon {
-    color: $dark-highlight-color;
-    box-shadow: 0 0 0 1px $dark-highlight-color;
-    background-color: lighten($highlight-color, 35%);
+  color: $dark-highlight-color;
+  box-shadow: 0 0 0 1px $dark-highlight-color;
+  background-color: lighten($highlight-color, 35%);
 
-    :global(.icon) {
-        font-size: 2em;
-    }
+  :global(.icon) {
+    font-size: 2em;
+  }
 }

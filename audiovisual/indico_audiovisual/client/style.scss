@@ -8,26 +8,30 @@
 @import 'base/palette';
 
 .av-contribution-list .i-checkbox {
-    .edit-link { display: none; }
-    &:hover .edit-link { display: inline; }
+  .edit-link {
+    display: none;
+  }
+  &:hover .edit-link {
+    display: inline;
+  }
 }
 
 .overview-results {
-    td.request-state {
-        .icon-disable {
-            color: $red;
-        }
-        .icon-checkmark {
-            color: $green;
-        }
+  td.request-state {
+    .icon-disable {
+      color: $red;
     }
-
-    td.entry-type {
-        color: $gray;
-        white-space: nowrap;
-
-        i.requested {
-            color: $blue;
-        }
+    .icon-checkmark {
+      color: $green;
     }
+  }
+
+  td.entry-type {
+    color: $gray;
+    white-space: nowrap;
+
+    i.requested {
+      color: $blue;
+    }
+  }
 }

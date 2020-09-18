@@ -8,45 +8,45 @@
 @import 'rb:styles/palette';
 
 %centered {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 100%;
-    text-align: center;
-    vertical-align: middle;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 100%;
+  text-align: center;
+  vertical-align: middle;
 }
 
 .map-cluster:global(.marker-cluster.marker-cluster-small) {
-    @extend %centered;
-    color: white;
-    background: rgba($dark-highlight-color, 0.6);
-    font-weight: bold;
+  @extend %centered;
+  color: white;
+  background: rgba($dark-highlight-color, 0.6);
+  font-weight: bold;
 }
 
 .map-marker:global(.leaflet-marker-icon) {
-    font-size: 0.9em;
-    font-weight: bold;
-    text-align: center;
-    color: white;
-    vertical-align: baseline;
-    border-radius: 2px 0 0 2px;
-    min-width: 3em;
-    white-space: nowrap;
+  font-size: 0.9em;
+  font-weight: bold;
+  text-align: center;
+  color: white;
+  vertical-align: baseline;
+  border-radius: 2px 0 0 2px;
+  min-width: 3em;
+  white-space: nowrap;
 
-    > :global(.marker-building) {
-        padding: 0.3em 0.3em;
-        background: rgba($primary-color, 0.9);
-    }
+  > :global(.marker-building) {
+    padding: 0.3em 0.3em;
+    background: rgba($primary-color, 0.9);
+  }
 
-    > :global(.marker-number) {
-        @extend %centered;
-        position: absolute;
-        top: 60%;
-        left: 70%;
-        width: 30px;
-        height: 30px;
-        font-size: 0.8em;
-        padding: 0.3em 0.3em;
-        background-color: rgba($dark-highlight-color, 0.9);
-    }
+  > :global(.marker-number) {
+    @extend %centered;
+    position: absolute;
+    top: 60%;
+    left: 70%;
+    width: 30px;
+    height: 30px;
+    font-size: 0.8em;
+    padding: 0.3em 0.3em;
+    background-color: rgba($dark-highlight-color, 0.9);
+  }
 }

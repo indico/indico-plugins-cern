@@ -6,27 +6,27 @@
 // the LICENSE file for more details.
 
 .assistance-occurrences-widget {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 
-    .occurrence + .occurrence {
-        margin-top: 5px;
+  .occurrence + .occurrence {
+    margin-top: 5px;
+  }
+
+  input ~ input {
+    margin-right: 1em;
+  }
+
+  .occurrence {
+    align-items: center;
+    display: inline-flex;
+
+    .datepicker {
+      width: 40% !important;
     }
 
-    input ~ input {
-        margin-right: 1em;
+    .timepicker {
+      display: flex;
     }
-
-    .occurrence {
-        align-items: center;
-        display: inline-flex;
-
-        .datepicker {
-            width: 40% !important;
-        }
-
-        .timepicker {
-            display: flex;
-        }
-    }
+  }
 }

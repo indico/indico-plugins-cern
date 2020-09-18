@@ -8,43 +8,43 @@
 @import 'base/palette';
 
 .building {
-    margin-bottom: 3em;
-    border-left: 2px solid $pastel-gray;
-    padding-left: 1em;
+  margin-bottom: 3em;
+  border-left: 2px solid $pastel-gray;
+  padding-left: 1em;
 
-    > h2 {
-        color: $dark-gray;
-    }
+  > h2 {
+    color: $dark-gray;
+  }
 
-    .building-container {
-        margin: 0;
-    }
+  .building-container {
+    margin: 0;
+  }
 }
 
 .room {
-    margin-bottom: 1.5em;
+  margin-bottom: 1.5em;
 
-    > h3 {
-        color: $black;
+  > h3 {
+    color: $black;
+  }
+
+  .room-container:global(.ui.cards) {
+    margin: 0 0 0 10px;
+  }
+
+  .extra-content {
+    display: flex;
+  }
+
+  :global(.ui.card).long-term-desk {
+    box-shadow: 0 2px 0 0 $highlight-color, 0 0 0 1px #d4d4d5;
+
+    .long-term-label {
+      color: $highlight-color;
+      position: absolute;
+      right: 0.5em;
+      bottom: 0.5em;
+      font-size: 0.9em;
     }
-
-    .room-container:global(.ui.cards) {
-        margin: 0 0 0 10px;
-    }
-
-    .extra-content {
-        display: flex;
-    }
-
-    :global(.ui.card).long-term-desk {
-        box-shadow: 0 2px 0 0 $highlight-color, 0 0 0 1px #d4d4d5;
-
-        .long-term-label {
-            color: $highlight-color;
-            position: absolute;
-            right: 0.5em;
-            bottom: 0.5em;
-            font-size: 0.9em;
-        }
-    }
+  }
 }

@@ -9,7 +9,8 @@ $header-text-color: $light-gray;
 @include header-logo('themes_cern:clic_logo.png', 15px, 190px, 15%);
 
 .event-header .details {
-    [class^='icon-']::before, [class*=' icon-']::before {
-        color: $light-gray;
-    }
+  [class^='icon-']::before,
+  [class*=' icon-']::before {
+    color: $light-gray;
+  }
 }
