@@ -38,14 +38,14 @@ pre {
 }
 
 td {
-  font-family: Verdana;
+  font-family: Verdana, sans-serif;
   font-size: medium;
   color: #000;
   text-align: left;
 }
 
 .eventInfo {
-  font-family: Verdana;
+  font-family: Verdana, sans-serif;
   font-size: large;
   text-align: center;
 }
@@ -66,6 +66,9 @@ table.event-wrapper > tbody > tr > td > br {
   border-spacing: 0;
   padding: 0;
   width: 100%;
+  font-family: Verdana, sans-serif;
+  font-size: x-large;
+  text-align: center;
 
   span {
     text-align: center;
@@ -90,7 +93,7 @@ table.dayList {
 }
 
 .itemTime {
-  font-family: Verdana;
+  font-family: Verdana, sans-serif;
   font-size: medium;
   font-style: italic;
   padding-left: 2em;
@@ -113,24 +116,18 @@ table.dayList {
 }
 
 .subItemText {
-  font-size: medium;
-  font-family: Verdana;
+  font-size: 12px;
+  font-family: Verdana, sans-serif;
 }
 
 .reportNumberHeader {
   text-align: right;
   font-size: 12px;
-  font-family: Verdana;
-}
-
-.eventHeader {
-  font-family: Verdana;
-  font-size: x-large;
-  text-align: center;
+  font-family: Verdana, sans-serif;
 }
 
 .CERNTitle {
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   font-size: xx-large;
 }
 
@@ -143,7 +140,7 @@ td.itemRightAlign {
 }
 
 td.itemHeaderDate {
-  font-family: Verdana;
+  font-family: Verdana, sans-serif;
   font-size: large;
   font-style: italic;
   padding-top: 1.5em;
@@ -166,7 +163,7 @@ td.itemHeaderDocuments {
 }
 
 td.sessionInfo {
-  font-family: Verdana;
+  font-family: Verdana, sans-serif;
   width: 100%;
 }
 
@@ -180,12 +177,7 @@ td.itemTopAlign {
 
 td.subItemOrder {
   font-size: 12px;
-  font-family: Verdana;
-}
-
-.subItemText {
-  font-size: 12px;
-  font-family: Verdana;
+  font-family: Verdana, sans-serif;
 }
 
 .confModifIcon {

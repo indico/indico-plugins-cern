@@ -26,13 +26,13 @@ pre {
 }
 
 table.dayList td:not(.actions) {
-  font-family: Times;
+  font-family: Times, serif;
   font-size: large;
   color: #000;
 }
 
 .eventInfo {
-  font-family: Times;
+  font-family: Times, serif;
   font-size: large;
   text-align: center;
 }
@@ -81,17 +81,17 @@ table.dayList {
 
 .subItemText {
   font-size: medium;
-  font-family: Times;
+  font-family: Times, serif;
 }
 
 .reportNumberHeader {
   text-align: right;
   font-size: 12px;
-  font-family: Times;
+  font-family: Times, serif;
 }
 
 .eventHeader {
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   font-size: large;
   font-weight: bold;
   text-align: center;
@@ -103,7 +103,7 @@ table.dayList {
 }
 
 .CERNTitle {
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   font-size: xx-large;
 }
 
@@ -117,26 +117,26 @@ td.itemRightAlign {
 }
 
 td.itemHeaderDate {
-  font-family: Times;
+  font-family: Times, serif;
   font-size: medium;
   font-style: italic;
   text-align: left;
 }
 
 td.itemHeaderDocuments {
-  font-family: Times;
+  font-family: Times, serif;
   font-size: medium;
   text-align: right;
   text-decoration: underline;
 }
 
 td.sessionInfo {
-  font-family: Times;
+  font-family: Times, serif;
   font-size: large;
 }
 
 td.breakInfo {
-  font-family: Times;
+  font-family: Times, serif;
   font-size: large;
   text-align: center;
 }
@@ -146,7 +146,7 @@ td.itemTopAlign {
 }
 
 td.subItemOrder {
-  font-family: Times;
+  font-family: Times, serif;
 }
 
 .notes {
@@ -157,7 +157,7 @@ td.subItemOrder {
   h3,
   h4 {
     font-size: 1.1em;
-    font-family: Times;
+    font-family: Times, serif;
   }
 }
 
