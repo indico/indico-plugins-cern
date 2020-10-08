@@ -33,9 +33,9 @@ from indico_vc_assistance.views import WPVCAssistance
 
 
 class PluginSettingsForm(IndicoForm):
-    authorized = PrincipalListField(_('Authorized users'), groups=True,
+    authorized = PrincipalListField(_('Authorized users'), allow_groups=True,
                                     description=_('List of users who can request videoconference assistance.'))
-    vc_support = PrincipalListField(_('Videoconference support'), groups=True,
+    vc_support = PrincipalListField(_('Videoconference support'), allow_groups=True,
                                     description=_('List of users who can view the list of events with videoconference '
                                                   'assistance.'))
     support_email = EmailField(_('Support email'), [DataRequired()],

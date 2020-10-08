@@ -53,7 +53,7 @@ class RoomAssistanceForm(IndicoForm):
                                                                          'assistance'),
                                                            get_label='full_name', collection_class=set,
                                                            render_kw={'size': 20}, modify_object_list=_order_func)
-    room_assistance_support = PrincipalListField(_('Room assistance support'), groups=True,
+    room_assistance_support = PrincipalListField(_('Room assistance support'), allow_groups=True,
                                                  description=_('List of users who can view the list of events with '
                                                                'room startup assistance.'))
 

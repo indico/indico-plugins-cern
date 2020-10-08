@@ -42,7 +42,7 @@ from indico_audiovisual.views import WPAudiovisualManagers
 
 
 class PluginSettingsForm(IndicoForm):
-    managers = PrincipalListField(_('Managers'), groups=True,
+    managers = PrincipalListField(_('Managers'), allow_groups=True,
                                   description=_('List of users who can manage recording/webcast requests.'))
     notification_emails = EmailListField(_('Notification email addresses'),
                                          description=_('Notifications about recording/webcast requests are sent to '
