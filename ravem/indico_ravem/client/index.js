@@ -15,7 +15,6 @@
         action: 'disconnect',
         handler: function disconnectHandler(data, btn) {
           const name = btn.data('roomName');
-          const vcRoomName = btn.data('vcRoomName');
           const requestStates = {
             old: 'connected',
             new: 'disconnected',
@@ -40,7 +39,7 @@
             ['already-disconnected'],
             messages,
             function checkDisconnected(status) {
-              return !status.connected || status.vc_room_name !== vcRoomName;
+              return !status.connected;
             }
           );
         },
@@ -70,7 +69,7 @@
           _handler(data, btn, requestStates, ['already-connected'], messages, function checkConnect(
             status
           ) {
-            return status.connected && status.vc_room_name === vcRoomName;
+            return status.connected;
           });
         },
       },
@@ -115,7 +114,7 @@
     function _handler(data, btn, requestStates, validReasons, messages, checkFn) {
       const name = btn.data('roomName');
 
-      // If the request appears to be successful, we now  must poll RAVEM
+      // If the request appears to be successful, we now must poll RAVEM
       // through Indico to assert it was
       if (data.success) {
         let attempts = RavemPlugin.polling.limit;
@@ -159,7 +158,7 @@
         }, RavemPlugin.polling.interval);
 
         // request failed with some reason and this reason is among the
-        // valid reasons so we mvoe the button to the new state.
+        // valid reasons so we move the button to the new state.
       } else if (~_.indexOf(validReasons, data.reason)) {
         setButtonState(btn, requestStates.new);
 
@@ -302,7 +301,6 @@
 
     function initializeRavemButton(btn) {
       btn.on('click', clickHandler);
-      const vcRoomName = btn.data('vcRoomName');
       getRoomStatus(btn, 'waitingStatus')
         .fail(function errorHandler(data) {
           setButtonState(btn, 'errorStatus', data.message);
@@ -311,7 +309,8 @@
           if (!data.success) {
             setButtonState(btn, 'errorStatus', data.message);
           } else {
-            const connected = data.connected && data.vc_room_name === vcRoomName;
+            console.log(data);
+            const connected = data.connected;
             setButtonState(btn, connected ? 'connected' : 'disconnected');
           }
         });

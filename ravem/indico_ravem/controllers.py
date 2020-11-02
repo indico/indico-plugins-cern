@@ -6,6 +6,7 @@
 # the LICENSE file for more details.
 
 from flask import jsonify, request
+from indico_ravem.plugin import RavemPlugin
 from werkzeug.exceptions import NotFound
 
 from indico.core.errors import IndicoError
@@ -18,6 +19,11 @@ from indico_ravem.util import RavemException, RavemOperationException, has_acces
 
 
 __all__ = ('RHRavemRoomStatus', 'RHRavemConnectRoom', 'RHRavemDisconnectRoom')
+services = {
+    'vidyo': 'vidyo',
+    'zoom': 'zoom',
+    'legacy': 'vidyo'  # Legacy connection are only supported by vidyo
+}
 
 
 class RHRavemBase(RH):
@@ -43,24 +49,24 @@ class RHRavemBase(RH):
             raise IndicoError(_("Event VC Room ({id}) does not have an event with the id {conf.id}")
                               .format(id=id_, conf=event))
 
-        room = self.event_vc_room.link_object.room if self.event_vc_room.link_object else None
-        if not room:
+        self.room = self.event_vc_room.link_object.room if self.event_vc_room.link_object else None
+        if not self.room:
             raise IndicoError(_("Event VC Room ({id}) is not linked to an event with a room").format(id=id_))
-
-        self.room_name = room.generate_name()
-        self.room_special_name = room.name
-
-        if not self.room_name:
+        if not self.room.name:
             raise IndicoError(_("Event VC Room ({id}) is not linked to an event with a valid room").format(id=id_))
-
-        if not self.room_special_name:
-            self.room_special_name = self.room_name
 
 
 class RHRavemRoomStatus(RHRavemBase):
     def _process(self):
         try:
-            response = get_room_status(self.room_name, room_special_name=self.room_special_name)
+            response = get_room_status(self.room.name)
+            room_name = self.room.verbose_name or self.room.name
+            service = services.get(response['service_type'])
+            if not service or service != self.event_vc_room.vc_room.type:
+                RavemPlugin.logger.error("%s is not supported in the room %s",
+                                         self.event_vc_room.vc_room.type, room_name)
+                raise RavemException(_("{service} is not supported in the room {room}")
+                                     .format(service=self.event_vc_room.vc_room.type, room=room_name))
             response['success'] = True
         except RavemException as err:
             response = {'success': False, 'reason': 'operation-failed', 'message': err.message}
@@ -71,8 +77,10 @@ class RHRavemConnectRoom(RHRavemBase):
     def _process(self):
         force = request.args.get('force') == '1'
         try:
-            connect_room(self.room_name, self.event_vc_room.vc_room, force=force,
-                         room_special_name=self.room_special_name)
+            ips = self.room.get_attribute_value('ip')
+            legacy_ip = ips and ips.split(',')[0]
+            connect_room(self.room.name, self.event_vc_room.vc_room, force=force,
+                         room_verbose_name=self.room.verbose_name, legacy_ip=legacy_ip)
         except RavemOperationException as err:
             response = {'success': False, 'reason': err.reason, 'message': err.message}
         except RavemException as err:
@@ -86,8 +94,7 @@ class RHRavemDisconnectRoom(RHRavemBase):
     def _process(self):
         force = request.args.get('force') == '1'
         try:
-            disconnect_room(self.room_name, self.event_vc_room.vc_room, force=force,
-                            room_special_name=self.room_special_name)
+            disconnect_room(self.room.name, self.event_vc_room.vc_room, force=force)
         except RavemOperationException as err:
             response = {'success': False, 'reason': err.reason, 'message': err.message}
         except RavemException as err:

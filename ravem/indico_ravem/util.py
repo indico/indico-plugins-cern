@@ -30,7 +30,7 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
     :param api_endpoint: str -- The RAVEM API endpoint to call.
     :param method: str -- The HTTP method to use for the call, currently, RAVEM
                    only supports `GET` or `POST`
-    :param **kwargs: The field names and values used for the RAVEM API as
+    :param kwargs: The field names and values used for the RAVEM API as
                      strings
 
     :returns: dict -- The JSON-encoded response from the RAVEM
@@ -39,9 +39,11 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
     """
 
     root_endpoint = RavemPlugin.settings.get('api_endpoint')
-    username = RavemPlugin.settings.get('username')
-    password = RavemPlugin.settings.get('password')
-    headers = {'Accept': 'application/json'}
+    access_token = RavemPlugin.settings.get('access_token')
+    headers = {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer %s' % access_token,
+    }
     timeout = RavemPlugin.settings.get('timeout') or None
     url = urljoin(root_endpoint, api_endpoint)
 
@@ -50,8 +52,7 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
         raise RavemAPIException('Action not possible in debug mode', api_endpoint, None)
 
     try:
-        response = requests.request(method, url, params=kwargs, headers=headers,
-                                    auth=HTTPDigestAuth(username, password), timeout=timeout)
+        response = requests.request(method, url, headers=headers, timeout=timeout, **kwargs)
     except Timeout as error:
         RavemPlugin.logger.warning("%s %s timed out: %s", error.request.method, error.request.url, error.message)
         # request timeout sometime has an inner timeout error as message instead of a string.
@@ -67,28 +68,7 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
         RavemPlugin.logger.exception("%s %s failed with %s", response.request.method, response.url, error.message)
         raise
 
-    json_response = response.json()
-    if 'error' not in json_response and 'result' not in json_response:
-        RavemPlugin.logger.exception('%s %s returned json without a result or error: %s',
-                                     response.request.method, response.url, json_response)
-        err_msg = ("{response.request.method} {response.url} returned json without a result or error: "
-                   "{json_response}").format(response=response, json_response=json_response)
-        raise RavemAPIException(err_msg, api_endpoint, response)
-
-    return json_response
-
-
-def get_room_endpoint(endpoints):
-    """Returns the proper endpoint of a room.
-
-    This will return the H323 IP endpoint, correctly formatted with the defined
-    prefix if available or the room's Vidyo user name otherwise.
-    """
-    if endpoints['vc_endpoint_legacy_ip']:
-        return '{prefix}{endpoints[vc_endpoint_legacy_ip]}'.format(prefix=RavemPlugin.settings.get('prefix'),
-                                                                   endpoints=endpoints)
-    else:
-        return endpoints['vc_endpoint_vidyo_username']
+    return response.json()
 
 
 def has_access(event_vc_room, _split_re=re.compile(r'[\s,;]+')):
@@ -113,12 +93,19 @@ def has_access(event_vc_room, _split_re=re.compile(r'[\s,;]+')):
     current_user = session.user
 
     # No physical room or room is not Vidyo capable
-    if not room or not room.has_equipment('Vidyo'):
+    # TODO: We don't have any for zoom yet
+    # if not room or not room.has_equipment('Vidyo'):
+    #     return False
+    if not room:
         return False
 
     ips = set(filter(None, (x.strip() for x in _split_re.split(room.get_attribute_value('ip', '')))))
+    # Not all providers use the same attribute for the principal, some may use owner or host
+    host = next(vc_room.data.get(attr) for attr in ('owner', 'host') if attr in vc_room.data)
+    if not host:
+        raise AttributeError('Unsupported principal attribute (valid: owner or host)')
     return any([
-        current_user == retrieve_principal(vc_room.data.get('owner')),
+        current_user == retrieve_principal(host),
         event.can_manage(current_user),
         request.remote_addr in ips
     ])

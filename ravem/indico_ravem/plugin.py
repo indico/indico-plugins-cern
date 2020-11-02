@@ -21,7 +21,6 @@ from indico.core.plugins import IndicoPlugin, PluginCategory
 from indico.modules.events.views import WPSimpleEventDisplay
 from indico.modules.vc.views import WPVCEventPage, WPVCManageEvent
 from indico.web.forms.base import IndicoForm
-from indico.web.forms.fields import IndicoPasswordField
 from indico.web.forms.widgets import SwitchWidget
 
 from indico_ravem import _
@@ -32,10 +31,8 @@ class SettingsForm(IndicoForm):  # pragma: no cover
                          description=_("If enabled, no actual connect/disconnect requests are sent"),)
     api_endpoint = URLField(_('API endpoint'), [DataRequired()], filters=[lambda x: x.rstrip('/') + '/'],
                             description=_('The endpoint for the RAVEM API'))
-    username = StringField(_('Username'), [DataRequired()],
-                           description=_('The username used to connect to the RAVEM API'))
-    password = IndicoPasswordField(_('Password'), [DataRequired()], toggle=True,
-                                   description=_('The password used to connect to the RAVEM API'))
+    access_token = StringField(_('Access token'), [DataRequired()],
+                               description=_('The access token used to connect to the RAVEM API'))
     prefix = IntegerField(_('Room IP prefix'), [NumberRange(min=0)],
                           description=_('IP prefix to connect a room to a Vidyo room.'))
     timeout = IntegerField(_('Timeout'), [NumberRange(min=0)],
@@ -62,10 +59,9 @@ class RavemPlugin(IndicoPlugin):
     default_settings = {
         'debug': False,
         'api_endpoint': '',
-        'username': 'ravem',
-        'password': None,
+        'access_token': None,
         'prefix': 21,
-        'timeout': 10,
+        'timeout': 30,
         'polling_limit': 8,
         'polling_interval': 4000
     }
@@ -98,7 +94,7 @@ class RavemPlugin(IndicoPlugin):
 
     def inject_connect_button(self, template, event_vc_room, **kwargs):  # pragma: no cover
         from indico_ravem.util import has_access
-        if event_vc_room.vc_room.type != 'vidyo' or not has_access(event_vc_room):
+        if event_vc_room.vc_room.type not in ('vidyo', 'zoom') or not has_access(event_vc_room):
             return
 
         return render_plugin_template(template, room_name=event_vc_room.link_object.room.name,

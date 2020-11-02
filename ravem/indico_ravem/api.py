@@ -5,72 +5,104 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
+from abc import ABCMeta, abstractmethod
 from indico_ravem.util import ravem_api_call
 
 
-__all__ = ('get_endpoint_status', 'disconnect_endpoint', 'connect_endpoint')
+# __all__ = ('get_endpoint_status', 'disconnect_endpoint', 'connect_endpoint')
 
 
-def get_endpoint_status(room_name):
-    """Returns the status of an physical room.
+class BaseAPI:
+    __metaclass__ = ABCMeta
 
-    This call returns the status of a room equipped with Vidyo capable device
+    @staticmethod
+    def get_endpoint_status(room_name):
+        """Returns the status of an physical room.
 
-    :param room_name: str -- the name of the physical room
+        This call returns the status of a room equipped with Vidyo capable device
 
-    :returns: dict -- the status of the room as a JSON response according to the
-        RAVEM API.
-    """
-    room_name = room_name.replace('/', '-', 1)
-    return ravem_api_call('getstatus', method='GET', service_name='videoconference', where='room_name', value=room_name)
+        :param room_name: str -- the name of the physical room
+
+        :returns: dict -- the status of the room as a JSON response according to the
+            RAVEM API.
+        """
+        room_name = room_name.replace('/', '-', 1)
+        return ravem_api_call('rooms/details', method='GET',
+                              params={'where': 'room_name', 'value': room_name})
+
+    @abstractmethod
+    def get_room_id(self, vc_room):
+        """Returns the provider specific room ID."""
+        pass
+
+    @abstractmethod
+    def connect_endpoint(self, room, vc_room):
+        """Connects a physical room to a Vidyo room using the RAVEM API.
+
+        This call will return "OK" as a result immediately if RAVEM can (or has
+        started to) perform the operation. This does not mean the operation has
+        actually succeeded. One should poll for the status of the room afterwards
+        using the `get_endpoint_status` method after some delay to allow the
+        operation to be performed..
+
+        :param vc_room: str -- the object representing the specific video
+            conference room of this specific provider
+        :param room: str -- the object representing the room status
+
+        :returns: dict -- {'result': 'OK'} if the operation "succeeds", raises a
+                  RavemAPIException otherwise.
+        """
+        pass
+
+    @abstractmethod
+    def disconnect_endpoint(self, room, vc_room):
+        """Disconnects a physical room from a vidyo room using the RAVEM API.
+
+        This call will return "OK" as a result immediately if RAVEM can (or has
+        started to) perform the operation. This does not mean the operation has
+        actually succeeded. One should poll for the status of the room afterwards
+        using the `get_endpoint_status` method after some delay to allow the
+        operation to be performed.
+
+        :param vc_room: str -- the object representing the specific video
+            conference room of this specific provider
+        :param room: str -- the object representing the room status
+
+        :returns: dict -- {'result': 'OK'} if the operation "succeeds", raises a
+            RavemAPIException otherwise.
+        """
+        pass
 
 
-def disconnect_endpoint(room_name, vc_room_name, service_type):
-    """Disconnects a physical room from a vidyo room using the RAVEM API.
+class ZoomAPI(BaseAPI):
+    SERVICE_TYPE = 'zoom'
 
-    This call will return "OK" as a result immediately if RAVEM can (or has
-    started to) perform the operation. This does not mean the operation has
-    actually succeeded. One should poll for the status of the room afterwards
-    using the `get_endpoint_status` method after some delay to allow the
-    operation to be performed.
+    def get_room_id(self, vc_room):
+        return str(vc_room.data['zoom_id'])
 
-    :param room_name: str -- the name of the physical room
-    :param vc_room_name: str -- The Vidyo room name (which is recommended to
-        disconnect the physical room from the Vidyo room in case the service
-        type is Vidyo.)
-    :param service_type: str -- The endpoint type (usually `vidyo` or `other`)
+    def connect_endpoint(self, room, vc_room):
+        return ravem_api_call('%s/connect' % self.SERVICE_TYPE, method='POST',
+                              json={'meetingId': self.get_room_id(vc_room), 'roomName': room['room_name']})
 
-    :returns: dict -- {'result': 'OK'} if the operation "succeeds", raises a
-        RavemAPIException otherwise.
-    """
-    room_name = room_name.replace('/', '-', 1)
-    params = {
-        'method': 'POST',
-        'where': 'room_name',
-        'value': room_name,
-        'type': service_type
-    }
-    if service_type == 'vidyo':
-        params['vidyo_room_name'] = vc_room_name
-
-    return ravem_api_call('videoconference/disconnect', **params)
+    def disconnect_endpoint(self, room, vc_room):
+        return ravem_api_call('%s/disconnect' % self.SERVICE_TYPE, method='POST', json={'roomName': room['room_name']})
 
 
-def connect_endpoint(vidyo_room_id, query):
-    """Connects a physical room to a Vidyo room using the RAVEM API.
+class VidyoAPI(BaseAPI):
+    SERVICE_TYPE = 'vidyo'
 
-    This call will return "OK" as a result immediately if RAVEM can (or has
-    started to) perform the operation. This does not mean the operation has
-    actually succeeded. One should poll for the status of the room afterwards
-    using the `get_endpoint_status` method after some delay to allow the
-    operation to be performed..
+    def get_room_id(self, vc_room):
+        return vc_room.data['vidyo_id']
 
-    :param vidyo_room_id: str -- target Vidyo room ID
-    :param query: str -- search query passed to RAVEM to allow it to find the
-        physical room from Vidyo. Usually, simply the room's endpoint as
-        specified in the room's status data.
+    def connect_endpoint(self, room, vc_room):
+        return ravem_api_call('%s/connect' % self.SERVICE_TYPE, method='POST',
+                              params={'vidyo_room_id': self.get_room_id(vc_room), 'query': room['room_endpoint']})
 
-    :returns: dict -- {'result': 'OK'} if the operation "succeeds", raises a
-              RavemAPIException otherwise.
-    """
-    return ravem_api_call('videoconference/connect', method='POST', vidyo_room_id=vidyo_room_id, query=query)
+    def disconnect_endpoint(self, room, vc_room):
+        room_name = room['room_name'].replace('/', '-', 1)
+        params = {
+            'method': 'POST',
+            'where': 'room_name',
+            'value': room_name,
+        }
+        return ravem_api_call('%s/disconnect' % self.SERVICE_TYPE, method='POST', params=params)
