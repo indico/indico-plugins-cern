@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-
 from markupsafe import Markup
 
 from indico.core.plugins import url_for_plugin

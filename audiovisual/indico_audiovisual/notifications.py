@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-
 from indico.core.notifications import email_sender
 from indico.modules.events.requests.notifications import notify_request_managers
 

@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-
 from flask import flash, session
 from flask_pluginengine import render_plugin_template, url_for_plugin
 from wtforms.ext.sqlalchemy.fields import QuerySelectField

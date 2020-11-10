@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-
 from flask import g, request, session
 from flask_pluginengine import render_plugin_template, url_for_plugin
 from sqlalchemy.orm.attributes import flag_modified

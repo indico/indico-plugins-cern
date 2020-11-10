@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-
 import base64
 import os
 from datetime import timedelta

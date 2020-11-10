@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-
 from indico.core.plugins import WPJinjaMixinPlugin
 from indico.web.breadcrumbs import render_breadcrumbs
 from indico.web.views import WPDecorated

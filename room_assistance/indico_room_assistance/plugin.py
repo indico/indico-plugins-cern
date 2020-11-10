@@ -6,7 +6,6 @@
 # the LICENSE file for more details.
 
 
-
 import dateutil.parser
 import pytz
 from flask import flash, request, session

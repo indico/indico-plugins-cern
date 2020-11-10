@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-
 from dateutil.relativedelta import relativedelta
 from flask import jsonify, session
 from webargs import fields, validate

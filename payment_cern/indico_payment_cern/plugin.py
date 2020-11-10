@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-
 import re
 from decimal import Decimal
 from hashlib import sha512

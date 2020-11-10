@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-
 import dateutil.parser
 from flask import flash, session
 from flask_pluginengine import plugin_context
