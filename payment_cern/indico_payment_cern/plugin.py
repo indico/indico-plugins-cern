@@ -154,7 +154,7 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         if method is None:
             raise UserValueError(_('Invalid currency'))
         template_page = ''  # yes, apparently it's supposed to be empty..
-        template_hash = sha512((seed + template_page).encode('utf-8')).hexdigest()
+        template_hash = sha512((seed + template_page).encode()).hexdigest()
         order_id = self._get_order_id(data)
         locator = registration.locator.uuid
 

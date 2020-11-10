@@ -108,7 +108,7 @@ class RHConversionFinished(RH):
         # TODO: remove first case when Conversion Server is fully on new version
         if 'content' in request.form:
             # handling of legacy API
-            data = BytesIO(base64.decodestring(request.form['content']))
+            data = BytesIO(base64.b64decode(request.form['content']))
         else:
             filepdf = request.files['content']
             data = filepdf.stream.read()
