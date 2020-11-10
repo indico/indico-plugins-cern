@@ -7,7 +7,6 @@
 
 
 from indico.core.db.sqlalchemy import PyIntEnum, db
-from indico.util.string import return_ascii
 from indico.util.struct.enum import IndicoEnum
 
 
@@ -67,7 +66,6 @@ class OutlookQueueEntry(db.Model):
         )
     )
 
-    @return_ascii
     def __repr__(self):
         return '<OutlookQueueEntry({}, {}, {}, {})>'.format(self.id, self.event_id, self.user_id,
                                                             OutlookAction(self.action).name)
