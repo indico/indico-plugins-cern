@@ -9,6 +9,7 @@ import json
 
 import pytest
 from flask import request
+from indico.modules.rb import Room
 from mock import MagicMock
 from werkzeug.exceptions import NotFound
 
@@ -33,10 +34,11 @@ def event_vc_room(vc_room=None, link_object=False, conf_id=None,
     event_vc_room.link_object.event = MagicMock(id=conf_id) if conf_id else None
 
     if rb_room or rb_room_gen_name or rb_room_name:
-        event_vc_room.link_object.room = MagicMock()
+        event_vc_room.link_object.room = MagicMock(Room)
 
-        event_vc_room.link_object.room.generate_name.return_value = rb_room_gen_name
-        event_vc_room.link_object.room.name = rb_room_name
+        type(event_vc_room.link_object.room).name = Room.name
+        event_vc_room.link_object.room.generate_name = MagicMock(return_value=rb_room_gen_name)
+        event_vc_room.link_object.room.verbose_name = rb_room_name
 
     else:
         event_vc_room.link_object.room = None
@@ -161,50 +163,6 @@ def test_invalid_room_name(mocker, rh_class):
             rh._process_args()
 
     assert excinfo.value.message == "Event VC Room ({0}) is not linked to an event with a valid room".format(id_)
-
-
-@pytest.mark.usefixtures('db', 'request_context')
-@pytest.mark.parametrize('rh_class', (RHRavemRoomStatus, RHRavemConnectRoom, RHRavemDisconnectRoom))
-def test_special_name_different_from_name(mocker, rh_class):
-    id_ = 123456
-    conf_id = 1111
-    room_name = '513-B-22'
-    room_special_name = 'Personalized name'
-
-    request.view_args['event_vc_room_id'] = id_
-    request.view_args['confId'] = conf_id
-
-    mock = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation.find_one')
-    mock.return_value = event_vc_room(conf_id=conf_id, rb_room_gen_name=room_name, rb_room_name=room_special_name)
-    rh = rh_class()
-
-    with RavemPlugin.instance.plugin_context():
-        rh._process_args()
-
-    assert rh.room_name != room_special_name
-    assert rh.room_name == room_name
-    assert rh.room_special_name == room_special_name
-
-
-@pytest.mark.usefixtures('db', 'request_context')
-@pytest.mark.parametrize('rh_class', (RHRavemRoomStatus, RHRavemConnectRoom, RHRavemDisconnectRoom))
-def test_default_special_name(mocker, rh_class):
-    id_ = 123456
-    conf_id = 1111
-    room_name = '513-B-22'
-
-    request.view_args['event_vc_room_id'] = id_
-    request.view_args['confId'] = conf_id
-
-    mock = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation.find_one')
-    mock.return_value = event_vc_room(conf_id=conf_id, rb_room_gen_name=room_name)
-    rh = rh_class()
-
-    with RavemPlugin.instance.plugin_context():
-        rh._process_args()
-
-    assert rh.room_name == room_name
-    assert rh.room_special_name == room_name
 
 
 @pytest.mark.usefixtures('db', 'request_context')
