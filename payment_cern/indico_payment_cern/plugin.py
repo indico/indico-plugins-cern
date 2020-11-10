@@ -22,7 +22,7 @@ from indico.core.errors import UserValueError
 from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.modules.events.payment import (PaymentEventSettingsFormBase, PaymentPluginMixin,
                                            PaymentPluginSettingsFormBase)
-from indico.util.string import remove_accents, unicode_to_ascii
+from indico.util.string import remove_accents, str_to_ascii
 from indico.web.flask.util import url_for
 from indico.web.forms.fields import MultipleItemsField, OverrideMultipleItemsField, PrincipalListField
 
@@ -167,7 +167,7 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             'AMOUNT': int(amount * 100),
             'CURRENCY': currency,
             'LANGUAGE': session.lang,
-            'CN': unicode_to_ascii(remove_accents(registration.full_name[:35], False)),
+            'CN': str_to_ascii(remove_accents(registration.full_name[:35], False)),
             'EMAIL': registration.email[:50],
             'OWNERADDRESS': address[:35],
             'OWNERTELNO': personal_data.get('phone', '')[:30],

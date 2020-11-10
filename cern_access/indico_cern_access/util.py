@@ -29,7 +29,7 @@ from indico.modules.events.registration.util import get_ticket_attachments
 from indico.modules.events.requests.models.requests import Request
 from indico.util.date_time import now_utc
 from indico.util.placeholders import replace_placeholders
-from indico.util.string import remove_accents, unicode_to_ascii
+from indico.util.string import remove_accents, str_to_ascii
 from indico.web.flask.templating import get_template_module
 
 from indico_cern_access import _
@@ -111,7 +111,7 @@ def build_access_request_data(registration, event, generate_code):
     from indico_cern_access.plugin import CERNAccessPlugin
     start_dt, end_dt = get_access_dates(get_last_request(event))
     tz = timezone('Europe/Zurich')
-    title = do_truncate(None, unicode_to_ascii(remove_accents(event.title)), 100, leeway=0)
+    title = do_truncate(None, str_to_ascii(remove_accents(event.title)), 100, leeway=0)
     if generate_code:
         reservation_code = get_random_reservation_code()
     else:
@@ -119,8 +119,8 @@ def build_access_request_data(registration, event, generate_code):
     data = {'$id': generate_access_id(registration.id),
             '$rc': reservation_code,
             '$gn': title,
-            '$fn': unicode_to_ascii(remove_accents(registration.first_name)),
-            '$ln': unicode_to_ascii(remove_accents(registration.last_name)),
+            '$fn': str_to_ascii(remove_accents(registration.first_name)),
+            '$ln': str_to_ascii(remove_accents(registration.last_name)),
             '$sd': start_dt.astimezone(tz).strftime('%Y-%m-%dT%H:%M'),
             '$ed': end_dt.astimezone(tz).strftime('%Y-%m-%dT%H:%M')}
 

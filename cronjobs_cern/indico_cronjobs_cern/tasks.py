@@ -17,7 +17,6 @@ from indico.core.notifications import make_email, send_email
 from indico.core.plugins import get_plugin_template_module
 from indico.modules.events.models.events import Event
 from indico.util.date_time import as_utc, format_date
-from indico.util.string import to_unicode
 
 from indico_cronjobs_cern.plugin import CERNCronjobsPlugin
 
@@ -32,7 +31,7 @@ def _get_start_end_date():
 def _group_by_date(object_list):
     objects_grouped_by_date = OrderedDict()
     for obj in object_list:
-        date = to_unicode(format_date(obj.start_dt, format='full'))
+        date = format_date(obj.start_dt, format='full')
         if date in objects_grouped_by_date:
             objects_grouped_by_date[date].append(obj)
         else:

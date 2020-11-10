@@ -14,7 +14,6 @@ from indico.modules.designer.placeholders import DesignerPlaceholder
 from indico.util.date_time import format_datetime
 from indico.util.i18n import _
 from indico.util.placeholders import ParametrizedPlaceholder
-from indico.util.string import to_unicode
 from indico.web.flask.templating import get_template_module
 
 from indico_cern_access.util import get_access_dates, get_last_request
@@ -30,10 +29,10 @@ class TicketAccessDatesPlaceholder(DesignerPlaceholder):
     def render(cls, event):
         start_dt, end_dt = get_access_dates(get_last_request(event))
         if start_dt.date() == end_dt.date():
-            return to_unicode(format_datetime(start_dt, format='d MMM YYY', locale='en_GB'))
+            return format_datetime(start_dt, format='d MMM YYY', locale='en_GB')
         else:
-            return "{} - {}".format(to_unicode(format_datetime(start_dt, format='d MMM YYY', locale='en_GB')),
-                                    to_unicode(format_datetime(end_dt, format='d MMM YYY', locale='en_GB')))
+            return '{} - {}'.format(format_datetime(start_dt, format='d MMM YYY', locale='en_GB'),
+                                    format_datetime(end_dt, format='d MMM YYY', locale='en_GB'))
 
 
 class TicketLicensePlatePlaceholder(DesignerPlaceholder):
