@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import division, unicode_literals
 
 import re
 from decimal import Decimal
@@ -64,7 +63,7 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
                                                            'overridden.'))
 
     def __init__(self, *args, **kwargs):
-        super(EventSettingsForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.custom_fees.field_data = self._plugin_settings['payment_methods']
 
 
@@ -99,7 +98,7 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     valid_currencies = {'EUR', 'CHF'}
 
     def init(self):
-        super(CERNPaymentPlugin, self).init()
+        super().init()
         self.template_hook('event-manage-payment-plugin-cannot-modify', self._get_cannot_modify_message)
         self.connect(signals.users.merged, self._merge_users)
 
@@ -150,8 +149,8 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         personal_data = registration.get_personal_data()
         event = data['event']
         currency = data['currency']
-        seed = data['settings']['hash_seed_{}'.format(currency.lower())]
-        shop_id = data['settings']['shop_id_{}'.format(currency.lower())]
+        seed = data['settings'][f'hash_seed_{currency.lower()}']
+        shop_id = data['settings'][f'shop_id_{currency.lower()}']
         method = get_payment_method(event, currency, data['selected_method'])
         if method is None:
             raise UserValueError(_('Invalid currency'))

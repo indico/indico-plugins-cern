@@ -9,7 +9,6 @@
 Synchronizes rooms with the CERN Foundation Database.
 """
 
-from __future__ import unicode_literals
 
 import logging
 import sys
@@ -53,7 +52,7 @@ class FoundationSyncPlugin(IndicoPlugin):
     default_settings = {'connection_string': ''}
 
     def init(self):
-        super(FoundationSyncPlugin, self).init()
+        super().init()
         self.connect(signals.plugin.cli, self._extend_indico_cli)
         self.connect(signals.plugin.schema_post_load, self._check_forbidden_fields, sender=RoomUpdateArgsSchema)
 
@@ -78,9 +77,9 @@ class FoundationSyncPlugin(IndicoPlugin):
 
         if 'acl_entries' in data:
             old_managers = g.rh.room.get_manager_list(include_groups=False)
-            new_managers = set(
-                k for k, v in data['acl_entries'].viewitems() if '_full_access' in v and isinstance(k, User)
-            )
+            new_managers = {
+                k for k, v in data['acl_entries'].items() if '_full_access' in v and isinstance(k, User)
+            }
             if old_managers != new_managers:
                 messages['acl_entries'] = [_('You cannot add/remove any individual managers. Please use an e-group.')]
 
@@ -96,7 +95,7 @@ class FoundationSyncPlugin(IndicoPlugin):
             """Synchronize rooms with the CERN Foundation Database"""
             db_name = self.settings.get('connection_string')
             if not db_name:
-                print 'Foundation DB connection string is not set'
+                print('Foundation DB connection string is not set')
                 sys.exit(1)
 
             # Log to stdout

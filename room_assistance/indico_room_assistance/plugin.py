@@ -5,9 +5,7 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
-from datetime import datetime
 
 import dateutil.parser
 import pytz
@@ -76,7 +74,7 @@ class RoomAssistancePlugin(IndicoPlugin):
     }
 
     def init(self):
-        super(RoomAssistancePlugin, self).init()
+        super().init()
         self.inject_bundle('main.css', WPRequestsEventManagement, subclasses=False,
                            condition=lambda: request.view_args.get('type') == RoomAssistanceRequest.name)
         self.template_hook('event-actions', self._room_assistance_action)
@@ -103,7 +101,7 @@ class RoomAssistancePlugin(IndicoPlugin):
 
     def _on_event_update(self, event, **kwargs):
         changes = kwargs['changes']
-        if not changes.viewkeys() & {'location_data', 'start_dt', 'end_dt'}:
+        if not changes.keys() & {'location_data', 'start_dt', 'end_dt'}:
             return
 
         request = Request.find_latest_for_event(event, RoomAssistanceRequest.name)
@@ -116,7 +114,7 @@ class RoomAssistancePlugin(IndicoPlugin):
             request.data = dict(request.data, occurrences=[])
             flash(_("The new event location is not in the list of the rooms supported by the room assistance team. "
                     "Room assistance request has been rejected and support will not be provided."), 'warning')
-        if changes.viewkeys() & {'start_dt', 'end_dt'}:
+        if changes.keys() & {'start_dt', 'end_dt'}:
             tz = pytz.timezone(config.DEFAULT_TIMEZONE)
             occurrences = {dateutil.parser.parse(occ).astimezone(tz) for occ in request.data['occurrences']}
             req_dates = {occ.date() for occ in occurrences}

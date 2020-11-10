@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 import dateutil.parser
 
@@ -24,7 +23,7 @@ def send_email_to_assistance(request, template_name, **template_params):
 
     occurrences = [dateutil.parser.parse(occ) for occ in request.data['occurrences']]
     request_data = dict(request.data, occurrences=occurrences)
-    template = get_plugin_template_module('emails/{}.html'.format(template_name), event=request.event,
+    template = get_plugin_template_module(f'emails/{template_name}.html', event=request.event,
                                           requested_by=request.created_by_user, request_data=request_data,
                                           **template_params)
     send_email(make_email(from_address=config.NO_REPLY_EMAIL, to_list=to_list, template=template, html=True))

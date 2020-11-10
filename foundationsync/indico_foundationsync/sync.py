@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 import re
 from collections import Counter, defaultdict
@@ -37,7 +36,7 @@ def OutputTypeHandler(cursor, name, defaultType, size, precision, scale):
     Source: http://www.oracle.com/technetwork/articles/dsl/tuininga-cx-oracle-084866.html
     """
     if defaultType in (cx_Oracle.STRING, cx_Oracle.FIXED_CHAR):
-        return cursor.var(unicode, size, cursor.arraysize)
+        return cursor.var(str, size, cursor.arraysize)
 
 
 def _get_room_role_map(connection, logger):
@@ -49,7 +48,7 @@ def _get_room_role_map(connection, logger):
     return roles
 
 
-class FoundationSync(object):
+class FoundationSync:
     def __init__(self, db_name, logger):
         self.db_name = db_name
         self._logger = logger
@@ -95,7 +94,7 @@ class FoundationSync(object):
         else:
             user = get_user_by_email(email, create_pending=True)
             if not user:
-                email_warning = 'Bad RESPONSIBLE_EMAIL in Foundation: no user found with email {}'.format(email)
+                email_warning = f'Bad RESPONSIBLE_EMAIL in Foundation: no user found with email {email}'
 
         data['owner'] = user
         data['verbose_name'] = (raw_data.get('FRIENDLY_NAME') or '').strip() or None
@@ -123,11 +122,11 @@ class FoundationSync(object):
     def _update_room(self, room, room_data, changes):
         room.is_deleted = False
         room.is_reservable = True
-        for attr, new in room_data.iteritems():
+        for attr, new in room_data.items():
             old = getattr(room, attr)
             if old != new:
                 setattr(room, attr, new)
-                changes.append('{}: {} -> {}'.format(attr, old, new))
+                changes.append(f'{attr}: {old} -> {new}')
         db.session.flush()
 
     def _update_managers(self, room, room_role_map, changes):
@@ -141,10 +140,10 @@ class FoundationSync(object):
         # compute the "diff" and update the principals accordingly (ignore groups)
         current_managers = {p for p in room.get_manager_list() if not isinstance(p, GroupProxy)}
         for principal in current_managers - new_managers:
-            changes.append('Manager removed: {}'.format(principal))
+            changes.append(f'Manager removed: {principal}')
             room.update_principal(principal, full_access=False)
         for principal in new_managers - current_managers:
-            changes.append('Manager added: {}'.format(principal))
+            changes.append(f'Manager added: {principal}')
             room.update_principal(principal, full_access=True)
 
     def fetch_buildings_coordinates(self, connection):

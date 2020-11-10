@@ -5,17 +5,15 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 import pytest
+from conftest import PERSONAL_DATA
 
 from indico.core import signals
 from indico.modules.events.registration.util import create_registration, make_registration_form, modify_registration
 
 from indico_cern_access.models.access_requests import CERNAccessRequestState
 from indico_cern_access.util import grant_access
-
-from conftest import PERSONAL_DATA
 
 
 @pytest.fixture

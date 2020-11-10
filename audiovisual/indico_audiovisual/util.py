@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 import json
 
@@ -99,7 +98,7 @@ def get_contributions(event):
 def contribution_id(contrib_or_subcontrib):
     """Returns an ID for the contribution/subcontribution"""
     prefix = 'sc' if isinstance(contrib_or_subcontrib, SubContribution) else 'c'
-    return '{}:{}'.format(prefix, contrib_or_subcontrib.id)
+    return f'{prefix}:{contrib_or_subcontrib.id}'
 
 
 def contribution_by_id(event, contrib_or_subcontrib_id):
@@ -214,9 +213,9 @@ def compare_data_identifiers(a, b):
     """Checks if all the identifiers match, besides those that are not in both lists"""
     a = {tuple(key): value for key, value in a}
     b = {tuple(key): value for key, value in b}
-    matching_keys = a.viewkeys() & b.viewkeys()
-    a = {k: v for k, v in a.iteritems() if k in matching_keys}
-    b = {k: v for k, v in b.iteritems() if k in matching_keys}
+    matching_keys = a.keys() & b.keys()
+    a = {k: v for k, v in a.items() if k in matching_keys}
+    b = {k: v for k, v in b.items() if k in matching_keys}
     return a == b
 
 

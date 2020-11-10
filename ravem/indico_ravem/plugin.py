@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 import os
 from functools import partial
@@ -72,7 +71,7 @@ class RavemPlugin(IndicoPlugin):
     category = PluginCategory.videoconference
 
     def init(self):
-        super(RavemPlugin, self).init()
+        super().init()
         if not config.ENABLE_ROOMBOOKING and 'INDICO_DUMPING_URLS' not in os.environ:
             from indico_ravem.util import RavemException
             raise RavemException('RoomBooking is inactive.')

@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 import os
 
@@ -20,7 +19,7 @@ class CERNThemesPlugin(IndicoPlugin):
     """
 
     def init(self):
-        super(CERNThemesPlugin, self).init()
+        super().init()
         self.connect(signals.plugin.get_event_themes_files, self._get_themes_yaml)
 
     def get_blueprints(self):

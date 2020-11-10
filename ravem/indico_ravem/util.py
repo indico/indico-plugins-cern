@@ -7,12 +7,12 @@
 
 import re
 from pprint import pformat
-from urlparse import urljoin
 
 import requests
 from flask import request, session
 from requests.auth import HTTPDigestAuth
 from requests.exceptions import HTTPError, Timeout
+from six.moves.urllib.parse import urljoin
 
 from indico.util.i18n import _
 
@@ -116,7 +116,7 @@ def has_access(event_vc_room, _split_re=re.compile(r'[\s,;]+')):
     if not room or not room.has_equipment('Vidyo'):
         return False
 
-    ips = set(filter(None, (x.strip() for x in _split_re.split(room.get_attribute_value('ip', '')))))
+    ips = {_f for _f in (x.strip() for x in _split_re.split(room.get_attribute_value('ip', ''))) if _f}
     return any([
         current_user == retrieve_principal(vc_room.data.get('owner')),
         event.can_manage(current_user),
@@ -139,7 +139,7 @@ class RavemOperationException(RavemException):
     which the exception can be raised.
     """
     def __init__(self, message, reason):
-        super(RavemOperationException, self).__init__(message)
+        super().__init__(message)
         self.message = message
         self.reason = reason
 
@@ -151,7 +151,7 @@ class RavemAPIException(RavemException):
     does not match the excepted format of having a `error` or `result` key.
     """
     def __init__(self, message, endpoint, response):
-        super(RavemAPIException, self).__init__(message)
+        super().__init__(message)
         self.message = message
         self.endpoint = endpoint
         self.response = response

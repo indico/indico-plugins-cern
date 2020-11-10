@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 from flask import g, request, session
 from flask_pluginengine import render_plugin_template, url_for_plugin
@@ -98,7 +97,7 @@ class AVRequestsPlugin(IndicoPlugin):
     acl_settings = {'managers'}
 
     def init(self):
-        super(AVRequestsPlugin, self).init()
+        super().init()
         self.inject_bundle('main.css', WPAudiovisualManagers)
         self.inject_bundle('main.css', WPRequestsEventManagement, subclasses=False,
                            condition=lambda: request.view_args.get('type') == AVRequest.name)

@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 from hashlib import sha512
 
@@ -44,7 +43,7 @@ def get_payment_method(event, currency, name):
 
 def create_hash(seed, form_data):
     """Creates the weird hash for postfinance"""
-    data_str = seed.join('{}={}'.format(key, value) for key, value in sorted(form_data.items()) if value) + seed
+    data_str = seed.join(f'{key}={value}' for key, value in sorted(form_data.items()) if value) + seed
     return sha512(data_str.encode('utf-8')).hexdigest().upper()
 
 
@@ -57,7 +56,7 @@ def get_order_id(registration, prefix):
     change to the format of the order ID should be checked with them
     beforehand.
     """
-    payment_id = 'c{}r{}'.format(registration.event_id, registration.id)
+    payment_id = f'c{registration.event_id}r{registration.id}'
     order_id_extra_len = 30 - len(payment_id)
     order_id = prefix + remove_non_alpha(remove_accents(registration.last_name + registration.first_name))
     return order_id[:order_id_extra_len].upper().strip() + payment_id

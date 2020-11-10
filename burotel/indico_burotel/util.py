@@ -5,18 +5,17 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 import itertools
 
 from dateutil.relativedelta import relativedelta
-from dateutil.rrule import rrule, MONTHLY
+from dateutil.rrule import MONTHLY, rrule
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import bindparam
 
 from indico.core.db import db
-from indico.modules.rb.models.rooms import Room
 from indico.modules.rb.models.reservations import Reservation, ReservationOccurrence
+from indico.modules.rb.models.rooms import Room
 from indico.util.string import natural_sort_key
 
 
@@ -61,7 +60,7 @@ def calculate_monthly_stats(start_dt, end_dt):
             _build_per_building_query(
                 Room.building.label('number'),
                 Room.division.label('experiment'),
-                bindparam('month-{}'.format(n), n).label('month'),
+                bindparam(f'month-{n}', n).label('month'),
                 db.func.count(db.func.concat(Reservation.id, ReservationOccurrence.start_dt)).label('bookings')
             ).filter(ReservationOccurrence.start_dt >= month_start, ReservationOccurrence.end_dt <= month_end)
         )
@@ -106,7 +105,7 @@ def calculate_monthly_stats(start_dt, end_dt):
             }
 
     # resulted sorted by building/experiment
-    result = [(number, [(experiment, data) for experiment, data in sorted(v.viewitems())])
-              for number, v in sorted(bldg_map.viewitems(), key=lambda x: natural_sort_key(x[0]))]
+    result = [(number, [(experiment, data) for experiment, data in sorted(v.items())])
+              for number, v in sorted(bldg_map.items(), key=lambda x: natural_sort_key(x[0]))]
 
     return result, months

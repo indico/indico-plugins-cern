@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 from datetime import time, timedelta
 
@@ -78,7 +77,7 @@ class PluginSettingsForm(IndicoForm):
                                        description=_('The password to access the API'))
 
     def __init__(self, *args, **kwargs):
-        super(PluginSettingsForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.access_ticket_template.query = (DesignerTemplate.query
                                              .filter(DesignerTemplate.category_id == 0,
                                                      DesignerTemplate.type == TemplateType.badge)
@@ -118,7 +117,7 @@ class CERNAccessPlugin(IndicoPlugin):
     }
 
     def init(self):
-        super(CERNAccessPlugin, self).init()
+        super().init()
         self.template_hook('registration-status-flag', self._get_access_status)
         self.template_hook('registration-status-action-button', self._get_access_action_button)
         self.template_hook('after-regform', self._get_personal_data_form)

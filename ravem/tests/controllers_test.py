@@ -6,10 +6,10 @@
 # the LICENSE file for more details.
 
 import json
+from unittest.mock import MagicMock
 
 import pytest
 from flask import request
-from mock import MagicMock
 from werkzeug.exceptions import NotFound
 
 from indico.core.errors import IndicoError
@@ -58,7 +58,7 @@ def test_event_vc_room_not_found(mocker, rh_class):
         with pytest.raises(NotFound) as excinfo:
             rh._process_args()
 
-    assert excinfo.value.description == "Event VC Room not found for id {0}".format(id_)
+    assert excinfo.value.description == f"Event VC Room not found for id {id_}"
 
 
 @pytest.mark.usefixtures('db', 'request_context')
@@ -78,7 +78,7 @@ def test_event_vc_room_without_link_object(mocker, rh_class):
         with pytest.raises(IndicoError) as excinfo:
             rh._process_args()
 
-    assert excinfo.value.message == "Event VC Room ({0}) is not linked to anything".format(id_)
+    assert excinfo.value.message == f"Event VC Room ({id_}) is not linked to anything"
 
 
 @pytest.mark.usefixtures('db', 'request_context')
@@ -98,7 +98,7 @@ def test_link_object_without_conference(mocker, rh_class):
         with pytest.raises(IndicoError) as excinfo:
             rh._process_args()
 
-    assert excinfo.value.message == "Event VC Room ({0}) does not have an event".format(id_)
+    assert excinfo.value.message == f"Event VC Room ({id_}) does not have an event"
 
 
 @pytest.mark.usefixtures('db', 'request_context')
@@ -119,7 +119,7 @@ def test_event_id_not_matching_conf_id(mocker, rh_class):
         with pytest.raises(IndicoError) as excinfo:
             rh._process_args()
 
-    assert excinfo.value.message == "Event VC Room ({0}) does not have an event with the id {1}" \
+    assert excinfo.value.message == "Event VC Room ({}) does not have an event with the id {}" \
                                     .format(id_, evcr_conf_id)
 
 
@@ -140,7 +140,7 @@ def test_invalid_room(mocker, rh_class):
         with pytest.raises(IndicoError) as excinfo:
             rh._process_args()
 
-    assert excinfo.value.message == "Event VC Room ({0}) is not linked to an event with a room".format(id_)
+    assert excinfo.value.message == f"Event VC Room ({id_}) is not linked to an event with a room"
 
 
 @pytest.mark.usefixtures('db', 'request_context')
@@ -160,7 +160,7 @@ def test_invalid_room_name(mocker, rh_class):
         with pytest.raises(IndicoError) as excinfo:
             rh._process_args()
 
-    assert excinfo.value.message == "Event VC Room ({0}) is not linked to an event with a valid room".format(id_)
+    assert excinfo.value.message == f"Event VC Room ({id_}) is not linked to an event with a valid room"
 
 
 @pytest.mark.usefixtures('db', 'request_context')

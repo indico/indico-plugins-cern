@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 import os
 from datetime import datetime, time
@@ -49,7 +48,7 @@ class BurotelPlugin(IndicoPlugin):
     }
 
     def init(self):
-        super(BurotelPlugin, self).init()
+        super().init()
         current_app.before_request(self._before_request)
         self.connect(signals.plugin.cli, self._extend_indico_cli)
         self.connect(signals.plugin.get_template_customization_paths, self._override_templates)

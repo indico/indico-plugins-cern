@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 from flask import redirect, request
 from werkzeug.exceptions import NotFound
@@ -31,19 +30,19 @@ def redirect_old_agreement_url(confId):
 
 @compat_blueprint.route('/export/eAgreements/<event_id>.<ext>')
 def redirect_old_eagreement_api(event_id, ext):
-    path = 'agreements/{}/{}.{}'.format(SpeakerReleaseAgreement.name, event_id, ext)
+    path = f'agreements/{SpeakerReleaseAgreement.name}/{event_id}.{ext}'
     if 'signature' in request.args:
         args = request.args.to_dict()
         for key in ('signature', 'apikey', 'ak', 'timestamp'):
             args.pop(key, None)
         url = url_for('api.httpapi', prefix='export', path=path, _external=True, **args)
-        return 'Please use the new URL: {}'.format(url), 400
+        return f'Please use the new URL: {url}', 400
     return redirect(url_for('api.httpapi', prefix='export', path=path, **request.args.to_dict()))
 
 
 @compat_blueprint.route('/export/video/<any(webcast,recording,"webcast-recording","recording-webcast"):service>.<ext>')
 def redirect_old_requests_api(service, ext):
-    path = '{}.{}'.format(AVRequest.name, ext)
+    path = f'{AVRequest.name}.{ext}'
     args = request.args.to_dict()
     services = service.split('-')
     if set(services) != {'webcast', 'recording'}:
@@ -52,5 +51,5 @@ def redirect_old_requests_api(service, ext):
         for key in ('signature', 'apikey', 'ak', 'timestamp'):
             args.pop(key, None)
         url = url_for('api.httpapi', prefix='export', path=path, _external=True, **args)
-        return 'Please use the new URL: {}'.format(url), 400
+        return f'Please use the new URL: {url}', 400
     return redirect(url_for('api.httpapi', prefix='export', path=path, **args))

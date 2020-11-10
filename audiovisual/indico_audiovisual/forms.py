@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 from datetime import date, timedelta
 
@@ -30,7 +29,7 @@ from indico_audiovisual.util import contribution_id, get_contributions, is_av_ma
 
 
 class AVRequestForm(RequestFormBase):
-    services = IndicoSelectMultipleCheckboxField(_('Services'), [DataRequired()], choices=SERVICES.items(),
+    services = IndicoSelectMultipleCheckboxField(_('Services'), [DataRequired()], choices=list(SERVICES.items()),
                                                  widget=JinjaWidget('service_type_widget.html', 'audiovisual'),
                                                  description=_("Please choose whether you want a webcast, recording or "
                                                                "both."))
@@ -49,7 +48,7 @@ class AVRequestForm(RequestFormBase):
                                            'down here.'))
 
     def __init__(self, *args, **kwargs):
-        super(AVRequestForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._update_audiences()
         self._update_contribution_fields()
 

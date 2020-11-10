@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 from flask import session
 from werkzeug.exceptions import Forbidden
@@ -39,11 +38,11 @@ class VCAssistanceRequest(RequestDefinitionBase):
         kwargs['request_accepted'] = req is not None and req.state == RequestState.accepted
         kwargs['within_working_hours'] = start_time_within_working_hours(event)
         kwargs['support_email'] = VCAssistanceRequestPlugin.settings.get('support_email')
-        return super(VCAssistanceRequest, cls).render_form(event, **kwargs)
+        return super().render_form(event, **kwargs)
 
     @classmethod
     def send(cls, req, data):
         if not can_request_assistance(session.user):
             raise Forbidden
-        super(VCAssistanceRequest, cls).send(req, data)
+        super().send(req, data)
         req.state = RequestState.accepted

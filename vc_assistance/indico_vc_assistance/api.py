@@ -5,9 +5,8 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import icalendar
 from sqlalchemy.orm import joinedload, noload
@@ -35,7 +34,7 @@ class VCAssistanceExportHook(HTTPAPIHook):
     VALID_FORMATS = ('json', 'jsonp', 'xml', 'ics')
 
     def _getParams(self):
-        super(VCAssistanceExportHook, self)._getParams()
+        super()._getParams()
         self._alarm = get_query_parameter(self._queryParams, ['alarms'], None, True)
 
     def _has_access(self, user):
@@ -56,7 +55,7 @@ def _serialize_obj(req, alarm):
     event = req.event
     url = event.external_url
     title = event.title
-    unique_id = 'e{}'.format(event.id)
+    unique_id = f'e{event.id}'
 
     data = {
         'event_id': req.event_id,
@@ -70,7 +69,7 @@ def _serialize_obj(req, alarm):
         'comment': req.data['comment'],
         'vc_capable_room': event.room is not None and event.room in get_vc_capable_rooms(),
         'OWH': not start_time_within_working_hours(event),
-        '_ical_id': 'indico-vc-assistance-{}@cern.ch'.format(unique_id)
+        '_ical_id': f'indico-vc-assistance-{unique_id}@cern.ch'
     }
     if alarm:
         data['_ical_alarm'] = alarm
@@ -86,7 +85,7 @@ def _ical_serialize_vc(cal, record, now):
     event.add('url', record['url'])
     event.add('categories', 'Videoconference assistance')
     event.add('summary', _ical_summary(record))
-    location = ': '.join(filter(None, (record['location'], record['room_full_name'])))
+    location = ': '.join([_f for _f in (record['location'], record['room_full_name']) if _f])
     event.add('location', location)
     description = ['URL: {}'.format(record['url'])]
     if record['comment']:
@@ -127,7 +126,7 @@ class RoomVCListHook(HTTPAPIHook):
     GUEST_ALLOWED = False
 
     def _getParams(self):
-        super(RoomVCListHook, self)._getParams()
+        super()._getParams()
         self.room = Room.query.filter(
             ~Room.is_deleted,
             Room.building == self._pathParams['building'],

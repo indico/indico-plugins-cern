@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 from flask import flash, session
 from flask_pluginengine import render_plugin_template, url_for_plugin
@@ -64,7 +63,7 @@ class VCAssistanceRequestPlugin(IndicoPlugin):
     }
 
     def init(self):
-        super(VCAssistanceRequestPlugin, self).init()
+        super().init()
         self.inject_bundle('main.css', WPVCAssistance)
         self.template_hook('before-vc-list', self._get_vc_assistance_request_link)
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)

@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 from collections import Counter
 from datetime import timedelta
@@ -268,6 +267,6 @@ class RHStatsAPI(RH):
             abort(422, messages={'from': ['start date cannot be after end date']})
 
         stats = self._get_stats(start_date, end_date)
-        days = [start_date + timedelta(days=offset) for offset in xrange((end_date - start_date).days + 1)]
+        days = [start_date + timedelta(days=offset) for offset in range((end_date - start_date).days + 1)]
         data = {day.isoformat(): stats.get(day, 0) for day in days}
         return jsonify(data)

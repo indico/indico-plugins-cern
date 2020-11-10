@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 from datetime import datetime
 from operator import itemgetter
@@ -38,7 +37,7 @@ class GrantAccessEmailForm(EmailRegistrantsForm):
     def __init__(self, *args, **kwargs):
         reset_text = (Markup('<a id="reset-cern-access-email">{}</a><br>')
                       .format(_('Click here to reset subject and body to the default text.')))
-        super(GrantAccessEmailForm, self).__init__(*args, recipients=[], **kwargs)
+        super().__init__(*args, recipients=[], **kwargs)
         self.body.description = reset_text + render_placeholder_info('cern-access-email', regform=self.regform,
                                                                      registration=None)
         del self.cc_addresses
@@ -81,10 +80,10 @@ class CERNAccessForm(RequestFormBase):
                                                         "instead of the event's end date"))
 
     def __init__(self, *args, **kwargs):
-        super(CERNAccessForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         regforms = get_regforms(self.event)
-        self._regform_map = {unicode(rf.id): rf for rf in regforms}
-        self.regforms.choices = [(unicode(rf.id), rf.title) for rf in regforms]
+        self._regform_map = {str(rf.id): rf for rf in regforms}
+        self.regforms.choices = [(str(rf.id), rf.title) for rf in regforms]
         self.start_dt_override.default_time = self.event.start_dt_local.time()
         self.end_dt_override.default_time = self.event.end_dt_local.time()
 
@@ -118,8 +117,8 @@ class AccessIdentityDataForm(IndicoForm):
     )
 
     def __init__(self, *args, **kwargs):
-        super(AccessIdentityDataForm, self).__init__(*args, **kwargs)
-        self.nationality.choices = [('', '')] + sorted(get_countries().iteritems(), key=itemgetter(1))
+        super().__init__(*args, **kwargs)
+        self.nationality.choices = [('', '')] + sorted(get_countries().items(), key=itemgetter(1))
 
     def validate_birth_date(self, field):
         if field.data > datetime.now().date():

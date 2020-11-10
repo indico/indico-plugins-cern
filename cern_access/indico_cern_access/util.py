@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 import hashlib
 import hmac
@@ -91,7 +90,7 @@ def send_adams_post_request(event, registrations, update=False):
     :param update: if True, send request updating already stored data
     """
     data = {reg.id: build_access_request_data(reg, event, generate_code=(not update)) for reg in registrations}
-    _send_adams_http_request('POST', data.values())
+    _send_adams_http_request('POST', list(data.values()))
     return CERNAccessRequestState.active, data
 
 
@@ -103,7 +102,7 @@ def send_adams_delete_request(registrations):
 
 def generate_access_id(registration_id):
     """Generate an id in format required by ADaMS API."""
-    return 'in{}'.format(registration_id)
+    return f'in{registration_id}'
 
 
 def build_access_request_data(registration, event, generate_code):
@@ -127,7 +126,7 @@ def build_access_request_data(registration, event, generate_code):
     if registration.cern_access_request and registration.cern_access_request.license_plate:
         data['$lp'] = registration.cern_access_request.license_plate
 
-    checksum = ';;'.join('{}:{}'.format(key, value) for key, value in sorted(data.viewitems()))
+    checksum = ';;'.join(f'{key}:{value}' for key, value in sorted(data.items()))
     signature = hmac.new(str(CERNAccessPlugin.settings.get('secret_key')), checksum, hashlib.sha256)
     data['$si'] = signature.hexdigest()
     return data

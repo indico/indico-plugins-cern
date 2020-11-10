@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 from flask_pluginengine import current_plugin
 from markupsafe import Markup, escape
@@ -54,21 +53,21 @@ class AVRequest(RequestDefinitionBase):
     @classmethod
     def get_notification_reply_email(cls):
         return (current_plugin.settings.get('notification_reply_email') or
-                super(AVRequest, cls).get_notification_reply_email())
+                super().get_notification_reply_email())
 
     @classmethod
     def get_notification_template(cls, name, **context):
         context['SubContribution'] = SubContribution
-        return super(AVRequest, cls).get_notification_template(name, **context)
+        return super().get_notification_template(name, **context)
 
     @classmethod
     def render_form(cls, event, **kwargs):
         kwargs['default_webcast_url'] = cls.plugin.settings.get('webcast_url')
-        return super(AVRequest, cls).render_form(event, **kwargs)
+        return super().render_form(event, **kwargs)
 
     @classmethod
     def create_manager_form(cls, req):
-        form = super(AVRequest, cls).create_manager_form(req)
+        form = super().create_manager_form(req)
         if 'webcast' not in req.data['services']:
             del form.custom_webcast_url
             del form.webcast_hidden
@@ -79,7 +78,7 @@ class AVRequest(RequestDefinitionBase):
         if (req.id is not None and req.state == RequestState.accepted and
                 ('webcast' in req.data['services']) != ('webcast' in data['services'])):
             send_webcast_ping.delay()
-        super(AVRequest, cls).send(req, data)
+        super().send(req, data)
         req.data['identifiers'] = get_data_identifiers(req)
         flag_modified(req, 'data')
 
@@ -87,23 +86,23 @@ class AVRequest(RequestDefinitionBase):
     def withdraw(cls, req, notify_event_managers=True):
         if req.state == RequestState.accepted and 'webcast' in req.data['services']:
             send_webcast_ping.delay()
-        super(AVRequest, cls).withdraw(req, notify_event_managers)
+        super().withdraw(req, notify_event_managers)
 
     @classmethod
     def accept(cls, req, data, user):
         if 'webcast' in req.data['services']:
             send_webcast_ping.delay()
-        super(AVRequest, cls).accept(req, data, user)
+        super().accept(req, data, user)
 
     @classmethod
     def reject(cls, req, data, user):
         if req.state == RequestState.accepted and 'webcast' in req.data['services']:
             send_webcast_ping.delay()
-        super(AVRequest, cls).reject(req, data, user)
+        super().reject(req, data, user)
 
     @classmethod
     def manager_save(cls, req, data):
-        super(AVRequest, cls).manager_save(req, data)
+        super().manager_save(req, data)
         req.data['custom_webcast_url'] = data.get('custom_webcast_url')
         req.data['webcast_hidden'] = data.get('webcast_hidden', False)
         flag_modified(req, 'data')
@@ -156,7 +155,7 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
 
     @classmethod
     def can_access_api(cls, user, event):
-        return super(SpeakerReleaseAgreement, cls).can_access_api(user, event) or is_av_manager(user)
+        return super().can_access_api(user, event) or is_av_manager(user)
 
     @classmethod
     def extend_api_data(cls, event, person, agreement, data):
@@ -165,7 +164,7 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
                            'name': person.name,
                            'email': person.email}
         if person.data['type'] == 'lecture_speaker':
-            data['contrib'] = unicode(event.id)
+            data['contrib'] = str(event.id)
         elif person.data['type'] == 'contribution':
             data['contrib'] = person.data['contribution']
 
@@ -194,14 +193,14 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
                        'is_subcontrib': is_subcontrib,
                        'talk_type': talk_type,
                        'event': event})
-        return super(SpeakerReleaseAgreement, cls).render_form(agreement, form, **kwargs)
+        return super().render_form(agreement, form, **kwargs)
 
     @classmethod
     def render_data(cls, event, data):
         try:
             type_, url, title = _talk_info_from_agreement_data(event, data)
         except RuntimeError as e:
-            return ['({})'.format(e)]
+            return [f'({e})']
         return [Markup('<a href="{}">{}</a>'.format(url, escape(title)))]
 
     @classmethod

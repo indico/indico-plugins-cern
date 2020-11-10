@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 import base64
 import os
@@ -61,7 +60,7 @@ def submit_attachment(task, attachment):
             response = requests.post(url, data=data, files={'uploadedfile': (filename, fd, file.content_type)})
             response.raise_for_status()
             if 'ok' not in response.text:
-                raise requests.RequestException('Unexpected response from server: {}'.format(response.text))
+                raise requests.RequestException(f'Unexpected response from server: {response.text}')
         except requests.RequestException as exc:
             attempt = task.request.retries + 1
             try:
@@ -74,7 +73,7 @@ def submit_attachment(task, attachment):
             except MaxRetriesExceededError:
                 ConversionPlugin.logger.error('Could not submit attachment %d (attempt %d/%d); giving up [%s]',
                                               attachment.id, attempt, MAX_TRIES, exc)
-                cache.delete(unicode(attachment.id))
+                cache.delete(str(attachment.id))
             except Retry:
                 ConversionPlugin.logger.warning('Could not submit attachment %d (attempt %d/%d); retry in %ds [%s]',
                                                 attachment.id, attempt, MAX_TRIES, delay, exc)
@@ -114,12 +113,12 @@ class RHConversionFinished(RH):
         else:
             filepdf = request.files['content']
             data = filepdf.stream.read()
-        pdf_attachment.file = AttachmentFile(user=attachment.file.user, filename='{}.pdf'.format(name),
+        pdf_attachment.file = AttachmentFile(user=attachment.file.user, filename=f'{name}.pdf',
                                              content_type='application/pdf')
         pdf_attachment.file.save(data)
         db.session.add(pdf_attachment)
         db.session.flush()
-        cache.set(unicode(attachment.id), 'finished', timedelta(minutes=15))
+        cache.set(str(attachment.id), 'finished', timedelta(minutes=15))
         ConversionPlugin.logger.info('Added PDF attachment %s for %s', pdf_attachment, attachment)
         signals.attachments.attachment_created.send(pdf_attachment, user=None)
         return jsonify(success=True)
@@ -131,8 +130,8 @@ class RHConversionCheck(RH):
     def _process(self):
         ids = request.args.getlist('a')
         results = {int(id_): cache.get(id_) for id_ in ids}
-        finished = [id_ for id_, status in results.iteritems() if status == 'finished']
-        pending = [id_ for id_, status in results.iteritems() if status == 'pending']
+        finished = [id_ for id_, status in results.items() if status == 'finished']
+        pending = [id_ for id_, status in results.items() if status == 'pending']
         containers = {}
         if finished:
             tpl = get_template_module('attachments/_display.html')

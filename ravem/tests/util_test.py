@@ -5,8 +5,9 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
+from unittest.mock import MagicMock
+
 import pytest
-from mock import MagicMock
 from requests.auth import HTTPDigestAuth
 from requests.exceptions import HTTPError, Timeout
 
@@ -164,7 +165,7 @@ def test_unexpected_exception_is_logged(mocker, caplog, method, params):
 
     assert excinfo.value.message == 'this is unexpected'
     log = extract_logs(caplog, one=True, name='indico.plugin.ravem')
-    assert log.message == "failed call: {0} {1} with {2}: {3}".format(method.upper(), 'test_endpoint', params,
+    assert log.message == "failed call: {} {} with {}: {}".format(method.upper(), 'test_endpoint', params,
                                                                       'this is unexpected')
     assert request.call_count == 1
 
@@ -193,7 +194,7 @@ def test_http_error_is_logged(mocker, caplog, method, params):
 
     assert excinfo.value.message == 'Well this is embarrassing'
     log = extract_logs(caplog, one=True, name='indico.plugin.ravem')
-    assert log.message == '{0} {1} failed with {2}'.format(
+    assert log.message == '{} {} failed with {}'.format(
         method.upper(), RavemPlugin.settings.get('api_endpoint') + 'test_endpoint', 'Well this is embarrassing')
 
     assert request.call_count == 1
@@ -215,7 +216,7 @@ def test_invalid_json_respons_is_handled(mocker, caplog, method):
     with pytest.raises(RavemAPIException) as excinfo:
         ravem_api_call('test_endpoint', method=method)
 
-    err_msg = '{0} {1} returned json without a result or error: {2}'.format(
+    err_msg = '{} {} returned json without a result or error: {}'.format(
         method.upper(), RavemPlugin.settings.get('api_endpoint') + 'test_endpoint', {'bad': 'json'})
     assert excinfo.value.message == err_msg
     assert excinfo.value.endpoint == 'test_endpoint'

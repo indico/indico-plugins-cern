@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 import posixpath
 from pprint import pformat
@@ -92,7 +91,7 @@ def _update_calendar_entry(entry, settings):
                 'uniqueID': unique_id,
                 'subject': strip_control_chars(event.title),
                 'location': location,
-                'body': '<a href="{}">{}</a><br><br>{}'.format(event_url, event_url, description),
+                'body': f'<a href="{event_url}">{event_url}</a><br><br>{description}',
                 'status': OutlookPlugin.user_settings.get(user, 'status', settings['status']),
                 'startDate': format_datetime(event.start_dt, format='MM-dd-yyyy HH:mm', timezone=pytz.utc),
                 'endDate': format_datetime(event.end_dt, format='MM-dd-yyyy HH:mm', timezone=pytz.utc),
@@ -102,7 +101,7 @@ def _update_calendar_entry(entry, settings):
         data = {'userEmail': user.email,
                 'uniqueID': unique_id}
     else:
-        raise ValueError('Unexpected action: {}'.format(entry.action))
+        raise ValueError(f'Unexpected action: {entry.action}')
 
     if settings['debug']:
         logger.debug('Calendar update request:\nURL: %s\nData: %s', url, pformat(data))

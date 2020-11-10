@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 import os
 from datetime import timedelta
@@ -59,7 +58,7 @@ class ConversionPlugin(IndicoPlugin):
                         'valid_extensions': ['ppt', 'doc', 'pptx', 'docx', 'odp', 'sxi']}
 
     def init(self):
-        super(ConversionPlugin, self).init()
+        super().init()
         self.connect(signals.add_form_fields, self._add_form_fields, sender=AddAttachmentFilesForm)
         self.connect(signals.form_validated, self._form_validated)
         self.connect(signals.attachments.attachment_created, self._attachment_created)
@@ -98,7 +97,7 @@ class ConversionPlugin(IndicoPlugin):
             g.convert_attachments = set()
         g.convert_attachments.add(attachment)
         # Set cache entry to show the pending attachment
-        cache.set(unicode(attachment.id), 'pending', info_ttl)
+        cache.set(str(attachment.id), 'pending', info_ttl)
         if not g.get('attachment_conversion_msg_displayed'):
             g.attachment_conversion_msg_displayed = True
             flash(_('Your file(s) have been sent to the conversion system. The PDF file(s) will be attached '
@@ -113,7 +112,7 @@ class ConversionPlugin(IndicoPlugin):
             return None
         if now_utc() - attachment.file.created_dt > info_ttl:
             return None
-        if cache.get(unicode(attachment.id)) != 'pending':
+        if cache.get(str(attachment.id)) != 'pending':
             return None
         return render_plugin_template('pdf_attachment.html', attachment=attachment, top_level=top_level,
                                       has_label=has_label, title=get_pdf_title(attachment))

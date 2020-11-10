@@ -114,7 +114,7 @@ def connect_room(room_name, vc_room, force=False, room_special_name=None):
 
         # ms in settings but time.sleep takes sec
         polling_interval = RavemPlugin.settings.get('polling_interval') / 1000.0
-        for attempt in xrange(RavemPlugin.settings.get('polling_limit')):
+        for attempt in range(RavemPlugin.settings.get('polling_limit')):
             status = get_room_status(room_name, room_special_name=room_special_name)
             if not status['connected']:
                 break

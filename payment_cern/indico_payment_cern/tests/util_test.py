@@ -5,10 +5,10 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
+
+from unittest.mock import MagicMock
 
 import pytest
-from mock import MagicMock
 
 from indico_payment_cern.util import get_order_id
 

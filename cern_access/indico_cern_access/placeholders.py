@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 from markupsafe import Markup
 
@@ -56,7 +55,7 @@ class FormLinkPlaceholder(ParametrizedPlaceholder):
     @classmethod
     def render(cls, param, regform, registration):
         url = url_for_plugin('cern_access.access_identity_data', registration.locator.uuid, _external=True)
-        return Markup('<a href="{}">{}</a>'.format(url, param))
+        return Markup(f'<a href="{url}">{param}</a>')
 
 
 class AccessPeriodPlaceholder(ParametrizedPlaceholder):

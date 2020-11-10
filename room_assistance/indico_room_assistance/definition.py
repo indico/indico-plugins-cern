@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 import dateutil.parser
 import pytz
@@ -32,7 +31,7 @@ class RoomAssistanceRequest(RequestDefinitionBase):
     def render_form(cls, event, **kwargs):
         kwargs['event_has_room_attached'] = event.room is not None
         kwargs['room_allows_assistance'] = event.room in cls.plugin.settings.get('rooms_with_assistance')
-        return super(RoomAssistanceRequest, cls).render_form(event, **kwargs)
+        return super().render_form(event, **kwargs)
 
     @classmethod
     def create_form(cls, event, existing_request=None):
@@ -59,7 +58,7 @@ class RoomAssistanceRequest(RequestDefinitionBase):
         old_data = {} if is_new else req.data
         data['occurrences'] = [occ.astimezone(pytz.utc).isoformat() for occ in data['occurrences']]
 
-        super(RoomAssistanceRequest, cls).send(req, data)
+        super().send(req, data)
         with plugin_context(cls.plugin):
             if is_new:
                 notify_about_new_request(req)
@@ -74,6 +73,6 @@ class RoomAssistanceRequest(RequestDefinitionBase):
 
     @classmethod
     def withdraw(cls, req, notify_event_managers=True):
-        super(RoomAssistanceRequest, cls).withdraw(req, notify_event_managers)
+        super().withdraw(req, notify_event_managers)
         with plugin_context(cls.plugin):
             notify_about_withdrawn_request(req)

@@ -7,9 +7,9 @@
 
 import json
 import logging
+from unittest.mock import MagicMock
 
 import pytest
-from mock import MagicMock
 
 from indico.testing.util import extract_logs
 
@@ -142,9 +142,9 @@ def test_get_room_status_error(caplog, httpretty, room_name, error):
     with pytest.raises(RavemException) as excinfo:
         get_room_status(room_name)
 
-    assert excinfo.value.message == "Failed to get status of room {0} with error: {1}".format(room_name, error)
+    assert excinfo.value.message == f"Failed to get status of room {room_name} with error: {error}"
     log = extract_logs(caplog, one=True, name='indico.plugin.ravem')
-    assert log.message == "Failed to get status of room {0} with error: {1}".format(room_name, error)
+    assert log.message == f"Failed to get status of room {room_name} with error: {error}"
 
     assert len(httpretty.httpretty.latest_requests) == 1
     request = httpretty.last_request()
@@ -168,9 +168,9 @@ def test_get_room_status_service_not_found(caplog, httpretty, room_name):
     with pytest.raises(RavemException) as excinfo:
         get_room_status(room_name)
 
-    assert excinfo.value.message == "Vidyo is not supported in the room {0}".format(room_name)
+    assert excinfo.value.message == f"Vidyo is not supported in the room {room_name}"
     log = extract_logs(caplog, one=True, name='indico.plugin.ravem')
-    assert log.message == "Vidyo is not supported in the room {0}".format(room_name)
+    assert log.message == f"Vidyo is not supported in the room {room_name}"
 
     assert len(httpretty.httpretty.latest_requests) == 1
     request = httpretty.last_request()
@@ -279,10 +279,10 @@ def test_disconnect_room_error(caplog, httpretty, room_name, status, data):
     with pytest.raises(RavemException) as excinfo:
         disconnect_room(room_name, vc_room)
 
-    assert excinfo.value.message == "Failed to disconnect the room {0} from the Vidyo room {1} with error: {2}" \
+    assert excinfo.value.message == "Failed to disconnect the room {} from the Vidyo room {} with error: {}" \
                                     .format(room_name, data.get('event_name'), error_message)
     log = extract_logs(caplog, one=True, name='indico.plugin.ravem')
-    assert log.message == "Failed to disconnect the room {0} from the Vidyo room {1} with error: {2}" \
+    assert log.message == "Failed to disconnect the room {} from the Vidyo room {} with error: {}" \
                           .format(room_name, data.get('event_name'), error_message)
 
     assert len(httpretty.httpretty.latest_requests) == 2
@@ -339,7 +339,7 @@ def test_disconnect_room_not_connected(httpretty, room_name, status, data):
     with pytest.raises(RavemOperationException) as excinfo:
         disconnect_room(room_name, vc_room)
 
-    assert excinfo.value.message == "The room {room} is already disconnected.".format(room=room_name)
+    assert excinfo.value.message == f"The room {room_name} is already disconnected."
     assert excinfo.value.reason == 'already-disconnected'
 
     assert len(httpretty.httpretty.latest_requests) == 1
@@ -396,7 +396,7 @@ def test_disconnect_room_already_disconnected(httpretty, room_name, status, data
     with pytest.raises(RavemOperationException) as excinfo:
         disconnect_room(room_name, vc_room)
 
-    assert excinfo.value.message == "The room {room} is already disconnected.".format(room=room_name)
+    assert excinfo.value.message == f"The room {room_name} is already disconnected."
     assert excinfo.value.reason == 'already-disconnected'
 
     assert len(httpretty.httpretty.latest_requests) == 2
@@ -454,7 +454,7 @@ def test_disconnect_room_connected_other(httpretty, room_name, status, data):
     with pytest.raises(RavemOperationException) as excinfo:
         disconnect_room(room_name, vc_room)
 
-    assert excinfo.value.message == "The room {0} is connected to an other Vidyo room: {1}".format(room_name,
+    assert excinfo.value.message == "The room {} is connected to an other Vidyo room: {}".format(room_name,
                                                                                                    different_vc_room)
     assert excinfo.value.reason == 'connected-other'
 
@@ -514,7 +514,7 @@ def test_disconnect_room_force(caplog, httpretty, room_name, status, data):
     disconnect_room(room_name, vc_room, force=True)
 
     log = extract_logs(caplog, one=True, name='indico.plugin.ravem')
-    assert log.message == "Force disconnect of room {0} from vc_room {1} (expected to disconnect from vc_room {2})" \
+    assert log.message == "Force disconnect of room {} from vc_room {} (expected to disconnect from vc_room {})" \
                           .format(room_name, different_vc_room, data.get('event_name'))
 
     assert len(httpretty.httpretty.latest_requests) == 2
@@ -637,10 +637,10 @@ def test_connect_room_error(caplog, httpretty, room_name, status, endpoint, vidy
     with pytest.raises(RavemException) as excinfo:
         connect_room(room_name, vc_room)
 
-    assert excinfo.value.message == "Failed to connect the room {0} to the Vidyo room {1} with error: {2}" \
+    assert excinfo.value.message == "Failed to connect the room {} to the Vidyo room {} with error: {}" \
                                     .format(room_name, data.get('event_name'), error_message)
     log = extract_logs(caplog, one=True, name='indico.plugin.ravem')
-    assert log.message == "Failed to connect the room {0} to the Vidyo room {1} with error: {2}" \
+    assert log.message == "Failed to connect the room {} to the Vidyo room {} with error: {}" \
                           .format(room_name, data.get('event_name'), error_message)
 
     assert len(httpretty.httpretty.latest_requests) == 2
@@ -701,7 +701,7 @@ def test_connect_room_already_connected(httpretty, room_name, status, vidyo_id, 
     with pytest.raises(RavemOperationException) as excinfo:
         connect_room(room_name, vc_room)
 
-    assert excinfo.value.message == "The room {0} is already connected to the vidyo room {1}" \
+    assert excinfo.value.message == "The room {} is already connected to the vidyo room {}" \
                                     .format(room_name, vc_room.name)
     assert excinfo.value.reason == 'already-connected'
 
@@ -749,7 +749,7 @@ def test_connect_room_connected_other(httpretty, room_name, status, data):
     with pytest.raises(RavemOperationException) as excinfo:
         connect_room(room_name, vc_room)
 
-    assert excinfo.value.message == "The room {0} is connected to an other Vidyo room: {1}".format(room_name,
+    assert excinfo.value.message == "The room {} is connected to an other Vidyo room: {}".format(room_name,
                                                                                                    different_vc_room)
     assert excinfo.value.reason == 'connected-other'
 
@@ -806,10 +806,10 @@ def test_connect_room_force_fail(caplog, httpretty, room_name, status, data):
     with pytest.raises(RavemException) as excinfo:
         connect_room(room_name, vc_room, force=True)
 
-    assert excinfo.value.message == "Failed to disconnect the room {0} from the Vidyo room {1} with an unknown error" \
+    assert excinfo.value.message == "Failed to disconnect the room {} from the Vidyo room {} with an unknown error" \
                                     .format(room_name, data.get('event_name'))
     log = extract_logs(caplog, one=True, name='indico.plugin.ravem')
-    assert log.message == "Failed to disconnect the room {0} from the Vidyo room {1} with an unknown error" \
+    assert log.message == "Failed to disconnect the room {} from the Vidyo room {} with an unknown error" \
                           .format(room_name, data.get('event_name'))
 
     # status, disconnect and polling attempts
@@ -878,10 +878,10 @@ def test_connect_room_force_error(caplog, httpretty, room_name, status, data):
     with pytest.raises(RavemException) as excinfo:
         connect_room(room_name, vc_room, force=True)
 
-    assert excinfo.value.message == "Failed to disconnect the room {0} from the Vidyo room {1} with error: {2}" \
+    assert excinfo.value.message == "Failed to disconnect the room {} from the Vidyo room {} with error: {}" \
                                     .format(room_name, different_vc_room, error_message)
     log = extract_logs(caplog, one=True, name='indico.plugin.ravem')
-    assert log.message == "Failed to disconnect the room {0} from the Vidyo room {1} with error: {2}" \
+    assert log.message == "Failed to disconnect the room {} from the Vidyo room {} with error: {}" \
                           .format(room_name, different_vc_room, error_message)
 
     assert len(httpretty.httpretty.latest_requests) == 2

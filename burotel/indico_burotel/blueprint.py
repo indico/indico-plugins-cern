@@ -5,11 +5,10 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 from indico.core.plugins import IndicoPluginBlueprint
 
-from indico_burotel.controllers import RHUserExperiment, RHBurotelStats, RHBurotelStatsCSV
+from indico_burotel.controllers import RHBurotelStats, RHBurotelStatsCSV, RHUserExperiment
 
 
 blueprint = IndicoPluginBlueprint('burotel', __name__, url_prefix='/rooms')

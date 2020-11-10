@@ -5,15 +5,13 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 from datetime import date
 
 import pytest
+from conftest import PERSONAL_DATA
 
 from indico.modules.events.registration.util import create_registration, make_registration_form
-
-from conftest import PERSONAL_DATA
 
 
 @pytest.mark.parametrize('mock_access_request',

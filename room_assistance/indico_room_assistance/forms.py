@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 from datetime import date, datetime, time, timedelta
 
@@ -34,15 +33,15 @@ class _RequestOccurrencesField(JSONField):
     widget = JinjaWidget('assistance_request_occurrences.html', 'room_assistance', single_line=True)
 
     def process_formdata(self, valuelist):
-        super(_RequestOccurrencesField, self).process_formdata(valuelist)
+        super().process_formdata(valuelist)
 
         dts = []
         tzinfo = pytz.timezone(config.DEFAULT_TIMEZONE)
-        for req_date, req_time in self.data.iteritems():
+        for req_date, req_time in self.data.items():
             if not req_time:
                 dt = datetime.strptime(req_date, '%Y-%m-%d').date()
             else:
-                dt = tzinfo.localize(dateutil.parser.parse('{} {}'.format(req_date, req_time)))
+                dt = tzinfo.localize(dateutil.parser.parse(f'{req_date} {req_time}'))
             dts.append(dt)
         self.data = dts
 
@@ -69,7 +68,7 @@ class RoomAssistanceRequestForm(RequestFormBase):
     reason = TextAreaField(_('Reason'), [DataRequired()], description=_('Why are you requesting assistance?'))
 
     def __init__(self, *args, **kwargs):
-        super(RoomAssistanceRequestForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.occurrences.event = kwargs['event']
 
     def validate_occurrences(self, field):

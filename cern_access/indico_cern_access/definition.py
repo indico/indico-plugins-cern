@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 import dateutil.parser
 from flask import flash, session
@@ -50,7 +49,7 @@ class CERNAccessRequestDefinition(RequestDefinitionBase):
         kwargs['category_blacklisted'] = is_category_blacklisted(event.category)
         kwargs['event_too_early'] = is_event_too_early(event)
         kwargs['earliest_start_dt'] = CERNAccessPlugin.settings.get('earliest_start_dt')
-        return super(CERNAccessRequestDefinition, cls).render_form(event, **kwargs)
+        return super().render_form(event, **kwargs)
 
     @classmethod
     def can_be_managed(cls, user):
@@ -70,7 +69,7 @@ class CERNAccessRequestDefinition(RequestDefinitionBase):
             old_start_dt, old_end_dt = get_access_dates(req)
             if old_start_dt != start_dt or old_end_dt != end_dt:
                 times_changed = True
-        super(CERNAccessRequestDefinition, cls).send(req, data)
+        super().send(req, data)
         update_access_request(req)
         req.state = RequestState.accepted
         if times_changed:
@@ -79,11 +78,11 @@ class CERNAccessRequestDefinition(RequestDefinitionBase):
         link = "https://indico.docs.cern.ch/cern/cern_access/#granting-access-to-participants"
         message = _('Please note that even though your request has been accepted, you still have to '
                     'request badges for each one of your participants. {link}More details here.{endlink}').format(
-                        link='<a href="{}">'.format(link),
+                        link=f'<a href="{link}">',
                         endlink='</a>')
         flash(Markup(message), 'warning')
 
     @classmethod
     def withdraw(cls, req, notify_event_managers=False):
         withdraw_event_access_request(req)
-        super(CERNAccessRequestDefinition, cls).withdraw(req, notify_event_managers)
+        super().withdraw(req, notify_event_managers)

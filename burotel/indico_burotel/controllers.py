@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 from dateutil.relativedelta import relativedelta
 from flask import jsonify, session
@@ -104,9 +103,9 @@ class RHBurotelStatsCSV(RHProtected):
                     month_duration = ((months[i] + relativedelta(months=1, days=-1)) - months[i]).days + 1
                     percent = float(m) / (row_data['desk_count'] * month_duration) * 100
                     row[month_dt.strftime('%b %Y')] = m
-                    row[month_dt.strftime('%b %Y (%%)')] = '{:.2f}%'.format(percent)
+                    row[month_dt.strftime('%b %Y (%%)')] = f'{percent:.2f}%'
                 row['Total'] = row_data['bookings']
                 percent = float(row_data['bookings']) / (row_data['desk_count'] * num_days) * 100
-                row['Total (%)'] = '{:.2f}%'.format(percent)
+                row['Total (%)'] = f'{percent:.2f}%'
                 rows.append(row)
         return send_csv('burotel_stats.csv', headers, rows)

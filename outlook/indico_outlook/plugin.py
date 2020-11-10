@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 from collections import defaultdict
 from datetime import timedelta
@@ -115,7 +114,7 @@ class OutlookPlugin(IndicoPlugin):
     }
 
     def init(self):
-        super(OutlookPlugin, self).init()
+        super().init()
         self.connect(signals.plugin.cli, self._extend_indico_cli)
         self.connect(signals.users.preferences, self.extend_user_preferences)
         self.connect(signals.event.registration.registration_form_deleted, self.event_registration_form_deleted)
@@ -159,7 +158,7 @@ class OutlookPlugin(IndicoPlugin):
             self.logger.info('Registration removed (form deleted): removing %s in %s', registration.user, event)
 
     def event_updated(self, event, changes, **kwargs):
-        if not changes.viewkeys() & {'title', 'description', 'location_data'}:
+        if not changes.keys() & {'title', 'description', 'location_data'}:
             return
         for user in get_participating_users(event):
             self.logger.info('Event data change: updating %s in %r', user, event)
@@ -191,7 +190,7 @@ class OutlookPlugin(IndicoPlugin):
         user_events = defaultdict(list)
         for event, user, action in g.outlook_changes:
             user_events[(user, event)].append(action)
-        for (user, event), data in user_events.viewitems():
+        for (user, event), data in user_events.items():
             for action in latest_actions_only(data):
                 OutlookQueueEntry.record(event, user, action)
 

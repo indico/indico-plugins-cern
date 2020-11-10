@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 import re
 from datetime import timedelta
@@ -34,10 +33,10 @@ from indico_audiovisual.util import find_requests
 
 
 def parse_indico_id(indico_id):
-    event_match = re.match('(\d+)$', indico_id)
-    session_match = re.match('(\d+)s(\d+)$', indico_id)
-    contrib_match = re.match('(\d+)c(\d+)$', indico_id)
-    subcontrib_match = re.match('(\d+)c(\d+)sc(\d+)$', indico_id)
+    event_match = re.match(r'(\d+)$', indico_id)
+    session_match = re.match(r'(\d+)s(\d+)$', indico_id)
+    contrib_match = re.match(r'(\d+)c(\d+)$', indico_id)
+    subcontrib_match = re.match(r'(\d+)c(\d+)sc(\d+)$', indico_id)
 
     if subcontrib_match:
         event = Event.get(subcontrib_match.group(1), is_deleted=False)
@@ -106,7 +105,7 @@ class RecordingLinkAPI(HTTPAPIHook):
         return AVRequest.can_be_managed(user)
 
     def _getParams(self):
-        super(RecordingLinkAPI, self)._getParams()
+        super()._getParams()
         self._indico_id = get_query_parameter(self._queryParams, ['iid', 'indicoID'])
         self._cds_id = get_query_parameter(self._queryParams, ['cid', 'cdsID'])
 
@@ -126,7 +125,7 @@ class AVExportHook(HTTPAPIHook):
     VALID_FORMATS = ('json', 'jsonp', 'xml', 'ics')
 
     def _getParams(self):
-        super(AVExportHook, self)._getParams()
+        super()._getParams()
         self._services = set(request.args.getlist('service'))
         self._alarm = get_query_parameter(self._queryParams, ['alarms'], None, True)
 
@@ -163,15 +162,15 @@ def _serialize_obj(req, obj, alarm):
     if isinstance(obj, Event):
         url = obj.external_url
         title = obj.title
-        unique_id = 'e{}'.format(obj.id)
+        unique_id = f'e{obj.id}'
     elif isinstance(obj, Contribution):
         url = url_for('contributions.display_contribution', obj, _external=True)
-        title = '{} - {}'.format(obj.event.title, obj.title)
-        unique_id = 'c{}'.format(obj.id)
+        title = f'{obj.event.title} - {obj.title}'
+        unique_id = f'c{obj.id}'
     elif isinstance(obj, SubContribution):
         url = url_for('contributions.display_subcontribution', obj, _external=True)
-        title = '{} - {} - {}'.format(obj.event.title, obj.contribution.title, obj.title)
-        unique_id = 'sc{}'.format(obj.id)
+        title = f'{obj.event.title} - {obj.contribution.title} - {obj.title}'
+        unique_id = f'sc{obj.id}'
         date_source = obj.contribution
         location_source = obj.contribution
 
@@ -191,7 +190,7 @@ def _serialize_obj(req, obj, alarm):
         'room_full_name': _get_room_name(location_source, full=True) or None,
         'url': url,
         'audience': audience,
-        '_ical_id': 'indico-audiovisual-{}@cern.ch'.format(unique_id)
+        '_ical_id': f'indico-audiovisual-{unique_id}@cern.ch'
     }
     if alarm:
         data['_ical_alarm'] = alarm
@@ -213,10 +212,10 @@ def _ical_serialize_av(cal, record, now):
     event.add('url', record['url'])
     event.add('categories', 'Webcast/Recording')
     event.add('summary', _ical_summary(record))
-    location = ': '.join(filter(None, (record['location'], record['room_full_name'])))
+    location = ': '.join([_f for _f in (record['location'], record['room_full_name']) if _f])
     event.add('location', location)
     description = ['URL: {}'.format(record['url']),
-                   'Services: {}'.format(', '.join(map(unicode, map(SERVICES.get, record['services']))))]
+                   'Services: {}'.format(', '.join(map(str, list(map(SERVICES.get, record['services'])))))]
     if record['audience']:
         description.append('Audience: {}'.format(record['audience']))
     event.add('description', '\n'.join(description))

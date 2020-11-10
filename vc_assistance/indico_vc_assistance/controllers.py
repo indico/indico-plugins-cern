@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
 
 from collections import OrderedDict
 from operator import itemgetter
@@ -43,7 +42,7 @@ class RHRequestList(RHProtected):
             results = [(req, req.event, req.event.start_dt, contribs, session_blocks)
                        for req, contribs, session_blocks in results]
             results = group_list(results, lambda x: x[2].date(), itemgetter(2), sort_reverse=reverse)
-            results = OrderedDict(sorted(results.viewitems(), key=itemgetter(0), reverse=reverse))
+            results = OrderedDict(sorted(results.items(), key=itemgetter(0), reverse=reverse))
         return WPVCAssistance.render_template('request_list.html', form=form, results=results,
                                               action=url_for('.request_list'), vc_capable_rooms=get_vc_capable_rooms(),
                                               within_working_hours=start_time_within_working_hours)
