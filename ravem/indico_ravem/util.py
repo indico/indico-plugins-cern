@@ -7,12 +7,12 @@
 
 import re
 from pprint import pformat
+from urllib.parse import urljoin
 
 import requests
 from flask import request, session
 from requests.auth import HTTPDigestAuth
 from requests.exceptions import HTTPError, Timeout
-from six.moves.urllib.parse import urljoin
 
 from indico.util.i18n import _
 
