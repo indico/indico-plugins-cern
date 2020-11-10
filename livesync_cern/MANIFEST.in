@@ -1,3 +1,0 @@
-graft indico_livesync_cern/translations
-
-global-exclude *.pyc __pycache__ .keep
