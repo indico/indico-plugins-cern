@@ -12,7 +12,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='indico-plugin-burotel',
-    version='2.3',
+    version='3.0-dev',
     url='https://github.com/indico/indico-plugins-cern',
     license='MIT',
     author='Indico Team',
@@ -21,9 +21,10 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'indico>=2.3.dev0',
-        'pyproj>=2.1.2'
+        'indico>=3.0.dev0',
+        'pyproj>=2.1.2',
     ],
+    python_requires='~=3.9',
     entry_points={
         'indico.plugins': {'burotel = indico_burotel.plugin:BurotelPlugin'}
     },
@@ -31,6 +32,6 @@ setup(
         'Environment :: Plugins',
         'Environment :: Web Environment',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.9',
     ],
 )

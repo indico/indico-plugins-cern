@@ -12,7 +12,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='indico-plugin-vc-assistance',
-    version='2.3',
+    version='3.0-dev',
     url='https://github.com/indico/indico-plugins-cern',
     license='MIT',
     author='Indico Team',
@@ -20,9 +20,8 @@ setup(
     packages=find_packages(),
     zip_safe=False,
     include_package_data=True,
-    install_requires=[
-        'indico>=2.3.dev0'
-    ],
+    install_requires=['indico>=3.0.dev0'],
+    python_requires='~=3.9',
     entry_points={
         'indico.plugins': {'vc_assistance = indico_vc_assistance.plugin:VCAssistanceRequestPlugin'},
     },
@@ -30,6 +29,6 @@ setup(
         'Environment :: Plugins',
         'Environment :: Web Environment',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.9',
     ],
 )
