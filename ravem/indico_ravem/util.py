@@ -11,13 +11,12 @@ from urlparse import urljoin
 
 import requests
 from flask import request, session
-from requests.auth import HTTPDigestAuth
+from indico.util.user import principal_from_identifier
 from requests.exceptions import HTTPError, Timeout
 
 from indico.util.i18n import _
 
 from indico_ravem.plugin import RavemPlugin
-from indico_vc_vidyo.util import retrieve_principal
 
 
 def ravem_api_call(api_endpoint, method='GET', **kwargs):
@@ -79,7 +78,7 @@ def has_access(event_vc_room, _split_re=re.compile(r'[\s,;]+')):
     If not the only way to have access is for the request to come from the
     terminal located in the room concerned.
 
-    Note that if the room does not have equipment supported by Vidyo, the access
+    Note that if the room does not have equipment supported by videoconference, the access
     will always be refused regardless of the user or the origin of the request.
     """
     link_object = event_vc_room.link_object
@@ -92,20 +91,17 @@ def has_access(event_vc_room, _split_re=re.compile(r'[\s,;]+')):
     event = event_vc_room.event
     current_user = session.user
 
-    # No physical room or room is not Vidyo capable
-    # TODO: We don't have any for zoom yet
-    # if not room or not room.has_equipment('Vidyo'):
-    #     return False
+    # No physical room or room is not videoconference capable
+    # TODO: We don't have any for room equipment attribute for zoom yet
     if not room:
         return False
 
     ips = set(filter(None, (x.strip() for x in _split_re.split(room.get_attribute_value('ip', '')))))
-    # Not all providers use the same attribute for the principal, some may use owner or host
-    host = next(vc_room.data.get(attr) for attr in ('owner', 'host') if attr in vc_room.data)
+    host = vc_room.data.get('host')
     if not host:
-        raise AttributeError('Unsupported principal attribute (valid: owner or host)')
+        raise AttributeError('Unsupported principal attribute (valid: host)')
     return any([
-        current_user == retrieve_principal(host),
+        current_user == principal_from_identifier(host),
         event.can_manage(current_user),
         request.remote_addr in ips
     ])

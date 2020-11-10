@@ -11,7 +11,7 @@
     const states = {
       connected: {
         icon: 'icon-no-camera',
-        tooltip: $t.gettext('Disconnect {0} from the Vidyo room {1}'),
+        tooltip: $t.gettext('Disconnect {0} from the videoconference room {1}'),
         action: 'disconnect',
         handler: function disconnectHandler(data, btn) {
           const name = btn.data('roomName');
@@ -27,7 +27,7 @@
               .format(name),
             error: $t
               .gettext(
-                'The room {0} might already be disconnected or connected to another Vidyo room'
+                'The room {0} might already be disconnected or connected to another videoconference room'
               )
               .format(name),
           };
@@ -46,7 +46,7 @@
       },
       disconnected: {
         icon: 'icon-camera',
-        tooltip: $t.gettext('Connect {0} to the Vidyo room {1}'),
+        tooltip: $t.gettext('Connect {0} to the videoconference room {1}'),
         action: 'connect',
         handler: function connectHandler(data, btn) {
           const name = btn.data('roomName');
@@ -59,10 +59,10 @@
           };
           const messages = {
             alreadyConnected: $t
-              .gettext('Would you like to force the room {0} to connect to your Vidyo room ({1}) ?')
+              .gettext('Would you like to force the room {0} to connect to your videoconference room ({1}) ?')
               .format(name, vcRoomName),
             error: $t
-              .gettext('The room {0} might already be connected to another Vidyo room')
+              .gettext('The room {0} might already be connected to another videoconference room')
               .format(name),
           };
 
@@ -96,11 +96,11 @@
       },
       waitingConnect: {
         icon: 'icon-spinner',
-        tooltip: $t.gettext('Connecting {0} to the Vidyo room {1}'),
+        tooltip: $t.gettext('Connecting {0} to the videoconference room {1}'),
       },
       waitingDisconnect: {
         icon: 'icon-spinner',
-        tooltip: $t.gettext('Disconnecting {0} from the Vidyo room {1}'),
+        tooltip: $t.gettext('Disconnecting {0} from the videoconference room {1}'),
       },
       waitingStatus: {
         icon: 'icon-spinner',

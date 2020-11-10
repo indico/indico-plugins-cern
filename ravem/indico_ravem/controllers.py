@@ -19,11 +19,6 @@ from indico_ravem.util import RavemException, RavemOperationException, has_acces
 
 
 __all__ = ('RHRavemRoomStatus', 'RHRavemConnectRoom', 'RHRavemDisconnectRoom')
-services = {
-    'vidyo': 'vidyo',
-    'zoom': 'zoom',
-    'legacy': 'vidyo'  # Legacy connection are only supported by vidyo
-}
 
 
 class RHRavemBase(RH):
@@ -61,8 +56,7 @@ class RHRavemRoomStatus(RHRavemBase):
         try:
             response = get_room_status(self.room.name)
             room_name = self.room.verbose_name or self.room.name
-            service = services.get(response['service_type'])
-            if not service or service != self.event_vc_room.vc_room.type:
+            if response.get('service_type') != self.event_vc_room.vc_room.type:
                 RavemPlugin.logger.error("%s is not supported in the room %s",
                                          self.event_vc_room.vc_room.type, room_name)
                 raise RavemException(_("{service} is not supported in the room {room}")
@@ -77,10 +71,8 @@ class RHRavemConnectRoom(RHRavemBase):
     def _process(self):
         force = request.args.get('force') == '1'
         try:
-            ips = self.room.get_attribute_value('ip')
-            legacy_ip = ips and ips.split(',')[0]
             connect_room(self.room.name, self.event_vc_room.vc_room, force=force,
-                         room_verbose_name=self.room.verbose_name, legacy_ip=legacy_ip)
+                         room_verbose_name=self.room.verbose_name)
         except RavemOperationException as err:
             response = {'success': False, 'reason': err.reason, 'message': err.message}
         except RavemException as err:

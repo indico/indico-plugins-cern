@@ -8,49 +8,40 @@
 from time import sleep
 
 from indico_ravem import _
-from indico_ravem.api import ZoomAPI, VidyoAPI, BaseAPI
+from indico_ravem.api import ZoomAPI, BaseAPI
 from indico_ravem.plugin import RavemPlugin
 from indico_ravem.util import RavemException, RavemOperationException
 
 _all__ = ('get_room_status', 'connect_room', 'disconnect_room')
 API = {
     'zoom': ZoomAPI(),
-    'vidyo': VidyoAPI()
 }
 
 
-def get_room_status(room_name, legacy_ip=None):
+def get_room_status(room_name):
     """Get the status of a room given its name.
 
     :param room_name: str -- The name of the room whose status is fetched
-    :param legacy_ip: str -- The H323 IP (if any)
 
     :returns: dict -- the status of the room with the following information:
         - `room_name`: The room identifier
         - `vc_room_id`: The id of the vc_room the room is connected to or
         `None` if the room is not connected.
-        - `service_type`: The type of service, given by RAVEM. Usually '"vidyo"'
+        - `service_type`: The type of service, given by RAVEM. Usually '"zoom"'
         or `"other"`
         - `connected`: `True` if the room is connected, `False` otherwise
-        - `room_endpoint`: vidyo username or RAVEM prefixed H323 IP
     """
     response = BaseAPI.get_endpoint_status(room_name)
     status = next(s for s in response['services'] if s['name'] == 'videoconference')
-    endpoint = response['vidyoUsername']
-    if response['legacyHostname']:
-        endpoint = '{prefix}{ip}'.format(
-            prefix=RavemPlugin.settings.get('prefix'), ip=legacy_ip
-        )
     return {
         'room_name': response['roomName'],
         'vc_room_id': status['eventName'],
         'service_type': response['deviceType'],
-        'connected': status['status'],
-        'room_endpoint': endpoint
+        'connected': status['status']
     }
 
 
-def connect_room(room_name, vc_room, force=False, room_verbose_name=None, legacy_ip=None):
+def connect_room(room_name, vc_room, force=False, room_verbose_name=None):
     """Connects a room given its name with a given vc_room.
 
     If a `RavemOperationException` is raised it is important to verify the
@@ -83,7 +74,7 @@ def connect_room(room_name, vc_room, force=False, room_verbose_name=None, legacy
     :raises: RavemOperationException, RavemException
     """
     room_verbose_name = room_verbose_name or room_name
-    status = get_room_status(room_name, legacy_ip)
+    status = get_room_status(room_name)
     service_api = API[vc_room.type]
     vc_room_id = service_api.get_room_id(vc_room)
     if status['connected']:
@@ -114,7 +105,7 @@ def connect_room(room_name, vc_room, force=False, room_verbose_name=None, legacy
         # ms in settings but time.sleep takes sec
         polling_interval = RavemPlugin.settings.get('polling_interval') / 1000.0
         for attempt in xrange(RavemPlugin.settings.get('polling_limit')):
-            status = get_room_status(room_name, legacy_ip)
+            status = get_room_status(room_name)
             if not status['connected']:
                 break
             sleep(polling_interval)

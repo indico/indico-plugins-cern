@@ -9,7 +9,7 @@ from abc import ABCMeta, abstractmethod
 from indico_ravem.util import ravem_api_call
 
 
-# __all__ = ('get_endpoint_status', 'disconnect_endpoint', 'connect_endpoint')
+__all__ = ('BaseAPI', 'ZoomAPI')
 
 
 class BaseAPI:
@@ -19,7 +19,7 @@ class BaseAPI:
     def get_endpoint_status(room_name):
         """Returns the status of an physical room.
 
-        This call returns the status of a room equipped with Vidyo capable device
+        This call returns the status of a room equipped with videoconference capable device
 
         :param room_name: str -- the name of the physical room
 
@@ -37,7 +37,7 @@ class BaseAPI:
 
     @abstractmethod
     def connect_endpoint(self, room, vc_room):
-        """Connects a physical room to a Vidyo room using the RAVEM API.
+        """Connects a physical room to a videoconference room using the RAVEM API.
 
         This call will return "OK" as a result immediately if RAVEM can (or has
         started to) perform the operation. This does not mean the operation has
@@ -56,7 +56,7 @@ class BaseAPI:
 
     @abstractmethod
     def disconnect_endpoint(self, room, vc_room):
-        """Disconnects a physical room from a vidyo room using the RAVEM API.
+        """Disconnects a physical room from a videoconference room using the RAVEM API.
 
         This call will return "OK" as a result immediately if RAVEM can (or has
         started to) perform the operation. This does not mean the operation has
@@ -86,23 +86,3 @@ class ZoomAPI(BaseAPI):
 
     def disconnect_endpoint(self, room, vc_room):
         return ravem_api_call('%s/disconnect' % self.SERVICE_TYPE, method='POST', json={'roomName': room['room_name']})
-
-
-class VidyoAPI(BaseAPI):
-    SERVICE_TYPE = 'vidyo'
-
-    def get_room_id(self, vc_room):
-        return vc_room.data['vidyo_id']
-
-    def connect_endpoint(self, room, vc_room):
-        return ravem_api_call('%s/connect' % self.SERVICE_TYPE, method='POST',
-                              params={'vidyo_room_id': self.get_room_id(vc_room), 'query': room['room_endpoint']})
-
-    def disconnect_endpoint(self, room, vc_room):
-        room_name = room['room_name'].replace('/', '-', 1)
-        params = {
-            'method': 'POST',
-            'where': 'room_name',
-            'value': room_name,
-        }
-        return ravem_api_call('%s/disconnect' % self.SERVICE_TYPE, method='POST', params=params)

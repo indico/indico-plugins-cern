@@ -33,8 +33,6 @@ class SettingsForm(IndicoForm):  # pragma: no cover
                             description=_('The endpoint for the RAVEM API'))
     access_token = StringField(_('Access token'), [DataRequired()],
                                description=_('The access token used to connect to the RAVEM API'))
-    prefix = IntegerField(_('Room IP prefix'), [NumberRange(min=0)],
-                          description=_('IP prefix to connect a room to a Vidyo room.'))
     timeout = IntegerField(_('Timeout'), [NumberRange(min=0)],
                            description=_('The amount of time in seconds to wait for RAVEM to reply<br>'
                                          '(0 to disable the timeout)'))
@@ -51,7 +49,7 @@ class SettingsForm(IndicoForm):  # pragma: no cover
 class RavemPlugin(IndicoPlugin):
     """RAVEM
 
-    Manages connections from physical rooms to Vidyo rooms through Indico using
+    Manages connections from physical rooms to videoconference rooms through Indico using
     the RAVEM API.
     """
     configurable = True
@@ -60,7 +58,6 @@ class RavemPlugin(IndicoPlugin):
         'debug': False,
         'api_endpoint': '',
         'access_token': None,
-        'prefix': 21,
         'timeout': 30,
         'polling_limit': 8,
         'polling_interval': 4000
@@ -94,7 +91,7 @@ class RavemPlugin(IndicoPlugin):
 
     def inject_connect_button(self, template, event_vc_room, **kwargs):  # pragma: no cover
         from indico_ravem.util import has_access
-        if event_vc_room.vc_room.type not in ('vidyo', 'zoom') or not has_access(event_vc_room):
+        if event_vc_room.vc_room.type != 'zoom' or not has_access(event_vc_room):
             return
 
         return render_plugin_template(template, room_name=event_vc_room.link_object.room.name,
