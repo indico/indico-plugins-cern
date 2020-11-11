@@ -165,7 +165,7 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             'AMOUNT': int(amount * 100),
             'CURRENCY': currency,
             'LANGUAGE': session.lang,
-            'CN': str_to_ascii(remove_accents(registration.full_name[:35], False)),
+            'CN': str_to_ascii(remove_accents(registration.full_name[:35])),
             'EMAIL': registration.email[:50],
             'OWNERADDRESS': address[:35],
             'OWNERTELNO': personal_data.get('phone', '')[:30],
