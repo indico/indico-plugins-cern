@@ -89,7 +89,7 @@ class VCAssistanceRequestPlugin(IndicoPlugin):
                            url_for_plugin('vc_assistance.request_list'), section='services')
 
     def _get_vc_assistance_request_link(self, event, **kwargs):
-        from definition import VCAssistanceRequest
+        from .definition import VCAssistanceRequest
         req = Request.find_latest_for_event(event, VCAssistanceRequest.name)
         support_email = VCAssistanceRequestPlugin.settings.get('support_email')
         return render_plugin_template('vc_assistance_request_link.html', event=event, name=VCAssistanceRequest.name,

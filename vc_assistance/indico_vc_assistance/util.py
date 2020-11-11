@@ -79,7 +79,7 @@ def find_requests(from_dt=None, to_dt=None, contribs_and_sessions=True):
     :param to_dt: latest event/contribution to include
     :param contribs_and_sessions: whether it should return contributions and sessions or only request
     """
-    from definition import VCAssistanceRequest
+    from .definition import VCAssistanceRequest
     query = Request.query.join(Event).filter(~Event.is_deleted,
                                              Request.type == VCAssistanceRequest.name,
                                              Request.state == RequestState.accepted)
