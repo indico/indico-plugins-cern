@@ -43,7 +43,7 @@ def update_calendar():
     entries = MultiDict(((entry.user_id, entry.event_id), entry) for entry in query)
     delete_ids = set()
     try:
-        for (user_id, event_id), entry_list in entries.iterlists():
+        for (user_id, event_id), entry_list in entries.lists():
             entry_ids = {x.id for x in entry_list}
             for entry in latest_actions_only(entry_list):
                 if is_event_excluded(entry.event):
