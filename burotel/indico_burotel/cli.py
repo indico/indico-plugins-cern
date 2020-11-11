@@ -101,7 +101,7 @@ def _print_changes(room, changes):
             old = {e.name for e in old}
             new = {e.name for e in new}
         print(cformat(' %{yellow}>%{reset} %{cyan}{}%{reset}: %{red}{}%{reset} -> %{green}{}%{reset}')
-               .format(field, old, new))
+              .format(field, old, new))
     print()
 
 
@@ -217,7 +217,7 @@ def update(csv_file, add_missing, dry_run):
             num_removes += 1
 
     print(cformat('\n%{cyan}Total:%{reset} %{green}+%{reset}{}  %{yellow}\u00b1%{reset}{}  %{red}-%{reset}{} ')
-           .format(num_adds, num_changes, num_removes))
+          .format(num_adds, num_changes, num_removes))
 
     if not dry_run:
         db.session.commit()

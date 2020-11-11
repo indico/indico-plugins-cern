@@ -14,4 +14,4 @@ _ = make_bound_gettext('room_assistance')
 
 @signals.import_tasks.connect
 def _import_tasks(sender, **kwargs):
-    import indico_room_assistance.tasks
+    import indico_room_assistance.tasks  # noqa: F401

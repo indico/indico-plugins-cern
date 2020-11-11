@@ -8,8 +8,7 @@
 from datetime import timedelta
 
 import icalendar
-from sqlalchemy.orm import joinedload, noload
-from werkzeug.exceptions import NotFound
+from sqlalchemy.orm import joinedload
 
 from indico.core.db import db
 from indico.modules.events.models.events import Event

@@ -166,7 +166,7 @@ def test_unexpected_exception_is_logged(mocker, caplog, method, params):
     assert excinfo.value.message == 'this is unexpected'
     log = extract_logs(caplog, one=True, name='indico.plugin.ravem')
     assert log.message == "failed call: {} {} with {}: {}".format(method.upper(), 'test_endpoint', params,
-                                                                      'this is unexpected')
+                                                                  'this is unexpected')
     assert request.call_count == 1
 
 

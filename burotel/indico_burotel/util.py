@@ -50,7 +50,7 @@ def calculate_monthly_stats(start_dt, end_dt):
         desk_count,
         db.func.count(
             db.func.concat(Reservation.id, ReservationOccurrence.start_dt)).label('bookings')
-        ).filter(ReservationOccurrence.start_dt >= start_dt, ReservationOccurrence.end_dt <= end_dt).order_by('number')
+    ).filter(ReservationOccurrence.start_dt >= start_dt, ReservationOccurrence.end_dt <= end_dt).order_by('number')
 
     parts = []
     for n, month_start in enumerate(months):

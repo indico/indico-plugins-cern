@@ -17,7 +17,7 @@ from wtforms.validators import DataRequired
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.modules.attachments.forms import AddAttachmentFilesForm
-from indico.modules.attachments.models.attachments import Attachment, AttachmentType
+from indico.modules.attachments.models.attachments import AttachmentType
 from indico.modules.events.views import WPSimpleEventDisplay
 from indico.util.date_time import now_utc
 from indico.web.forms.base import IndicoForm

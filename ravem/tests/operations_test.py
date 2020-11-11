@@ -454,8 +454,7 @@ def test_disconnect_room_connected_other(httpretty, room_name, status, data):
     with pytest.raises(RavemOperationException) as excinfo:
         disconnect_room(room_name, vc_room)
 
-    assert excinfo.value.message == "The room {} is connected to an other Vidyo room: {}".format(room_name,
-                                                                                                   different_vc_room)
+    assert excinfo.value.message == f'The room {room_name} is connected to an other Vidyo room: {different_vc_room}'
     assert excinfo.value.reason == 'connected-other'
 
     assert len(httpretty.httpretty.latest_requests) == 1
@@ -701,8 +700,7 @@ def test_connect_room_already_connected(httpretty, room_name, status, vidyo_id, 
     with pytest.raises(RavemOperationException) as excinfo:
         connect_room(room_name, vc_room)
 
-    assert excinfo.value.message == "The room {} is already connected to the vidyo room {}" \
-                                    .format(room_name, vc_room.name)
+    assert excinfo.value.message == f'The room {room_name} is already connected to the vidyo room {vc_room.name}'
     assert excinfo.value.reason == 'already-connected'
 
     assert len(httpretty.httpretty.latest_requests) == 1
@@ -749,8 +747,7 @@ def test_connect_room_connected_other(httpretty, room_name, status, data):
     with pytest.raises(RavemOperationException) as excinfo:
         connect_room(room_name, vc_room)
 
-    assert excinfo.value.message == "The room {} is connected to an other Vidyo room: {}".format(room_name,
-                                                                                                   different_vc_room)
+    assert excinfo.value.message == f'The room {room_name} is connected to an other Vidyo room: {different_vc_room}'
     assert excinfo.value.reason == 'connected-other'
 
     assert len(httpretty.httpretty.latest_requests) == 1
