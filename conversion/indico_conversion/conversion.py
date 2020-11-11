@@ -5,10 +5,8 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-import base64
 import os
 from datetime import timedelta
-from io import BytesIO
 
 import requests
 from celery.exceptions import MaxRetriesExceededError, Retry
@@ -105,13 +103,7 @@ class RHConversionFinished(RH):
         pdf_attachment = Attachment(folder=attachment.folder, user=attachment.user, title=title,
                                     description=attachment.description, type=AttachmentType.file,
                                     protection_mode=attachment.protection_mode, acl=attachment.acl)
-        # TODO: remove first case when Conversion Server is fully on new version
-        if 'content' in request.form:
-            # handling of legacy API
-            data = BytesIO(base64.b64decode(request.form['content']))
-        else:
-            filepdf = request.files['content']
-            data = filepdf.stream.read()
+        data = request.files['content'].stream.read()
         pdf_attachment.file = AttachmentFile(user=attachment.file.user, filename=f'{name}.pdf',
                                              content_type='application/pdf')
         pdf_attachment.file.save(data)
