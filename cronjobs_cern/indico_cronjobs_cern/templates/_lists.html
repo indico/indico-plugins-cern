@@ -5,7 +5,7 @@
 {% macro render_event_list(events_by_date) %}
     <ul>
         {% if events_by_date %}
-            {% for date, events in events_by_date.iteritems() %}
+            {% for date, events in events_by_date.items() %}
                 <li>
                     <span>{{ date }}</span>
                     <ul>
