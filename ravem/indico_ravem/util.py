@@ -53,18 +53,17 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
         response = requests.request(method, url, params=kwargs, headers=headers,
                                     auth=HTTPDigestAuth(username, password), timeout=timeout)
     except Timeout as error:
-        RavemPlugin.logger.warning("%s %s timed out: %s", error.request.method, error.request.url, error.message)
+        RavemPlugin.logger.warning("%s %s timed out: %s", error.request.method, error.request.url, error)
         # request timeout sometime has an inner timeout error as message instead of a string.
         raise Timeout(_("Timeout while contacting the room."))
     except Exception as error:
-        RavemPlugin.logger.exception("failed call: %s %s with %s: %s",
-                                     method.upper(), api_endpoint, kwargs, error.message)
+        RavemPlugin.logger.exception("failed call: %s %s with %s: %s", method.upper(), api_endpoint, kwargs, error)
         raise
 
     try:
         response.raise_for_status()
     except HTTPError as error:
-        RavemPlugin.logger.exception("%s %s failed with %s", response.request.method, response.url, error.message)
+        RavemPlugin.logger.exception("%s %s failed with %s", response.request.method, response.url, error)
         raise
 
     json_response = response.json()
@@ -140,7 +139,6 @@ class RavemOperationException(RavemException):
     """
     def __init__(self, message, reason):
         super().__init__(message)
-        self.message = message
         self.reason = reason
 
 
@@ -152,6 +150,5 @@ class RavemAPIException(RavemException):
     """
     def __init__(self, message, endpoint, response):
         super().__init__(message)
-        self.message = message
         self.endpoint = endpoint
         self.response = response

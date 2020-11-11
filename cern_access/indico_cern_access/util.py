@@ -126,7 +126,7 @@ def build_access_request_data(registration, event, generate_code):
         data['$lp'] = registration.cern_access_request.license_plate
 
     checksum = ';;'.join(f'{key}:{value}' for key, value in sorted(data.items()))
-    signature = hmac.new(str(CERNAccessPlugin.settings.get('secret_key')), checksum, hashlib.sha256)
+    signature = hmac.new(CERNAccessPlugin.settings.get('secret_key').encode(), checksum.encode(), hashlib.sha256)
     data['$si'] = signature.hexdigest()
     return data
 

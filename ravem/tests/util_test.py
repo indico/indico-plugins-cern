@@ -143,7 +143,7 @@ def test_raises_timeout(mocker):
     with pytest.raises(Timeout) as excinfo:
         ravem_api_call('test_endpoint')
 
-    assert excinfo.value.message == "Timeout while contacting the room."
+    assert str(excinfo.value) == "Timeout while contacting the room."
     assert request.call_count == 1
 
 
@@ -163,7 +163,7 @@ def test_unexpected_exception_is_logged(mocker, caplog, method, params):
     with pytest.raises(IndexError) as excinfo:
         ravem_api_call('test_endpoint', method=method, **params)
 
-    assert excinfo.value.message == 'this is unexpected'
+    assert str(excinfo.value) == 'this is unexpected'
     log = extract_logs(caplog, one=True, name='indico.plugin.ravem')
     assert log.message == "failed call: {} {} with {}: {}".format(method.upper(), 'test_endpoint', params,
                                                                   'this is unexpected')
@@ -192,7 +192,7 @@ def test_http_error_is_logged(mocker, caplog, method, params):
     with pytest.raises(HTTPError) as excinfo:
         ravem_api_call('test_endpoint', method=method, **params)
 
-    assert excinfo.value.message == 'Well this is embarrassing'
+    assert str(excinfo.value) == 'Well this is embarrassing'
     log = extract_logs(caplog, one=True, name='indico.plugin.ravem')
     assert log.message == '{} {} failed with {}'.format(
         method.upper(), RavemPlugin.settings.get('api_endpoint') + 'test_endpoint', 'Well this is embarrassing')
@@ -218,7 +218,7 @@ def test_invalid_json_respons_is_handled(mocker, caplog, method):
 
     err_msg = '{} {} returned json without a result or error: {}'.format(
         method.upper(), RavemPlugin.settings.get('api_endpoint') + 'test_endpoint', {'bad': 'json'})
-    assert excinfo.value.message == err_msg
+    assert str(excinfo.value) == err_msg
     assert excinfo.value.endpoint == 'test_endpoint'
     assert excinfo.value.response == response
 
@@ -236,7 +236,7 @@ def test_unlinked_event_vc_room_has_no_access():
     assert not has_access(event_vc_room)
 
 
-@pytest.mark.usefixtures('db')
+@pytest.mark.usefixtures('db', 'request_context')
 def test_unlinked_room_has_no_access(mocker):
     session = mocker.patch('indico_ravem.util.session')
     session.user = 'Guinea Pig'
@@ -247,7 +247,7 @@ def test_unlinked_room_has_no_access(mocker):
     assert not has_access(event_vc_room)
 
 
-@pytest.mark.usefixtures('db')
+@pytest.mark.usefixtures('db', 'request_context')
 def test_room_not_vidyo_capable_has_no_access(mocker):
     session = mocker.patch('indico_ravem.util.session')
     session.user = 'Guinea Pig'
@@ -260,7 +260,7 @@ def test_room_not_vidyo_capable_has_no_access(mocker):
     event_vc_room.link_object.room.has_equipment.assert_called_once_with('Vidyo')
 
 
-@pytest.mark.usefixtures('db')
+@pytest.mark.usefixtures('db', 'request_context')
 def test_check_if_current_user_is_room_owner(mocker):
     session = mocker.patch('indico_ravem.util.session')
     session.user = 'Guinea Pig'
@@ -281,7 +281,7 @@ def test_check_if_current_user_is_room_owner(mocker):
     retrieve_principal.assert_called_once_with(event_vc_room.vc_room.data.get.return_value)
 
 
-@pytest.mark.usefixtures('db')
+@pytest.mark.usefixtures('db', 'request_context')
 def test_check_if_current_user_can_modify(mocker):
     request = mocker.patch('indico_ravem.util.request')
     request.remote_addr = '111.222.123.123'
@@ -299,7 +299,7 @@ def test_check_if_current_user_can_modify(mocker):
     event_vc_room.event.can_manage.assert_called_once_with(session.user)
 
 
-@pytest.mark.usefixtures('db')
+@pytest.mark.usefixtures('db', 'request_context')
 def test_check_if_request_from_room(mocker):
     mocker.patch('indico_ravem.util.session')
     mocker.patch('indico_ravem.util.retrieve_principal')
@@ -316,7 +316,7 @@ def test_check_if_request_from_room(mocker):
     event_vc_room.link_object.room.get_attribute_value.assert_called_once_with('ip', '')
 
 
-@pytest.mark.usefixtures('db')
+@pytest.mark.usefixtures('db', 'request_context')
 def test_check_basic_user_outside_room(mocker):
     mocker.patch('indico_ravem.util.session')
     mocker.patch('indico_ravem.util.retrieve_principal')
