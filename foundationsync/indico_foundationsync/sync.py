@@ -5,6 +5,7 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
+import functools
 import re
 from collections import Counter, defaultdict
 from contextlib import contextmanager
@@ -27,6 +28,10 @@ except ImportError:
 
 class SkipRoom(Exception):
     pass
+
+
+# memoize results in case we are on the slower auth API
+get_user_by_email = functools.cache(get_user_by_email)
 
 
 def OutputTypeHandler(cursor, name, defaultType, size, precision, scale):
