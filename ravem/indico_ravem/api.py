@@ -31,12 +31,12 @@ class BaseAPI:
                               params={'where': 'room_name', 'value': room_name})
 
     @abstractmethod
-    def get_room_id(self, vc_room):
+    def get_room_id(self, vc_room_data):
         """Returns the provider specific room ID."""
         pass
 
     @abstractmethod
-    def connect_endpoint(self, room, vc_room):
+    def connect_endpoint(self, room_name, vc_room_id):
         """Connects a physical room to a videoconference room using the RAVEM API.
 
         This call will return "OK" as a result immediately if RAVEM can (or has
@@ -45,9 +45,9 @@ class BaseAPI:
         using the `get_endpoint_status` method after some delay to allow the
         operation to be performed..
 
-        :param vc_room: str -- the object representing the specific video
-            conference room of this specific provider
-        :param room: str -- the object representing the room status
+        :param room_name: str -- the name of the physical room
+        :param vc_room_id: str -- the provider specific id of the
+            videoconference room
 
         :returns: dict -- {'result': 'OK'} if the operation "succeeds", raises a
                   RavemAPIException otherwise.
@@ -55,7 +55,7 @@ class BaseAPI:
         pass
 
     @abstractmethod
-    def disconnect_endpoint(self, room, vc_room):
+    def disconnect_endpoint(self, room_name, vc_room_id):
         """Disconnects a physical room from a videoconference room using the RAVEM API.
 
         This call will return "OK" as a result immediately if RAVEM can (or has
@@ -64,9 +64,9 @@ class BaseAPI:
         using the `get_endpoint_status` method after some delay to allow the
         operation to be performed.
 
-        :param vc_room: str -- the object representing the specific video
-            conference room of this specific provider
-        :param room: str -- the object representing the room status
+        :param room_name: str -- the name of the physical room
+        :param vc_room_id: str -- the provider specific id of the
+            videoconference room
 
         :returns: dict -- {'result': 'OK'} if the operation "succeeds", raises a
             RavemAPIException otherwise.
@@ -77,12 +77,12 @@ class BaseAPI:
 class ZoomAPI(BaseAPI):
     SERVICE_TYPE = 'zoom'
 
-    def get_room_id(self, vc_room):
-        return str(vc_room.data['zoom_id'])
+    def get_room_id(self, vc_room_data):
+        return str(vc_room_data["zoom_id"])
 
-    def connect_endpoint(self, room, vc_room):
+    def connect_endpoint(self, room_name, vc_room_id):
         return ravem_api_call('%s/connect' % self.SERVICE_TYPE, method='POST',
-                              json={'meetingId': self.get_room_id(vc_room), 'roomName': room['room_name']})
+                              json={'meetingId': vc_room_id, 'roomName': room_name})
 
-    def disconnect_endpoint(self, room, vc_room):
-        return ravem_api_call('%s/disconnect' % self.SERVICE_TYPE, method='POST', json={'roomName': room['room_name']})
+    def disconnect_endpoint(self, room_name, vc_room_id):
+        return ravem_api_call('%s/disconnect' % self.SERVICE_TYPE, method='POST', json={'roomName': room_name})

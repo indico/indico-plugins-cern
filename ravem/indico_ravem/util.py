@@ -121,6 +121,7 @@ class RavemOperationException(RavemException):
     Functions raising this exception should document the possible reasons with
     which the exception can be raised.
     """
+
     def __init__(self, message, reason):
         super(RavemOperationException, self).__init__(message)
         self.message = message
@@ -133,6 +134,7 @@ class RavemAPIException(RavemException):
     In this context, by invalid response we mean a valid json response which
     does not match the excepted format of having a `error` or `result` key.
     """
+
     def __init__(self, message, endpoint, response):
         super(RavemAPIException, self).__init__(message)
         self.message = message
