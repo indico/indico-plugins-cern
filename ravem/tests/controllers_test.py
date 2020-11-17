@@ -9,15 +9,14 @@ import json
 
 import pytest
 from flask import request
-from indico.modules.rb import Room
-from mock import MagicMock
-from werkzeug.exceptions import NotFound
-
-from indico.core.errors import IndicoError
-
 from indico_ravem.controllers import RHRavemConnectRoom, RHRavemDisconnectRoom, RHRavemRoomStatus
 from indico_ravem.plugin import RavemPlugin
 from indico_ravem.util import RavemException, RavemOperationException
+from mock import MagicMock, Mock
+from werkzeug.exceptions import NotFound
+
+from indico.core.errors import IndicoError
+from indico.modules.rb import Room
 
 
 def event_vc_room(vc_room=None, link_object=False, conf_id=None,
@@ -80,7 +79,7 @@ def test_event_vc_room_without_link_object(mocker, rh_class):
         with pytest.raises(IndicoError) as excinfo:
             rh._process_args()
 
-    assert excinfo.value.message == "Event VC Room ({0}) is not linked to anything".format(id_)
+    assert str(excinfo.value) == "Event VC Room ({0}) is not linked to anything".format(id_)
 
 
 @pytest.mark.usefixtures('db', 'request_context')
@@ -100,7 +99,7 @@ def test_link_object_without_conference(mocker, rh_class):
         with pytest.raises(IndicoError) as excinfo:
             rh._process_args()
 
-    assert excinfo.value.message == "Event VC Room ({0}) does not have an event".format(id_)
+    assert str(excinfo.value) == "Event VC Room ({0}) does not have an event".format(id_)
 
 
 @pytest.mark.usefixtures('db', 'request_context')
@@ -121,7 +120,7 @@ def test_event_id_not_matching_conf_id(mocker, rh_class):
         with pytest.raises(IndicoError) as excinfo:
             rh._process_args()
 
-    assert excinfo.value.message == "Event VC Room ({0}) does not have an event with the id {1}" \
+    assert str(excinfo.value) == "Event VC Room ({0}) does not have an event with the id {1}" \
                                     .format(id_, evcr_conf_id)
 
 
@@ -142,7 +141,7 @@ def test_invalid_room(mocker, rh_class):
         with pytest.raises(IndicoError) as excinfo:
             rh._process_args()
 
-    assert excinfo.value.message == "Event VC Room ({0}) is not linked to an event with a room".format(id_)
+    assert str(excinfo.value) == "Event VC Room ({0}) is not linked to an event with a room".format(id_)
 
 
 @pytest.mark.usefixtures('db', 'request_context')
@@ -162,25 +161,25 @@ def test_invalid_room_name(mocker, rh_class):
         with pytest.raises(IndicoError) as excinfo:
             rh._process_args()
 
-    assert excinfo.value.message == "Event VC Room ({0}) is not linked to an event with a valid room".format(id_)
+    assert str(excinfo.value) == "Event VC Room ({0}) is not linked to an event with a valid room".format(id_)
 
 
 @pytest.mark.usefixtures('db', 'request_context')
 @pytest.mark.parametrize(('rh_class', 'operation_name', 'args', 'kwargs', 'fixture'), (
-    (RHRavemRoomStatus, 'get_room_status', ['room_name'], ['room_special_name'], {
+    (RHRavemRoomStatus, 'get_room_status', ['room_name', 'room_verbose_name'], [], {
         'room_name': '513-B-22',
-        'room_special_name': 'Personalized name'
+        'room_verbose_name': 'Personalized name',
     }),
-    (RHRavemConnectRoom, 'connect_room', ['room_name', 'vc_room'], ['room_special_name', 'force'], {
+    (RHRavemConnectRoom, 'connect_room', ['room_name', 'vc_room'], ['room_verbose_name', 'force'], {
         'room_name': '513-B-22',
-        'room_special_name': 'Personalized name',
-        'vc_room': '<vc_room_object(id:6789)>',
+        'room_verbose_name': 'Personalized name',
+        'vc_room': Mock(type='zoom'),
         'force': True
     }),
-    (RHRavemDisconnectRoom, 'disconnect_room', ['room_name', 'vc_room'], ['room_special_name', 'force'], {
+    (RHRavemDisconnectRoom, 'disconnect_room', ['room_name', 'vc_room'], ['room_verbose_name', 'force'], {
         'room_name': '513-B-22',
-        'room_special_name': 'Personalized name',
-        'vc_room': '<vc_room_object(id:6789)>',
+        'room_verbose_name': 'Personalized name',
+        'vc_room': Mock(type='zoom'),
         'force': True
     })
 ))
@@ -194,7 +193,7 @@ def test_operation_called_with_correct_args(mocker, rh_class, operation_name, ar
     evcr_query = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation.find_one')
     evcr_query.return_value = event_vc_room(vc_room=fixture.get('vc_room'), conf_id=conf_id,
                                             rb_room_gen_name=fixture['room_name'],
-                                            rb_room_name=fixture['room_special_name'])
+                                            rb_room_name=fixture['room_verbose_name'])
 
     operation = mocker.patch('indico_ravem.controllers.' + operation_name)
 
@@ -221,8 +220,7 @@ def test_operation_called_with_correct_args(mocker, rh_class, operation_name, ar
         'return_value': {
             'vc_room_name': '513-B-22',
             'connected': True,
-            'service_type': 'vidyo',
-            'room_endpoint': 'vidyo_username'
+            'service_type': 'zoom',
         }
     }),
     (RHRavemConnectRoom, {'name': 'connect_room'}),
@@ -238,7 +236,8 @@ def test_successful_operation(mocker, rh_class, operation):
     request.view_args['confId'] = conf_id
 
     evcr_query = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation.find_one')
-    evcr_query.return_value = event_vc_room(conf_id=conf_id, rb_room_gen_name=room_name, rb_room_name=room_special_name)
+    evcr_query.return_value = event_vc_room(conf_id=conf_id, vc_room=Mock(type='zoom'),
+                                            rb_room_gen_name=room_name, rb_room_name=room_special_name)
 
     op_mock = mocker.patch('indico_ravem.controllers.' + operation['name'])
     op_mock.return_value = dict(operation.get('return_value', {}))
@@ -329,4 +328,4 @@ def test_exception_raised_on_unauthorized_access(mocker, rh_class):
         with pytest.raises(RavemException) as excinfo:
             rh._check_access()
 
-    assert excinfo.value.message == "Not authorized to access the room with RAVEM"
+    assert str(excinfo.value) == "Not authorized to access the room with RAVEM"
