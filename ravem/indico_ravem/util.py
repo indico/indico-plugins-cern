@@ -11,6 +11,8 @@ from urlparse import urljoin
 
 import requests
 from flask import request, session
+from indico.modules.rb.models.equipment import EquipmentType
+from indico.modules.rb.models.room_features import RoomFeature
 from indico.util.user import principal_from_identifier
 from requests.exceptions import HTTPError, Timeout
 
@@ -92,8 +94,9 @@ def has_access(event_vc_room, _split_re=re.compile(r'[\s,;]+')):
     current_user = session.user
 
     # No physical room or room is not videoconference capable
-    # TODO: We don't have any for room equipment attribute for zoom yet
-    if not room:
+    feature = RavemPlugin.settings.get('room_feature')
+    equipment = EquipmentType.query.filter(EquipmentType.features.any(RoomFeature.name == feature)).all()
+    if not room or not room.has_equipment(*(e.name for e in equipment)):
         return False
 
     ips = set(filter(None, (x.strip() for x in _split_re.split(room.get_attribute_value('ip', '')))))

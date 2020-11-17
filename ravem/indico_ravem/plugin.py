@@ -43,6 +43,8 @@ class SettingsForm(IndicoForm):  # pragma: no cover
     polling_interval = IntegerField(_('Polling interval'), [NumberRange(min=1000)],
                                     description=_('The delay between two polls in ms, at least 1000 ms<br>'
                                                   '(delete the cached var.js to take effect)'))
+    room_feature = StringField(_('Room feature'), [DataRequired()],
+                               description=_('The room equipment feature for videoconference capable rooms'))
 
 
 @depends('vc_vidyo')
@@ -60,7 +62,8 @@ class RavemPlugin(IndicoPlugin):
         'access_token': None,
         'timeout': 30,
         'polling_limit': 8,
-        'polling_interval': 4000
+        'polling_interval': 4000,
+        'room_feature': 'zoom'
     }
     category = PluginCategory.videoconference
 
