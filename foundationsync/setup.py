@@ -19,7 +19,7 @@ setup(
     zip_safe=False,
     install_requires=[
         'indico>=3.0.dev0',
-        'cx_Oracle<8',
+        'cx_Oracle>=8.0.1,<9',
     ],
     python_requires='~=3.9',
     entry_points={

@@ -20,7 +20,7 @@ setup(
     zip_safe=False,
     install_requires=[
         'indico>=3.0.dev0',
-        'pyproj>=2.1.2',
+        'pyproj>=3.0.0.post1,<4',
     ],
     python_requires='~=3.9',
     entry_points={
