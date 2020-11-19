@@ -6,7 +6,7 @@
 # the LICENSE file for more details.
 
 import pytest
-from tests.conftest import RAVEM_TEST_API_ENDPOINT, RAVEM_TEST_PATH, connected_fixtures, disconnected_fixtures, gen_params
+from conftest import RAVEM_TEST_API_ENDPOINT, RAVEM_TEST_PATH, connected_fixtures, disconnected_fixtures, gen_params
 from indico_ravem.operations import connect_room, get_api
 from indico_ravem.plugin import RavemPlugin
 from indico_ravem.util import RavemException, RavemOperationException

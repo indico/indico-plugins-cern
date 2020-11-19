@@ -8,7 +8,7 @@
 import json
 
 import pytest
-from tests.conftest import RAVEM_TEST_API_ENDPOINT, RAVEM_TEST_PATH, fixtures, gen_params
+from conftest import RAVEM_TEST_API_ENDPOINT, RAVEM_TEST_PATH, fixtures, gen_params
 from indico_ravem.operations import connect_room, get_api, get_room_status
 from indico_ravem.plugin import RavemPlugin
 from indico_ravem.util import RavemException

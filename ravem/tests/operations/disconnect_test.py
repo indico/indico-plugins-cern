@@ -6,7 +6,7 @@
 # the LICENSE file for more details.
 
 import pytest
-from tests.conftest import RAVEM_TEST_API_ENDPOINT, RAVEM_TEST_PATH, connected_fixtures, disconnected_fixtures, gen_params
+from conftest import RAVEM_TEST_API_ENDPOINT, RAVEM_TEST_PATH, connected_fixtures, disconnected_fixtures, gen_params
 from indico_ravem.operations import disconnect_room, get_api
 from indico_ravem.plugin import RavemPlugin
 from indico_ravem.util import RavemException, RavemOperationException
@@ -114,13 +114,13 @@ def test_disconnect_room_error(
         disconnect_room(room_name, vc_room)
 
     assert (
-        excinfo.value.message
+        str(excinfo.value)
         == "Failed to disconnect the room {0} from the videoconference room {1} with error: {2}".format(
             room_name, vc_room_id, error_message
         )
     )
     log = extract_logs(caplog, one=True, name="indico.plugin.ravem")
-    assert log.message == excinfo.value.message
+    assert log.message == str(excinfo.value)
 
 
 @pytest.mark.usefixtures("db")
