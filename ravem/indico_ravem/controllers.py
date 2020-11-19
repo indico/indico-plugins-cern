@@ -61,7 +61,7 @@ class RHRavemRoomStatus(RHRavemBase):
             response = get_room_status(self.room.name, self.room.verbose_name)
             response['success'] = True
         except RavemException as err:
-            response = {'success': False, 'reason': 'operation-failed', 'message': err.message}
+            response = {'success': False, 'reason': 'operation-failed', 'message': str(err)}
         return jsonify(response)
 
 
@@ -72,9 +72,9 @@ class RHRavemConnectRoom(RHRavemBase):
             connect_room(self.room.name, self.event_vc_room.vc_room, force=force,
                          room_verbose_name=self.room.verbose_name)
         except RavemOperationException as err:
-            response = {'success': False, 'reason': err.reason, 'message': err.message}
+            response = {'success': False, 'reason': err.reason, 'message': str(err)}
         except RavemException as err:
-            response = {'success': False, 'reason': 'operation-failed', 'message': err.message}
+            response = {'success': False, 'reason': 'operation-failed', 'message': str(err)}
         else:
             response = {'success': True}
         return jsonify(response)
@@ -87,9 +87,9 @@ class RHRavemDisconnectRoom(RHRavemBase):
             disconnect_room(self.room.name, self.event_vc_room.vc_room, force=force,
                             room_verbose_name=self.room.verbose_name)
         except RavemOperationException as err:
-            response = {'success': False, 'reason': err.reason, 'message': err.message}
+            response = {'success': False, 'reason': err.reason, 'message': str(err)}
         except RavemException as err:
-            response = {'success': False, 'reason': 'operation-failed', 'message': err.message}
+            response = {'success': False, 'reason': 'operation-failed', 'message': str(err)}
         else:
             response = {'success': True}
 
