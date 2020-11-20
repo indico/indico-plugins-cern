@@ -40,12 +40,14 @@ export default class BootstrapOptions extends React.Component {
                 {EXPERIMENTS.map(experiment => (
                     <Button key={experiment}
                             onClick={() => this.handleExperimentClick(experiment)}
+                            type="button"
                             primary={division === experiment}>
                         {experiment}
                     </Button>
                 ))}
                 <Button key="other"
                         onClick={() => this.handleExperimentClick(null)}
+                        type="button"
                         primary={!division}>
                     <Translate>All</Translate>
                 </Button>
