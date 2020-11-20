@@ -9,8 +9,7 @@ import os
 from datetime import datetime, time
 
 from flask import current_app, redirect, request, url_for
-from marshmallow import ValidationError, fields
-from webargs import dict2schema
+from marshmallow import Schema, ValidationError, fields
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
@@ -25,8 +24,8 @@ from indico_burotel.controllers import RHLanding, WPBurotelBase
 
 
 def _add_missing_time(field, data, time_):
-    ds = dict2schema({field: fields.Date()})()
-    dts = dict2schema({field: NaiveDateTime()})()
+    ds = Schema.from_dict({field: fields.Date()})()
+    dts = Schema.from_dict({field: NaiveDateTime()})()
     try:
         # let's see if we can load this as a DateTime
         dts.load({field: data[field]})

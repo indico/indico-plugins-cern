@@ -258,7 +258,7 @@ class RHStatsAPI(RH):
     @use_args({
         'from': fields.Date(required=True),
         'to': fields.Date(required=True),
-    })
+    }, location='query')
     def _process(self, args):
         start_date = args['from']
         end_date = args['to']

@@ -54,7 +54,7 @@ class RHBurotelStats(RHProtected):
     @use_kwargs({
         'start_month': fields.DateTime("%Y-%m"),
         'end_month': fields.DateTime("%Y-%m")
-    })
+    }, location='query')
     def process(self, start_month, end_month):
         start_dt, end_dt = get_month_dates(start_month, end_month)
         result, months = calculate_monthly_stats(start_dt, end_dt)
@@ -76,7 +76,7 @@ class RHBurotelStatsCSV(RHProtected):
     @use_kwargs({
         'start_month': fields.DateTime('%Y-%m'),
         'end_month': fields.DateTime('%Y-%m')
-    })
+    }, location='query')
     def process(self, start_month, end_month):
         start_dt, end_dt = get_month_dates(start_month, end_month)
         result, months = calculate_monthly_stats(start_dt, end_dt)
