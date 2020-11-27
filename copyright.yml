@@ -1,0 +1,11 @@
+root: true
+name: CERN
+start_year: 2014
+header: |-
+  {comment_start} This file is part of the CERN Indico plugins.
+  {comment_middle} Copyright (C) {dates} {name}
+  {comment_middle}
+  {comment_middle} The CERN Indico plugins are free software; you can redistribute
+  {comment_middle} them and/or modify them under the terms of the MIT License; see
+  {comment_middle} the LICENSE file for more details.
+  {comment_end}

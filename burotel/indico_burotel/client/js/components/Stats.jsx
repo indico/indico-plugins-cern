@@ -1,9 +1,9 @@
-// This file is part of Indico.
-// Copyright (C) 2002 - 2020 CERN
+// This file is part of the CERN Indico plugins.
+// Copyright (C) 2014 - 2020 CERN
 //
-// Indico is free software; you can redistribute it and/or
-// modify it under the terms of the MIT License; see the
-// LICENSE file for more details.
+// The CERN Indico plugins are free software; you can redistribute
+// them and/or modify them under the terms of the MIT License; see
+// the LICENSE file for more details.
 
 import getBurotelStats from 'indico-url:plugin_burotel.stats';
 
