@@ -61,6 +61,11 @@ definitions:
     stylesheet: fcc.scss
     title: FCC
 
+  fccis:
+    <<: *standard_themes_cern
+    stylesheet: fccis.scss
+    title: FCCIS
+
   ilc:
     <<: *standard_themes_cern
     stylesheet: ilc.scss
