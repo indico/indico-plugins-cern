@@ -201,7 +201,7 @@ def test_check_if_current_user_is_room_owner(mocker):
     session.user = 'Guinea Pig'
     request = mocker.patch('indico_ravem.util.request')
     request.remote_addr = '111.222.123.123'
-    retrieve_principal = mocker.patch('indico_ravem.util.principal_from_identifier')
+    retrieve_principal = mocker.patch('indico_ravem.util._retrieve_principal')
     retrieve_principal.side_effect = lambda x: session.user
 
     event_vc_room = MagicMock()
@@ -219,7 +219,7 @@ def test_check_if_current_user_can_modify(mocker):
     request.remote_addr = '111.222.123.123'
     session = mocker.patch('indico_ravem.util.session')
     session.user = 'Guinea Pig'
-    mocker.patch('indico_ravem.util.principal_from_identifier')
+    mocker.patch('indico_ravem.util._retrieve_principal')
 
     event_vc_room = MagicMock()
     event_vc_room.link_object.room.has_equipment = MagicMock(return_value=True)

@@ -12,7 +12,6 @@ from urlparse import urljoin
 
 import requests
 from flask import request, session
-from indico.util.user import principal_from_identifier
 from requests.exceptions import HTTPError, Timeout
 
 from indico.util.i18n import _
@@ -94,16 +93,15 @@ def has_access(event_vc_room, _split_re=re.compile(r'[\s,;]+')):
 
     # No physical room or room is not videoconference capable
     feature = RavemPlugin.settings.get('room_feature')
-    if not room or not feature or not (set(feature.equipment_types) & set(room.available_equipment)):
+    if not room or feature and not (set(feature.equipment_types) & set(room.available_equipment)):
         return False
 
     ips = {_f for _f in (x.strip() for x in _split_re.split(room.get_attribute_value('ip', ''))) if _f}
     host = vc_room.data.get('host') or vc_room.data.get('owner')
     if not host:
         raise AttributeError('Unsupported principal attribute (valid: host, owner)')
-    principal = _retrieve_principal(host)
     return any([
-        current_user == principal,
+        current_user == _retrieve_principal(host),
         event.can_manage(current_user),
         request.remote_addr in ips
     ])

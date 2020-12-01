@@ -169,6 +169,7 @@ def test_invalid_room_name(mocker, rh_class):
     (RHRavemRoomStatus, 'get_room_status', ['room_name', 'room_verbose_name'], [], {
         'room_name': '513-B-22',
         'room_verbose_name': 'Personalized name',
+        'vc_room': Mock(type='zoom'),
     }),
     (RHRavemConnectRoom, 'connect_room', ['room_name', 'vc_room'], ['room_verbose_name', 'force'], {
         'room_name': '513-B-22',
@@ -301,7 +302,7 @@ def test_exception_is_handled(mocker, rh_class, operation_name, err_message):
     op_mock.side_effect = RavemException(err_message)
 
     evcr_query = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation.find_one')
-    evcr_query.return_value = event_vc_room(vc_room='<vc_room_object(id:6789)>', conf_id=conf_id,
+    evcr_query.return_value = event_vc_room(vc_room=Mock(type='zoom'), conf_id=conf_id,
                                             rb_room_gen_name='513-B-22', rb_room_name='Personalized name')
 
     rh = rh_class()
