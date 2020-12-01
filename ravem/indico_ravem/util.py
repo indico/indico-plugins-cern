@@ -7,6 +7,7 @@
 
 import re
 from pprint import pformat
+
 from urlparse import urljoin
 
 import requests
@@ -97,14 +98,26 @@ def has_access(event_vc_room, _split_re=re.compile(r'[\s,;]+')):
         return False
 
     ips = {_f for _f in (x.strip() for x in _split_re.split(room.get_attribute_value('ip', ''))) if _f}
-    host = vc_room.data.get('host')
+    host = vc_room.data.get('host') or vc_room.data.get('owner')
     if not host:
-        raise AttributeError('Unsupported principal attribute (valid: host)')
+        raise AttributeError('Unsupported principal attribute (valid: host, owner)')
+    principal = _retrieve_principal(host)
     return any([
-        current_user == principal_from_identifier(host),
+        current_user == principal,
         event.can_manage(current_user),
         request.remote_addr in ips
     ])
+
+
+def _retrieve_principal(principal):
+    """Retrieve a principal from a serialized string defined by a list ([User, 23]) or a double
+       dot delimited string (User:23).
+    """
+    from indico.modules.users import User
+    type_, id_ = principal if isinstance(principal, (list, tuple)) else principal.split(':')
+    if type_ in {'Avatar', 'User'}:
+        return User.get(int(id_))
+    raise ValueError('Unexpected type: {}'.format(type_))
 
 
 class RavemException(Exception):

@@ -106,6 +106,10 @@
         icon: 'icon-spinner',
         tooltip: $t.gettext('Waiting for information about {0}'),
       },
+      unsupported: {
+        icon: 'icon-warning',
+        tooltip: $t.gettext('Unsupported provider: {2}'),
+      }
     };
 
     /**
@@ -307,12 +311,11 @@
         })
         .done(function successHandler(data) {
           if (!data.success) {
-            setButtonState(btn, 'errorStatus', data.message);
-          } else {
-            console.log(data);
-            const connected = data.connected;
-            setButtonState(btn, connected ? 'connected' : 'disconnected');
+            setButtonState(btn, data.reason === 'unsupported' ? data.reason : 'errorStatus', data.message);
+            return;
           }
+          const connected = data.connected;
+          setButtonState(btn, connected ? 'connected' : 'disconnected');
         });
       return btn;
     }

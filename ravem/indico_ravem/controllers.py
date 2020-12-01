@@ -57,6 +57,13 @@ class RHRavemBase(RH):
 
 class RHRavemRoomStatus(RHRavemBase):
     def _process(self):
+        if self.event_vc_room.vc_room.type == 'vidyo':
+            return {
+                'success': False,
+                'reason': 'unsupported',
+                'message': '<a target="_blank" href="https://cern.ch/go/6SNm">'
+                           'Vidyo is no longer supported</a>'
+            }
         try:
             response = get_room_status(self.room.name, self.room.verbose_name)
             response['success'] = True
