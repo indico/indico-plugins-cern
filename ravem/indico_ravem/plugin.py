@@ -11,16 +11,19 @@ import os
 from functools import partial
 
 from flask_pluginengine import depends, render_plugin_template
+from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from wtforms.fields import BooleanField, IntegerField
 from wtforms.fields.html5 import URLField
-from wtforms.fields.simple import StringField
 from wtforms.validators import DataRequired, NumberRange
 
 from indico.core.config import config
 from indico.core.plugins import IndicoPlugin, PluginCategory
+from indico.core.settings.converters import ModelConverter
 from indico.modules.events.views import WPSimpleEventDisplay
+from indico.modules.rb.models.room_features import RoomFeature
 from indico.modules.vc.views import WPVCEventPage, WPVCManageEvent
 from indico.web.forms.base import IndicoForm
+from indico.web.forms.fields import IndicoPasswordField
 from indico.web.forms.widgets import SwitchWidget
 
 from indico_ravem import _
@@ -28,11 +31,11 @@ from indico_ravem import _
 
 class SettingsForm(IndicoForm):  # pragma: no cover
     debug = BooleanField(_('Debug mode'), widget=SwitchWidget(),
-                         description=_("If enabled, no actual connect/disconnect requests are sent"),)
+                         description=_('If enabled, no actual connect/disconnect requests are sent'),)
     api_endpoint = URLField(_('API endpoint'), [DataRequired()], filters=[lambda x: x.rstrip('/') + '/'],
                             description=_('The endpoint for the RAVEM API'))
-    access_token = StringField(_('Access token'), [DataRequired()],
-                               description=_('The access token used to connect to the RAVEM API'))
+    access_token = IndicoPasswordField(_('Access token'), [DataRequired()], toggle=True,
+                                       description=_('The access token used to connect to the RAVEM API'))
     timeout = IntegerField(_('Timeout'), [NumberRange(min=0)],
                            description=_('The amount of time in seconds to wait for RAVEM to reply<br>'
                                          '(0 to disable the timeout)'))
@@ -43,8 +46,9 @@ class SettingsForm(IndicoForm):  # pragma: no cover
     polling_interval = IntegerField(_('Polling interval'), [NumberRange(min=1000)],
                                     description=_('The delay between two polls in ms, at least 1000 ms<br>'
                                                   '(delete the cached var.js to take effect)'))
-    room_feature = StringField(_('Room feature'), [DataRequired()],
-                               description=_('The room equipment feature for videoconference capable rooms'))
+    room_feature = QuerySelectField(_('Room feature'), [DataRequired()], allow_blank=True,
+                                    query_factory=lambda: RoomFeature.query, get_label='title',
+                                    description=_('The room equipment feature for videoconference capable rooms'))
 
 
 @depends('vc_vidyo')
@@ -63,7 +67,10 @@ class RavemPlugin(IndicoPlugin):
         'timeout': 30,
         'polling_limit': 8,
         'polling_interval': 4000,
-        'room_feature': 'zoom'
+        'room_feature': None
+    }
+    settings_converters = {
+        'room_feature': ModelConverter(RoomFeature),
     }
     category = PluginCategory.videoconference
 
