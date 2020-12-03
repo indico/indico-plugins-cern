@@ -6,7 +6,6 @@
 # the LICENSE file for more details.
 
 from flask import jsonify, request
-from indico_ravem.plugin import RavemPlugin
 from werkzeug.exceptions import NotFound
 
 from indico.core.errors import IndicoError

@@ -5,8 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from __future__ import unicode_literals
-
 import os
 from functools import partial
 
@@ -51,7 +49,7 @@ class SettingsForm(IndicoForm):  # pragma: no cover
                                     description=_('The room equipment feature for videoconference capable rooms'))
 
 
-@depends('vc_vidyo')
+@depends('vc_zoom')
 class RavemPlugin(IndicoPlugin):
     """RAVEM
 

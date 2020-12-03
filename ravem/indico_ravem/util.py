@@ -7,7 +7,6 @@
 
 import re
 from pprint import pformat
-
 from urlparse import urljoin
 
 import requests
@@ -108,8 +107,8 @@ def has_access(event_vc_room, _split_re=re.compile(r'[\s,;]+')):
 
 
 def _retrieve_principal(principal):
-    """Retrieve a principal from a serialized string defined by a list ([User, 23]) or a double
-       dot delimited string (User:23).
+    """Retrieve a principal from a serialized string defined by a list ``[User, 23]`` or a comma
+       delimited string like ``User:23``.
     """
     from indico.modules.users import User
     type_, id_ = principal if isinstance(principal, (list, tuple)) else principal.split(':')

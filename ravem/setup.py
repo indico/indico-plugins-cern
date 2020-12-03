@@ -22,7 +22,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'indico>=2.2.dev0',
-        'indico-plugin-vc-vidyo>=1.0',
+        'indico-plugin-vc-zoom>=2.3b1,<2.4.dev0',
     ],
     entry_points={
         'indico.plugins': {'ravem = indico_ravem.plugin:RavemPlugin'},

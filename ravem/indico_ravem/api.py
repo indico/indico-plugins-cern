@@ -6,6 +6,7 @@
 # the LICENSE file for more details.
 
 from abc import ABCMeta, abstractmethod
+
 from indico_ravem.util import ravem_api_call
 
 
@@ -22,9 +23,6 @@ class BaseAPI:
         This call returns the status of a room equipped with videoconference capable device
 
         :param room_name: str -- the name of the physical room
-
-        :returns: dict -- the status of the room as a JSON response according to the
-            RAVEM API.
         """
         room_name = room_name.replace('/', '-', 1)
         return ravem_api_call('rooms/details', method='GET',
@@ -48,9 +46,6 @@ class BaseAPI:
         :param room_name: str -- the name of the physical room
         :param vc_room_id: str -- the provider specific id of the
             videoconference room
-
-        :returns: dict -- {'result': 'OK'} if the operation "succeeds", raises a
-                  RavemAPIException otherwise.
         """
         pass
 
@@ -67,9 +62,6 @@ class BaseAPI:
         :param room_name: str -- the name of the physical room
         :param vc_room_id: str -- the provider specific id of the
             videoconference room
-
-        :returns: dict -- {'result': 'OK'} if the operation "succeeds", raises a
-            RavemAPIException otherwise.
         """
         pass
 
