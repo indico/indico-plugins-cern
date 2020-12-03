@@ -25,13 +25,13 @@ class RHRavemBase(RH):
         if not has_access(self.event_vc_room):
             raise RavemException(_("Not authorized to access the room with RAVEM"))
 
-    def get_event_vc_room(self, _id):
-        event_vc_room = VCRoomEventAssociation.find_one(id=_id)
+    def get_event_vc_room(self, id_):
+        event_vc_room = VCRoomEventAssociation.query.get(id_)
         if not event_vc_room:
-            raise NotFound(_("Event VC Room not found for id {id}").format(id=_id))
+            raise NotFound(_("Event VC Room not found for id {id}").format(id=id_))
         if not event_vc_room.link_object:
             raise IndicoError(
-                _("Event VC Room ({id}) is not linked to anything").format(id=_id)
+                _("Event VC Room ({id}) is not linked to anything").format(id=id_)
             )
         return event_vc_room
 

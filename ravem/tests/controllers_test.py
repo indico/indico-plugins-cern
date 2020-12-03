@@ -51,8 +51,8 @@ def test_event_vc_room_not_found(mocker, rh_class):
     id_ = 123456
     request.view_args['event_vc_room_id'] = id_
 
-    mock = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation.find_one')
-    mock.return_value = None
+    mock = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation')
+    mock.query.get.return_value = None
     rh = rh_class()
 
     with RavemPlugin.instance.plugin_context():
@@ -71,8 +71,8 @@ def test_event_vc_room_without_link_object(mocker, rh_class):
     request.view_args['event_vc_room_id'] = id_
     request.view_args['confId'] = conf_id
 
-    mock = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation.find_one')
-    mock.return_value = event_vc_room()
+    mock = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation')
+    mock.query.get.return_value = event_vc_room()
     rh = rh_class()
 
     with RavemPlugin.instance.plugin_context():
@@ -91,8 +91,8 @@ def test_link_object_without_conference(mocker, rh_class):
     request.view_args['event_vc_room_id'] = id_
     request.view_args['confId'] = conf_id
 
-    mock = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation.find_one')
-    mock.return_value = event_vc_room(link_object=True)
+    mock = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation')
+    mock.query.get.return_value = event_vc_room(link_object=True)
     rh = rh_class()
 
     with RavemPlugin.instance.plugin_context():
@@ -112,8 +112,8 @@ def test_event_id_not_matching_conf_id(mocker, rh_class):
     request.view_args['event_vc_room_id'] = id_
     request.view_args['confId'] = conf_id
 
-    mock = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation.find_one')
-    mock.return_value = event_vc_room(conf_id=evcr_conf_id)
+    mock = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation')
+    mock.query.get.return_value = event_vc_room(conf_id=evcr_conf_id)
     rh = rh_class()
 
     with RavemPlugin.instance.plugin_context():
@@ -133,8 +133,8 @@ def test_invalid_room(mocker, rh_class):
     request.view_args['event_vc_room_id'] = id_
     request.view_args['confId'] = conf_id
 
-    mock = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation.find_one')
-    mock.return_value = event_vc_room(conf_id=conf_id)
+    mock = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation')
+    mock.query.get.return_value = event_vc_room(conf_id=conf_id)
     rh = rh_class()
 
     with RavemPlugin.instance.plugin_context():
@@ -153,8 +153,8 @@ def test_invalid_room_name(mocker, rh_class):
     request.view_args['event_vc_room_id'] = id_
     request.view_args['confId'] = conf_id
 
-    mock = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation.find_one')
-    mock.return_value = event_vc_room(conf_id=conf_id, rb_room=True)
+    mock = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation')
+    mock.query.get.return_value = event_vc_room(conf_id=conf_id, rb_room=True)
     rh = rh_class()
 
     with RavemPlugin.instance.plugin_context():
@@ -191,8 +191,8 @@ def test_operation_called_with_correct_args(mocker, rh_class, operation_name, ar
     request.view_args['event_vc_room_id'] = id_
     request.view_args['confId'] = conf_id
 
-    evcr_query = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation.find_one')
-    evcr_query.return_value = event_vc_room(vc_room=fixture.get('vc_room'), conf_id=conf_id,
+    mock = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation')
+    mock.query.get.return_value = event_vc_room(vc_room=fixture.get('vc_room'), conf_id=conf_id,
                                             rb_room_gen_name=fixture['room_name'],
                                             rb_room_name=fixture['room_verbose_name'])
 
@@ -236,8 +236,8 @@ def test_successful_operation(mocker, rh_class, operation):
     request.view_args['event_vc_room_id'] = id_
     request.view_args['confId'] = conf_id
 
-    evcr_query = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation.find_one')
-    evcr_query.return_value = event_vc_room(conf_id=conf_id, vc_room=Mock(type='zoom'),
+    mock = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation')
+    mock.query.get.return_value = event_vc_room(conf_id=conf_id, vc_room=Mock(type='zoom'),
                                             rb_room_gen_name=room_name, rb_room_name=room_special_name)
 
     op_mock = mocker.patch('indico_ravem.controllers.' + operation['name'])
@@ -269,8 +269,8 @@ def test_operation_exception_is_handled(mocker, rh_class, operation_name, err_re
     op_mock = mocker.patch('indico_ravem.controllers.' + operation_name)
     op_mock.side_effect = RavemOperationException(err_message, err_reason)
 
-    evcr_query = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation.find_one')
-    evcr_query.return_value = event_vc_room(vc_room='<vc_room_object(id:6789)>', conf_id=conf_id,
+    mock = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation')
+    mock.query.get.return_value = event_vc_room(vc_room='<vc_room_object(id:6789)>', conf_id=conf_id,
                                             rb_room_gen_name='513-B-22', rb_room_name='Personalized name')
 
     rh = rh_class()
@@ -301,8 +301,8 @@ def test_exception_is_handled(mocker, rh_class, operation_name, err_message):
     op_mock = mocker.patch('indico_ravem.controllers.' + operation_name)
     op_mock.side_effect = RavemException(err_message)
 
-    evcr_query = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation.find_one')
-    evcr_query.return_value = event_vc_room(vc_room=Mock(type='zoom'), conf_id=conf_id,
+    mock = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation')
+    mock.query.get.return_value = event_vc_room(vc_room=Mock(type='zoom'), conf_id=conf_id,
                                             rb_room_gen_name='513-B-22', rb_room_name='Personalized name')
 
     rh = rh_class()
