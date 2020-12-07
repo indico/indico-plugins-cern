@@ -5,13 +5,16 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
+from __future__ import unicode_literals
+
 import pytest
-from indico_ravem.plugin import RavemPlugin
-from indico_ravem.util import has_access, ravem_api_call
 from mock import MagicMock
 from requests.exceptions import HTTPError, Timeout
 
 from indico.testing.util import extract_logs
+
+from indico_ravem.plugin import RavemPlugin
+from indico_ravem.util import has_access, ravem_api_call
 
 
 @pytest.mark.usefixtures('db')

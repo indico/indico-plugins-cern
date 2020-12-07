@@ -5,15 +5,18 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
+from __future__ import unicode_literals
+
 import pytest
-from conftest import RAVEM_TEST_API_ENDPOINT, RAVEM_TEST_PATH, connected_fixtures, disconnected_fixtures, gen_params
-from indico_ravem.operations import connect_room, get_api
-from indico_ravem.plugin import RavemPlugin
-from indico_ravem.util import RavemException, RavemOperationException
 from mock import MagicMock
 
 from indico.testing.util import extract_logs
 from indico.util import json
+
+from conftest import RAVEM_TEST_API_ENDPOINT, RAVEM_TEST_PATH, connected_fixtures, disconnected_fixtures, gen_params
+from indico_ravem.operations import connect_room, get_api
+from indico_ravem.plugin import RavemPlugin
+from indico_ravem.util import RavemException, RavemOperationException
 
 
 @pytest.mark.usefixtures("db")

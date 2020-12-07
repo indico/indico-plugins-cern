@@ -5,18 +5,21 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
+from __future__ import unicode_literals
+
 import json
 
 import pytest
 from flask import request
-from indico_ravem.controllers import RHRavemConnectRoom, RHRavemDisconnectRoom, RHRavemRoomStatus
-from indico_ravem.plugin import RavemPlugin
-from indico_ravem.util import RavemException, RavemOperationException
 from mock import MagicMock, Mock
 from werkzeug.exceptions import NotFound
 
 from indico.core.errors import IndicoError
 from indico.modules.rb import Room
+
+from indico_ravem.controllers import RHRavemConnectRoom, RHRavemDisconnectRoom, RHRavemRoomStatus
+from indico_ravem.plugin import RavemPlugin
+from indico_ravem.util import RavemException, RavemOperationException
 
 
 def event_vc_room(vc_room=None, link_object=False, conf_id=None,
