@@ -39,7 +39,7 @@
             ['already-disconnected'],
             messages,
             function checkDisconnected(status) {
-              return !status.connected;
+              return !status.success;
             }
           );
         },
@@ -69,7 +69,7 @@
           _handler(data, btn, requestStates, ['already-connected'], messages, function checkConnect(
             status
           ) {
-            return status.connected;
+            return status.success;
           });
         },
       },
