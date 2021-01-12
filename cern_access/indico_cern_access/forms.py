@@ -12,7 +12,7 @@ from operator import itemgetter
 
 from markupsafe import Markup
 from wtforms.fields import BooleanField, SelectField, StringField
-from wtforms.validators import DataRequired, Length, Optional, Regexp, ValidationError
+from wtforms.validators import DataRequired, Length, Optional, ValidationError
 
 from indico.core.db import db
 from indico.modules.events.registration.forms import EmailRegistrantsForm
