@@ -337,7 +337,9 @@ class CERNAccessPlugin(IndicoPlugin):
             return
 
         regform = RegistrationForm.get_or_404(request.view_args['reg_form_id'])
-        if regform.cern_access_request and regform.cern_access_request.is_active and not form.tickets_enabled.data:
+        if not form.tickets_enabled.data:
+            if not regform.cern_access_request or not regform.cern_access_request.is_active:
+                return
             err = _('This form is used to grant CERN site access so ticketing must be enabled')
             form.tickets_enabled.errors.append(err)
             return False
