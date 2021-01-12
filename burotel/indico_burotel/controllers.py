@@ -45,7 +45,7 @@ class RHUserExperiment(RHProtected):
         return jsonify(value=BurotelPlugin.user_settings.get(session.user, 'default_experiment'))
 
     @use_kwargs({
-        'value': fields.String(validate=validate.OneOf({'ATLAS', 'CMS', 'ALICE', 'LHCb'}), allow_none=True)
+        'value': fields.String(validate=validate.OneOf({'ATLAS', 'CMS', 'ALICE', 'LHCb', 'HSE'}), allow_none=True)
     })
     def _process_POST(self, value):
         from indico_burotel.plugin import BurotelPlugin
