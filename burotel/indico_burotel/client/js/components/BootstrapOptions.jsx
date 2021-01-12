@@ -14,7 +14,7 @@ import {indicoAxios, handleAxiosError} from 'indico/utils/axios';
 import {Translate} from 'indico/react/i18n';
 
 
-export const EXPERIMENTS = ['ATLAS', 'CMS', 'ALICE', 'LHCb'];
+export const EXPERIMENTS = ['ATLAS', 'CMS', 'ALICE', 'LHCb', 'HSE'];
 
 export default class BootstrapOptions extends React.Component {
     static propTypes = {
