@@ -39,7 +39,7 @@
             ['already-disconnected'],
             messages,
             function checkDisconnected(status) {
-              return !status.success;
+              return status.connected === false;
             }
           );
         },
