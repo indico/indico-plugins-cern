@@ -16,7 +16,7 @@ from indico.web.rh import RH
 
 from indico_ravem import _
 from indico_ravem.operations import connect_room, disconnect_room, get_room_status
-from indico_ravem.util import RavemException, RavemOperationException, has_access
+from indico_ravem.util import RavemException, has_access
 
 
 __all__ = ('RHRavemRoomStatus', 'RHRavemConnectRoom', 'RHRavemDisconnectRoom')
@@ -69,7 +69,7 @@ class RHRavemRoomStatus(RHRavemBase):
             response = get_room_status(self.room.name, self.room.verbose_name)
             response['success'] = True
         except RavemException as err:
-            response = {'success': False, 'reason': 'operation-failed', 'message': str(err)}
+            response = {'success': False, 'reason': err.reason, 'message': str(err)}
         return jsonify(response)
 
 
@@ -77,14 +77,11 @@ class RHRavemConnectRoom(RHRavemBase):
     def _process(self):
         force = request.args.get('force') == '1'
         try:
-            connect_room(self.room.name, self.event_vc_room.vc_room, force=force,
+            success = connect_room(self.room.name, self.event_vc_room.vc_room, force=force,
                          room_verbose_name=self.room.verbose_name)
-        except RavemOperationException as err:
-            response = {'success': False, 'reason': err.reason, 'message': str(err)}
+            response = {'success': success}
         except RavemException as err:
-            response = {'success': False, 'reason': 'operation-failed', 'message': str(err)}
-        else:
-            response = {'success': True}
+            response = {'success': False, 'reason': err.reason, 'message': str(err)}
         return jsonify(response)
 
 
@@ -92,13 +89,9 @@ class RHRavemDisconnectRoom(RHRavemBase):
     def _process(self):
         force = request.args.get('force') == '1'
         try:
-            disconnect_room(self.room.name, self.event_vc_room.vc_room, force=force,
+            success = disconnect_room(self.room.name, self.event_vc_room.vc_room, force=force,
                             room_verbose_name=self.room.verbose_name)
-        except RavemOperationException as err:
-            response = {'success': False, 'reason': err.reason, 'message': str(err)}
+            response = {'success': success}
         except RavemException as err:
-            response = {'success': False, 'reason': 'operation-failed', 'message': str(err)}
-        else:
-            response = {'success': True}
-
+            response = {'success': False, 'reason': err.reason, 'message': str(err)}
         return jsonify(response)

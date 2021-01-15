@@ -12,7 +12,7 @@ from time import sleep
 from indico_ravem import _
 from indico_ravem.api import BaseAPI, ZoomAPI
 from indico_ravem.plugin import RavemPlugin
-from indico_ravem.util import RavemException, RavemOperationException
+from indico_ravem.util import RavemException
 
 
 _all__ = ('get_room_status', 'connect_room', 'disconnect_room')
@@ -63,7 +63,7 @@ def get_room_status(room_name, room_verbose_name=None):
 def connect_room(room_name, vc_room, force=False, room_verbose_name=None):
     """Connects a room given its name with a given vc_room.
 
-    If a `RavemOperationException` is raised it is important to verify the
+    If a `RavemException` is raised it is important to verify the
     `reason` attribute of the exception.
     If the room is already connected to the given VC room, the `reason` will be:
     `"already-connected"`.
@@ -89,7 +89,7 @@ def connect_room(room_name, vc_room, force=False, room_verbose_name=None):
     :param room_verbose_name: str -- The prettier name of a room, used in the
         error messages.
 
-    :raises: RavemOperationException, RavemException
+    :raises: RavemException
     """
     _room_name = room_verbose_name or room_name
     status = get_room_status(room_name)
@@ -98,13 +98,13 @@ def connect_room(room_name, vc_room, force=False, room_verbose_name=None):
     vc_room_id = service_api.get_room_id(vc_room.data)
     if status['connected']:
         if status['vc_room_id'] == vc_room_id:
-            raise RavemOperationException(
+            raise RavemException(
                 _("The room {room} is already connected to the videoconference room {vc_room}")
                 .format(room=_room_name, vc_room=vc_room_id),
                 'already-connected'
             )
         if not force:
-            raise RavemOperationException(
+            raise RavemException(
                 _("The room {room} is connected to another videoconference room: {vc_room}")
                 .format(room=_room_name, vc_room=status['vc_room_id']),
                 'connected-other'
@@ -144,12 +144,13 @@ def connect_room(room_name, vc_room, force=False, room_verbose_name=None):
             _("Failed to connect the room {room} to the videoconference room {vc_room} "
               "with error: {response[error]}").format(room=_room_name, vc_room=vc_room_id, response=response)
         )
+    return response.get('success')
 
 
 def disconnect_room(room_name, vc_room, force=False, room_verbose_name=None):
     """Disconnect a room given its name from a given vc_room.
 
-    If a `RavemOperationException` is raised it is important to verify the
+    If a `RavemException` is raised it is important to verify the
     `reason` attribute of the exception.
     If the room is already disconnected, the `reason` will be:
     `"already-disconnected"`.
@@ -166,7 +167,7 @@ def disconnect_room(room_name, vc_room, force=False, room_verbose_name=None):
     :param room_verbose_name: str -- The prettier name of a room, used in the
         error messages.
 
-    :raises: RavemOperationException, RavemException
+    :raises: RavemException
     """
     _room_name = room_verbose_name or room_name
     status = get_room_status(room_name)
@@ -174,13 +175,13 @@ def disconnect_room(room_name, vc_room, force=False, room_verbose_name=None):
     service_api = get_api(vc_room.type)
     vc_room_id = service_api.get_room_id(vc_room.data)
     if not status['connected']:
-        raise RavemOperationException(
+        raise RavemException(
             _("The room {room} is already disconnected.").format(room=_room_name),
             'already-disconnected'
         )
     if status['vc_room_id'] != vc_room_id:
         if not force:
-            raise RavemOperationException(
+            raise RavemException(
                 _("The room {room} is connected to another videoconference room: {vc_room}")
                 .format(room=_room_name, vc_room=status['vc_room_id']),
                 'connected-other'
@@ -193,7 +194,7 @@ def disconnect_room(room_name, vc_room, force=False, room_verbose_name=None):
 
     if response.get('error'):
         if response['error'] == 'Call already disconnected':
-            raise RavemOperationException(
+            raise RavemException(
                 _('The room {room} is already disconnected.').format(room=_room_name),
                 'already-disconnected'
             )
@@ -204,6 +205,7 @@ def disconnect_room(room_name, vc_room, force=False, room_verbose_name=None):
             _("Failed to disconnect the room {room} from the videoconference room {vc_room} with error: "
               "{response[error]}").format(room=_room_name, vc_room=vc_room_id, response=response)
         )
+    return response.get('success')
 
 
 def get_api(service_type):

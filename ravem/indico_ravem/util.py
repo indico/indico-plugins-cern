@@ -120,11 +120,7 @@ def _retrieve_principal(principal):
 
 
 class RavemException(Exception):
-    pass
-
-
-class RavemOperationException(RavemException):
-    """Indicates an operation failed and the cause of the failure is known.
+    """Indicates an operation failed and the cause of the failure (if known).
 
     Known causes of failure are for example if the room is already disconnected
     when trying to disconnect it.
@@ -133,12 +129,9 @@ class RavemOperationException(RavemException):
     Functions raising this exception should document the possible reasons with
     which the exception can be raised.
     """
-
-    def __init__(self, message, reason):
-        super(RavemOperationException, self).__init__(message)
-        self.message = message
+    def __init__(self, message, reason = 'operation-failed'):
+        super(RavemException, self).__init__(message)
         self.reason = reason
-
 
 class RavemAPIException(RavemException):
     """Indicates the RAVEM API replied with an invalid response.

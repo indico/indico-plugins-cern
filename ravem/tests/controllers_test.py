@@ -19,7 +19,7 @@ from indico.modules.rb import Room
 
 from indico_ravem.controllers import RHRavemConnectRoom, RHRavemDisconnectRoom, RHRavemRoomStatus
 from indico_ravem.plugin import RavemPlugin
-from indico_ravem.util import RavemException, RavemOperationException
+from indico_ravem.util import RavemException
 
 
 def event_vc_room(vc_room=None, link_object=False, conf_id=None,
@@ -270,7 +270,7 @@ def test_operation_exception_is_handled(mocker, rh_class, operation_name, err_re
     request.view_args['confId'] = conf_id
 
     op_mock = mocker.patch('indico_ravem.controllers.' + operation_name)
-    op_mock.side_effect = RavemOperationException(err_message, err_reason)
+    op_mock.side_effect = RavemException(err_message, err_reason)
 
     mock = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation')
     mock.query.get.return_value = event_vc_room(vc_room='<vc_room_object(id:6789)>', conf_id=conf_id,

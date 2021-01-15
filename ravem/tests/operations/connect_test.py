@@ -16,7 +16,7 @@ from indico.util import json
 from conftest import RAVEM_TEST_API_ENDPOINT, RAVEM_TEST_PATH, connected_fixtures, disconnected_fixtures, gen_params
 from indico_ravem.operations import connect_room, get_api
 from indico_ravem.plugin import RavemPlugin
-from indico_ravem.util import RavemException, RavemOperationException
+from indico_ravem.util import RavemException
 
 
 @pytest.mark.usefixtures("db")
@@ -163,7 +163,7 @@ def test_connect_room_already_connected(
     vc_room.type = service_type
     vc_room.data = data
 
-    with pytest.raises(RavemOperationException) as excinfo:
+    with pytest.raises(RavemException) as excinfo:
         connect_room(room_name, vc_room)
 
     assert str(excinfo.value) == "The room {0} is already connected to the videoconference room {1}"\
@@ -203,7 +203,7 @@ def test_connect_room_connected_other(
     vc_room = MagicMock()
     vc_room.type = service_type
 
-    with pytest.raises(RavemOperationException) as excinfo:
+    with pytest.raises(RavemException) as excinfo:
         connect_room(room_name, vc_room)
 
     assert (

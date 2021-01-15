@@ -16,7 +16,7 @@ from indico.util import json
 from conftest import RAVEM_TEST_API_ENDPOINT, RAVEM_TEST_PATH, connected_fixtures, disconnected_fixtures, gen_params
 from indico_ravem.operations import disconnect_room, get_api
 from indico_ravem.plugin import RavemPlugin
-from indico_ravem.util import RavemException, RavemOperationException
+from indico_ravem.util import RavemException
 
 
 @pytest.mark.usefixtures("db")
@@ -158,7 +158,7 @@ def test_disconnect_room_not_connected(
     vc_room.type = service_type
     vc_room.data = data
 
-    with pytest.raises(RavemOperationException) as excinfo:
+    with pytest.raises(RavemException) as excinfo:
         disconnect_room(room_name, vc_room)
 
     assert str(excinfo.value) == "The room {room} is already disconnected.".format(room=room_name)
@@ -199,7 +199,7 @@ def test_disconnect_room_connected_other(
     vc_room.type = service_type
     vc_room.data = data
 
-    with pytest.raises(RavemOperationException) as excinfo:
+    with pytest.raises(RavemException) as excinfo:
         disconnect_room(room_name, vc_room)
 
     assert str(excinfo.value) == "The room {room} is connected to another videoconference room: {vc_room}"\
