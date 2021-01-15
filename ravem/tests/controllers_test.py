@@ -218,46 +218,6 @@ def test_operation_called_with_correct_args(mocker, rh_class, operation_name, ar
 
 
 @pytest.mark.usefixtures('db', 'request_context')
-@pytest.mark.parametrize(('rh_class', 'operation'), (
-    (RHRavemRoomStatus, {
-        'name': 'get_room_status',
-        'return_value': {
-            'vc_room_name': '513-B-22',
-            'connected': True,
-            'service_type': 'zoom',
-        }
-    }),
-    (RHRavemConnectRoom, {'name': 'connect_room'}),
-    (RHRavemDisconnectRoom, {'name': 'disconnect_room'}),
-))
-def test_successful_operation(mocker, rh_class, operation):
-    id_ = 123456
-    conf_id = 1111
-    room_name = '513-B-22'
-    room_special_name = 'Personalized name'
-
-    request.view_args['event_vc_room_id'] = id_
-    request.view_args['confId'] = conf_id
-
-    mock = mocker.patch('indico_ravem.controllers.VCRoomEventAssociation')
-    mock.query.get.return_value = event_vc_room(conf_id=conf_id, vc_room=Mock(type='zoom'),
-                                            rb_room_gen_name=room_name, rb_room_name=room_special_name)
-
-    op_mock = mocker.patch('indico_ravem.controllers.' + operation['name'])
-    op_mock.return_value = dict(operation.get('return_value', {}))
-    rh = rh_class()
-
-    with RavemPlugin.instance.plugin_context():
-        rh._process_args()
-        response = rh._process()
-
-    data = json.loads(response.get_data())
-    assert data['success'] is True
-    del data['success']
-    assert data == operation.get('return_value', {})
-
-
-@pytest.mark.usefixtures('db', 'request_context')
 @pytest.mark.parametrize(('rh_class', 'operation_name', 'err_reason', 'err_message'), (
     (RHRavemConnectRoom, 'connect_room', 'connect-other', 'The room is connected to another room'),
     (RHRavemDisconnectRoom, 'disconnect_room', 'already-disconnected', 'The room is already disconnected'),

@@ -144,7 +144,7 @@ def connect_room(room_name, vc_room, force=False, room_verbose_name=None):
             _("Failed to connect the room {room} to the videoconference room {vc_room} "
               "with error: {response[error]}").format(room=_room_name, vc_room=vc_room_id, response=response)
         )
-    return response.get('success')
+    return response.get('success', False)
 
 
 def disconnect_room(room_name, vc_room, force=False, room_verbose_name=None):
@@ -205,7 +205,7 @@ def disconnect_room(room_name, vc_room, force=False, room_verbose_name=None):
             _("Failed to disconnect the room {room} from the videoconference room {vc_room} with error: "
               "{response[error]}").format(room=_room_name, vc_room=vc_room_id, response=response)
         )
-    return response.get('success')
+    return response.get('success', False)
 
 
 def get_api(service_type):
