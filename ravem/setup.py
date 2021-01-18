@@ -12,7 +12,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='indico-plugin-ravem',
-    version='2.2',
+    version='2.3',
     url='https://github.com/indico/indico-plugins-cern',
     license='MIT',
     author='Indico Team',
@@ -22,7 +22,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'indico>=2.2.dev0',
-        'indico-plugin-vc-vidyo>=1.0',
+        'indico-plugin-vc-zoom>=2.3b1,<2.4.dev0',
     ],
     entry_points={
         'indico.plugins': {'ravem = indico_ravem.plugin:RavemPlugin'},
