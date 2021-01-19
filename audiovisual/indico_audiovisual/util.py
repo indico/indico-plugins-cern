@@ -80,9 +80,9 @@ def get_contributions(event):
                          subqueryload('person_links'),
                          undefer('is_scheduled'))
                 .all())
-    subcontribs = (SubContribution
-                   .find(SubContribution.contribution_id.in_(c.id for c in contribs),
-                         ~SubContribution.is_deleted)
+    subcontribs = (SubContribution.query
+                   .filter(SubContribution.contribution_id.in_(c.id for c in contribs),
+                           ~SubContribution.is_deleted)
                    .options(subqueryload('person_links'))
                    .all())
     all_contribs = sorted(contribs + subcontribs, key=_contrib_key)
@@ -107,10 +107,13 @@ def contribution_by_id(event, contrib_or_subcontrib_id):
     if type_ == 'c':
         return Contribution.query.with_parent(event).filter_by(id=id_).first()
     elif type_ == 'sc':
-        return SubContribution.find(SubContribution.id == id_, ~SubContribution.is_deleted,
-                                    SubContribution.contribution.has(event=event, is_deleted=False)).first()
+        return (SubContribution.query
+                .filter(SubContribution.id == id_,
+                        ~SubContribution.is_deleted,
+                        SubContribution.contribution.has(event=event, is_deleted=False))
+                .first())
     else:
-        raise ValueError('Invalid id type: ' + type_)
+        raise ValueError(f'Invalid id type: {type_}')
 
 
 def get_selected_contributions(req):

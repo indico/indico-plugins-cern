@@ -11,6 +11,7 @@ from pprint import pformat
 import pytz
 import requests
 from requests.exceptions import RequestException, Timeout
+from sqlalchemy.orm import joinedload
 from werkzeug.datastructures import MultiDict
 
 from indico.core.db import db
@@ -37,8 +38,8 @@ def update_calendar():
         return
 
     settings = OutlookPlugin.settings.get_all()
-    query = (OutlookQueueEntry
-             .find(_eager=OutlookQueueEntry.event)
+    query = (OutlookQueueEntry.query
+             .options(joinedload(OutlookQueueEntry.event))
              .order_by(OutlookQueueEntry.user_id, OutlookQueueEntry.id))
     entries = MultiDict(((entry.user_id, entry.event_id), entry) for entry in query)
     delete_ids = set()
@@ -54,7 +55,7 @@ def update_calendar():
             delete_ids |= entry_ids
     finally:
         if delete_ids:
-            OutlookQueueEntry.find(OutlookQueueEntry.id.in_(delete_ids)).delete(synchronize_session=False)
+            OutlookQueueEntry.query.filter(OutlookQueueEntry.id.in_(delete_ids)).delete(synchronize_session=False)
             db.session.commit()
 
 

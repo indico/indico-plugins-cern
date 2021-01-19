@@ -194,4 +194,4 @@ class OutlookPlugin(IndicoPlugin):
                 OutlookQueueEntry.record(event, user, action)
 
     def _merge_users(self, target, source, **kwargs):
-        OutlookQueueEntry.find(user_id=source.id).update({OutlookQueueEntry.user_id: target.id})
+        OutlookQueueEntry.query.filter_by(user_id=source.id).update({OutlookQueueEntry.user_id: target.id})

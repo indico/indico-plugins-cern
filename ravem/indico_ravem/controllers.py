@@ -27,7 +27,7 @@ class RHRavemBase(RH):
 
     def _process_args(self):
         id_ = request.view_args['event_vc_room_id']
-        self.event_vc_room = VCRoomEventAssociation.find_one(id=id_)
+        self.event_vc_room = VCRoomEventAssociation.get(id_)
         if not self.event_vc_room:
             raise NotFound(_("Event VC Room not found for id {id}").format(id=id_))
 

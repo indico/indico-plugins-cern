@@ -105,7 +105,7 @@ class RHPaymentSuccessBackground(PaymentSuccessMixin, RH):
         matches = re.search(r'r(\d+)$', request.values['orderID'])
         if matches is None:
             raise BadRequest
-        self.registration = Registration.find_first(id=matches.group(1))
+        self.registration = Registration.query.filter_by(id=matches.group(1)).first()
         if self.registration is None:
             raise BadRequest
 

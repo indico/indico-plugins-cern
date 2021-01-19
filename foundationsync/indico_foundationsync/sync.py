@@ -233,8 +233,11 @@ class FoundationSync:
             foundation_rooms.append(room)
 
         # Deactivate rooms not found in Foundation
-        indico_rooms = Room.find(Room.name == room_name) if room_name else Room.find(location=self._location)
-        rooms_to_deactivate = (room for room in indico_rooms if room not in foundation_rooms and not room.is_deleted)
+        if room_name:
+            query = Room.query.filter_by(name=room_name)
+        else:
+            query = Room.query.filter_by(location=self._location)
+        rooms_to_deactivate = (room for room in query if room not in foundation_rooms and not room.is_deleted)
         for room in rooms_to_deactivate:
             self._logger.info("Deactivated room '%s'", room.full_name)
             room.is_deleted = True

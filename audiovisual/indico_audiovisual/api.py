@@ -41,9 +41,11 @@ def parse_indico_id(indico_id):
         event = Event.get(subcontrib_match.group(1), is_deleted=False)
         if not event:
             return None
-        return SubContribution.find(SubContribution.id == subcontrib_match.group(3), ~SubContribution.is_deleted,
-                                    SubContribution.contribution.has(event=event, id=subcontrib_match.group(2),
-                                                                     is_deleted=False)).first()
+        return (SubContribution.query
+                .filter(SubContribution.id == subcontrib_match.group(3),
+                        ~SubContribution.is_deleted,
+                        SubContribution.contribution.has(event=event, id=subcontrib_match.group(2), is_deleted=False))
+                .first())
     elif session_match:
         event = Event.get(session_match.group(1), is_deleted=False)
         return Session.query.with_parent(event).filter_by(id=session_match.group(2)).first()
@@ -57,13 +59,13 @@ def parse_indico_id(indico_id):
 
 
 def cds_link_exists(obj, url):
-    query = (Attachment
-             .find(~Attachment.is_deleted,
-                   ~AttachmentFolder.is_deleted,
-                   AttachmentFolder.object == obj,
-                   Attachment.type == AttachmentType.link,
-                   Attachment.link_url == url,
-                   _join=AttachmentFolder)
+    query = (Attachment.query
+             .filter(~Attachment.is_deleted,
+                     ~AttachmentFolder.is_deleted,
+                     AttachmentFolder.object == obj,
+                     Attachment.type == AttachmentType.link,
+                     Attachment.link_url == url)
+             .join(AttachmentFolder)
              .options(noload('*')))
     return db.session.query(query.exists()).scalar()
 

@@ -21,7 +21,7 @@ compat_blueprint = IndicoPluginBlueprint('compat_audiovisual', 'indico_audiovisu
 @compat_blueprint.route('/event/<int:confId>/collaboration/agreement')
 def redirect_old_agreement_url(confId):
     uuid = request.args['authKey']
-    agreement = Agreement.find_first(event_id=confId, uuid=uuid)
+    agreement = Agreement.query.filter_by(event_id=confId, uuid=uuid).first()
     if agreement is None:
         raise NotFound
     return redirect(url_for('agreements.agreement_form', confId=confId, id=agreement.id, uuid=uuid))

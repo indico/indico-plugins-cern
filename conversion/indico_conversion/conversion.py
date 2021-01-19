@@ -126,7 +126,7 @@ class RHConversionCheck(RH):
         containers = {}
         if finished:
             tpl = get_template_module('attachments/_display.html')
-            for attachment in Attachment.find(Attachment.id.in_(finished)):
+            for attachment in Attachment.query.filter(Attachment.id.in_(finished)):
                 if not attachment.folder.can_view(session.user):
                     continue
                 containers[attachment.id] = tpl.render_attachments_folders(item=attachment.folder.object)
