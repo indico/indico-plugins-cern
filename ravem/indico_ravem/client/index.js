@@ -11,11 +11,10 @@
     const states = {
       connected: {
         icon: 'icon-no-camera',
-        tooltip: $t.gettext('Disconnect {0} from the Vidyo room {1}'),
+        tooltip: $t.gettext('Disconnect {0} from the videoconference room {1}'),
         action: 'disconnect',
         handler: function disconnectHandler(data, btn) {
           const name = btn.data('roomName');
-          const vcRoomName = btn.data('vcRoomName');
           const requestStates = {
             old: 'connected',
             new: 'disconnected',
@@ -28,7 +27,7 @@
               .format(name),
             error: $t
               .gettext(
-                'The room {0} might already be disconnected or connected to another Vidyo room'
+                'The room {0} might already be disconnected or connected to another videoconference room'
               )
               .format(name),
           };
@@ -40,14 +39,14 @@
             ['already-disconnected'],
             messages,
             function checkDisconnected(status) {
-              return !status.connected || status.vc_room_name !== vcRoomName;
+              return status.connected === false;
             }
           );
         },
       },
       disconnected: {
         icon: 'icon-camera',
-        tooltip: $t.gettext('Connect {0} to the Vidyo room {1}'),
+        tooltip: $t.gettext('Connect {0} to the videoconference room {1}'),
         action: 'connect',
         handler: function connectHandler(data, btn) {
           const name = btn.data('roomName');
@@ -60,17 +59,17 @@
           };
           const messages = {
             alreadyConnected: $t
-              .gettext('Would you like to force the room {0} to connect to your Vidyo room ({1}) ?')
+              .gettext('Would you like to force the room {0} to connect to your videoconference room ({1}) ?')
               .format(name, vcRoomName),
             error: $t
-              .gettext('The room {0} might already be connected to another Vidyo room')
+              .gettext('The room {0} might already be connected to another videoconference room')
               .format(name),
           };
 
           _handler(data, btn, requestStates, ['already-connected'], messages, function checkConnect(
             status
           ) {
-            return status.connected && status.vc_room_name === vcRoomName;
+            return status.success;
           });
         },
       },
@@ -97,16 +96,20 @@
       },
       waitingConnect: {
         icon: 'icon-spinner',
-        tooltip: $t.gettext('Connecting {0} to the Vidyo room {1}'),
+        tooltip: $t.gettext('Connecting {0} to the videoconference room {1}'),
       },
       waitingDisconnect: {
         icon: 'icon-spinner',
-        tooltip: $t.gettext('Disconnecting {0} from the Vidyo room {1}'),
+        tooltip: $t.gettext('Disconnecting {0} from the videoconference room {1}'),
       },
       waitingStatus: {
         icon: 'icon-spinner',
         tooltip: $t.gettext('Waiting for information about {0}'),
       },
+      unsupported: {
+        icon: 'icon-warning',
+        tooltip: $t.gettext('Unsupported provider: {2}'),
+      }
     };
 
     /**
@@ -115,7 +118,7 @@
     function _handler(data, btn, requestStates, validReasons, messages, checkFn) {
       const name = btn.data('roomName');
 
-      // If the request appears to be successful, we now  must poll RAVEM
+      // If the request appears to be successful, we now must poll RAVEM
       // through Indico to assert it was
       if (data.success) {
         let attempts = RavemPlugin.polling.limit;
@@ -159,7 +162,7 @@
         }, RavemPlugin.polling.interval);
 
         // request failed with some reason and this reason is among the
-        // valid reasons so we mvoe the button to the new state.
+        // valid reasons so we move the button to the new state.
       } else if (~_.indexOf(validReasons, data.reason)) {
         setButtonState(btn, requestStates.new);
 
@@ -302,18 +305,17 @@
 
     function initializeRavemButton(btn) {
       btn.on('click', clickHandler);
-      const vcRoomName = btn.data('vcRoomName');
       getRoomStatus(btn, 'waitingStatus')
         .fail(function errorHandler(data) {
           setButtonState(btn, 'errorStatus', data.message);
         })
         .done(function successHandler(data) {
           if (!data.success) {
-            setButtonState(btn, 'errorStatus', data.message);
-          } else {
-            const connected = data.connected && data.vc_room_name === vcRoomName;
-            setButtonState(btn, connected ? 'connected' : 'disconnected');
+            setButtonState(btn, data.reason === 'unsupported' ? data.reason : 'errorStatus', data.message);
+            return;
           }
+          const connected = data.connected;
+          setButtonState(btn, connected ? 'connected' : 'disconnected');
         });
       return btn;
     }

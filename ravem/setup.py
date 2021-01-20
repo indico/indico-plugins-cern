@@ -20,7 +20,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'indico>=3.0.dev0',
-        'indico-plugin-vc-vidyo>=3.0.dev0',
+        'indico-plugin-vc-zoom>=2.3b1,<2.4.dev0',
     ],
     python_requires='~=3.9',
     entry_points={
