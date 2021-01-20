@@ -5,28 +5,7 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from setuptools import find_packages, setup
+from setuptools import setup
 
 
-setup(
-    name='indico-plugin-themes-cern',
-    version='3.0-dev',
-    url='https://github.com/indico/indico-plugins-cern',
-    license='MIT',
-    author='Indico Team',
-    author_email='indico-team@cern.ch',
-    packages=find_packages(),
-    zip_safe=False,
-    include_package_data=True,
-    install_requires=['indico>=3.0.dev0'],
-    python_requires='~=3.9',
-    entry_points={
-        'indico.plugins': {'themes_cern = indico_themes_cern.plugin:CERNThemesPlugin'}
-    },
-    classifiers=[
-        'Environment :: Plugins',
-        'Environment :: Web Environment',
-        'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3.9',
-    ],
-)
+setup()
