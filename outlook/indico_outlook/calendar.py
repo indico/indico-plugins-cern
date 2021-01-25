@@ -14,8 +14,10 @@ from requests.exceptions import RequestException, Timeout
 from sqlalchemy.orm import joinedload
 from werkzeug.datastructures import MultiDict
 
+from indico.core import signals
 from indico.core.db import db
 from indico.util.date_time import format_datetime
+from indico.util.signals import values_from_signal
 from indico.util.string import strip_control_chars
 
 from indico_outlook.models.queue import OutlookAction, OutlookQueueEntry
@@ -91,12 +93,22 @@ def _update_calendar_entry(entry, settings):
                 'uniqueID': unique_id,
                 'subject': strip_control_chars(event.title),
                 'location': location,
-                'body': f'<a href="{event_url}">{event_url}</a><br><br>{description}',
+                'description': f'<a href="{event_url}">{event_url}</a><br><br>{description}',
                 'status': OutlookPlugin.user_settings.get(user, 'status', settings['status']),
                 'startDate': format_datetime(event.start_dt, format='MM-dd-yyyy HH:mm', timezone=pytz.utc),
                 'endDate': format_datetime(event.end_dt, format='MM-dd-yyyy HH:mm', timezone=pytz.utc),
                 'isThereReminder': settings['reminder'],
                 'reminderTimeInMinutes': settings['reminder_minutes']}
+
+        # check whether the plugins want to add/override any data
+        for update in values_from_signal(
+            signals.event.metadata_postprocess.send('ical-export', event=event, data=data, user=user,
+                                                    html_fields={'description'}),
+            as_list=True
+        ):
+            data.update(update)
+        # the API expects the field to be named 'body', contrarily to our usage
+        data['body'] = data.pop('description')
     elif entry.action == OutlookAction.remove:
         data = {'userEmail': user.email,
                 'uniqueID': unique_id}
