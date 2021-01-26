@@ -8,10 +8,8 @@ env:
   - PLUGIN=ravem
   - PLUGIN=cern_access
 before_install:
-  - pip install -U pip setuptools
-  - pip install wheel
-  - pip install -r https://raw.githubusercontent.com/indico/indico/${TRAVIS_BRANCH}/requirements.dev.txt
-  - pip install -e git+https://github.com/indico/indico.git@${TRAVIS_BRANCH}#egg=indico
+  - pip install -U pip setuptools wheel
+  - pip install -e git+https://github.com/indico/indico.git@${TRAVIS_BRANCH}#egg=indico[dev]
   - pip install httpretty
 install:
   - '[[ "$PLUGIN" == "ravem" ]] && pip install git+https://github.com/indico/indico-plugins.git@${TRAVIS_BRANCH}#subdirectory=vc_vidyo || :'
