@@ -9,10 +9,10 @@ import json
 from unittest.mock import MagicMock
 
 import pytest
+from conftest import RAVEM_TEST_API_ENDPOINT, RAVEM_TEST_PATH, fixtures, gen_params
 
 from indico.testing.util import extract_logs
 
-from conftest import RAVEM_TEST_API_ENDPOINT, RAVEM_TEST_PATH, fixtures, gen_params
 from indico_ravem.operations import connect_room, get_api, get_room_status
 from indico_ravem.plugin import RavemPlugin
 from indico_ravem.util import RavemException

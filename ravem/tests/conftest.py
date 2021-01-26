@@ -7,6 +7,7 @@
 
 import httpretty as httpretty_
 import pytest
+
 from indico_ravem.api import ZoomAPI
 
 
