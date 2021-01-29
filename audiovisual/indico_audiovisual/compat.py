@@ -18,16 +18,16 @@ from indico_audiovisual.definition import AVRequest, SpeakerReleaseAgreement
 compat_blueprint = IndicoPluginBlueprint('compat_audiovisual', 'indico_audiovisual')
 
 
-@compat_blueprint.route('/event/<int:confId>/collaboration/agreement')
-def redirect_old_agreement_url(confId):
+@compat_blueprint.route('/event/<int:event_id>/collaboration/agreement')
+def redirect_old_agreement_url(event_id):
     uuid = request.args['authKey']
-    agreement = Agreement.query.filter_by(event_id=confId, uuid=uuid).first()
+    agreement = Agreement.query.filter_by(event_id=event_id, uuid=uuid).first()
     if agreement is None:
         raise NotFound
-    return redirect(url_for('agreements.agreement_form', confId=confId, id=agreement.id, uuid=uuid))
+    return redirect(url_for('agreements.agreement_form', event_id=event_id, id=agreement.id, uuid=uuid))
 
 
-@compat_blueprint.route('/export/eAgreements/<event_id>.<ext>')
+@compat_blueprint.route('/export/eAgreements/<int:event_id>.<ext>')
 def redirect_old_eagreement_api(event_id, ext):
     path = f'agreements/{SpeakerReleaseAgreement.name}/{event_id}.{ext}'
     if 'signature' in request.args:

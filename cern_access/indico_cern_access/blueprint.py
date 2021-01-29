@@ -13,7 +13,7 @@ from indico_cern_access.controllers import (RHExportCERNAccessCSV, RHExportCERNA
                                             RHRegistrationRevokeCERNAccess, RHStatsAPI)
 
 
-blueprint = IndicoPluginBlueprint('cern_access', __name__, url_prefix='/event/<confId>')
+blueprint = IndicoPluginBlueprint('cern_access', __name__, url_prefix='/event/<int:event_id>')
 
 blueprint.add_url_rule('/manage/registration/<int:reg_form_id>/registrations/cern-access/grant',
                        'registrations_grant_cern_access', RHRegistrationGrantCERNAccess, methods=('POST',))

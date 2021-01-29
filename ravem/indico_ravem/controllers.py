@@ -39,7 +39,7 @@ class RHRavemBase(RH):
         id_ = request.view_args['event_vc_room_id']
         self.event_vc_room = self.get_event_vc_room(id_)
 
-        event_id = int(request.view_args['confId'])
+        event_id = request.view_args['event_id']
         event = self.event_vc_room.link_object.event
         if not event:
             raise IndicoError(_("Event VC Room ({id}) does not have an event").format(id=id_))
