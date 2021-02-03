@@ -24,7 +24,7 @@ from indico.util.signing import secure_serializer
 from indico.web.flask.templating import get_template_module
 from indico.web.rh import RH
 
-from indico_conversion import cache
+from indico_conversion import pdf_state_cache
 from indico_conversion.util import get_pdf_title
 
 
@@ -70,7 +70,7 @@ def submit_attachment(task, attachment):
             except MaxRetriesExceededError:
                 ConversionPlugin.logger.error('Could not submit attachment %d (attempt %d/%d); giving up [%s]',
                                               attachment.id, attempt, MAX_TRIES, exc)
-                cache.delete(str(attachment.id))
+                pdf_state_cache.delete(str(attachment.id))
             except Retry:
                 ConversionPlugin.logger.warning('Could not submit attachment %d (attempt %d/%d); retry in %ds [%s]',
                                                 attachment.id, attempt, MAX_TRIES, delay, exc)
@@ -109,7 +109,7 @@ class RHConversionFinished(RH):
         pdf_attachment.file.save(data)
         db.session.add(pdf_attachment)
         db.session.flush()
-        cache.set(str(attachment.id), 'finished', timedelta(minutes=15))
+        pdf_state_cache.set(str(attachment.id), 'finished', timeout=timedelta(minutes=15))
         ConversionPlugin.logger.info('Added PDF attachment %s for %s', pdf_attachment, attachment)
         signals.attachments.attachment_created.send(pdf_attachment, user=None)
         return jsonify(success=True)
@@ -120,7 +120,7 @@ class RHConversionCheck(RH):
 
     def _process(self):
         ids = request.args.getlist('a')
-        results = {int(id_): cache.get(id_) for id_ in ids}
+        results = {int(id_): pdf_state_cache.get(id_) for id_ in ids}
         finished = [id_ for id_, status in results.items() if status == 'finished']
         pending = [id_ for id_, status in results.items() if status == 'pending']
         containers = {}

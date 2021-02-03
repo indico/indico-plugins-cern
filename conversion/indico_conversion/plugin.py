@@ -24,7 +24,7 @@ from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import TextListField
 from indico.web.forms.widgets import SwitchWidget
 
-from indico_conversion import _, cache
+from indico_conversion import _, pdf_state_cache
 from indico_conversion.blueprint import blueprint
 from indico_conversion.conversion import submit_attachment
 from indico_conversion.util import get_pdf_title
@@ -96,7 +96,7 @@ class ConversionPlugin(IndicoPlugin):
             g.convert_attachments = set()
         g.convert_attachments.add(attachment)
         # Set cache entry to show the pending attachment
-        cache.set(str(attachment.id), 'pending', info_ttl)
+        pdf_state_cache.set(str(attachment.id), 'pending', timeout=info_ttl)
         if not g.get('attachment_conversion_msg_displayed'):
             g.attachment_conversion_msg_displayed = True
             flash(_('Your file(s) have been sent to the conversion system. The PDF file(s) will be attached '
@@ -111,7 +111,7 @@ class ConversionPlugin(IndicoPlugin):
             return None
         if now_utc() - attachment.file.created_dt > info_ttl:
             return None
-        if cache.get(str(attachment.id)) != 'pending':
+        if pdf_state_cache.get(str(attachment.id)) != 'pending':
             return None
         return render_plugin_template('pdf_attachment.html', attachment=attachment, top_level=top_level,
                                       has_label=has_label, title=get_pdf_title(attachment))
