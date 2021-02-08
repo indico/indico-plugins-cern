@@ -17,7 +17,7 @@ from indico.core.db import db
 from indico.modules.events import Event
 from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.util.date_time import as_utc, get_day_end, get_day_start
-from indico.util.struct.iterables import group_list
+from indico.util.iterables import group_list
 from indico.web.rh import RHProtected
 
 from indico_room_assistance.forms import RequestListFilterForm

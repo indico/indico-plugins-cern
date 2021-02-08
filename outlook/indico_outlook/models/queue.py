@@ -6,7 +6,7 @@
 # the LICENSE file for more details.
 
 from indico.core.db.sqlalchemy import PyIntEnum, db
-from indico.util.struct.enum import IndicoEnum
+from indico.util.enum import IndicoEnum
 
 
 class OutlookAction(int, IndicoEnum):

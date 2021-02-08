@@ -12,7 +12,7 @@ from flask import request, session
 from werkzeug.exceptions import Forbidden
 
 from indico.util.date_time import as_utc, get_day_end, get_day_start
-from indico.util.struct.iterables import group_list
+from indico.util.iterables import group_list
 from indico.web.rh import RHProtected
 
 from indico_audiovisual.forms import RequestListFilterForm

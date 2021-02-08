@@ -8,7 +8,7 @@
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from indico.core.db.sqlalchemy import PyIntEnum, db
-from indico.util.struct.enum import RichIntEnum
+from indico.util.enum import RichIntEnum
 
 from indico_cern_access import _
 
