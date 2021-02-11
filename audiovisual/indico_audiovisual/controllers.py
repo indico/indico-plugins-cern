@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from collections import OrderedDict
 from operator import itemgetter
 
 from flask import request, session
@@ -41,6 +40,6 @@ class RHRequestList(RHProtected):
             if not talks:
                 results = [(req, req.event, req.event.start_dt) for req in results]
             results = group_list(results, lambda x: x[2].date(), itemgetter(2), sort_reverse=reverse)
-            results = OrderedDict(sorted(results.items(), key=itemgetter(0), reverse=reverse))
+            results = dict(sorted(results.items(), key=itemgetter(0), reverse=reverse))
 
         return WPAudiovisualManagers.render_template('request_list.html', form=form, results=results)

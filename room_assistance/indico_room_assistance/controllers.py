@@ -5,8 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from collections import OrderedDict
-
 import dateutil.parser
 from flask import request, session
 from sqlalchemy import func
@@ -59,6 +57,6 @@ class RHRequestList(RHProtected):
             results = _find_requests(from_dt=from_dt, to_dt=to_dt)
             results = group_list(results, lambda req: dateutil.parser.parse(req['requested_at']).date(),
                                  sort_reverse=reverse)
-            results = OrderedDict(sorted(results.items(), reverse=reverse))
+            results = dict(sorted(results.items(), reverse=reverse))
         return WPRoomAssistance.render_template('request_list.html', form=form, results=results,
                                                 parse_dt=dateutil.parser.parse)

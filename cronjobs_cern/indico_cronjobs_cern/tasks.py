@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from collections import OrderedDict
 from datetime import date, datetime, time, timedelta
 
 from celery.schedules import crontab
@@ -27,7 +26,7 @@ def _get_start_end_date():
 
 
 def _group_by_date(object_list):
-    objects_grouped_by_date = OrderedDict()
+    objects_grouped_by_date = {}
     for obj in object_list:
         date = format_date(obj.start_dt, format='full')
         if date in objects_grouped_by_date:
