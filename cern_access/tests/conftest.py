@@ -68,7 +68,7 @@ def mock_access_request(dummy_event, dummy_regform, dummy_user, app, request):
     data.update(request.param.get('personal_data', {}))
 
     with app.test_request_context(method='POST', data=data):
-        session.user = dummy_user
+        session.set_session_user(dummy_user)
         session.lang = 'en_GB'
 
         CERNAccessPlugin.settings.acls.add_principal('authorized_users', dummy_user)
