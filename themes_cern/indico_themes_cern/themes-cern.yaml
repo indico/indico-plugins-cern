@@ -61,6 +61,11 @@ definitions:
     stylesheet: fcc.scss
     title: FCC
 
+  hfm:
+    <<: *standard_themes_cern
+    stylesheet: hfm.scss
+    title: HFM
+
   fccis:
     <<: *standard_themes_cern
     stylesheet: fccis.scss
