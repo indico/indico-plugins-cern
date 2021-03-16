@@ -1,0 +1,9 @@
+@import 'base/palette';
+
+$header-bg-color: #0c2d5a;
+$header-icon-color: $white;
+$header-text-color: $white;
+
+@import 'themes/indico';
+
+@include header-logo('themes_cern:hfm_logo.png', 15px 30px, 230px, 20%);
