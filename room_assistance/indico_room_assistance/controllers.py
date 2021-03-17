@@ -48,7 +48,7 @@ class RHRequestList(RHProtected):
             raise Forbidden
 
     def _process(self):
-        form = RequestListFilterForm(request.args)
+        form = RequestListFilterForm(request.args, csrf_enabled=False)
         results = None
         if form.validate_on_submit():
             reverse = form.direction.data == 'desc'
