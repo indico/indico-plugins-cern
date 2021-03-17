@@ -57,10 +57,10 @@ def _contrib_key(contrib):
     # key function to sort contributions and their subcontributions properly
     is_subcontrib = isinstance(contrib, SubContribution)
     return (_get_contrib(contrib).start_dt,
-            _get_contrib(contrib),
             is_subcontrib,
             (contrib.position if is_subcontrib else None),
-            contrib.title)
+            contrib.title,
+            _get_contrib(contrib).friendly_id)
 
 
 @memoize_request

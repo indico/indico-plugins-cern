@@ -55,7 +55,8 @@ class RHRequestList(RHProtected):
             from_dt = as_utc(get_day_start(form.start_date.data)) if form.start_date.data else None
             to_dt = as_utc(get_day_end(form.end_date.data)) if form.end_date.data else None
             results = _find_requests(from_dt=from_dt, to_dt=to_dt)
-            results = group_list(results, lambda req: dateutil.parser.parse(req['requested_at']).date(),
+            results = group_list(results, key=lambda req: dateutil.parser.parse(req['requested_at']).date(),
+                                 sort_by=lambda req: dateutil.parser.parse(req['requested_at']).date(),
                                  sort_reverse=reverse)
             results = dict(sorted(results.items(), reverse=reverse))
         return WPRoomAssistance.render_template('request_list.html', form=form, results=results,

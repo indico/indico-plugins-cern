@@ -115,8 +115,8 @@ def get_vc_capable_rooms():
 
 def _contrib_key(contrib):
     return (contrib.start_dt,
-            contrib,
-            contrib.title)
+            contrib.title,
+            contrib.friendly_id)
 
 
 @memoize_request
