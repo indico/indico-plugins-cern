@@ -1,7 +1,7 @@
 {% macro _contribution_line(contrib, custom_room) -%}
     {{ contrib.start_dt | format_date() }}, {{ contrib.start_dt | format_time(timezone=contrib.event.tzinfo) }} - {{ contrib.duration | format_timedelta }}
     {%- if custom_room %} (in {{ custom_room }}){% endif %} - {{ contrib.title }}
-    {%- if caller %} - {{ caller() }}{%- endif -%}
+    {%- if caller is defined %} - {{ caller() }}{%- endif -%}
 {%- endmacro %}
 
 {% macro _contribution_or_subcontribution_line(contrib, custom_room) -%}

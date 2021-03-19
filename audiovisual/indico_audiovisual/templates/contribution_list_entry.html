@@ -5,7 +5,7 @@
     {% if custom_room %}(in {{ custom_room }}){% endif %}
     -
     {{ contrib.title }}
-    {% if caller %}{{ caller() }}{% endif %}
+    {% if caller is defined %}{{ caller() }}{% endif %}
     {% if not capable %}
         <i class="icon-warning warningText"
            title="{% trans %}This room does not have Webcast/Recording equipment.{%- endtrans %}"></i>
