@@ -1,0 +1,22 @@
+{% extends 'emails/base.html' %}
+
+{% block header_recipient %}{{ user.first_name }}{% endblock %}
+{% block subject -%}
+    Your Burotel pre-booking is about to be cancelled
+{%- endblock %}
+
+
+{% block body -%}
+    {% block message %}
+        The following booking is about to be <strong>cancelled</strong> unless you
+        <strong>confirm it with your Secretariat within the next 24h</strong>:<br>
+    {% endblock %}
+    <ul>
+        <li>
+            <strong>{{ booking.room.full_name }}</strong>:
+            <strong>{{ booking.start_dt|format_date('EEEE dd/MM/yyyy', locale='en_GB') }}</strong> -
+            <strong>{{ booking.end_dt|format_date('EEEE dd/MM/yyyy', locale='en_GB') }}</strong>
+            (<a href="{{ booking.external_details_url }}">link</a>)
+        </li>
+    </ul>
+{%- endblock %}

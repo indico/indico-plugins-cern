@@ -9,6 +9,7 @@ import csv
 
 import click
 import requests
+from flask_pluginengine import current_plugin
 from pyproj import Proj, transform
 
 from indico.cli.core import cli_group
@@ -68,7 +69,8 @@ def get_principal(name):
         return get_user(name)
 
     # otherwise we assume it's a group's name
-    group = group_cache.setdefault(name, GroupProxy(name, provider='cern-ldap'))
+    cern_ident_provider = current_plugin.settings.get('cern_identity_provider')
+    group = group_cache.setdefault(name, GroupProxy(name, provider=cern_ident_provider))
     if not group or not group.group:
         group = None
         print(cformat("%{red}!%{reset} Group %{cyan}{}%{reset} doesn't seem to exist!").format(name))
