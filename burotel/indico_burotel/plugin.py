@@ -104,6 +104,7 @@ class BurotelPlugin(IndicoPlugin):
         super().init()
         current_app.before_request(self._before_request)
         self.connect(signals.rb.booking_created, self._booking_created)
+        self.connect(signals.rb.booking_modified, self._booking_modified)
         self.connect(signals.rb.booking_state_changed, self._booking_state_changed)
         self.connect(signals.plugin.cli, self._extend_indico_cli)
         self.connect(signals.plugin.get_template_customization_paths, self._override_templates)
@@ -150,6 +151,22 @@ class BurotelPlugin(IndicoPlugin):
         if booking.state == ReservationState.accepted:
             _check_no_parallel_bookings(booking)
             _check_update_permissions(booking)
+
+    def _booking_modified(self, booking, changes, **kwargs):
+        if (
+            booking.state != ReservationState.accepted or
+            booking.room.get_attribute_value('electronic-lock') != 'yes'
+        ):
+            return
+
+        if 'end_dt/date' in changes or 'start_dt/date' in changes:
+            @after_this_request
+            def _launch_task(response):
+                update_access_permissions.delay(booking, modify_dates=(
+                    changes.get('start_dt/date', {}).get('old', booking.start_dt.date()),
+                    changes.get('end_dt/date', {}).get('old', booking.end_dt.date())
+                ))
+                return response
 
     def _booking_state_changed(self, booking, **kwargs):
         if booking.state == ReservationState.accepted:

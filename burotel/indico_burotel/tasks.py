@@ -92,8 +92,8 @@ def _adams_request(action, user, room, start_dt, end_dt):
         action=action,
         person_id=person_id,
         room=room.name.replace('-', '/'),
-        start_dt=start_dt.date().isoformat(),
-        end_dt=end_dt.date().isoformat()
+        start_dt=start_dt.isoformat(),
+        end_dt=end_dt.isoformat()
     )
 
     try:
@@ -132,16 +132,35 @@ def auto_cancel_bookings():
 
 
 @celery.task
-def update_access_permissions(booking):
+def update_access_permissions(booking, modify_dates=None):
     from indico_burotel.plugin import BurotelPlugin
     logger = BurotelPlugin.logger
     user = booking.booked_for_user
 
     if booking.state == ReservationState.accepted:
+        if modify_dates:
+            old_start_dt, old_end_dt = modify_dates
+            logger.info(
+                'Modifying access to %s: %s (%s - %s) -> (%s - %s)',
+                booking.room,
+                booking.booked_for_user,
+                old_start_dt,
+                old_end_dt,
+                booking.start_dt,
+                booking.end_dt
+            )
+            logger.info('Removing ADaMS access from %s: %s, %s - %s (booking rejected/cancelled)',
+                        booking.room, booking.booked_for_user, old_start_dt, old_end_dt)
+            _adams_request('cancel', booking.booked_for_user, booking.room, old_start_dt, old_end_dt)
+            booking.add_edit_log(ReservationEditLog(user_name="Burotel", info=[
+                'Removing current access to {} ({}), {} - {} (booking created)'.format(
+                    user.full_name, user.id, old_start_dt, old_end_dt
+                )
+            ]))
+
         logger.info('Granting ADaMS access to %s: %s, %s - %s',
                     booking.room, booking.booked_for_user, booking.start_dt, booking.end_dt)
-        _adams_request('create', booking.booked_for_user, booking.room, booking.start_dt,
-                       booking.end_dt)
+        _adams_request('create', booking.booked_for_user, booking.room, booking.start_dt.date(), booking.end_dt.date())
         booking.add_edit_log(ReservationEditLog(user_name="Burotel", info=[
             'Granting ADaMS access to {} ({}), {} - {} (booking created)'.format(
                 user.full_name, user.id, booking.start_dt.date(), booking.end_dt.date()
@@ -150,13 +169,12 @@ def update_access_permissions(booking):
     elif booking.state in {ReservationState.cancelled, ReservationState.rejected}:
         logger.info('Removing ADaMS access from %s: %s, %s - %s (booking rejected/cancelled)',
                     booking.room, booking.booked_for_user, booking.start_dt, booking.end_dt)
+        _adams_request('cancel', booking.booked_for_user, booking.room, booking.start_dt.date(), booking.end_dt.date())
         booking.add_edit_log(ReservationEditLog(user_name="Burotel", info=[
             'Removing ADaMS access from {} ({}), {} - {} (booking rejected/cancelled)'.format(
                 user.full_name, user.id, booking.start_dt.date(), booking.end_dt.date()
             )
         ]))
-        _adams_request('cancel', booking.booked_for_user, booking.room, booking.start_dt,
-                       booking.end_dt)
     else:
         return
 

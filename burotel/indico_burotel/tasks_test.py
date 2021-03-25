@@ -5,7 +5,7 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from datetime import datetime
+from datetime import date, datetime
 
 import pytest
 
@@ -95,8 +95,7 @@ def test_update_called_on_create(db, dummy_user, mocker, create_room, no_csrf_cl
         'room_id': room.id
     }).status_code == 200
 
-    adams_request.assert_called_once_with('create', dummy_user, room,
-                                          datetime(2020, 2, 3), datetime(2020, 2, 4, 23, 59))
+    adams_request.assert_called_once_with('create', dummy_user, room, date(2020, 2, 3), date(2020, 2, 4))
 
 
 def test_update_called_on_accept(create_room, mocker, no_csrf_client, dummy_user, room_attributes):
@@ -125,14 +124,55 @@ def test_update_called_on_accept(create_room, mocker, no_csrf_client, dummy_user
 
     assert not adams_request.called
 
-    with no_csrf_client.session_transaction() as sess:
-        sess.set_session_user(dummy_user)
-
     no_csrf_client.post(url_for('rb.booking_state_actions', booking_id=prebooking.id, action='approve'))
 
     # after the pre-booking is accepted, _adams_request should be called
-    adams_request.assert_called_once_with('create', dummy_user, room,
-                                          datetime(2020, 2, 1), datetime(2020, 2, 2, 23, 59))
+    adams_request.assert_called_once_with('create', dummy_user, room, date(2020, 2, 1), date(2020, 2, 2))
+
+
+def test_update_called_on_modify(create_room, mocker, no_csrf_client, dummy_user, room_attributes):
+    attr_lock = room_attributes[0]
+
+    adams_request = mocker.patch('indico_burotel.tasks._adams_request')
+    room = create_room(protection_mode=ProtectionMode.public, reservations_need_confirmation=True)
+
+    room.attributes.append(RoomAttributeAssociation(attribute=attr_lock, value='yes'))
+
+    with no_csrf_client.session_transaction() as sess:
+        sess.set_session_user(dummy_user)
+
+    response = no_csrf_client.post(url_for('rb.create_booking'), data={
+        'start_dt': '2020-02-01',
+        'end_dt': '2020-02-02',
+        'repeat_frequency': 'DAY',
+        'repeat_interval': 1,
+        'booked_for_user': dummy_user.identifier,
+        'booking_reason': 'just chillin',
+        'room_id': room.id
+    })
+
+    assert response.status_code == 200
+
+    adams_request.assert_called_once_with('create', dummy_user, room, date(2020, 2, 1), date(2020, 2, 2))
+
+    adams_request.reset_mock()
+
+    response = no_csrf_client.patch(url_for('rb.update_booking', booking_id=response.json['booking']['id']), data={
+        'repeat_frequency': 'DAY',
+        'repeat_interval': 1,
+        'booked_for_user': dummy_user.identifier,
+        'booking_reason': 'just chillin',
+        'room_id': room.id,
+        'start_dt': '2020-02-02',
+        'end_dt': '2020-02-03'
+    })
+
+    assert response.status_code == 200
+
+    assert adams_request.call_args_list == [
+        (('cancel', dummy_user, room, date(2020, 2, 1), date(2020, 2, 2)),),
+        (('create', dummy_user, room, date(2020, 2, 2), date(2020, 2, 3)),)
+    ]
 
 
 def test_update_called_on_reject(dummy_user, create_room, mocker, no_csrf_client, room_attributes):
@@ -156,13 +196,12 @@ def test_update_called_on_reject(dummy_user, create_room, mocker, no_csrf_client
     assert response.status_code == 200
     booking = Reservation.get(response.json['booking']['id'])
 
-    adams_request.assert_called_once_with('create', dummy_user, room,
-                                          datetime(2020, 2, 5), datetime(2020, 2, 6, 23, 59))
+    adams_request.assert_called_once_with('create', dummy_user, room, date(2020, 2, 5), date(2020, 2, 6))
 
     no_csrf_client.post(url_for('rb.booking_state_actions', booking_id=booking.id, action='cancel'))
 
     # after the pre-booking is accepted, _adams_request should be called
-    adams_request.assert_called_with('cancel', dummy_user, room, datetime(2020, 2, 5), datetime(2020, 2, 6, 23, 59))
+    adams_request.assert_called_with('cancel', dummy_user, room, date(2020, 2, 5), date(2020, 2, 6))
 
     assert adams_request.call_count == 2
 
