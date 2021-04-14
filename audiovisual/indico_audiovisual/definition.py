@@ -200,7 +200,7 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
             type_, url, title = _talk_info_from_agreement_data(event, data)
         except RuntimeError as e:
             return [f'({e})']
-        return [Markup('<a href="{}">{}</a>'.format(url, escape(title)))]
+        return [Markup(f'<a href="{url}">{escape(title)}</a>')]
 
     @classmethod
     def iter_people(cls, event):
