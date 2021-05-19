@@ -104,7 +104,6 @@ class FoundationSync(object):
         data['division'] = raw_data.get('DEPARTMENT')
         data['telephone'] = raw_data.get('TELEPHONE') or ''
         data['key_location'] = self._html_to_markdown(raw_data.get('WHERE_IS_KEY') or '')
-        data['comments'] = self._html_to_markdown(raw_data.get('COMMENTS')) if raw_data.get('COMMENTS') else ''
 
         site = raw_data.get('SITE')
         site_map = {'MEYR': 'Meyrin', 'PREV': 'Prevessin'}

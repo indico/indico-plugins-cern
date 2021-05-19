@@ -35,7 +35,7 @@ from indico_foundationsync.sync import FoundationSync
 
 
 SYNCED_FIELDS = {'building', 'floor', 'number', 'verbose_name', 'site', 'key_location', 'capacity', 'surface_area',
-                 'telephone', 'division', 'comments', 'latitude', 'longitude', 'owner'}
+                 'telephone', 'division', 'latitude', 'longitude', 'owner'}
 BLOCKED_FIELDS = {'protection_mode'}
 
 
