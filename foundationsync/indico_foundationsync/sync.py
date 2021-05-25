@@ -30,10 +30,6 @@ class SkipRoom(Exception):
     pass
 
 
-# memoize results in case we are on the slower auth API
-get_user_by_email = functools.cache(get_user_by_email)
-
-
 def OutputTypeHandler(cursor, name, defaultType, size, precision, scale):
     """
     Unicode output handler for oracle connections
@@ -54,6 +50,9 @@ def _get_room_role_map(connection, logger):
 
 class FoundationSync:
     def __init__(self, db_name, logger):
+        # memoize results in case we are on the slower auth API
+        self.get_user_by_email = functools.cache(get_user_by_email)
+
         self.db_name = db_name
         self._logger = logger
 
@@ -96,7 +95,7 @@ class FoundationSync:
             email_warning = 'No value for RESPONSIBLE_EMAIL in Foundation'
             user = None
         else:
-            user = get_user_by_email(email, create_pending=True)
+            user = self.get_user_by_email(email.lower(), create_pending=True)
             if not user:
                 email_warning = f'Bad RESPONSIBLE_EMAIL in Foundation: no user found with email {email}'
 
@@ -136,7 +135,7 @@ class FoundationSync:
         new_managers = {room.owner}
 
         # add managers from aisroles (DKMs + DKAs)
-        new_managers |= {get_user_by_email(email, create_pending=True)
+        new_managers |= {self.get_user_by_email(email.lower(), create_pending=True)
                          for email in room_role_map[(room.building, room.floor, room.number)]}
         new_managers.discard(None)
 
