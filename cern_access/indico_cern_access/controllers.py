@@ -229,14 +229,14 @@ class RHStatsAPI(RH):
                 Event.start_dt
             ).astimezone('Europe/Zurich'),
             db.Date
-        )
+        ).label('access_start')
         access_end = db.cast(
             db.func.coalesce(
                 db.cast(Request.data['end_dt_override'].astext, UTCDateTime()),
                 Event.end_dt
             ).astimezone('Europe/Zurich'),
             db.Date
-        )
+        ).label('access_end')
 
         query = (db.session.query(access_start, access_end, db.func.count('*'))
                  .filter(CERNAccessRequest.request_state == CERNAccessRequestState.active)
