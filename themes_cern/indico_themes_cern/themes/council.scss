@@ -11,6 +11,11 @@ div.event-header {
   background-size: cover;
 }
 
+.timetable-block > .timetable-item-body:first-of-type {
+  // Restores left overflow to cope with the margin-left applied below
+  overflow: visible;
+}
+
 // Make top level items bigger and non-bold
 .timetable-item-body .timetable-item-header {
   .timetable-title.top-level,
