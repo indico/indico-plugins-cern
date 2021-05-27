@@ -213,7 +213,7 @@ def _ical_serialize_av(cal, record, now):
     event.add('url', record['url'])
     event.add('categories', 'Webcast/Recording')
     event.add('summary', _ical_summary(record))
-    location = ': '.join([_f for _f in (record['location'], record['room_full_name']) if _f])
+    location = ': '.join(_f for _f in (record['location'], record['room_full_name']) if _f)
     event.add('location', location)
     description = ['URL: {}'.format(record['url']),
                    'Services: {}'.format(', '.join(map(str, list(map(SERVICES.get, record['services'])))))]
