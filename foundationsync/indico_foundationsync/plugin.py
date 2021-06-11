@@ -61,13 +61,14 @@ class FoundationSyncPlugin(IndicoPlugin):
         return blueprint
 
     def _check_forbidden_fields(self, sender, data, **kwargs):
-        """Check that no one is trying to edit fields that come from Gesloc."""
+        """Check that no one is trying to edit fields that come from Locations."""
         sync_collisions = set(data) & SYNCED_FIELDS
         blocked_collisions = set(data) & BLOCKED_FIELDS
         messages = {}
 
         messages.update({
-            k: [_('This field is managed by Gesloc. You cannot change it from here.')] for k in sync_collisions
+            k: [_('This field is managed via the Locations application. You cannot change it from here.')]
+            for k in sync_collisions
         })
 
         if blocked_collisions and not rb_is_admin(session.user):
