@@ -57,12 +57,16 @@
                       {% else %}{% trans %}not requested{% endtrans %}{% endif %}"></i>
         </td>
         <td class="entry-location">
-            <span class="room">
-                {{ obj.room_name }}
-            </span>
-            <span class="location">
-                ({{ obj.venue_name }})
-            </span>
+            {% if obj.room_name %}
+                <span class="room">
+                    {{ obj.room_name }}
+                </span>
+            {% endif %}
+            {% if obj.venue_name %}
+                <span class="location">
+                    ({{ obj.venue_name }})
+                </span>
+            {% endif %}
         </td>
         <td class="request-event">
             <a class="discreet-link" href="{{ req.event.url }}">
