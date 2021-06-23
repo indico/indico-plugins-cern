@@ -103,7 +103,7 @@ class FoundationSync:
         data['verbose_name'] = (raw_data.get('FRIENDLY_NAME') or '').strip() or None
         data['capacity'] = int(raw_data['CAPACITY']) if raw_data['CAPACITY'] else None
         data['surface_area'] = int(raw_data['SURFACE']) if raw_data['SURFACE'] else None
-        data['division'] = raw_data.get('DEPARTMENT')
+        data['division'] = raw_data.get('DEPARTMENT') or ''
         data['telephone'] = raw_data.get('TELEPHONE') or ''
         data['key_location'] = self._html_to_markdown(raw_data.get('WHERE_IS_KEY') or '')
 
