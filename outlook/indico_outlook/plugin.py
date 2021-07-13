@@ -122,7 +122,7 @@ class OutlookPlugin(IndicoPlugin):
         self.connect(signals.event.updated, self.event_updated)
         self.connect(signals.event.times_changed, self.event_times_changed, sender=Event)
         self.connect(signals.event.deleted, self.event_deleted)
-        self.connect(signals.after_process, self._apply_changes)
+        self.connect(signals.core.after_process, self._apply_changes)
         self.connect(signals.users.merged, self._merge_users)
 
     def _extend_indico_cli(self, sender, **kwargs):

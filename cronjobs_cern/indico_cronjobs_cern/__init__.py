@@ -8,6 +8,6 @@
 from indico.core import signals
 
 
-@signals.import_tasks.connect
+@signals.core.import_tasks.connect
 def _import_tasks(sender, **kwargs):
     import indico_cronjobs_cern.tasks  # noqa: F401

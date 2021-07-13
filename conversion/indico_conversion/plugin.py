@@ -58,10 +58,10 @@ class ConversionPlugin(IndicoPlugin):
 
     def init(self):
         super().init()
-        self.connect(signals.add_form_fields, self._add_form_fields, sender=AddAttachmentFilesForm)
-        self.connect(signals.form_validated, self._form_validated)
+        self.connect(signals.core.add_form_fields, self._add_form_fields, sender=AddAttachmentFilesForm)
+        self.connect(signals.core.form_validated, self._form_validated)
         self.connect(signals.attachments.attachment_created, self._attachment_created)
-        self.connect(signals.after_commit, self._after_commit)
+        self.connect(signals.core.after_commit, self._after_commit)
         self.template_hook('event-display-after-attachment', self._event_display_after_attachment)
         self.inject_bundle('main.css', WPSimpleEventDisplay)
         self.inject_bundle('main.js', WPSimpleEventDisplay)
