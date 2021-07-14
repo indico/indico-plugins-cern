@@ -10,7 +10,7 @@ from datetime import date, timedelta
 from flask import render_template, session
 from flask_pluginengine import current_plugin
 from markupsafe import Markup
-from wtforms.fields import BooleanField, SelectField, TextAreaField
+from wtforms.fields import BooleanField, SelectField, StringField, TextAreaField
 from wtforms.fields.html5 import IntegerField, URLField
 from wtforms.validators import DataRequired, NumberRange, Optional
 
@@ -20,7 +20,7 @@ from indico.modules.events.requests.base import RequestManagerForm
 from indico.modules.events.requests.models.requests import RequestState
 from indico.web.forms.base import IndicoForm, generated_data
 from indico.web.forms.fields import IndicoDateField, IndicoEnumSelectField, IndicoSelectMultipleCheckboxField
-from indico.web.forms.validators import Exclusive, UsedIf
+from indico.web.forms.validators import Exclusive, IndicoRegexp, UsedIf
 from indico.web.forms.widgets import JinjaWidget
 
 from indico_audiovisual import SERVICES, _
@@ -110,3 +110,16 @@ class RequestListFilterForm(IndicoForm):
         if self.abs_end_date.data is None and self.rel_end_date.data is None:
             return None
         return self.abs_end_date.data or (date.today() + timedelta(days=self.rel_end_date.data))
+
+
+class RequestCalendarForm(IndicoForm):
+    start_date = StringField(_('From'), [DataRequired(), IndicoRegexp(r'^([+-])?(\d{1,3})d$')],
+                             default='-14d',
+                             description=_('The offset from the current date, e.g. "-14d"'))
+    end_date = StringField(_('To'), [DataRequired(), IndicoRegexp(r'^([+-])?(\d{1,3})d$')],
+                           default='14d',
+                           description=_('The offset from the current date, e.g. "14d"'))
+    include = IndicoSelectMultipleCheckboxField(_('Services'), choices=list(SERVICES.items()),
+                                                description=_('Only include the selected request types.'))
+    alarm = IntegerField(_('Reminder'), [Optional(), NumberRange(min=0)],
+                         description=_('Enable a reminder X minutes before the start date'))
