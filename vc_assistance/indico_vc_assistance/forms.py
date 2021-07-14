@@ -8,7 +8,7 @@
 from datetime import date, timedelta
 
 from flask import request
-from wtforms import SelectField
+from wtforms import SelectField, StringField
 from wtforms.fields.html5 import IntegerField
 from wtforms.fields.simple import TextAreaField
 from wtforms.validators import DataRequired, NumberRange, Optional
@@ -16,7 +16,7 @@ from wtforms.validators import DataRequired, NumberRange, Optional
 from indico.modules.events.requests import RequestFormBase
 from indico.web.forms.base import IndicoForm, generated_data
 from indico.web.forms.fields import IndicoDateField
-from indico.web.forms.validators import Exclusive
+from indico.web.forms.validators import Exclusive, IndicoRegexp
 
 from indico_vc_assistance import _
 
@@ -49,3 +49,14 @@ class RequestListFilterForm(IndicoForm):
         if self.abs_end_date.data is None and self.rel_end_date.data is None:
             return None
         return self.abs_end_date.data or (date.today() + timedelta(days=self.rel_end_date.data))
+
+
+class RequestCalendarForm(IndicoForm):
+    start_date = StringField(_('From'), [DataRequired(), IndicoRegexp(r'^([+-])?(\d{1,3})d$')],
+                             default='-14d',
+                             description=_('The offset from the current date, e.g. "-14d"'))
+    end_date = StringField(_('To'), [DataRequired(), IndicoRegexp(r'^([+-])?(\d{1,3})d$')],
+                           default='14d',
+                           description=_('The offset from the current date, e.g. "14d"'))
+    alarm = IntegerField(_('Reminder'), [Optional(), NumberRange(min=0)],
+                         description=_('Enable a reminder X minutes before the start date'))

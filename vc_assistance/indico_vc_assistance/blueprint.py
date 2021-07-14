@@ -7,8 +7,10 @@
 
 from indico.core.plugins import IndicoPluginBlueprint
 
-from indico_vc_assistance.controllers import RHRequestList
+from indico_vc_assistance.controllers import RHRequestCalendar, RHRequestCalendarLink, RHRequestList
 
 
 blueprint = IndicoPluginBlueprint('vc_assistance', __name__, url_prefix='/service/vc-assistance')
 blueprint.add_url_rule('/', 'request_list', RHRequestList)
+blueprint.add_url_rule('/calendar.ics', 'request_calendar', RHRequestCalendar)
+blueprint.add_url_rule('/calendar-link', 'request_calendar_link', RHRequestCalendarLink, methods=('GET', 'POST'))
