@@ -8,7 +8,7 @@
 import os
 from datetime import datetime, time
 
-from flask import current_app, redirect, request, url_for
+from flask import current_app, has_request_context, redirect, request, url_for
 from marshmallow import Schema, ValidationError, fields
 
 from indico.core import signals
@@ -82,7 +82,7 @@ class BurotelPlugin(IndicoPlugin):
         data.setdefault('reason', 'Burotel booking')
 
     def _inject_time(self, sender, data, **kwargs):
-        if request.blueprint != 'rb':
+        if not has_request_context() or request.blueprint != 'rb':
             return
         if 'start_dt' in data:
             _add_missing_time('start_dt', data, time(0, 0))
