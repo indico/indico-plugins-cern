@@ -45,7 +45,8 @@ def _get_category_events_query(start_dt, end_dt, category_ids):
 
 
 def _send_email(recipients, template):
-    email = make_email(from_address='noreply-indico-team@cern.ch', to_list=recipients, template=template, html=True)
+    from_address = CERNCronjobsPlugin.settings.get('sender_email')
+    email = make_email(from_address=from_address, to_list=recipients, template=template, html=True)
     send_email(email, module='Indico Cronjobs CERN')
 
 
