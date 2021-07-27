@@ -73,7 +73,7 @@
                     [licensePlate, birthDate, nationality, birthPlace].forEach(clearFieldState);
 
                     const switchLabel = document.querySelector('#request_cern_access');
-                    if (!switchLabel || !switchLabel.checked) {
+                    if (switchLabel && !switchLabel.checked) {
                         return;
                     }
 
