@@ -5,8 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-import hashlib
-import hmac
 import json
 import random
 import re
@@ -80,7 +78,7 @@ def _send_adams_http_request(method, data):
     except requests.exceptions.RequestException:
         CERNAccessPlugin.logger.exception('Request to ADAMS failed (%r)', data)
         raise AdamsError(_('Sending request to ADAMS failed'))
-    return r.status_code == requests.codes.all_ok
+    return r
 
 
 def send_adams_post_request(event, registrations, update=False):
@@ -89,8 +87,9 @@ def send_adams_post_request(event, registrations, update=False):
     :param update: if True, send request updating already stored data
     """
     data = {reg.id: build_access_request_data(reg, event, generate_code=(not update)) for reg in registrations}
-    _send_adams_http_request('POST', list(data.values()))
-    return CERNAccessRequestState.active, data
+    r = _send_adams_http_request('POST', list(data.values()))
+    nonces_by_access_id = {x['ticketid']: x['nonce'] for x in r.json()['tickets']}
+    return CERNAccessRequestState.active, data, nonces_by_access_id
 
 
 def send_adams_delete_request(registrations):
@@ -104,9 +103,12 @@ def generate_access_id(registration_id):
     return f'in{registration_id}'
 
 
-def build_access_request_data(registration, event, generate_code):
+def build_access_request_data(registration, event, generate_code, for_qr_code=False):
     """Return a dictionary with data required by ADaMS API."""
-    from indico_cern_access.plugin import CERNAccessPlugin
+
+    if for_qr_code:
+        return {'_adams_nonce': registration.cern_access_request.adams_nonce}
+
     start_dt, end_dt = get_access_dates(get_last_request(event))
     tz = timezone('Europe/Zurich')
     title = do_truncate(None, str_to_ascii(remove_accents(event.title)), 100, leeway=0)
@@ -125,9 +127,6 @@ def build_access_request_data(registration, event, generate_code):
     if registration.cern_access_request and registration.cern_access_request.license_plate:
         data['$lp'] = registration.cern_access_request.license_plate
 
-    checksum = ';;'.join(f'{key}:{value}' for key, value in sorted(data.items()))
-    signature = hmac.new(CERNAccessPlugin.settings.get('secret_key').encode(), checksum.encode(), hashlib.sha256)
-    data['$si'] = signature.hexdigest()
     return data
 
 
@@ -178,10 +177,11 @@ def remove_access_template(regform):
         regform.ticket_template = None
 
 
-def add_access_requests(registrations, data, state):
+def add_access_requests(registrations, data, state, nonces):
     """Add CERN access requests for registrations."""
     for registration in registrations:
-        create_access_request(registration, state, data[registration.id]['$rc'])
+        create_access_request(registration, state, data[registration.id]['$rc'],
+                              nonces[generate_access_id(registration.id)])
 
 
 def update_access_requests(registrations, state):
@@ -216,14 +216,16 @@ def get_random_reservation_code():
     return 'I' + ''.join(random.sample(charset, 6))
 
 
-def create_access_request(registration, state, reservation_code):
+def create_access_request(registration, state, reservation_code, nonce):
     """Create CERN access request object for registration."""
     if registration.cern_access_request:
         registration.cern_access_request.request_state = state
         registration.cern_access_request.reservation_code = reservation_code
+        registration.cern_access_request.adams_nonce = nonce
     else:
         registration.cern_access_request = CERNAccessRequest(request_state=state,
-                                                             reservation_code=reservation_code)
+                                                             reservation_code=reservation_code,
+                                                             adams_nonce=nonce)
 
 
 def create_access_request_regform(regform, state):
@@ -293,8 +295,8 @@ def grant_access(registrations, regform, email_subject=None, email_body=None, em
                          if not (reg.cern_access_request and
                                  not reg.cern_access_request.is_withdrawn and
                                  reg.cern_access_request.request_state == CERNAccessRequestState.active)]
-    state, data = send_adams_post_request(event, new_registrations)
-    add_access_requests(new_registrations, data, state)
+    state, data, nonces = send_adams_post_request(event, new_registrations)
+    add_access_requests(new_registrations, data, state, nonces)
     registrations_without_data = []
     for registration in new_registrations:
         if not registration.cern_access_request.has_identity_info:

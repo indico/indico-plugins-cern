@@ -57,8 +57,6 @@ class PluginSettingsForm(IndicoForm):
                            description=_('The login used to authenticate with ADaMS service'))
     password = IndicoPasswordField(_('Password'), [DataRequired()],
                                    description=_('The password used to authenticate with ADaMS service'))
-    secret_key = IndicoPasswordField(_('Secret key'), [DataRequired()],
-                                     description=_('Secret key to sign ADaMS requests'))
     authorized_users = PrincipalListField(_('Authorized users'), allow_groups=True,
                                           description=_('List of users/groups who can send requests'))
     excluded_categories = MultipleItemsField('Excluded categories', fields=[{'id': 'id', 'caption': 'Category ID'}])
@@ -98,7 +96,6 @@ class CERNAccessPlugin(IndicoPlugin):
         'adams_url': '',
         'username': '',
         'password': '',
-        'secret_key': '',
         'excluded_categories': [],
         'access_ticket_template': None,
         'earliest_start_dt': None,
@@ -360,7 +357,7 @@ class CERNAccessPlugin(IndicoPlugin):
         if not self._is_ticketing_handled(registration.registration_form):
             return
         event = registration.event
-        ticket_data.update(build_access_request_data(registration, event, generate_code=False))
+        ticket_data.update(build_access_request_data(registration, event, generate_code=False, for_qr_code=True))
 
     def _get_designer_placeholders(self, sender, **kwargs):
         yield TicketAccessDatesPlaceholder

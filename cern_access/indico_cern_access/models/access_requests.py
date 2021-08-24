@@ -37,6 +37,11 @@ class CERNAccessRequest(db.Model):
         db.String,
         nullable=False
     )
+    adams_nonce = db.Column(
+        db.String,
+        nullable=False,
+        default='',
+    )
     birth_date = db.Column(
         db.Date,
         nullable=True

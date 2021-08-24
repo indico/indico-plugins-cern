@@ -14,7 +14,7 @@ from indico.core import signals
 from indico.modules.events.registration.util import create_registration, modify_registration
 
 from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState
-from indico_cern_access.util import grant_access
+from indico_cern_access.util import generate_access_id, grant_access
 
 
 @pytest.fixture
@@ -29,7 +29,8 @@ def api_delete(mocker):
 def api_post(mocker):
     """Mock up POST request to ADAMS."""
     def _mock_post(event, registrations, **kwargs):
-        return CERNAccessRequestState.active, {reg.id: {'$rc': 'test'} for reg in registrations}
+        nonces = {generate_access_id(reg.id): f'nonce#{reg.id}' for reg in registrations}
+        return CERNAccessRequestState.active, {reg.id: {'$rc': 'test'} for reg in registrations}, nonces
 
     mock = mocker.patch('indico_cern_access.plugin.send_adams_post_request', side_effect=_mock_post, autospec=True)
     mocker.patch('indico_cern_access.util.send_adams_post_request', new=mock)
