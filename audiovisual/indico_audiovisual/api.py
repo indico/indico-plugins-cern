@@ -9,8 +9,11 @@ import re
 from datetime import timedelta
 
 import icalendar
-from flask import request
+from flask import jsonify, request, session
+from marshmallow import ValidationError
 from sqlalchemy.orm import noload
+from webargs import fields
+from werkzeug.exceptions import Forbidden
 
 from indico.core import signals
 from indico.core.db import db
@@ -21,14 +24,17 @@ from indico.modules.events.contributions import Contribution
 from indico.modules.events.contributions.models.subcontributions import SubContribution
 from indico.modules.events.requests.models.requests import RequestState
 from indico.modules.events.sessions.models.sessions import Session
+from indico.util.marshmallow import not_empty
+from indico.web.args import use_kwargs
 from indico.web.flask.util import url_for
 from indico.web.http_api import HTTPAPIHook
 from indico.web.http_api.responses import HTTPAPIError
 from indico.web.http_api.util import get_query_parameter
+from indico.web.rh import RHProtected
 
 from indico_audiovisual import SERVICES, SHORT_SERVICES
 from indico_audiovisual.definition import AVRequest
-from indico_audiovisual.util import find_requests
+from indico_audiovisual.util import find_requests, is_av_manager
 
 
 def parse_indico_id(indico_id):
@@ -56,6 +62,13 @@ def parse_indico_id(indico_id):
         return Event.get(event_match.group(1), is_deleted=False)
     else:
         return None
+
+
+def parse_indico_id_verbose(indico_id):
+    rv = parse_indico_id(indico_id)
+    if not rv:
+        raise ValidationError('Invalid object identifier')
+    return rv
 
 
 def cds_link_exists(obj, url):
@@ -91,6 +104,43 @@ def create_link(indico_id, cds_id, user):
     db.session.flush()
     signals.attachments.attachment_created.send(attachment, user=user)
     return True
+
+
+class RHCreateLink(RHProtected):
+    def _check_access(self):
+        RHProtected._check_access(self)
+        if not is_av_manager(session.user):
+            raise Forbidden
+
+    @use_kwargs({
+        'obj': fields.Function(deserialize=parse_indico_id_verbose, required=True),
+        'url': fields.URL(schemes={'https'}, required=True, validate=not_empty),
+        'title': fields.String(required=True, validate=not_empty),
+    })
+    def _process(self, obj, url, title):
+        existing = (Attachment.query
+                    .filter(~Attachment.is_deleted,
+                            ~AttachmentFolder.is_deleted,
+                            AttachmentFolder.object == obj,
+                            Attachment.type == AttachmentType.link,
+                            Attachment.title == title,
+                            Attachment.user_id == session.user.id)
+                    .join(AttachmentFolder)
+                    .first())
+
+        if existing:
+            if existing.link_url == url:
+                return jsonify(status='exists'), 409
+            existing.link_url = url
+            signals.attachments.attachment_updated.send(existing, user=session.user)
+            return jsonify(status='updated')
+
+        folder = AttachmentFolder.get_or_create_default(obj)
+        attachment = Attachment(folder=folder, user=session.user, title=title, type=AttachmentType.link, link_url=url)
+        db.session.add(attachment)
+        db.session.flush()
+        signals.attachments.attachment_created.send(attachment, user=session.user)
+        return jsonify(status='created'), 201
 
 
 class RecordingLinkAPI(HTTPAPIHook):
