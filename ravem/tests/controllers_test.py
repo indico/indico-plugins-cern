@@ -196,7 +196,7 @@ def test_operation_called_with_correct_args(mocker, rh_class, operation_name, ar
                                                 rb_room_gen_name=fixture['room_name'],
                                                 rb_room_name=fixture['room_verbose_name'])
 
-    operation = mocker.patch('indico_ravem.controllers.' + operation_name)
+    operation = mocker.patch('indico_ravem.controllers.' + operation_name, return_value={})
 
     rh = rh_class()
     if fixture.get('force'):
