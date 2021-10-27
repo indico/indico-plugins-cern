@@ -65,7 +65,7 @@ class RHRequestCalendar(RHVCSupportProtected):
     """Provides a calendar of videoconference assistance requests"""
 
     @use_kwargs({
-        'alarm': fields.Int(missing=0, validate=validate.Range(min=0)),
+        'alarm': fields.Int(load_default=0, validate=validate.Range(min=0)),
         'start_dt': RelativeDayDateTime(data_key='start_date', required=True),
         'end_dt': RelativeDayDateTime(data_key='end_date', day_end=True, required=True),
     }, location='query')

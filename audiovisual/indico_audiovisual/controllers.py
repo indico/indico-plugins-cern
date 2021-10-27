@@ -65,10 +65,10 @@ class RHRequestCalendar(RHAVManagerProtected):
     """Provides a calendar of webcast/recording requests"""
 
     @use_kwargs({
-        'alarm': fields.Int(missing=0, validate=validate.Range(min=0)),
+        'alarm': fields.Int(load_default=0, validate=validate.Range(min=0)),
         'start_dt': RelativeDayDateTime(data_key='start_date', required=True),
         'end_dt': RelativeDayDateTime(data_key='end_date', day_end=True, required=True),
-        'include': fields.List(fields.Str(), missing=None),
+        'include': fields.List(fields.Str(), load_default=None),
     }, location='query')
     def _process(self, alarm, start_dt, end_dt, include):
         if include is not None:
