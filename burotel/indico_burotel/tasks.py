@@ -28,20 +28,38 @@ from indico_burotel.notifications import notify_about_to_cancel, notify_automati
 def _find_person_id(plugin, user):
     """Get the CERN Person ID of a user."""
     cern_ident_provider = plugin.settings.get('cern_identity_provider')
-    cern_ident_provider = plugin.settings.get('cern_identity_provider')
+    provider = multipass.identity_providers[cern_ident_provider]
     cern_ident = user.get_identity(cern_ident_provider)
 
-    if not cern_ident:
-        # try to fetch the identity from the source before giving up
-        results = multipass.search_identities(providers={cern_ident_provider}, exact=True, email=user.all_emails)
-        if not (cern_ident := next(results, None)):
-            # that didn't work out, raise an error
-            raise Exception(f"Can't find '{cern_ident_provider}' identity for {user}")
+    try:
+        return cern_ident.multipass_data['cern_person_id']
+    except (KeyError, TypeError, AttributeError):
+        # no cern identity, no multipass data, or no person id in there
+        pass
 
-    if not (person_id := cern_ident.multipass_data.get('cern_person_id')):
-        raise Exception(f"Can't find CERN Person ID in '{cern_ident_provider}' identity for {user}")
+    # we have a cern identity, try refreshing its data
+    # (for existing users we have no multipass data and thus no person id)
+    if cern_ident:
+        plugin.logger.info('Refreshing identity %r', cern_ident)
+        info = provider.refresh_identity(cern_ident.identifier, cern_ident.multipass_data)
+        cern_ident.data = info.data
+        cern_ident.multipass_data = info.multipass_data
+        try:
+            return info.multipass_data['cern_person_id']
+        except (TypeError, KeyError):
+            plugin.logger.warning('Refreshed CERN identity without person id: %r', cern_ident)
 
-    return person_id
+    # try to fetch the identity from the source before giving up
+    plugin.logger.info('Searching person id for %r in central database', user)
+    results = multipass.search_identities(providers={cern_ident_provider}, exact=True, email=user.all_emails)
+    for info in results:
+        try:
+            return info.multipass_data['cern_person_id']
+        except (TypeError, KeyError):
+            pass
+
+    plugin.logger.error("Could not retrieve CERN Person ID for %r", user)
+    return None
 
 
 def _build_query(delta):
