@@ -190,6 +190,7 @@ jobs:
     strategy:
       matrix:
         include:
+          - plugin: burotel
           - plugin: cern_access
           - plugin: payment_cern
           - plugin: ravem

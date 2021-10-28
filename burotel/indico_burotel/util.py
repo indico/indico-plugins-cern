@@ -13,6 +13,7 @@ from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import bindparam
 
 from indico.core.db import db
+from indico.core.db.sqlalchemy.util.queries import db_dates_overlap
 from indico.modules.rb.models.reservations import Reservation, ReservationOccurrence
 from indico.modules.rb.models.rooms import Room
 from indico.util.string import natural_sort_key
@@ -27,6 +28,17 @@ def _build_per_building_query(*query_results):
             .join(Reservation)
             .join(Room)
             .group_by(Room.building, Room.division))
+
+
+def query_user_overlapping_bookings(booking):
+    """Get (accepted) bookings which were made for the same user and overlap with this one."""
+    return Reservation.query.filter(
+        Reservation.booked_for_user == booking.booked_for_user,
+        Reservation.is_accepted,
+        Reservation.id != booking.id,
+        # booking overlaps
+        db_dates_overlap(Reservation, 'start_dt', booking.start_dt, 'end_dt', booking.end_dt, inclusive=True)
+    ).join(Room)
 
 
 def calculate_monthly_stats(start_dt, end_dt):

@@ -1,0 +1,21 @@
+{% extends 'emails/base.html' %}
+
+{% block header_recipient %}{{ user.first_name }}{% endblock %}
+{% block subject -%}
+    Your Burotel pre-booking has been cancelled
+{%- endblock %}
+
+
+{% block body -%}
+    {% block message %}
+        The following booking has been cancelled since it was not confirmed within 3 days:<br>
+    {% endblock %}
+    <ul>
+        <li>
+            <strong>{{ booking.room.full_name }}</strong>:
+            <strong>{{ booking.start_dt|format_date('EEEE dd/MM/yyyy', locale='en_GB') }}</strong> -
+            <strong>{{ booking.end_dt|format_date('EEEE dd/MM/yyyy', locale='en_GB') }}</strong>
+            (<a href="{{ booking.external_details_url }}">link</a>)
+        </li>
+    </ul>
+{%- endblock %}
