@@ -11,7 +11,6 @@ from celery.schedules import crontab
 from flask_pluginengine import current_plugin
 from requests.exceptions import RequestException, Timeout
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.types import Interval
 
 from indico.core.auth import multipass
 from indico.core.celery import celery
@@ -64,33 +63,23 @@ def _find_person_id(plugin, user):
 
 def _build_query(delta):
     attr = RoomAttribute.query.filter(RoomAttribute.name == 'confirmation-by-secretariat').one()
-    reservation = db.aliased(Reservation)
-
-    # get all days between two dates
-    subq = db.session.query(db.func.generate_series(
-        reservation.start_dt,
-        now_utc(),
-        db.func.cast('1 day', Interval)
-    ).label('d')).subquery()
-
-    # count all days except for weekends (working days)
-    query = db.session.query(
-        db.func.count(subq.c.d).label('d')
-    ).filter(db.func.extract('dow', subq.c.d).notin_({0, 6})).subquery()
-
-    return reservation.query.filter(
-        reservation.state == ReservationState.pending,
-        # booking ends in the future
-        reservation.end_dt > now_utc(),
-        # booking has started more than `delta` working days ago
-        query.c.d > delta,
-        Room.attributes.any(
-            db.and_(
-                RoomAttributeAssociation.attribute == attr,
-                RoomAttributeAssociation.value == db.func.cast('yes', JSONB)
+    return (
+        Reservation.query
+        .join(Room)
+        .filter(
+            Reservation.state == ReservationState.pending,
+            # booking ends in the future
+            Reservation.end_dt > now_utc(),
+            # booking has started more than `delta` working days ago
+            db.func.plugin_burotel.count_weekdays(db.cast(Reservation.start_dt, db.Date), now_utc().date()) > delta,
+            Room.attributes.any(
+                db.and_(
+                    RoomAttributeAssociation.attribute == attr,
+                    RoomAttributeAssociation.value == db.func.cast('yes', JSONB)
+                )
             )
         )
-    ).join(Room)
+    )
 
 
 def _adams_request(action, user, room, start_dt, end_dt):
