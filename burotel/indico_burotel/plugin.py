@@ -60,9 +60,9 @@ def _check_no_parallel_bookings(booking):
     overlapping = query_user_overlapping_bookings(booking).first()
     if overlapping:
         raise ExpectedError(_("There is a parallel booking for this person in {0}, from {1} to {2}").format(
-            overlapping[0].room.full_name,
-            format_date(overlapping[0].start_dt),
-            format_date(overlapping[0].end_dt)
+            overlapping.room.full_name,
+            format_date(overlapping.start_dt),
+            format_date(overlapping.end_dt)
         ))
 
 
