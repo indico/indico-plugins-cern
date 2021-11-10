@@ -78,8 +78,11 @@ class SettingsForm(IndicoForm):
                                  description=_('The username to access the ADaMS web service'))
     adams_password = IndicoPasswordField(_('Password'), [DataRequired()], toggle=True,
                                          description=_('The password to access the ADaMS web service'))
-    cern_identity_provider = SelectField(_('CERN Identity Provider'), validators=[DataRequired()],
-                                         choices=[(k, p.title) for k, p in multipass.identity_providers.items()])
+    cern_identity_provider = SelectField(_('CERN Identity Provider'), validators=[DataRequired()])
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cern_identity_provider.choices = [(k, p.title) for k, p in multipass.identity_providers.items()]
 
 
 class BurotelPlugin(IndicoPlugin):
