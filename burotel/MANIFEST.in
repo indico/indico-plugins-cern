@@ -1,5 +1,6 @@
 graft indico_burotel/migrations
 graft indico_burotel/static
 graft indico_burotel/template_overrides
+graft indico_burotel/templates
 
 global-exclude *.pyc __pycache__ .keep
