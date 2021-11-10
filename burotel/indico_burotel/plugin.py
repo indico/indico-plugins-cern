@@ -10,8 +10,7 @@ from datetime import datetime, time
 
 from flask import after_this_request, current_app, has_request_context, redirect, request, url_for
 from marshmallow import Schema, ValidationError, fields
-from wtforms.fields import SelectField, StringField
-from wtforms.fields.html5 import URLField
+from wtforms.fields import SelectField, StringField, URLField
 from wtforms.validators import URL, DataRequired
 
 from indico.core import signals

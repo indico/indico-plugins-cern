@@ -10,10 +10,9 @@ from datetime import time, timedelta
 from flask import g, request, session
 from flask_pluginengine import render_plugin_template
 from werkzeug.exceptions import Forbidden
-from wtforms.ext.sqlalchemy.fields import QuerySelectField
-from wtforms.fields import StringField
-from wtforms.fields.html5 import URLField
+from wtforms.fields import StringField, URLField
 from wtforms.validators import DataRequired, Optional
+from wtforms_sqlalchemy.fields import QuerySelectField
 
 from indico.core import signals
 from indico.core.db import db

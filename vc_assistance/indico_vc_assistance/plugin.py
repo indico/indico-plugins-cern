@@ -7,9 +7,9 @@
 
 from flask import flash, session
 from flask_pluginengine import render_plugin_template, url_for_plugin
-from wtforms.ext.sqlalchemy.fields import QuerySelectField
-from wtforms.fields.html5 import EmailField
+from wtforms.fields import EmailField
 from wtforms.validators import DataRequired
+from wtforms_sqlalchemy.fields import QuerySelectField
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin

@@ -10,8 +10,7 @@ from datetime import date, timedelta
 from flask import render_template, session
 from flask_pluginengine import current_plugin
 from markupsafe import Markup
-from wtforms.fields import BooleanField, SelectField, StringField, TextAreaField
-from wtforms.fields.html5 import IntegerField, URLField
+from wtforms.fields import BooleanField, IntegerField, SelectField, StringField, TextAreaField, URLField
 from wtforms.validators import DataRequired, NumberRange, Optional
 
 from indico.modules.events.contributions.models.subcontributions import SubContribution

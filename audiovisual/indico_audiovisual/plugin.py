@@ -8,10 +8,9 @@
 from flask import g, request, session
 from flask_pluginengine import render_plugin_template, url_for_plugin
 from sqlalchemy.orm.attributes import flag_modified
-from wtforms.ext.sqlalchemy.fields import QuerySelectField
-from wtforms.fields.core import StringField
-from wtforms.fields.html5 import URLField
+from wtforms.fields import StringField, URLField
 from wtforms.validators import DataRequired, ValidationError
+from wtforms_sqlalchemy.fields import QuerySelectField
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin

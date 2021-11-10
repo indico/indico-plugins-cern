@@ -11,8 +11,7 @@ from hashlib import sha512
 
 from flask import request, session
 from flask_pluginengine import render_plugin_template
-from wtforms.fields.core import BooleanField, StringField
-from wtforms.fields.html5 import EmailField, URLField
+from wtforms.fields import BooleanField, EmailField, StringField, URLField
 from wtforms.validators import DataRequired
 
 from indico.core import signals

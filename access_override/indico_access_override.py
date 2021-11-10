@@ -9,7 +9,7 @@ from operator import attrgetter
 
 from flask import request
 from markupsafe import escape
-from wtforms.fields.core import BooleanField, SelectField
+from wtforms.fields import BooleanField, SelectField
 from wtforms.validators import DataRequired, ValidationError
 
 from indico.core import signals

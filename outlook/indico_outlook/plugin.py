@@ -9,8 +9,7 @@ from collections import defaultdict
 from datetime import timedelta
 
 from flask import g
-from wtforms.fields.core import BooleanField, FloatField, SelectField
-from wtforms.fields.html5 import IntegerField, URLField
+from wtforms.fields import BooleanField, FloatField, IntegerField, SelectField, URLField
 from wtforms.fields.simple import StringField
 from wtforms.validators import URL, DataRequired, NumberRange
 

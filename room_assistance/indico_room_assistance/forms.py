@@ -11,7 +11,7 @@ import dateutil.parser
 import pytz
 from flask import request
 from wtforms import SelectField
-from wtforms.fields.html5 import IntegerField
+from wtforms.fields import IntegerField
 from wtforms.fields.simple import TextAreaField
 from wtforms.validators import DataRequired, NumberRange, Optional, ValidationError
 

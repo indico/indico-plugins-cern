@@ -9,10 +9,9 @@ import os
 from functools import partial
 
 from flask_pluginengine import depends, render_plugin_template
-from wtforms.ext.sqlalchemy.fields import QuerySelectField
-from wtforms.fields import BooleanField, IntegerField
-from wtforms.fields.html5 import URLField
+from wtforms.fields import BooleanField, IntegerField, URLField
 from wtforms.validators import DataRequired, NumberRange
+from wtforms_sqlalchemy.fields import QuerySelectField
 
 from indico.core.config import config
 from indico.core.plugins import IndicoPlugin, PluginCategory
