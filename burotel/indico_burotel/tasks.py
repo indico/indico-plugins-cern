@@ -118,7 +118,10 @@ def _adams_request(action, user, room, start_dt, end_dt):
                      url, res.status_code, res.text)
 
 
-@celery.periodic_task(run_every=crontab(minute='0', hour='8'), plugin='burotel')
+# this task needs a request context since cancelling a booking will trigger an adams update
+# to ensure the user does not have access (even though that has never been granted for a
+# reservation which was still pending approval)
+@celery.periodic_task(run_every=crontab(minute='0', hour='8'), plugin='burotel', request_context=True)
 def auto_cancel_bookings():
     # bookings which should be cancelled
     for booking in _build_query(3):
