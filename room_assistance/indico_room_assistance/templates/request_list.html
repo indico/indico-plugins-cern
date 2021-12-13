@@ -40,7 +40,7 @@
     <tbody>
         <tr class="result-group-entry">
             <td>
-                {{ request.event.room.full_name }}
+                {{ request.event.room.full_name if request.event.room else '-' }}
             </td>
             <td>
                 <a href="{{ request.event.url }}">
