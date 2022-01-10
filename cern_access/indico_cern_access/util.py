@@ -276,6 +276,8 @@ def enable_ticketing(regform):
 
 def is_category_blacklisted(category):
     from indico_cern_access.plugin import CERNAccessPlugin
+    if not category:
+        return False
     return any(category.id == int(cat['id']) for cat in CERNAccessPlugin.settings.get('excluded_categories'))
 
 
