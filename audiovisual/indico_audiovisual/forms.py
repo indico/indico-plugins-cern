@@ -84,6 +84,10 @@ class AVRequestManagerForm(RequestManagerForm):
                                                 "replaced with the ID of this event."))
     webcast_hidden = BooleanField(_('Hide webcast'),
                                   description=_('Do not show a link to the webcast on the event page'))
+    ignore_capability = BooleanField(_('Ignore room capability'),
+                                     description=_('If selected, "All contributions" will not skip those which take '
+                                                   'place in a room that does not support webcast/recording. This is '
+                                                   'especially useful for virtual events which have no physical room.'))
 
 
 class RequestListFilterForm(IndicoForm):

@@ -126,7 +126,7 @@ def get_selected_contributions(req):
     contributions = get_contributions(req.event)
     if req.data.get('all_contributions', True):
         # "all contributions" includes only those in capable rooms
-        contributions = [x for x in contributions if x[1]]
+        contributions = [x for x in contributions if x[1] or req.data.get('ignore_capability')]
     else:
         selected = set(req.data['contributions'])
         contributions = [x for x in contributions if contribution_id(x[0]) in selected]

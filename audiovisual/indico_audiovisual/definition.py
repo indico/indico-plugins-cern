@@ -70,6 +70,8 @@ class AVRequest(RequestDefinitionBase):
         if 'webcast' not in req.data['services']:
             del form.custom_webcast_url
             del form.webcast_hidden
+        if req.event.type == 'lecture':
+            del form.ignore_capability
         return form
 
     @classmethod
@@ -104,6 +106,7 @@ class AVRequest(RequestDefinitionBase):
         super().manager_save(req, data)
         req.data['custom_webcast_url'] = data.get('custom_webcast_url')
         req.data['webcast_hidden'] = data.get('webcast_hidden', False)
+        req.data['ignore_capability'] = data.get('ignore_capability', False)
         flag_modified(req, 'data')
 
 
