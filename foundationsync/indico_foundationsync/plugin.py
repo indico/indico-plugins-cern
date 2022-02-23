@@ -19,6 +19,7 @@ from celery.schedules import crontab
 from flask import g, session
 from webargs import flaskparser
 from wtforms import StringField
+from wtforms.fields import BooleanField
 
 from indico.cli.core import cli_command
 from indico.core import signals
@@ -29,6 +30,7 @@ from indico.modules.rb.util import rb_is_admin
 from indico.modules.users.models.users import User
 from indico.util.i18n import _
 from indico.web.forms.base import IndicoForm
+from indico.web.forms.widgets import SwitchWidget
 
 from indico_foundationsync.sync import FoundationSync
 
@@ -40,6 +42,8 @@ BLOCKED_FIELDS = {'protection_mode'}
 
 class SettingsForm(IndicoForm):
     connection_string = StringField('Foundation DB')
+    disable_sync = BooleanField(_('Disable sync'), widget=SwitchWidget(),
+                                description=_('Temporarily disable synchronization with Foundation'))
 
 
 class FoundationSyncPlugin(IndicoPlugin):
@@ -49,7 +53,7 @@ class FoundationSyncPlugin(IndicoPlugin):
     """
     configurable = True
     settings_form = SettingsForm
-    default_settings = {'connection_string': ''}
+    default_settings = {'connection_string': '', 'disable_sync': False}
 
     def init(self):
         super().init()
@@ -109,6 +113,9 @@ class FoundationSyncPlugin(IndicoPlugin):
 
 @celery.periodic_task(run_every=crontab(minute='0'))
 def scheduled_update(room_name=None):
+    if FoundationSyncPlugin.settings.get('disable_sync'):
+        FoundationSyncPlugin.logger.warning('Sync is currently disabled')
+        return
     db_name = FoundationSyncPlugin.settings.get('connection_string')
     if not db_name:
         raise RuntimeError('Foundation DB connection string is not set')
