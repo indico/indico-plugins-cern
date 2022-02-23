@@ -235,7 +235,10 @@ class FoundationSync:
             query = Room.query.filter_by(name=room_name)
         else:
             query = Room.query.filter_by(location=self._location)
-        rooms_to_deactivate = (room for room in query if room not in foundation_rooms and not room.is_deleted)
+        rooms_to_deactivate = [room for room in query if room not in foundation_rooms and not room.is_deleted]
+        if len(rooms_to_deactivate) > 10:
+            self._logger.error('Would deactivate too many rooms; aborting sync')
+            return False
         for room in rooms_to_deactivate:
             self._logger.info("Deactivated room '%s'", room.full_name)
             room.is_deleted = True
@@ -245,15 +248,16 @@ class FoundationSync:
         self._logger.info("Rooms summary: %d in Foundation - %d skipped - %d inserted - %d updated - %d deactivated",
                           counter['found'], counter['skipped'], counter['inserted'], counter['updated'],
                           counter['deactivated'])
+        return True
 
     def run_all(self, room_name=None, dry_run=False):
         with self.connect_to_foundation() as connection:
             try:
-                self.fetch_rooms(connection, room_name)
+                ok = self.fetch_rooms(connection, room_name)
             except Exception:
                 self._logger.exception("Synchronization with Foundation failed")
                 raise
-            if dry_run:
+            if dry_run or not ok:
                 db.session.rollback()
             else:
                 db.session.commit()
