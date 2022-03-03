@@ -5,6 +5,7 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
+import json
 from datetime import time, timedelta
 
 from flask import g, request, session
@@ -26,8 +27,10 @@ from indico.modules.events.registration.forms import TicketsForm
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.registration.placeholders.registrations import (EventTitlePlaceholder, FirstNamePlaceholder,
                                                                            LastNamePlaceholder)
+from indico.modules.events.registration.util import RegistrationSchemaBase
 from indico.modules.events.registration.views import (WPDisplayRegistrationFormConference,
                                                       WPDisplayRegistrationFormSimpleEvent)
+from indico.util.countries import get_countries
 from indico.util.date_time import now_utc
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import (IndicoDateTimeField, IndicoPasswordField, MultipleItemsField, PrincipalListField,
@@ -36,14 +39,14 @@ from indico.web.forms.fields import (IndicoDateTimeField, IndicoPasswordField, M
 from indico_cern_access import _
 from indico_cern_access.blueprint import blueprint
 from indico_cern_access.definition import CERNAccessRequestDefinition
-from indico_cern_access.forms import AccessIdentityDataForm, RegistrationFormPersonalDataForm
 from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState
 from indico_cern_access.placeholders import (AccessPeriodPlaceholder, FormLinkPlaceholder, TicketAccessDatesPlaceholder,
                                              TicketLicensePlatePlaceholder)
+from indico_cern_access.schemas import RequestAccessSchema
 from indico_cern_access.util import (build_access_request_data, get_access_dates, get_last_request, get_requested_forms,
                                      get_requested_registrations, handle_event_time_update, notify_access_withdrawn,
-                                     sanitize_license_plate, send_adams_delete_request, send_adams_post_request,
-                                     update_access_requests, withdraw_access_requests)
+                                     send_adams_delete_request, send_adams_post_request, update_access_requests,
+                                     withdraw_access_requests)
 from indico_cern_access.views import WPAccessRequestDetails
 
 
@@ -118,11 +121,10 @@ class CERNAccessPlugin(IndicoPlugin):
         super().init()
         self.template_hook('registration-status-flag', self._get_access_status)
         self.template_hook('registration-status-action-button', self._get_access_action_button)
-        self.template_hook('after-regform', self._get_personal_data_form)
+        self.template_hook('regform-container-attrs', self._get_regform_container_attrs, markup=False)
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
         self.connect(signals.event.registration_deleted, self._registration_deleted)
         self.connect(signals.event.registration_created, self._registration_created)
-        self.connect(signals.core.form_validated, self._registration_form_validated)
         self.connect(signals.event.timetable.times_changed, self._event_time_changed, sender=Event)
         self.connect(signals.event.registration_personal_data_modified, self._registration_modified)
         self.connect(signals.event.registration_form_deleted, self._registration_form_deleted)
@@ -135,9 +137,49 @@ class CERNAccessPlugin(IndicoPlugin):
         self.connect(signals.event.registration.generate_ticket_qr_code, self._generate_ticket_qr_code)
         self.connect(signals.core.get_placeholders, self._get_designer_placeholders, sender='designer-fields')
         self.connect(signals.core.get_placeholders, self._get_email_placeholders, sender='cern-access-email')
+        self.connect(signals.plugin.schema_pre_load, self._registration_schema_pre_load)
+        self.inject_bundle('main.js', WPDisplayRegistrationFormConference)
+        self.inject_bundle('main.js', WPDisplayRegistrationFormSimpleEvent)
         self.inject_bundle('main.css', WPDisplayRegistrationFormConference)
         self.inject_bundle('main.css', WPDisplayRegistrationFormSimpleEvent)
         self.inject_bundle('main.css', WPAccessRequestDetails)
+
+    def _registration_schema_pre_load(self, schema, data, **kwargs):
+        if not issubclass(schema, RegistrationSchemaBase):
+            return
+        if type(g.rh) is not RHRegistrationForm:
+            return
+        regform = g.rh.regform
+        if not regform.cern_access_request or not regform.cern_access_request.is_active:
+            return
+        req = get_last_request(regform.event)
+        if not req or not req.data['during_registration']:
+            return
+        cern_access_data = {k: data.pop(k) for k in list(data) if k.startswith('cern_access_')}
+        if req.data['during_registration_required']:
+            cern_access_data['cern_access_request_cern_access'] = True
+        g.cern_access_request_data = RequestAccessSchema().load(cern_access_data)
+
+    def _get_regform_container_attrs(self, event, regform, management, registration=None, **kwargs):
+        if management or registration is not None:
+            return
+        if not regform.cern_access_request or not regform.cern_access_request.is_active:
+            return
+        req = get_last_request(event)
+        if not req.data['during_registration']:
+            return
+        required = req.data['during_registration_required']
+        preselected = req.data['during_registration_preselected'] and not required
+        start_dt, end_dt = get_access_dates(req)
+        return {
+            'data-cern-access': json.dumps({
+                'countries': get_countries(),
+                'start': start_dt.astimezone(event.tzinfo).isoformat(),
+                'end': end_dt.astimezone(event.tzinfo).isoformat(),
+                'required': required,
+                'preselected': preselected,
+            })
+        }
 
     def get_blueprints(self):
         return blueprint
@@ -155,26 +197,6 @@ class CERNAccessPlugin(IndicoPlugin):
                                           registration=registration,
                                           header=header)
 
-    def _get_personal_data_form(self, event, regform, management, registration=None, **kwargs):
-        if management or registration is not None:
-            return
-
-        if regform.cern_access_request and regform.cern_access_request.is_active:
-            req = get_last_request(event)
-            if not req.data['during_registration']:
-                return
-            required = req.data['during_registration_required']
-            form_cls = AccessIdentityDataForm if required else RegistrationFormPersonalDataForm
-            form = g.get('personal_data_form')
-            if not form:
-                form = form_cls()
-                if req.data['during_registration_preselected'] and not required:
-                    form.request_cern_access.data = True
-            start_dt, end_dt = get_access_dates(req)
-            return render_plugin_template('regform_identity_data_section.html', event=event, form=form,
-                                          start_dt=start_dt, end_dt=end_dt, registration=registration,
-                                          required=required)
-
     def _is_past_event(self, event):
         end_dt = get_access_dates(get_last_request(event))[1]
         return end_dt < now_utc()
@@ -191,9 +213,9 @@ class CERNAccessPlugin(IndicoPlugin):
             return
 
         regform = registration.registration_form
-        personal_data_form = g.pop('personal_data_form', None)
+        access_request_data = g.pop('cern_access_request_data', None)
 
-        if not regform.cern_access_request or not regform.cern_access_request.is_active or not personal_data_form:
+        if not regform.cern_access_request or not regform.cern_access_request.is_active or not access_request_data:
             return
 
         req = get_last_request(registration.event)
@@ -201,44 +223,15 @@ class CERNAccessPlugin(IndicoPlugin):
             return
 
         required = req.data['during_registration_required']
-        if not required and not personal_data_form.request_cern_access.data:
+        if not required and not access_request_data['request_cern_access']:
             return
 
-        license_plate = (
-            sanitize_license_plate(personal_data_form.license_plate.data)
-            if personal_data_form.license_plate.data
-            else None
-        )
-
-        registration.cern_access_request = CERNAccessRequest(birth_date=personal_data_form.birth_date.data,
-                                                             nationality=personal_data_form.nationality.data,
-                                                             birth_place=personal_data_form.birth_place.data,
-                                                             license_plate=license_plate,
+        registration.cern_access_request = CERNAccessRequest(birth_date=access_request_data['birth_date'],
+                                                             nationality=access_request_data['nationality'],
+                                                             birth_place=access_request_data['birth_place'],
+                                                             license_plate=access_request_data['license_plate'],
                                                              request_state=CERNAccessRequestState.not_requested,
                                                              reservation_code='')
-
-    def _registration_form_validated(self, form, **kwargs):
-        if type(form).__name__ != 'RegistrationFormWTF':
-            return
-
-        if type(g.rh) is not RHRegistrationForm:
-            return
-
-        regform = g.rh.regform
-        if not regform.cern_access_request or not regform.cern_access_request.is_active:
-            return
-
-        req = get_last_request(regform.event)
-        if not req or not req.data['during_registration']:
-            return
-
-        required = req.data['during_registration_required']
-        form_cls = AccessIdentityDataForm if required else RegistrationFormPersonalDataForm
-        # we pass 'csrf_enabled' on to allow unit tests to set it to False
-        g.personal_data_form = form = form_cls(csrf_enabled=form.meta.csrf)
-
-        if not form.validate_on_submit():
-            return False
 
     def _event_time_changed(self, sender, obj, **kwargs):
         """Update event time in CERN access requests in ADaMS."""

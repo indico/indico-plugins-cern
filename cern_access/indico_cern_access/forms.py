@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from datetime import datetime
 from operator import itemgetter
 
 from markupsafe import Markup
@@ -20,8 +19,7 @@ from indico.util.countries import get_countries
 from indico.util.placeholders import get_missing_placeholders, render_placeholder_info
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import IndicoDateField, IndicoDateTimeField, IndicoSelectMultipleCheckboxField
-from indico.web.forms.util import inject_validators
-from indico.web.forms.validators import HiddenUnless, IndicoRegexp, LinkedDateTime, UsedIf
+from indico.web.forms.validators import DateRange, HiddenUnless, IndicoRegexp, LinkedDateTime
 from indico.web.forms.widgets import JinjaWidget, SwitchWidget
 
 from indico_cern_access import _
@@ -101,7 +99,7 @@ def get_regforms(event):
 
 
 class AccessIdentityDataForm(IndicoForm):
-    birth_date = IndicoDateField(_('Birth date'), [DataRequired()])
+    birth_date = IndicoDateField(_('Birth date'), [DataRequired(), DateRange(earliest=None, latest='today')])
     nationality = SelectField(_('Country of birth'), [DataRequired()])
     birth_place = StringField(_('Place of birth'), [DataRequired()])
     by_car = BooleanField(_('Are you bringing your own car?'), [Optional()], widget=SwitchWidget())
@@ -119,23 +117,6 @@ class AccessIdentityDataForm(IndicoForm):
         super().__init__(*args, **kwargs)
         self.nationality.choices = [('', '')] + sorted(get_countries().items(), key=itemgetter(1))
 
-    def validate_birth_date(self, field):
-        if field.data > datetime.now().date():
-            raise ValidationError(_('The specified date is in the future'))
-
     def validate_license_plate(self, field):
         if self.by_car.data and not sanitize_license_plate(field.data):
             raise ValidationError(_('Please insert a valid license plate number!'))
-
-
-class RegistrationFormPersonalDataForm(AccessIdentityDataForm):
-    request_cern_access = BooleanField(_('Request access to the CERN site'), widget=SwitchWidget())
-
-    @classmethod
-    def _add_fields_hidden_unless(cls):
-        for field_name in ('birth_date', 'nationality', 'birth_place'):
-            inject_validators(RegistrationFormPersonalDataForm, field_name,
-                              [UsedIf(lambda form, field: form.request_cern_access.data)], early=True)
-
-
-RegistrationFormPersonalDataForm._add_fields_hidden_unless()

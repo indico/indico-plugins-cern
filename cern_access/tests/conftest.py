@@ -20,10 +20,10 @@ from indico_cern_access.plugin import CERNAccessPlugin
 
 
 PERSONAL_DATA = {
-    'request_cern_access': 1,
-    'birth_date': '02/03/2000',
-    'nationality': 'PT',
-    'birth_place': 'Freixo de Espada as Costas'
+    'cern_access_request_cern_access': True,
+    'cern_access_birth_date': '2000-03-02',
+    'cern_access_nationality': 'PT',
+    'cern_access_birth_place': 'Freixo de Espada as Costas'
 }
 
 
@@ -44,9 +44,6 @@ def dummy_registration(dummy_regform, dummy_user, db):
         'email': dummy_user.email,
         'first_name': dummy_user.first_name,
         'last_name': dummy_user.last_name,
-        'affiliation': dummy_user.affiliation,
-        'phone': dummy_user.phone,
-        'position': 'Business Relationship Manager',
         'user': dummy_user
     })
     db.session.flush()
@@ -59,15 +56,11 @@ def mock_access_request(dummy_event, dummy_regform, dummy_user, app, request):
         'email': dummy_user.email,
         'first_name': dummy_user.first_name,
         'last_name': dummy_user.last_name,
-        'affiliation': dummy_user.affiliation,
-        'phone': dummy_user.phone,
-        'position': 'Business Relationship Manager',
-        'user': dummy_user
     }
 
     data.update(request.param.get('personal_data', {}))
 
-    with app.test_request_context(method='POST', data=data):
+    with app.test_request_context(method='POST', json=data):
         session.set_session_user(dummy_user)
         session.lang = 'en_GB'
 

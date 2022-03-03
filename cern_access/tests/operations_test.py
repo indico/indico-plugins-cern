@@ -5,13 +5,15 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
+from datetime import date
+
 import pytest
 from conftest import PERSONAL_DATA
 
 from indico.core import signals
-from indico.modules.events.registration.util import create_registration, make_registration_form, modify_registration
+from indico.modules.events.registration.util import create_registration, modify_registration
 
-from indico_cern_access.models.access_requests import CERNAccessRequestState
+from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState
 from indico_cern_access.util import grant_access
 
 
@@ -37,9 +39,17 @@ def api_post(mocker):
 @pytest.fixture
 def dummy_access_request(dummy_regform):
     """Create a registration and corresponding request."""
-    form = make_registration_form(dummy_regform)(csrf_enabled=False)
-    form.validate()
-    return create_registration(dummy_regform, form.data).cern_access_request
+    reg = create_registration(dummy_regform, {
+        'email': 'test@example.com',
+        'first_name': 'Test',
+        'last_name': 'Dude'
+    })
+    reg.cern_access_request = CERNAccessRequest(birth_date=date(2000, 1, 1),
+                                                nationality='XX',
+                                                birth_place='bar',
+                                                license_plate=None,
+                                                request_state=CERNAccessRequestState.not_requested,
+                                                reservation_code='')
 
 
 def setup_fixtures(func):

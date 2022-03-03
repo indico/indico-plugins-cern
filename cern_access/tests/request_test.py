@@ -9,8 +9,10 @@ from datetime import date
 
 import pytest
 from conftest import PERSONAL_DATA
+from werkzeug.exceptions import UnprocessableEntity
 
-from indico.modules.events.registration.util import create_registration, make_registration_form
+from indico.modules.events.registration.util import create_registration, make_registration_schema
+from indico.web.args import parser
 
 
 @pytest.mark.parametrize('mock_access_request',
@@ -24,11 +26,9 @@ from indico.modules.events.registration.util import create_registration, make_re
 def test_during_registration_positive(dummy_regform):
     """Data can be provided during registration (it is)."""
     assert dummy_regform.cern_access_request is not None
-
-    form = make_registration_form(dummy_regform)(csrf_enabled=False)
-    assert form.validate()
-
-    registration = create_registration(dummy_regform, form.data)
+    schema = make_registration_schema(dummy_regform)()
+    form_data = parser.parse(schema)
+    registration = create_registration(dummy_regform, form_data)
     assert registration.cern_access_request is not None
     assert registration.cern_access_request.nationality == 'PT'
     assert registration.cern_access_request.birth_date == date(2000, 3, 2)
@@ -44,10 +44,9 @@ def test_during_registration_positive(dummy_regform):
 @pytest.mark.usefixtures('smtp', 'mock_access_request')
 def test_during_registration_negative(dummy_regform):
     """Data can be provided during registration (it is not)."""
-    form = make_registration_form(dummy_regform)(csrf_enabled=False)
-    assert form.validate()
-
-    registration = create_registration(dummy_regform, form.data)
+    schema = make_registration_schema(dummy_regform)()
+    form_data = parser.parse(schema)
+    registration = create_registration(dummy_regform, form_data)
     assert registration.cern_access_request is None
 
 
@@ -60,8 +59,12 @@ def test_during_registration_negative(dummy_regform):
 @pytest.mark.usefixtures('smtp', 'mock_access_request')
 def test_during_registration_required_negative(dummy_regform):
     """Data must be provided during registration (it is not)."""
-    form = make_registration_form(dummy_regform)(csrf_enabled=False)
-    assert not form.validate()
+    schema = make_registration_schema(dummy_regform)()
+    with pytest.raises(UnprocessableEntity) as exc_info:
+        parser.parse(schema)
+    assert set(exc_info.value.data['messages']) == {
+        'cern_access_nationality', 'cern_access_birth_place', 'cern_access_birth_date'
+    }
 
 
 @pytest.mark.parametrize('mock_access_request',
@@ -74,10 +77,9 @@ def test_during_registration_required_negative(dummy_regform):
 @pytest.mark.usefixtures('smtp', 'mock_access_request')
 def test_during_registration_required_positive(dummy_regform):
     """Data must be provided during registration (it is)."""
-    form = make_registration_form(dummy_regform)(csrf_enabled=False)
-    assert form.validate()
-
-    registration = create_registration(dummy_regform, form.data)
+    schema = make_registration_schema(dummy_regform)()
+    form_data = parser.parse(schema)
+    registration = create_registration(dummy_regform, form_data)
     assert registration.cern_access_request is not None
     assert registration.cern_access_request.nationality == 'PT'
     assert registration.cern_access_request.birth_date == date(2000, 3, 2)
