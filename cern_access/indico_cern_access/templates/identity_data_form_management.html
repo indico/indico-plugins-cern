@@ -1,4 +1,3 @@
-{% from 'forms/_form.html' import simple_form, form_rows, form_row_static %}
 {% from 'message_box.html' import message_box %}
 
 {% call message_box('info', fixed_width=true) %}
@@ -21,7 +20,14 @@
     {%- endtrans %}
 {% endcall %}
 
-{% call simple_form(form, back_button=false) %}
-    {{ form_row_static(_('Name'), registration.full_name) }}
-    {{ form_rows(form) }}
-{% endcall %}
+<div id="registration-identity-data-form-container"></div>
+
+<script>
+    setupEnterPersonalDataForm(
+        {{ registration.locator | tojson }},
+        true,
+        {{ countries | tojson }},
+        {{ accompanying | tojson }},
+        {{ accompanying_persons | tojson }}
+    );
+</script>

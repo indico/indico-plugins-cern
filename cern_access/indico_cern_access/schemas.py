@@ -15,6 +15,15 @@ from indico.util.marshmallow import validate_with_message
 from indico_cern_access.util import sanitize_license_plate
 
 
+class AccompanyingPersonAccessSchema(mm.Schema):
+    id = fields.UUID()
+    birth_date = fields.Date(load_default=None,
+                             validate=validate_with_message(lambda x: x <= date.today(),
+                                                            'The specified date is in the future'))
+    nationality = fields.String(load_default='')
+    birth_place = fields.String(load_default='')
+
+
 class RequestAccessSchema(mm.Schema):
     request_cern_access = fields.Bool(load_default=False, data_key='cern_access_request_cern_access')
     birth_date = fields.Date(load_default=None, data_key='cern_access_birth_date',
@@ -22,6 +31,8 @@ class RequestAccessSchema(mm.Schema):
                                                             'The specified date is in the future'))
     nationality = fields.String(load_default='', data_key='cern_access_nationality')
     birth_place = fields.String(load_default='', data_key='cern_access_birth_place')
+    accompanying_persons = fields.List(fields.Nested(AccompanyingPersonAccessSchema), load_default=[],
+                                       data_key='cern_access_accompanying_persons')
     by_car = fields.Bool(load_default=False, data_key='cern_access_by_car')
     license_plate = fields.String(data_key='cern_access_license_plate', load_default=None)
 

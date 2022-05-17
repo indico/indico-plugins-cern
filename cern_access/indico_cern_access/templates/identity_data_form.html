@@ -1,7 +1,6 @@
 {% extends 'layout/base.html' %}
 
-{% from 'cern_access:_common.html' import render_access_dates, render_security_policy, render_identity_form %}
-{% from 'forms/_form.html' import simple_form, form_rows, form_row_static %}
+{% from 'cern_access:_common.html' import render_access_dates, render_security_policy %}
 {% from 'message_box.html' import message_box %}
 
 {% block page_class %}meeting-page{% endblock %}
@@ -32,10 +31,16 @@
             {% call message_box('info') %}
                 {{ render_security_policy(start_dt, end_dt) }}
             {% endcall %}
-            {% call simple_form(form, back_button=false) %}
-                {{ form_row_static(_('Name'), access_request.registration.full_name) }}
-                {{ render_identity_form(form) }}
-            {% endcall %}
+            <div id="registration-identity-data-form-container"></div>
+            <script>
+                setupEnterPersonalDataForm(
+                    {{ access_request.registration.locator.registrant | tojson }},
+                    false,
+                    {{ countries | tojson }},
+                    {{ accompanying | tojson }},
+                    {{ accompanying_persons | tojson }}
+                );
+            </script>
         {% endif %}
     {% else %}
         {# checking is_ticket_blocked is enough for regular users but without the extra check

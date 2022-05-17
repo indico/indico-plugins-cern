@@ -5,25 +5,20 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from operator import itemgetter
-
 from markupsafe import Markup
-from wtforms.fields import BooleanField, SelectField, StringField
-from wtforms.validators import DataRequired, Length, Optional, ValidationError
+from wtforms.fields import BooleanField
+from wtforms.validators import DataRequired, Optional, ValidationError
 
 from indico.core.db import db
 from indico.modules.events.registration.forms import EmailRegistrantsForm
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.requests import RequestFormBase
-from indico.util.countries import get_countries
 from indico.util.placeholders import get_missing_placeholders, render_placeholder_info
-from indico.web.forms.base import IndicoForm
-from indico.web.forms.fields import IndicoDateField, IndicoDateTimeField, IndicoSelectMultipleCheckboxField
-from indico.web.forms.validators import DateRange, HiddenUnless, IndicoRegexp, LinkedDateTime
+from indico.web.forms.fields import IndicoDateTimeField, IndicoSelectMultipleCheckboxField
+from indico.web.forms.validators import HiddenUnless, LinkedDateTime
 from indico.web.forms.widgets import JinjaWidget, SwitchWidget
 
 from indico_cern_access import _
-from indico_cern_access.util import sanitize_license_plate
 
 
 class GrantAccessEmailForm(EmailRegistrantsForm):
@@ -68,6 +63,9 @@ class CERNAccessForm(RequestFormBase):
                                                 description=_("Require all users to provide data for site access. "
                                                               "Registration without entering the data will not be "
                                                               "possible."))
+    include_accompanying_persons = BooleanField(_("Include registrant's accompanying persons"), widget=SwitchWidget(),
+                                                description=_("Request access for each of the participant's "
+                                                              "accompanying persons."))
     start_dt_override = IndicoDateTimeField(_('Start date override'), [Optional()],
                                             description=_("If set, CERN access will be granted starting at the "
                                                           "specified date instead of the event's start date"))
@@ -96,27 +94,3 @@ def get_regforms(event):
             .with_parent(event)
             .order_by(db.func.lower(RegistrationForm.title), RegistrationForm.id)
             .all())
-
-
-class AccessIdentityDataForm(IndicoForm):
-    birth_date = IndicoDateField(_('Birth date'), [DataRequired(), DateRange(earliest=None, latest='today')])
-    nationality = SelectField(_('Country of birth'), [DataRequired()])
-    birth_place = StringField(_('Place of birth'), [DataRequired()])
-    by_car = BooleanField(_('Are you bringing your own car?'), [Optional()], widget=SwitchWidget())
-    license_plate = StringField(
-        _('License plate'),
-        [
-            HiddenUnless('by_car'),
-            Length(min=3),
-            IndicoRegexp(r'^[0-9A-Za-z]+([- ][ ]*[0-9A-Za-z]+)*$',
-                         message=_('Wrong format. Only letters and numbers separated by dashes (-) or spaces allowed'))
-        ]
-    )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.nationality.choices = [('', '')] + sorted(get_countries().items(), key=itemgetter(1))
-
-    def validate_license_plate(self, field):
-        if self.by_car.data and not sanitize_license_plate(field.data):
-            raise ValidationError(_('Please insert a valid license plate number!'))

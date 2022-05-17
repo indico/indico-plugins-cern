@@ -6,6 +6,8 @@
 // the LICENSE file for more details.
 
 @use 'base/palette' as *;
+@use 'base/defaults' as *;
+@use 'base/borders' as *;
 
 .form-item {
   display: flex;
@@ -43,5 +45,30 @@
         margin-left: 5px;
       }
     }
+  }
+}
+
+.accompanying-persons-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1em;
+  padding-bottom: 25px;
+
+  thead {
+    th {
+      @include border-bottom();
+      padding-bottom: 4px;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    td {
+      background: white !important;
+    }
+  }
+
+  td,
+  th {
+    padding: 4px 4px;
   }
 }

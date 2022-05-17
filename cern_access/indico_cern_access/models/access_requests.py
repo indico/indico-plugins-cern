@@ -5,6 +5,7 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from indico.core.db.sqlalchemy import PyIntEnum, db
@@ -59,6 +60,11 @@ class CERNAccessRequest(db.Model):
     license_plate = db.Column(
         db.String,
         nullable=True
+    )
+    accompanying_persons = db.Column(
+        JSONB,
+        nullable=False,
+        default=[]
     )
 
     registration = db.relationship(

@@ -27,7 +27,8 @@ class CERNAccessRequestDefinition(RequestDefinitionBase):
     form = CERNAccessForm
     form_defaults = {'during_registration': True,
                      'during_registration_preselected': False,
-                     'during_registration_required': False}
+                     'during_registration_required': False,
+                     'include_accompanying_persons': True}
 
     @classmethod
     def create_form(cls, event, existing_request=None):

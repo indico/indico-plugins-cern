@@ -29,7 +29,7 @@ from indico.modules.events.registration.placeholders.registrations import (Event
                                                                            LastNamePlaceholder)
 from indico.modules.events.registration.util import RegistrationSchemaBase
 from indico.modules.events.registration.views import (WPDisplayRegistrationFormConference,
-                                                      WPDisplayRegistrationFormSimpleEvent)
+                                                      WPDisplayRegistrationFormSimpleEvent, WPManageRegistration)
 from indico.util.countries import get_countries
 from indico.util.date_time import now_utc
 from indico.web.forms.base import IndicoForm
@@ -135,11 +135,15 @@ class CERNAccessPlugin(IndicoPlugin):
         self.connect(signals.core.get_placeholders, self._get_designer_placeholders, sender='designer-fields')
         self.connect(signals.core.get_placeholders, self._get_email_placeholders, sender='cern-access-email')
         self.connect(signals.plugin.schema_pre_load, self._registration_schema_pre_load)
+        self.inject_bundle('main.js', WPAccessRequestDetails)
         self.inject_bundle('main.js', WPDisplayRegistrationFormConference)
         self.inject_bundle('main.js', WPDisplayRegistrationFormSimpleEvent)
+        self.inject_bundle('main.js', WPManageRegistration)
+        self.inject_bundle('main.css', WPAccessRequestDetails)
         self.inject_bundle('main.css', WPDisplayRegistrationFormConference)
         self.inject_bundle('main.css', WPDisplayRegistrationFormSimpleEvent)
         self.inject_bundle('main.css', WPAccessRequestDetails)
+        self.inject_bundle('main.css', WPManageRegistration)
 
     def _registration_schema_pre_load(self, schema, data, **kwargs):
         if not issubclass(schema, RegistrationSchemaBase):
@@ -167,6 +171,7 @@ class CERNAccessPlugin(IndicoPlugin):
             return
         required = req.data['during_registration_required']
         preselected = req.data['during_registration_preselected'] and not required
+        accompanying = req.data.get('include_accompanying_persons', False)
         start_dt, end_dt = get_access_dates(req)
         return {
             'data-cern-access': json.dumps({
@@ -175,6 +180,7 @@ class CERNAccessPlugin(IndicoPlugin):
                 'end': end_dt.astimezone(event.tzinfo).isoformat(),
                 'required': required,
                 'preselected': preselected,
+                'accompanying': accompanying,
             })
         }
 
@@ -229,12 +235,15 @@ class CERNAccessPlugin(IndicoPlugin):
         if not required and not access_request_data['request_cern_access']:
             return
 
-        registration.cern_access_request = CERNAccessRequest(birth_date=access_request_data['birth_date'],
-                                                             nationality=access_request_data['nationality'],
-                                                             birth_place=access_request_data['birth_place'],
-                                                             license_plate=access_request_data['license_plate'],
-                                                             request_state=CERNAccessRequestState.not_requested,
-                                                             reservation_code='')
+        registration.cern_access_request = CERNAccessRequest(
+            birth_date=access_request_data['birth_date'],
+            nationality=access_request_data['nationality'],
+            birth_place=access_request_data['birth_place'],
+            license_plate=access_request_data['license_plate'],
+            accompanying_persons=access_request_data['accompanying_persons'],
+            request_state=CERNAccessRequestState.not_requested,
+            reservation_code=''
+        )
 
     def _event_time_changed(self, sender, obj, **kwargs):
         """Update event time in CERN access requests in ADaMS."""
