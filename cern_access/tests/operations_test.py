@@ -123,7 +123,7 @@ def test_registration_modified_active(dummy_regform, api_delete, api_post):
     modify_registration(registration, {
         'first_name': 'Conan',
         'last_name': 'Osiris',
-        'email': '1337@example.com'
+        'email': '1337@example.test'
     })
     api_delete.call_count == 0
     assert api_post.call_count == 2
@@ -137,7 +137,7 @@ def test_registration_modified_inactive(dummy_regform, api_delete, api_post):
     modify_registration(registration, {
         'first_name': 'Conan',
         'last_name': 'Osiris',
-        'email': '1337@example.com'
+        'email': '1337@example.test'
     })
     assert api_delete.call_count == 0
     assert api_post.call_count == 0
