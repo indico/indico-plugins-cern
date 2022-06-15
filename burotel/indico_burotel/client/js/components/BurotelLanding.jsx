@@ -8,31 +8,31 @@
 import defaultExperimentURL from 'indico-url:plugin_burotel.user_experiment';
 
 import React from 'react';
-import {indicoAxios, handleAxiosError} from 'indico/utils/axios';
-import {Landing} from 'indico/modules/rb/modules/landing/Landing';
 
+import {Landing} from 'indico/modules/rb/modules/landing/Landing';
+import {indicoAxios, handleAxiosError} from 'indico/utils/axios';
 
 export default class BurotelLanding extends React.Component {
-    constructor(props) {
-        super(props);
-        this.landing = React.createRef();
-    }
+  constructor(props) {
+    super(props);
+    this.landing = React.createRef();
+  }
 
-    async componentDidMount() {
-        let response;
-        try {
-            response = await indicoAxios.get(defaultExperimentURL());
-        } catch (error) {
-            handleAxiosError(error);
-            return;
-        }
-        const experiment = response.data.value;
-        if (this.landing.current && experiment) {
-            this.landing.current.setExtraState({division: experiment});
-        }
+  async componentDidMount() {
+    let response;
+    try {
+      response = await indicoAxios.get(defaultExperimentURL());
+    } catch (error) {
+      handleAxiosError(error);
+      return;
     }
+    const experiment = response.data.value;
+    if (this.landing.current && experiment) {
+      this.landing.current.setExtraState({division: experiment});
+    }
+  }
 
-    render() {
-        return <Landing ref={this.landing} {...this.props} />;
-    }
+  render() {
+    return <Landing ref={this.landing} {...this.props} />;
+  }
 }

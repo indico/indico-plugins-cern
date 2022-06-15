@@ -9,9 +9,9 @@ import getBurotelStatsCSV from 'indico-url:plugin_burotel.stats_csv';
 
 import _ from 'lodash';
 import moment from 'moment';
-
 import React, {useState} from 'react';
 import {Button, Dropdown, Form} from 'semantic-ui-react';
+
 import {Translate} from 'indico/react/i18n';
 
 import Stats from './Stats';

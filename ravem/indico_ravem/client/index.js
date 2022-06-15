@@ -59,7 +59,9 @@
           };
           const messages = {
             alreadyConnected: $t
-              .gettext('Would you like to force the room {0} to connect to your videoconference room ({1}) ?')
+              .gettext(
+                'Would you like to force the room {0} to connect to your videoconference room ({1}) ?'
+              )
               .format(name, vcRoomName),
             error: $t
               .gettext('The room {0} might already be connected to another videoconference room')
@@ -109,7 +111,7 @@
       unsupported: {
         icon: 'icon-warning',
         tooltip: $t.gettext('Unsupported provider: {2}'),
-      }
+      },
     };
 
     /**
@@ -311,7 +313,11 @@
         })
         .done(function successHandler(data) {
           if (!data.success) {
-            setButtonState(btn, data.reason === 'unsupported' ? data.reason : 'errorStatus', data.message);
+            setButtonState(
+              btn,
+              data.reason === 'unsupported' ? data.reason : 'errorStatus',
+              data.message
+            );
             return;
           }
           const connected = data.connected;

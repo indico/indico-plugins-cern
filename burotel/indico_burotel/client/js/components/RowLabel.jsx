@@ -5,22 +5,22 @@
 // them and/or modify them under the terms of the MIT License; see
 // the LICENSE file for more details.
 
-import React from 'react';
 import PropTypes from 'prop-types';
-
-import {Translate} from 'indico/react/i18n';
+import React from 'react';
 
 import {TimelineRowLabel} from 'indico/modules/rb/common/timeline/DailyTimelineContent';
-
+import {Translate} from 'indico/react/i18n';
 
 const RowLabel = ({room, ...props}) => (
-    <TimelineRowLabel {...props}
-                      gutter={room.isLongTerm}
-                      gutterTooltip={Translate.string('Long term')} />
+  <TimelineRowLabel
+    {...props}
+    gutter={room.isLongTerm}
+    gutterTooltip={Translate.string('Long term')}
+  />
 );
 
 RowLabel.propTypes = {
-    room: PropTypes.object.isRequired,
+  room: PropTypes.object.isRequired,
 };
 
 export default RowLabel;

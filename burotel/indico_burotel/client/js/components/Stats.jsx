@@ -8,13 +8,13 @@
 import getBurotelStats from 'indico-url:plugin_burotel.stats';
 
 import _ from 'lodash';
-import React from 'react';
 import PropTypes from 'prop-types';
+import React from 'react';
 import {Chart} from 'react-charts';
 import {Table, Loader} from 'semantic-ui-react';
 
-import {Translate} from 'indico/react/i18n';
 import {useIndicoAxios} from 'indico/react/hooks';
+import {Translate} from 'indico/react/i18n';
 
 import './StatsPage.module.scss';
 
@@ -26,10 +26,7 @@ function toHex(color) {
   return `#${_.map(color, c => c.toString(16).padStart(2, '0')).join('')}`;
 }
 
-const PALETTE = [
-  [204, 0, 0],
-  [0, 200, 81],
-];
+const PALETTE = [[204, 0, 0], [0, 200, 81]];
 
 const AXES = [
   {primary: true, type: 'ordinal', position: 'bottom'},
@@ -43,9 +40,8 @@ function calculateChartData(data, monthInfo) {
     });
     return accum;
   }, []);
-  const experimentsByMonth = _.mapValues(
-    _.groupBy(rows, ([, experiment]) => experiment),
-    rows_ => _.zip(...rows_.map(([, , {months}]) => months)).map(a => _.sum(a))
+  const experimentsByMonth = _.mapValues(_.groupBy(rows, ([, experiment]) => experiment), rows_ =>
+    _.zip(...rows_.map(([, , {months}]) => months)).map(a => _.sum(a))
   );
   return Object.entries(experimentsByMonth).map(([k, months]) => ({
     label: k,

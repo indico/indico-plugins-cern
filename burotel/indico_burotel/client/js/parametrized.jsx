@@ -5,32 +5,33 @@
 // them and/or modify them under the terms of the MIT License; see
 // the LICENSE file for more details.
 
-import React from 'react';
-import moment from 'moment';
-import {parametrize} from 'react-overridable';
 import {push as pushRoute} from 'connected-react-router';
+import moment from 'moment';
+import React from 'react';
+import {parametrize} from 'react-overridable';
 
 // Import defaults that will be parametrized
+import DefaultBookingEditForm from 'indico/modules/rb/common/bookings/BookingEditForm';
+import DefaultRoomBookingMap from 'indico/modules/rb/common/map/RoomBookingMap';
+import DefaultRoomDetailsModal from 'indico/modules/rb/common/rooms/RoomDetailsModal';
+import DefaultTimelineItem from 'indico/modules/rb/common/timeline/TimelineItem';
 import DefaultApp from 'indico/modules/rb/components/App';
 import DefaultBookingBootstrapForm from 'indico/modules/rb/components/BookingBootstrapForm';
 import DefaultMenu from 'indico/modules/rb/components/Menu';
-import DefaultBookingFilterBar from 'indico/modules/rb/modules/bookRoom/BookingFilterBar';
-import {RoomFilterBarBase} from 'indico/modules/rb/modules/roomList/RoomFilterBar';
-import DefaultBookRoomModal from 'indico/modules/rb/modules/bookRoom/BookRoomModal';
+import DefaultSidebarMenu from 'indico/modules/rb/components/SidebarMenu';
 import DefaultTimeInformation from 'indico/modules/rb/components/TimeInformation';
+import DefaultBookingFilterBar from 'indico/modules/rb/modules/bookRoom/BookingFilterBar';
 import DefaultBookRoom from 'indico/modules/rb/modules/bookRoom/BookRoom';
-import DefaultRoomBookingMap from 'indico/modules/rb/common/map/RoomBookingMap';
-import DefaultRoomDetailsModal from 'indico/modules/rb/common/rooms/RoomDetailsModal';
+import DefaultBookRoomModal from 'indico/modules/rb/modules/bookRoom/BookRoomModal';
+import DefaultCalendar from 'indico/modules/rb/modules/calendar/Calendar';
 import DefaultLanding from 'indico/modules/rb/modules/landing/Landing';
 import DefaultLandingStatistics from 'indico/modules/rb/modules/landing/LandingStatistics';
-import DefaultCalendar from 'indico/modules/rb/modules/calendar/Calendar';
-import DefaultTimelineItem from 'indico/modules/rb/common/timeline/TimelineItem';
-import DefaultBookingEditForm from 'indico/modules/rb/common/bookings/BookingEditForm';
-import DefaultSidebarMenu from 'indico/modules/rb/components/SidebarMenu';
+import {RoomFilterBarBase} from 'indico/modules/rb/modules/roomList/RoomFilterBar';
 import DefaultRoomList from 'indico/modules/rb/modules/roomList/RoomList';
 import {UserSearch as DefaultUserSearch} from 'indico/react/components/principals/Search';
 import {Translate} from 'indico/react/i18n';
 import {ConditionalRoute} from 'indico/react/util';
+
 import MapMarkers from './components/MapMarkers';
 import StatsPage from './components/StatsPage';
 

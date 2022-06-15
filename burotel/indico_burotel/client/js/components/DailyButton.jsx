@@ -10,11 +10,10 @@ import {Button} from 'semantic-ui-react';
 
 import {Translate} from 'indico/react/i18n';
 
-
 export default function DailyButton() {
-    return (
-        <Button primary>
-            <Translate>Daily</Translate>
-        </Button>
-    );
+  return (
+    <Button primary>
+      <Translate>Daily</Translate>
+    </Button>
+  );
 }

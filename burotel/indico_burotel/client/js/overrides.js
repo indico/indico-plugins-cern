@@ -5,13 +5,13 @@
 // them and/or modify them under the terms of the MIT License; see
 // the LICENSE file for more details.
 
-import DeskRenderer from './components/DeskRenderer';
 import BootstrapOptions from './components/BootstrapOptions';
-import ExtraFilters from './components/ExtraFilters';
-import DailyButton from './components/DailyButton';
 import BurotelLanding from './components/BurotelLanding';
-import RowLabel from './components/RowLabel';
+import DailyButton from './components/DailyButton';
 import DeskInfoBoxes from './components/DeskInfoBoxes';
+import DeskRenderer from './components/DeskRenderer';
+import ExtraFilters from './components/ExtraFilters';
+import RowLabel from './components/RowLabel';
 
 export default {
   'Landing': BurotelLanding,

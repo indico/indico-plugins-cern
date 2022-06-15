@@ -6,6 +6,7 @@
 // the LICENSE file for more details.
 
 import _ from 'lodash';
+
 import {RESET_PAGE_STATE, INIT} from 'indico/modules/rb/actions';
 
 export default [
