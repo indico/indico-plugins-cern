@@ -134,14 +134,13 @@ StatsTable.propTypes = {
 };
 
 export default function Stats({startDate, endDate}) {
-  const {loading, data} = useIndicoAxios({
-    url: getBurotelStats({
+  const {loading, data} = useIndicoAxios(
+    getBurotelStats({
       start_month: startDate.format('YYYY-MM'),
       end_month: endDate.format('YYYY-MM'),
     }),
-    camelize: true,
-    trigger: [startDate, endDate],
-  });
+    {camelize: true}
+  );
 
   return loading || !data ? <Loader active /> : <StatsTable {...data} />;
 }
