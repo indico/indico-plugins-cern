@@ -9,12 +9,12 @@ import os
 from datetime import timedelta
 
 from flask import flash, g
-from flask_pluginengine import render_plugin_template
+from flask_pluginengine import render_plugin_template, uses
 from wtforms.fields import BooleanField, URLField
 from wtforms.validators import DataRequired
 
 from indico.core import signals
-from indico.core.plugins import IndicoPlugin, url_for_plugin
+from indico.core.plugins import IndicoPlugin, plugin_engine, url_for_plugin
 from indico.modules.attachments.forms import AddAttachmentFilesForm
 from indico.modules.attachments.models.attachments import AttachmentType
 from indico.modules.events.views import WPSimpleEventDisplay
@@ -44,6 +44,7 @@ class SettingsForm(IndicoForm):
                                                    'One extension per line.'))
 
 
+@uses('owncloud')
 class ConversionPlugin(IndicoPlugin):
     """PDF Conversion
 
@@ -58,6 +59,9 @@ class ConversionPlugin(IndicoPlugin):
     def init(self):
         super().init()
         self.connect(signals.core.add_form_fields, self._add_form_fields, sender=AddAttachmentFilesForm)
+        if plugin_engine.has_plugin('owncloud'):
+            from indico_owncloud.forms import AddAttachmentOwncloudForm
+            self.connect(signals.core.add_form_fields, self._add_form_fields, sender=AddAttachmentOwncloudForm)
         self.connect(signals.core.form_validated, self._form_validated)
         self.connect(signals.attachments.attachment_created, self._attachment_created)
         self.connect(signals.core.after_commit, self._after_commit)
@@ -80,7 +84,11 @@ class ConversionPlugin(IndicoPlugin):
                             default=True)
 
     def _form_validated(self, form, **kwargs):
-        if not isinstance(form, AddAttachmentFilesForm):
+        classes = [AddAttachmentFilesForm]
+        if plugin_engine.has_plugin('owncloud'):
+            from indico_owncloud.forms import AddAttachmentOwncloudForm
+            classes.append(AddAttachmentOwncloudForm)
+        if not isinstance(form, tuple(classes)):
             return
         g.convert_attachments_pdf = form.ext__convert_to_pdf.data
 
