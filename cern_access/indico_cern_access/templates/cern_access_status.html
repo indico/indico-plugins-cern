@@ -28,7 +28,7 @@
                data-cern-access-message="{% trans name=registration.full_name %}Access Code for <strong>{{ name }}</strong>{% endtrans %}"
                data-cern-access-code="{{ registration.cern_access_request.reservation_code }}"></a>
         {% else %}
-            <i class="icon-user-block" title="{% trans %}No access to CERN{% endtrans %}"></i>
+            <i class="icon-user-block" title="{% trans %}No visitor access to CERN requested{% endtrans %}"></i>
         {% endif %}
     </td>
 {% elif header %}
