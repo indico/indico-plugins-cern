@@ -141,7 +141,7 @@ export const formDecorator = createDecorator(
             cern_access_birth_date: null,
             cern_access_nationality: '',
             cern_access_birth_place: '',
-            cern_access_accompanying_persons: [],
+            cern_access_accompanying_persons: {},
             cern_access_by_car: false,
             cern_access_license_plate: null,
           };

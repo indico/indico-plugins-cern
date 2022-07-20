@@ -64,7 +64,7 @@ class CERNAccessRequest(db.Model):
     accompanying_persons = db.Column(
         JSONB,
         nullable=False,
-        default=[]
+        default={}
     )
 
     registration = db.relationship(
@@ -104,6 +104,7 @@ class CERNAccessRequest(db.Model):
         self.nationality = None
         self.birth_place = None
         self.license_plate = None
+        self.accompanying_persons = {}
 
     def archive(self):
         db.session.add(ArchivedCERNAccessRequest.create_from_request(self))

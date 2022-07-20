@@ -40,7 +40,7 @@ function EnterPersonalDataForm({registration, isManagement, ...rest}) {
     cern_access_birth_date: '',
     cern_access_nationality: '',
     cern_access_birth_place: null,
-    cern_access_accompanying_persons: [],
+    cern_access_accompanying_persons: {},
     cern_access_by_car: false,
     cern_access_license_plate: '',
   };

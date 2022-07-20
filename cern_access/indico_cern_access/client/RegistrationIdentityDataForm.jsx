@@ -43,19 +43,12 @@ const accompanyingPersonShape = {
 };
 
 function AccompanyingPersonsComponent({onChange, value, countryOptions, accompanyingPersons}) {
-  const valueById = useMemo(() => (value ? Object.assign(
-    {},
-    ...value.map(({id, birth_date, nationality, birth_place}) => ({[id]: {birth_date, nationality, birth_place}}))
-  ) : {}), [value]);
-
-  const handleOnChange = (id, field, newValue) => {
-    if (id in valueById) {
-      const newValueEntry = {id, ...valueById[id]};
-      newValueEntry[field] = newValue;
-      onChange([...value.filter(v => v.id !== id), newValueEntry]);
-    } else {
-      onChange([...value, {id, [field]: newValue}]);
-    }
+  const handleOnChange = (id, field, newFieldValue) => {
+    const newValueEntry = {...value[id]};
+    const newValue = {...value}
+    newValueEntry[field] = newFieldValue;
+    newValue[id] = newValueEntry
+    onChange(newValue);
   }
   const makeOnChange = (id, field) => (evt, {value: v}) => handleOnChange(id, field, v);
 
@@ -86,7 +79,7 @@ function AccompanyingPersonsComponent({onChange, value, countryOptions, accompan
                 name="birth_date"
                 isOutsideRange={value => value.isAfter()}
                 placeholder={moment.localeData().longDateFormat('L')}
-                date={toMoment(valueById[id]?.birth_date, 'YYYY-MM-DD')}
+                date={toMoment(value[id]?.birth_date, 'YYYY-MM-DD')}
                 onDateChange={date => handleOnChange(id, 'birth_date', serializeDate(date))}
                 enableOutsideDays
                 required
@@ -97,7 +90,7 @@ function AccompanyingPersonsComponent({onChange, value, countryOptions, accompan
                 name="nationality"
                 options={countryOptions}
                 placeholder={Translate.string('Select a country')}
-                value={valueById[id]?.nationality}
+                value={value[id]?.nationality}
                 onChange={makeOnChange(id, 'nationality')}
                 required
                 search
@@ -107,7 +100,7 @@ function AccompanyingPersonsComponent({onChange, value, countryOptions, accompan
             <td>
               <Input
                 name="birth_place"
-                value={valueById[id]?.birth_place || ''}
+                value={value[id]?.birth_place || ''}
                 onChange={makeOnChange(id, 'birth_place')}
                 required
               />
@@ -121,7 +114,7 @@ function AccompanyingPersonsComponent({onChange, value, countryOptions, accompan
 
 AccompanyingPersonsComponent.propTypes = {
   onChange: PropTypes.func.isRequired,
-  value: PropTypes.arrayOf(PropTypes.shape({
+  value: PropTypes.objectOf(PropTypes.shape({
     id: PropTypes.string,
     birth_date: PropTypes.string,
     nationality: PropTypes.string,

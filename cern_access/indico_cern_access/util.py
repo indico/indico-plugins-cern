@@ -8,6 +8,7 @@
 import json
 import random
 import re
+from copy import deepcopy
 
 import dateutil.parser
 import requests
@@ -87,7 +88,13 @@ def send_adams_post_request(event, registrations, update=False):
 
     :param update: if True, send request updating already stored data
     """
-    data = {reg.id: build_access_request_data(reg, event, generate_code=(not update)) for reg in registrations}
+    if update:
+        # we don't support updating accompanying persons
+        data = {reg.id: build_access_request_data_from_reg(reg, event, False) for reg in registrations}
+    else:
+        data = {}
+        for reg in registrations:
+            data.update(build_access_request_data_list_from_reg(reg, event))
     r = _send_adams_http_request('POST', list(data.values()))
     nonces_by_access_id = {x['ticketid']: x['nonce'] for x in r.json()['tickets']}
     return CERNAccessRequestState.active, data, nonces_by_access_id
@@ -96,38 +103,70 @@ def send_adams_post_request(event, registrations, update=False):
 def send_adams_delete_request(registrations):
     """Send DELETE request to ADaMS API."""
     data = [generate_access_id(registration.id) for registration in registrations]
+    for registration in registrations:
+        accompanying, accompanying_persons = get_accompanying_persons(registration,
+                                                                      get_last_request(registration.event))
+        if not accompanying:
+            break
+        data += [generate_access_id(person['id']) for person in accompanying_persons]
     _send_adams_http_request('DELETE', data)
 
 
-def generate_access_id(registration_id):
+def get_accompanying_persons(registration, cern_access_request):
+    """Return the list of accompanying persons for a given registration."""
+    from indico.modules.events.registration.fields.accompanying import AccompanyingPersonsField
+    accompanying = (cern_access_request.data.get('include_accompanying_persons', False)
+                    and any(isinstance(item.field_impl, AccompanyingPersonsField)
+                            for item in registration.registration_form.active_fields))
+    accompanying_persons = registration.accompanying_persons if accompanying else []
+    return accompanying, accompanying_persons
+
+
+def generate_access_id(person_id):
     """Generate an id in format required by ADaMS API."""
-    return f'in{registration_id}'
+    if isinstance(person_id, str):
+        # If it is an accomanying person UUID, truncate it to 16 characters
+        person_id = person_id.replace('-', '')[16:]
+    return f'in{person_id}'
 
 
-def build_access_request_data(registration, event, generate_code, for_qr_code=False):
+def build_access_request_data(id, first_name, last_name, event, license_plate=None, reservation_code=None):
     """Return a dictionary with data required by ADaMS API."""
+
+    start_dt, end_dt = get_access_dates(get_last_request(event))
+    tz = timezone('Europe/Zurich')
+    data = {'$id': generate_access_id(id),
+            '$rc': reservation_code or get_random_reservation_code(),
+            '$gn': do_truncate(None, str_to_ascii(remove_accents(event.title)), 100, leeway=0),
+            '$fn': str_to_ascii(remove_accents(first_name)),
+            '$ln': str_to_ascii(remove_accents(last_name)),
+            '$sd': start_dt.astimezone(tz).strftime('%Y-%m-%dT%H:%M'),
+            '$ed': end_dt.astimezone(tz).strftime('%Y-%m-%dT%H:%M')}
+    if license_plate:
+        data['$lp'] = license_plate
+
+    return data
+
+
+def build_access_request_data_from_reg(registration, event, generate_code, for_qr_code=False):
+    """Build the access request data dictionary from a registration."""
 
     if for_qr_code:
         return {'_adams_nonce': registration.cern_access_request.adams_nonce}
 
-    start_dt, end_dt = get_access_dates(get_last_request(event))
-    tz = timezone('Europe/Zurich')
-    title = do_truncate(None, str_to_ascii(remove_accents(event.title)), 100, leeway=0)
-    if generate_code:
-        reservation_code = get_random_reservation_code()
-    else:
-        reservation_code = registration.cern_access_request.reservation_code
-    data = {'$id': generate_access_id(registration.id),
-            '$rc': reservation_code,
-            '$gn': title,
-            '$fn': str_to_ascii(remove_accents(registration.first_name)),
-            '$ln': str_to_ascii(remove_accents(registration.last_name)),
-            '$sd': start_dt.astimezone(tz).strftime('%Y-%m-%dT%H:%M'),
-            '$ed': end_dt.astimezone(tz).strftime('%Y-%m-%dT%H:%M')}
+    reservation_code = None if generate_code else registration.cern_access_request.reservation_code
+    license_plate = registration.cern_access_request.license_plate if registration.cern_access_request else None
+    return build_access_request_data(registration.id, registration.first_name, registration.last_name, event,
+                                     license_plate=license_plate, reservation_code=reservation_code)
 
-    if registration.cern_access_request and registration.cern_access_request.license_plate:
-        data['$lp'] = registration.cern_access_request.license_plate
 
+def build_access_request_data_list_from_reg(registration, event):
+    """Build the access request data from a registration including accompanying persons."""
+    # since we don't support updates to accompanying persons, we always generate new codes
+    data = {registration.id: build_access_request_data_from_reg(registration, event, True)}
+    _, accompanying_persons = get_accompanying_persons(registration, get_last_request(registration.event))
+    for person in accompanying_persons:
+        data[person['id']] = build_access_request_data(person['id'], person['firstName'], person['lastName'], event)
     return data
 
 
@@ -183,6 +222,22 @@ def add_access_requests(registrations, data, state, nonces):
     for registration in registrations:
         create_access_request(registration, state, data[registration.id]['$rc'],
                               nonces[generate_access_id(registration.id)])
+        # save the accompanying persons' reservation codes
+        # TODO save the acc person's nonce
+        _, accompanying_persons = get_accompanying_persons(registration, get_last_request(registration.event))
+        request_persons = deepcopy(registration.cern_access_request.accompanying_persons)
+        for person in accompanying_persons:
+            reservation_code = data[person['id']]['$rc']
+            adams_nonce = nonces[generate_access_id(person['id'])]
+            if person['id'] in request_persons:
+                request_persons[person['id']]['reservation_code'] = reservation_code
+                request_persons[person['id']]['adams_nonce'] = adams_nonce
+            else:
+                request_persons[person['id']] = {
+                    'reservation_code': reservation_code,
+                    'adams_nonce': adams_nonce,
+                }
+        registration.cern_access_request.accompanying_persons = request_persons
 
 
 def update_access_requests(registrations, state):
@@ -275,6 +330,7 @@ def enable_ticketing(regform):
         regform.ticket_on_email = True
         regform.ticket_on_event_page = True
         regform.ticket_on_summary_page = True
+        regform.tickets_for_accompanying_persons = True
 
 
 def is_category_blacklisted(category):
@@ -366,6 +422,35 @@ def sanitize_personal_data():
     db.session.flush()
 
 
+def sanitize_accompanying_persons(value, registration):
+    accompanying, accompanying_persons = get_accompanying_persons(registration, get_last_request(registration.event))
+    if not accompanying:
+        return {}
+
+    def _fix_person_attrs(id, person):
+        previous_value = (registration.cern_access_request.accompanying_persons.get(id)
+                          if registration.cern_access_request
+                          else None)
+        new_person = {
+            'birth_date': person['birth_date'].strftime('%Y-%m-%d'),
+            'nationality': person['nationality'],
+            'birth_place': person['birth_place'],
+            'reservation_code': previous_value.get('reservation_code', '') if previous_value else '',
+            'adams_nonce': previous_value.get('adams_nonce', '') if previous_value else '',
+        }
+        return new_person
+
+    return {id: _fix_person_attrs(id, person)
+            for id, person in value.items()
+            if any(p['id'] == id for p in accompanying_persons)}
+
+
+def sanitize_license_plate(number):
+    """Sanitize a license plate number to [A-Z0-9]+, no dashes/spaces."""
+    number = re.sub(r'[ -]', '', number.strip().upper())
+    return number if re.match(r'^[A-Z0-9]+$', number) else None
+
+
 def cleanup_archived_requests():
     from indico_cern_access.plugin import CERNAccessPlugin
     query = (ArchivedCERNAccessRequest.query
@@ -375,12 +460,6 @@ def cleanup_archived_requests():
         CERNAccessPlugin.logger.info('Removing archived personal data for %r', req)
         db.session.delete(req)
     db.session.flush()
-
-
-def sanitize_license_plate(number):
-    """Sanitize a license plate number to [A-Z0-9]+, no dashes/spaces."""
-    number = re.sub(r'[ -]', '', number.strip().upper())
-    return number if re.match(r'^[A-Z0-9]+$', number) else None
 
 
 class AdamsError(Exception):

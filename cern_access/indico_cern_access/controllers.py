@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-import itertools
 from collections import Counter
 from datetime import timedelta
 
@@ -22,10 +21,8 @@ from indico.modules.events.models.events import Event
 from indico.modules.events.registration.controllers.display import RHRegistrationFormRegistrationBase
 from indico.modules.events.registration.controllers.management import RHManageRegistrationBase
 from indico.modules.events.registration.controllers.management.reglists import RHRegistrationsActionBase
-from indico.modules.events.registration.fields.accompanying import AccompanyingPersonsField
-from indico.modules.events.registration.models.form_fields import RegistrationFormFieldData
 from indico.modules.events.registration.models.forms import RegistrationForm
-from indico.modules.events.registration.models.registrations import Registration, RegistrationData
+from indico.modules.events.registration.models.registrations import Registration
 from indico.modules.events.requests.controllers import RHRequestsEventRequestDetailsBase
 from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.util.countries import get_countries
@@ -41,8 +38,9 @@ from indico_cern_access import _
 from indico_cern_access.forms import GrantAccessEmailForm
 from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState
 from indico_cern_access.schemas import RequestAccessSchema
-from indico_cern_access.util import (get_access_dates, get_last_request, grant_access, revoke_access,
-                                     sanitize_license_plate, send_adams_post_request, send_ticket)
+from indico_cern_access.util import (get_access_dates, get_accompanying_persons, get_last_request, grant_access,
+                                     revoke_access, sanitize_accompanying_persons, sanitize_license_plate,
+                                     send_adams_post_request, send_ticket)
 from indico_cern_access.views import WPAccessRequestDetails
 
 
@@ -106,46 +104,13 @@ class RHRegistrationPreviewCERNAccessEmail(RHRegistrationsActionBase):
         return jsonify(html=html)
 
 
-def _get_accompanying_persons(registration, cern_access_request):
-    accompanying = (cern_access_request.data.get('include_accompanying_persons', False)
-                    and any(isinstance(item.field_impl, AccompanyingPersonsField)
-                            for item in registration.registration_form.active_fields))
-    accompanying_persons = []
-    if accompanying:
-        accompanying_persons_data = (
-            RegistrationData.query
-            .with_parent(registration)
-            .join(RegistrationFormFieldData)
-            .filter(RegistrationFormFieldData.field.has(input_type='accompanying_persons'))
-            .all()
-        )
-        accompanying_persons = list(itertools.chain.from_iterable(d.data
-                                                                  for d in accompanying_persons_data
-                                                                  if d.field_data.field.is_active))
-    return accompanying, accompanying_persons
-
-
 def _save_registration_access_data(registration, data):
-    accompanying, accompanying_persons = _get_accompanying_persons(registration, get_last_request(registration.event))
-
-    def _fix_person_attrs(person):
-        person_id = str(person['id'])
-        if not accompanying or not any(p['id'] == person_id for p in accompanying_persons):
-            raise UserValueError(_('One or more accompanying persons are not listed in the registration'))
-        new_person = {
-            'id': person_id,
-            'birth_date': person['birth_date'].strftime('%Y-%m-%d'),
-            'nationality': person['nationality'],
-            'birth_place': person['birth_place'],
-        }
-        return new_person
-
     for field in data:
         if field in ('by_car', 'request_cern_access'):
             continue
         value = data[field]
         if field == 'accompanying_persons':
-            value = [_fix_person_attrs(person) for person in value]
+            value = sanitize_accompanying_persons(value, registration)
         elif field == 'license_plate':
             value = sanitize_license_plate(value) if data['by_car'] and value else None
         setattr(registration.cern_access_request, field, value)
@@ -169,7 +134,7 @@ class RHRegistrationAccessIdentityData(RHRegistrationFormRegistrationBase):
         pass
 
     def _process_GET(self):
-        accompanying, accompanying_persons = _get_accompanying_persons(self.registration, self.cern_access_request)
+        accompanying, accompanying_persons = get_accompanying_persons(self.registration, self.cern_access_request)
         access_request = self.registration.cern_access_request
         email_ticket = self.registration.registration_form.ticket_on_email
         return WPAccessRequestDetails.render_template('identity_data_form.html', self.event, countries=get_countries(),
@@ -192,7 +157,7 @@ class RHRegistrationAccessIdentityData(RHRegistrationFormRegistrationBase):
 
 class RHRegistrationEnterIdentityData(RHManageRegistrationBase):
     def _process_GET(self):
-        accompanying, accompanying_persons = _get_accompanying_persons(self.registration, get_last_request(self.event))
+        accompanying, accompanying_persons = get_accompanying_persons(self.registration, get_last_request(self.event))
         return jsonify_template('identity_data_form_management.html', render_plugin_template,
                                 registration=self.registration, countries=get_countries(), accompanying=accompanying,
                                 accompanying_persons=accompanying_persons)

@@ -43,10 +43,10 @@ from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAcc
 from indico_cern_access.placeholders import (AccessPeriodPlaceholder, FormLinkPlaceholder, TicketAccessDatesPlaceholder,
                                              TicketLicensePlatePlaceholder)
 from indico_cern_access.schemas import RequestAccessSchema
-from indico_cern_access.util import (build_access_request_data, get_access_dates, get_last_request, get_requested_forms,
-                                     get_requested_registrations, handle_event_time_update, notify_access_withdrawn,
-                                     send_adams_delete_request, send_adams_post_request, update_access_requests,
-                                     withdraw_access_requests)
+from indico_cern_access.util import (build_access_request_data_from_reg, get_access_dates, get_last_request,
+                                     get_requested_forms, get_requested_registrations, handle_event_time_update,
+                                     notify_access_withdrawn, sanitize_accompanying_persons, send_adams_delete_request,
+                                     send_adams_post_request, update_access_requests, withdraw_access_requests)
 from indico_cern_access.views import WPAccessRequestDetails
 
 
@@ -129,8 +129,10 @@ class CERNAccessPlugin(IndicoPlugin):
         self.connect(signals.event.updated, self._event_title_changed)
         self.connect(signals.event.is_ticketing_handled, self._is_ticketing_handled)
         self.connect(signals.event.is_ticket_blocked, self._is_ticket_blocked)
+        self.connect(signals.event.is_field_data_locked, self._is_field_data_locked)
         self.connect(signals.core.form_validated, self._form_validated)
         self.connect(signals.event.designer.print_badge_template, self._print_badge_template)
+        self.connect(signals.event.registration.generate_accompanying_person_id, self._generate_accompanying_person_id)
         self.connect(signals.event.registration.generate_ticket_qr_code, self._generate_ticket_qr_code)
         self.connect(signals.core.get_placeholders, self._get_designer_placeholders, sender='designer-fields')
         self.connect(signals.core.get_placeholders, self._get_email_placeholders, sender='cern-access-email')
@@ -160,6 +162,12 @@ class CERNAccessPlugin(IndicoPlugin):
         if req.data['during_registration_required']:
             cern_access_data['cern_access_request_cern_access'] = True
         g.cern_access_request_data = RequestAccessSchema().load(cern_access_data)
+
+    def _generate_accompanying_person_id(self, schema, temporary_id, permanent_id, **kwargs):
+        if hasattr(g, 'accompaning_person_tmp_ids'):
+            g.accompaning_person_tmp_ids[temporary_id] = permanent_id
+        else:
+            g.accompaning_person_tmp_ids = {temporary_id: permanent_id}
 
     def _get_regform_container_attrs(self, event, regform, management, registration=None, **kwargs):
         if management or registration is not None:
@@ -235,12 +243,20 @@ class CERNAccessPlugin(IndicoPlugin):
         if not required and not access_request_data['request_cern_access']:
             return
 
+        accompanying_persons = {}
+        accompaning_person_tmp_ids = g.pop('accompaning_person_tmp_ids', {})
+        for tmp_id in access_request_data['accompanying_persons']:
+            if tmp_id not in accompaning_person_tmp_ids:
+                return
+            permanent_id = accompaning_person_tmp_ids[tmp_id]
+            accompanying_persons[permanent_id] = access_request_data['accompanying_persons'][tmp_id]
+
         registration.cern_access_request = CERNAccessRequest(
             birth_date=access_request_data['birth_date'],
             nationality=access_request_data['nationality'],
             birth_place=access_request_data['birth_place'],
             license_plate=access_request_data['license_plate'],
-            accompanying_persons=access_request_data['accompanying_persons'],
+            accompanying_persons=sanitize_accompanying_persons(accompanying_persons, registration),
             request_state=CERNAccessRequestState.not_requested,
             reservation_code=''
         )
@@ -330,6 +346,19 @@ class CERNAccessPlugin(IndicoPlugin):
         req = registration.cern_access_request
         return not req or not req.is_active or not req.has_identity_info
 
+    def _is_field_data_locked(self, item, registration, **kwargs):
+        if not registration:
+            return False
+        access_request = registration.cern_access_request
+        # if there is no active access request we don't block any fields
+        if not access_request or access_request.is_withdrawn:
+            return False
+        # if request includes accompanying persons, we don't allow modifying them
+        if (item.input_type == 'accompanying_persons'
+                and get_last_request(registration.event).data.get('include_accompanying_persons', False)):
+            return True
+        return False
+
     def _form_validated(self, form, **kwargs):
         """
         Forbid to disable the tickets when access to CERN is requested and
@@ -368,11 +397,16 @@ class CERNAccessPlugin(IndicoPlugin):
                 raise Forbidden(_('This badge cannot be printed because it uses the CERN access ticket '
                                   'template without an active CERN access request'))
 
-    def _generate_ticket_qr_code(self, registration, ticket_data, **kwargs):
+    def _generate_ticket_qr_code(self, registration, person, ticket_data, **kwargs):
         if not self._is_ticketing_handled(registration.registration_form):
             return
         event = registration.event
-        ticket_data.update(build_access_request_data(registration, event, generate_code=False, for_qr_code=True))
+        if person['is_accompanying']:
+            request_person = registration.cern_access_request.accompanying_persons[person['id']]
+            ticket_data['_adams_nonce'] = request_person['adams_nonce']
+        else:
+            ticket_data.update(build_access_request_data_from_reg(registration, event, generate_code=False,
+                                                                  for_qr_code=True))
 
     def _get_designer_placeholders(self, sender, **kwargs):
         yield TicketAccessDatesPlaceholder
