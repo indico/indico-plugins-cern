@@ -30,6 +30,11 @@ definitions:
     stylesheet: tical.scss
     title: TICAL
 
+  smarthep-lecture:
+    <<: *lecture_themes_cern
+    stylesheet: smarthep.scss
+    title: SMARTHEP lecture
+
   # Meetings
   atlas:
     <<: *standard_themes_cern
@@ -169,6 +174,11 @@ definitions:
       hide_session_block_time: true
       number_contributions: true
       hide_end_time: true
+
+  smarthep-meeting:
+    <<: *standard_themes_cern
+    stylesheet: smarthep.scss
+    title: SMARTHEP meeting
 
   # Meetings - CERN Administrative
   administrative: &administrative

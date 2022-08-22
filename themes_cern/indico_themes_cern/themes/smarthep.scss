@@ -1,0 +1,9 @@
+@import 'base/palette';
+
+$header-bg-color: #bfdef4;
+$header-icon-color: #0c3454;
+$header-text-color: $black;
+
+@import 'themes/indico';
+
+@include header-logo('themes_cern:smarthep_logo.png', 26px 23px, 230px, 17%);
