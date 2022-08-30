@@ -88,13 +88,9 @@ def send_adams_post_request(event, registrations, update=False):
 
     :param update: if True, send request updating already stored data
     """
-    if update:
-        # we don't support updating accompanying persons
-        data = {reg.id: build_access_request_data_from_reg(reg, event, False) for reg in registrations}
-    else:
-        data = {}
-        for reg in registrations:
-            data.update(build_access_request_data_list_from_reg(reg, event))
+    data = {}
+    for reg in registrations:
+        data.update(build_access_request_data_list_from_reg(reg, event, not update))
     r = _send_adams_http_request('POST', list(data.values()))
     nonces_by_access_id = {x['ticketid']: x['nonce'] for x in r.json()['tickets']}
     return CERNAccessRequestState.active, data, nonces_by_access_id
@@ -160,13 +156,19 @@ def build_access_request_data_from_reg(registration, event, generate_code, for_q
                                      license_plate=license_plate, reservation_code=reservation_code)
 
 
-def build_access_request_data_list_from_reg(registration, event):
+def build_access_request_data_list_from_reg(registration, event, generate_code):
     """Build the access request data from a registration including accompanying persons."""
     # since we don't support updates to accompanying persons, we always generate new codes
-    data = {registration.id: build_access_request_data_from_reg(registration, event, True)}
+    data = {registration.id: build_access_request_data_from_reg(registration, event, generate_code)}
     _, accompanying_persons = get_accompanying_persons(registration, get_last_request(registration.event))
     for person in accompanying_persons:
-        data[person['id']] = build_access_request_data(person['id'], person['firstName'], person['lastName'], event)
+        if generate_code:
+            reservation_code = None
+        else:
+            person_request = registration.cern_access_request.accompanying_persons.get(person['id'])
+            reservation_code = person_request.get('reservation_code') if person_request else None
+        data[person['id']] = build_access_request_data(person['id'], person['firstName'], person['lastName'], event,
+                                                       reservation_code=reservation_code)
     return data
 
 
@@ -177,6 +179,18 @@ def handle_event_time_update(event):
         state = send_adams_post_request(event, registrations, update=True)[0]
         if state == CERNAccessRequestState.active:
             update_access_requests(registrations, state)
+
+
+def handle_include_accompanying_persons_disabled(event):
+    registrations = get_requested_registrations(event=event, only_active=True)
+    print('Hayo')
+    for reg in registrations:
+        accompanying = reg.accompanying_persons
+        print(reg)
+        print(reg.cern_access_request.request_state)
+        print(reg.cern_access_request.has_identity_info)
+        print(not not reg.cern_access_request)
+        print(accompanying)
 
 
 def update_access_request(req):

@@ -16,7 +16,8 @@ from indico.web.forms.base import FormDefaults
 
 from indico_cern_access import _
 from indico_cern_access.forms import CERNAccessForm
-from indico_cern_access.util import (check_access, get_access_dates, handle_event_time_update, is_authorized_user,
+from indico_cern_access.util import (check_access, get_access_dates, handle_event_time_update,
+                                     handle_include_accompanying_persons_disabled, is_authorized_user,
                                      is_category_blacklisted, is_event_too_early, update_access_request,
                                      withdraw_event_access_request)
 
@@ -69,11 +70,16 @@ class CERNAccessRequestDefinition(RequestDefinitionBase):
             old_start_dt, old_end_dt = get_access_dates(req)
             if old_start_dt != start_dt or old_end_dt != end_dt:
                 times_changed = True
+        include_accompanying_persons_disabled = False
+        if req.data['include_accompanying_persons'] and not data['include_accompanying_persons']:
+            include_accompanying_persons_disabled = True
         super().send(req, data)
         update_access_request(req)
         req.state = RequestState.accepted
         if times_changed:
             handle_event_time_update(req.event)
+        if include_accompanying_persons_disabled:
+            handle_include_accompanying_persons_disabled(req.event)
 
         link = "https://indico.docs.cern.ch/cern/cern_access/#granting-access-to-participants"
         message = _('Please note that even though your request has been accepted, you still have to '
