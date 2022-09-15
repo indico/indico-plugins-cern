@@ -10,6 +10,7 @@ from markupsafe import Markup, escape
 from sqlalchemy.orm.attributes import flag_modified
 from werkzeug.exceptions import NotFound
 
+from indico.core.config import config
 from indico.modules.events.agreements import AgreementDefinitionBase, AgreementPersonInfo
 from indico.modules.events.contributions.models.subcontributions import SubContribution
 from indico.modules.events.requests import RequestDefinitionBase
@@ -46,13 +47,23 @@ class AVRequest(RequestDefinitionBase):
         return is_av_manager(user)
 
     @classmethod
-    def get_manager_notification_emails(cls):
-        return set(current_plugin.settings.get('notification_emails'))
+    def get_manager_notification_emails(cls, req):
+        setting = ('initial_notification_emails'
+                   if req.state in (RequestState.pending, RequestState.withdrawn)
+                   else 'notification_emails')
+        return set(current_plugin.settings.get(setting))
 
     @classmethod
-    def get_notification_reply_email(cls):
-        return (current_plugin.settings.get('notification_reply_email') or
-                super().get_notification_reply_email())
+    def get_notification_from_email(cls, req, *, to_request_managers: bool):
+        if req.state in (RequestState.pending, RequestState.withdrawn):
+            return req.created_by_user.email
+        return config.NO_REPLY_EMAIL
+
+    @classmethod
+    def get_notification_reply_email(cls, req, *, to_request_managers: bool):
+        if req.state in (RequestState.pending, RequestState.withdrawn):
+            return None
+        return config.SUPPORT_EMAIL
 
     @classmethod
     def get_notification_template(cls, name, **context):

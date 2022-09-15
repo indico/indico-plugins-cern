@@ -41,6 +41,11 @@ from indico_audiovisual.views import WPAudiovisualManagers
 class PluginSettingsForm(IndicoForm):
     managers = PrincipalListField(_('Managers'), allow_groups=True,
                                   description=_('List of users who can manage recording/webcast requests.'))
+    initial_notification_emails = EmailListField(_('Initial notification email addresses'),
+                                                 description=_('Notifications about the initial submission of a '
+                                                               'recording/webcast request are sent to these '
+                                                               'email addresses (one per line). The sender for '
+                                                               'these emails is the user submitting the request.'))
     notification_emails = EmailListField(_('Notification email addresses'),
                                          description=_('Notifications about recording/webcast requests are sent to '
                                                        'these email addresses (one per line).'))
@@ -83,6 +88,7 @@ class AVRequestsPlugin(IndicoPlugin):
     settings_form = PluginSettingsForm
     default_settings = {'webcast_audiences': [],
                         'notification_reply_email': '',
+                        'initial_notification_emails': [],
                         'notification_emails': [],
                         'webcast_ping_url': '',
                         'webcast_url': '',
