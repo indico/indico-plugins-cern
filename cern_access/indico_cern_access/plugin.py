@@ -348,16 +348,16 @@ class CERNAccessPlugin(IndicoPlugin):
 
     def _is_field_data_locked(self, item, registration, **kwargs):
         if not registration:
-            return False, None
+            return None
         access_request = registration.cern_access_request
         # if there is no active access request we don't block any fields
         if not access_request or access_request.is_withdrawn:
-            return False, None
+            return None
         # if request includes accompanying persons, we don't allow modifying them
         if (item.input_type == 'accompanying_persons'
                 and get_last_request(registration.event).data.get('include_accompanying_persons', False)):
-            return True, _('The Accompanying Persons field has been locked due to an active CERN access request.')
-        return False, None
+            return _('The Accompanying Persons field has been locked due to an active CERN access request.')
+        return None
 
     def _form_validated(self, form, **kwargs):
         """
