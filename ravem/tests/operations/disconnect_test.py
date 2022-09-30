@@ -5,13 +5,13 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
+import json
 from unittest.mock import MagicMock
 
 import pytest
 from conftest import RAVEM_TEST_API_ENDPOINT, RAVEM_TEST_PATH, connected_fixtures, disconnected_fixtures, gen_params
 
 from indico.testing.util import extract_logs
-from indico.util import json
 
 from indico_ravem.operations import disconnect_room, get_api
 from indico_ravem.plugin import RavemPlugin
