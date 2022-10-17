@@ -232,7 +232,7 @@ def send_webcast_ping():
     return requests.get(url).status_code
 
 
-def find_requests(talks=False, from_dt=None, to_dt=None, services=None, states=None):
+def find_requests(talks=False, from_dt=None, to_dt=None, services=None, states=None, has_comment=None):
     """Finds requests matching certain criteria.
 
     :param talks: if True, yield ``(request, contrib, start_dt)`` tuples
@@ -242,6 +242,7 @@ def find_requests(talks=False, from_dt=None, to_dt=None, services=None, states=N
     :param to_dt: latest event/contribution to include
     :param states: acceptable request states (by default anything but withdrawn)
     :param services: set of services that must have been requested
+    :param has_comment: if the request has a comment (from the requester)
     """
     from indico_audiovisual.definition import AVRequest
     query = Request.query.filter_by(type=AVRequest.name)
@@ -252,6 +253,11 @@ def find_requests(talks=False, from_dt=None, to_dt=None, services=None, states=N
 
     if from_dt is not None or to_dt is not None:
         query = query.join(Event).filter(Event.happens_between(from_dt, to_dt))
+
+    if has_comment:
+        query = query.filter(Request.data['comments'].astext != '')
+    elif has_comment is not None:
+        query = query.filter(Request.data['comments'].astext == '')
 
     # We only want the latest one for each event
     query = limit_groups(query, Request, Request.event_id, Request.created_dt.desc(), 1)

@@ -23,6 +23,11 @@
                 </div>
             </td>
         {% endif %}
+        <td>
+            <div class="title">
+                {% trans %}Comment{% endtrans %}
+            </div>
+        </td>
     </tr>
     {% for req, obj, start_time in items %}
         {{ request_entry(req, obj, start_time) }}
@@ -78,5 +83,8 @@
                 {{ obj.title }}
             </td>
         {% endif %}
+        <td>
+            {{ req.data.comments }}
+        </td>
     </tr>
 {% endmacro %}

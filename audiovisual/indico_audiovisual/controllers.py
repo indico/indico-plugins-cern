@@ -49,7 +49,8 @@ class RHRequestList(RHAVManagerProtected):
             from_dt = as_utc(get_day_start(form.start_date.data)) if form.start_date.data else None
             to_dt = as_utc(get_day_end(form.end_date.data)) if form.end_date.data else None
             states = {form.state.data} if form.state.data is not None else None
-            results = find_requests(talks=talks, from_dt=from_dt, to_dt=to_dt, states=states)
+            has_comment = {'': None, 'no': False, 'yes': True}[form.has_comment.data or '']
+            results = find_requests(talks=talks, from_dt=from_dt, to_dt=to_dt, states=states, has_comment=has_comment)
             if not talks:
                 results = [(req, req.event, req.event.start_dt) for req in results]
             results = group_list(results, lambda x: x[2].date(), itemgetter(2), sort_reverse=reverse)

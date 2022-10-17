@@ -101,6 +101,7 @@ class RequestListFilterForm(IndicoForm):
     abs_end_date = IndicoDateField(_('End Date'), [Optional(), Exclusive('rel_end_date')])
     rel_start_date = IntegerField(_('Days in the past'), [Optional(), Exclusive('abs_start_date'), NumberRange(min=0)])
     rel_end_date = IntegerField(_('Days in the future'), [Optional(), Exclusive('abs_end_date'), NumberRange(min=0)])
+    has_comment = SelectField(_('Has comment'), [Optional()], choices=[('', ''), ('no', _('No')), ('yes', _('Yes'))])
 
     @generated_data
     def start_date(self):
