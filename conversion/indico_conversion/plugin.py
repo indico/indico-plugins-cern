@@ -10,8 +10,8 @@ from datetime import timedelta
 
 from flask import flash, g
 from flask_pluginengine import render_plugin_template, uses
-from wtforms.fields import BooleanField, URLField
-from wtforms.validators import DataRequired
+from wtforms.fields import BooleanField, StringField, URLField
+from wtforms.validators import DataRequired, ValidationError
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin, plugin_engine, url_for_plugin
@@ -25,7 +25,7 @@ from indico.web.forms.widgets import SwitchWidget
 
 from indico_conversion import _, pdf_state_cache
 from indico_conversion.blueprint import blueprint
-from indico_conversion.conversion import submit_attachment
+from indico_conversion.conversion import submit_attachment_cloudconvert, submit_attachment_doconverter
 from indico_conversion.util import get_pdf_title
 
 
@@ -33,15 +33,23 @@ info_ttl = timedelta(hours=1)
 
 
 class SettingsForm(IndicoForm):
+    use_cloudconvert = BooleanField(_('Use CloudConvert'), widget=SwitchWidget(),
+                                    description=_('Use Cloudconvert instead of Doconverter'))
     maintenance = BooleanField(_('Maintenance'), widget=SwitchWidget(),
                                description=_('Temporarily disable submitting files. The tasks will be kept and once '
                                              'this setting is disabled the files will be submitted.'))
     server_url = URLField(_('Server URL'), [DataRequired()],
                           description=_("The URL to the conversion server's uploadFile.py script."))
+    cloudconvert_api_key = StringField(_('CloudConvert API key'))
+    sandbox = StringField(_('Sandbox'), widget=SwitchWidget(), description=_('Use CloudConvert sandbox'))
     valid_extensions = TextListField(_('Extensions'),
                                      filters=[lambda exts: sorted({ext.lower().lstrip('.').strip() for ext in exts})],
                                      description=_('File extensions for which PDF conversion is supported. '
                                                    'One extension per line.'))
+
+    def validate_cloudconvert_api_key(self, field):
+        if self.use_cloudconvert.data and not self.cloudconvert_api_key.data:
+            raise ValidationError('CloudConvert requires an API key')
 
 
 @uses('owncloud')
@@ -52,8 +60,11 @@ class ConversionPlugin(IndicoPlugin):
     """
     configurable = True
     settings_form = SettingsForm
-    default_settings = {'maintenance': False,
+    default_settings = {'use_cloudconvert': False,
+                        'maintenance': False,
                         'server_url': '',
+                        'cloudconvert_api_key': '',
+                        'sandbox': False,
                         'valid_extensions': ['ppt', 'doc', 'pptx', 'docx', 'odp', 'sxi']}
 
     def init(self):
@@ -111,7 +122,10 @@ class ConversionPlugin(IndicoPlugin):
 
     def _after_commit(self, sender, **kwargs):
         for attachment in g.get('convert_attachments', ()):
-            submit_attachment.delay(attachment)
+            if self.settings.get('use_cloudconvert'):
+                submit_attachment_cloudconvert.delay(attachment)
+            else:
+                submit_attachment_doconverter.delay(attachment)
 
     def _event_display_after_attachment(self, attachment, top_level, has_label, **kwargs):
         if attachment.type != AttachmentType.file:
