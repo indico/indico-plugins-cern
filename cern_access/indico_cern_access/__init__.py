@@ -17,6 +17,7 @@ _ = make_bound_gettext('cern_access')
 
 @celery.periodic_task(run_every=crontab(minute='0', hour='5'))
 def scheduled_sanitization():
-    from indico_cern_access.util import sanitize_personal_data
+    from indico_cern_access.util import cleanup_archived_requests, sanitize_personal_data
     sanitize_personal_data()
+    cleanup_archived_requests()
     db.session.commit()

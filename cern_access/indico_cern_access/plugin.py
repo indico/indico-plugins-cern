@@ -198,12 +198,18 @@ class CERNAccessPlugin(IndicoPlugin):
         end_dt = get_access_dates(get_last_request(event))[1]
         return end_dt < now_utc()
 
-    def _registration_deleted(self, registration, **kwargs):
+    def _registration_deleted(self, registration, permanent=False, **kwargs):
         """Withdraw CERN access request for deleted registrations."""
-        if registration.cern_access_request and not self._is_past_event(registration.event):
-            if registration.cern_access_request.is_active:
+        if not (access_request := registration.cern_access_request):
+            return
+        if not self._is_past_event(registration.event):
+            if access_request.is_active:
                 send_adams_delete_request([registration])
-            registration.cern_access_request.request_state = CERNAccessRequestState.withdrawn
+            access_request.request_state = CERNAccessRequestState.withdrawn
+        if permanent and access_request.has_identity_info:
+            # archive registration data and detach request
+            self.logger.info('Archiving request %r', access_request)
+            access_request.archive()
 
     def _registration_created(self, registration, management, **kwargs):
         if management:

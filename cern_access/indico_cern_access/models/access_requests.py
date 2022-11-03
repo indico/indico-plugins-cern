@@ -9,8 +9,10 @@ from sqlalchemy.ext.hybrid import hybrid_property
 
 from indico.core.db.sqlalchemy import PyIntEnum, db
 from indico.util.enum import RichIntEnum
+from indico.util.string import format_repr
 
 from indico_cern_access import _
+from indico_cern_access.models.archived_requests import ArchivedCERNAccessRequest
 
 
 class CERNAccessRequestState(RichIntEnum):
@@ -65,6 +67,7 @@ class CERNAccessRequest(db.Model):
         lazy=True,
         backref=db.backref(
             'cern_access_request',
+            cascade='all, delete-orphan',
             uselist=False,
             lazy=False
         )
@@ -95,3 +98,11 @@ class CERNAccessRequest(db.Model):
         self.nationality = None
         self.birth_place = None
         self.license_plate = None
+
+    def archive(self):
+        db.session.add(ArchivedCERNAccessRequest.create_from_request(self))
+        self.registration.cern_access_request = None
+        db.session.flush()
+
+    def __repr__(self):
+        return format_repr(self, 'registration_id', 'request_state')

@@ -31,6 +31,7 @@ from indico.web.flask.templating import get_template_module
 from indico_cern_access import _
 from indico_cern_access.models.access_request_regforms import CERNAccessRequestRegForm
 from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState
+from indico_cern_access.models.archived_requests import ArchivedCERNAccessRequest
 
 
 def get_last_request(event):
@@ -362,6 +363,17 @@ def sanitize_personal_data():
     for req in query:
         req.clear_identity_data()
         CERNAccessPlugin.logger.info('Removing personal data for registrant %d', req.registration_id)
+    db.session.flush()
+
+
+def cleanup_archived_requests():
+    from indico_cern_access.plugin import CERNAccessPlugin
+    query = (ArchivedCERNAccessRequest.query
+             .join(ArchivedCERNAccessRequest.event)
+             .filter(Event.end_dt < now_utc() - CERNAccessPlugin.settings.get('delete_personal_data_after')))
+    for req in query.all():
+        CERNAccessPlugin.logger.info('Removing archived personal data for %r', req)
+        db.session.delete(req)
     db.session.flush()
 
 
