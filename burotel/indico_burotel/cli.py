@@ -143,7 +143,7 @@ def get_latlon_building(building_num):
 
 
 @cli.command()
-@click.argument('csv_file', type=click.File('rb'))
+@click.argument('csv_file', type=click.File('r'))
 @click.option('--add-missing', is_flag=True, help="Add UPDATE rooms that do not exist locally")
 @click.option('--dry-run', is_flag=True, help="Don't actually change the database, just report on the changes")
 def update(csv_file, add_missing, dry_run):
