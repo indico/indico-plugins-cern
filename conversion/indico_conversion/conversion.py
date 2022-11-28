@@ -7,7 +7,6 @@
 
 import os
 
-import cloudconvert
 import requests
 from celery.exceptions import MaxRetriesExceededError, Retry
 from flask import jsonify, request, session
@@ -23,6 +22,7 @@ from indico.web.flask.templating import get_template_module
 from indico.web.rh import RH
 
 from indico_conversion import pdf_state_cache
+from indico_conversion.cloudconvert import CloudConvertRestClient
 from indico_conversion.util import save_pdf
 
 
@@ -114,10 +114,11 @@ def submit_attachment_cloudconvert(task, attachment):
     if ConversionPlugin.settings.get('maintenance'):
         task.retry(countdown=900)
 
+    api_key = ConversionPlugin.settings.get('cloudconvert_api_key')
     sandbox = ConversionPlugin.settings.get('sandbox')
-    cloudconvert.configure(api_key=ConversionPlugin.settings.get('cloudconvert_api_key'), sandbox=sandbox)
+    client = CloudConvertRestClient(api_key=api_key, sandbox=sandbox)
 
-    job = cloudconvert.Job.create(payload={
+    job_definition = {
         'tag': secure_serializer.dumps(str(attachment.id), salt='pdf-conversion'),
         'tasks': {
             'import-my-file': {
@@ -134,15 +135,21 @@ def submit_attachment_cloudconvert(task, attachment):
             }
         },
         'webhook_url': url_for_plugin('conversion.cloudconvert_callback', _external=True)
-    })
+    }
 
-    upload_task_id = job['tasks'][0]['id']
-    task = cloudconvert.Task.find(id=upload_task_id)
-    form = task.get('result').get('form')
+    try:
+        job = client.Job.create(payload=job_definition)
+        upload_task_id = job['tasks'][0]['id']
+        task = client.Task.find(id=upload_task_id)
+    except requests.RequestException as exc:
+        retry_task(task, attachment, exc)
+        return
+
+    form = task['result']['form']
     with attachment.file.open() as fd:
         try:
-            response = requests.request(method='POST', url=form.get('url'),
-                                        files={'file': fd}, data=form.get('parameters'))
+            response = requests.request(method='POST', url=form['url'],
+                                        files={'file': fd}, data=form['parameters'])
             response.raise_for_status()
             if response.status_code != 201:
                 raise requests.RequestException(f'Unexpected response status from server: {response.status_code}')
