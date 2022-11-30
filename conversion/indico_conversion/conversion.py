@@ -80,7 +80,7 @@ def submit_attachment_doconverter(task, attachment):
         except requests.RequestException as exc:
             retry_task(task, attachment, exc)
         else:
-            ConversionPlugin.logger.info('Submitted %r', attachment)
+            ConversionPlugin.logger.info('Submitted %r to Doconverter', attachment)
 
 
 class RHDoconverterFinished(RH):
@@ -141,22 +141,11 @@ def submit_attachment_cloudconvert(task, attachment):
         job = client.Job.create(payload=job_definition)
         upload_task_id = job['tasks'][0]['id']
         task = client.Task.find(id=upload_task_id)
+        client.Task.upload(task, attachment.file)
     except requests.RequestException as exc:
         retry_task(task, attachment, exc)
-        return
-
-    form = task['result']['form']
-    with attachment.file.open() as fd:
-        try:
-            response = requests.request(method='POST', url=form['url'],
-                                        files={'file': fd}, data=form['parameters'])
-            response.raise_for_status()
-            if response.status_code != 201:
-                raise requests.RequestException(f'Unexpected response status from server: {response.status_code}')
-        except requests.RequestException as exc:
-            retry_task(task, attachment, exc)
-        else:
-            ConversionPlugin.logger.info('Submitted %r', attachment)
+    else:
+        ConversionPlugin.logger.info('Submitted %r to CloudConvert', attachment)
 
 
 class RHCloudConvertFinished(RH):
