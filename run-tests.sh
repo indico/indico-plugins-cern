@@ -1,6 +1,6 @@
 #!/bin/bash
 # This file is part of the CERN Indico plugins.
-# Copyright (C) 2014 - 2022 CERN
+# Copyright (C) 2014 - 2023 CERN
 #
 # The CERN Indico plugins are free software; you can redistribute
 # them and/or modify them under the terms of the MIT License; see
