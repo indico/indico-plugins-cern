@@ -47,9 +47,7 @@
         <td class="itemTopAlign actions">
             {% if not print_mode %}
                 {{ render_manage_button(subcontrib, 'SUBCONTRIBUTION', toggle_notes=false, show_notes=show_notes,
-                                        show_note_operations=true,
-                                        show_button=(not event.is_locked and
-                                                     subcontrib.can_manage_attachments(session.user))) }}
+                                        show_note_operations=true) }}
             {% endif %}
         </td>
     </tr>
