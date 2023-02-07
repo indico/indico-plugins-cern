@@ -34,7 +34,7 @@ info_ttl = timedelta(hours=1)
 
 class SettingsForm(IndicoForm):
     use_cloudconvert = BooleanField(_('Use CloudConvert'), widget=SwitchWidget(),
-                                    description=_('Use Cloudconvert instead of Doconverter'))
+                                    description=_('Use Cloudconvert instead of Doconverter for public materials'))
     maintenance = BooleanField(_('Maintenance'), widget=SwitchWidget(),
                                description=_('Temporarily disable submitting files. The tasks will be kept and once '
                                              'this setting is disabled the files will be submitted.'))
@@ -122,7 +122,7 @@ class ConversionPlugin(IndicoPlugin):
 
     def _after_commit(self, sender, **kwargs):
         for attachment in g.get('convert_attachments', ()):
-            if self.settings.get('use_cloudconvert'):
+            if self.settings.get('use_cloudconvert') and not attachment.is_protected:
                 submit_attachment_cloudconvert.delay(attachment)
             else:
                 submit_attachment_doconverter.delay(attachment)
