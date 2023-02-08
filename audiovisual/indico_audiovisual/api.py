@@ -229,6 +229,10 @@ def _serialize_obj(req, obj, alarm):
     if 'webcast' in req.data['services']:
         audience = req.data['webcast_audience'] or 'No restriction'
 
+    language = None
+    if 'recording' in req.data['services']:
+        language = req.data.get('language')
+
     data = {
         'status': 'P' if req.state == RequestState.pending else 'A',
         'services': req.data['services'],
@@ -241,6 +245,7 @@ def _serialize_obj(req, obj, alarm):
         'room_full_name': _get_room_name(location_source, full=True) or None,
         'url': url,
         'audience': audience,
+        'language': language,
         '_ical_id': f'indico-audiovisual-{unique_id}@cern.ch'
     }
     if alarm:

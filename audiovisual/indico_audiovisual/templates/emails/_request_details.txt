@@ -38,6 +38,9 @@
     {%- if 'webcast' in req.data.services %}
         Webcast audience:   {{ req.data.webcast_audience or 'No restriction' }}
     {%- endif -%}
+    {%- if 'recording' in req.data.services %}
+        Event language:     {{ req.data.language or 'Unknown' }}
+    {%- endif -%}
     {%- if not is_lecture %}
         Contributions:      {{ 'All' if req.data.all_contributions else 'Only selected' }}
     {%- endif -%}

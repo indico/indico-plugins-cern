@@ -5,6 +5,7 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
+from flask import g
 from flask_pluginengine import current_plugin
 from markupsafe import Markup, escape
 from sqlalchemy.orm.attributes import flag_modified
@@ -33,7 +34,6 @@ class AVRequest(RequestDefinitionBase):
     title = _('Webcast / Recording')
     form = AVRequestForm
     manager_form = AVRequestManagerForm
-    form_defaults = {'all_contributions': True}
     # needed for templates where we only have access to the definition
     util = {'count_capable_contributions': count_capable_contributions,
             'get_av_capable_rooms': get_av_capable_rooms,
@@ -41,6 +41,15 @@ class AVRequest(RequestDefinitionBase):
             'get_selected_contributions': get_selected_contributions,
             'get_selected_services': get_selected_services,
             'all_agreements_signed': all_agreements_signed}
+
+    @classproperty
+    @classmethod
+    def form_defaults(cls):
+        event_language = g.rh.event.default_locale.split('_')[0] or 'en'
+        return {
+            'all_contributions': True,
+            'language': event_language if event_language in ('en', 'fr') else 'other'
+        }
 
     @classmethod
     def can_be_managed(cls, user):

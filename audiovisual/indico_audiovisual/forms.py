@@ -41,6 +41,9 @@ class AVRequestForm(RequestFormBase):
                                                                          SubContribution=SubContribution))
     webcast_audience = SelectField(_('Webcast Audience'),
                                    description=_("Select the audience to which the webcast will be restricted"))
+    language = SelectField(_('Language'),
+                           choices=[('en', _('English')), ('fr', _('French')), ('other', _('Other'))],
+                           description=_('Select the main spoken language during the event'))
     comments = TextAreaField(_('Comments'),
                              description=_('If you have any additional comments or instructions, please write them '
                                            'down here.'))

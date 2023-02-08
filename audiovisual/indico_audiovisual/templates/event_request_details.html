@@ -116,6 +116,7 @@
 
         $('input[name="request-services"][value="recording"]').on('change', function() {
             $('#recording-protection-msg').toggle(this.checked);
+            $('#form-group-request-language').toggle(this.checked);
         }).trigger('change');
 
         $('#request-all_contributions').on('change', function() {
