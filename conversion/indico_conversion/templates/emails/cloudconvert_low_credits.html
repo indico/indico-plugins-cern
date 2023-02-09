@@ -1,0 +1,14 @@
+{% extends 'emails/base.html' %}
+
+{% block subject %}[CloudConvert plugin] Low credits{% endblock %}
+
+{% block header_recipient %}Indico Administrators{% endblock %}
+
+{% block body -%}
+    <p>
+        The available credits for the CloudConvert plugin have dropped below the configured threshold.<br>
+        Number of credits remaining: <b>{{ credits }}</b><br>
+        You should either buy more credits or disable the CloudConvert conversion.<br>
+        You can manage the plugin from here: <a href="{{ plugin_settings_url }}">{{ plugin_settings_url }}</a>
+    </p>
+{%- endblock %}

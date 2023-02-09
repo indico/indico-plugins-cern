@@ -10,8 +10,8 @@ from datetime import timedelta
 
 from flask import flash, g
 from flask_pluginengine import render_plugin_template, uses
-from wtforms.fields import BooleanField, StringField, URLField
-from wtforms.validators import DataRequired, ValidationError
+from wtforms.fields import BooleanField, EmailField, IntegerField, StringField, URLField
+from wtforms.validators import DataRequired, NumberRange, Optional, ValidationError
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin, plugin_engine, url_for_plugin
@@ -38,10 +38,13 @@ class SettingsForm(IndicoForm):
     maintenance = BooleanField(_('Maintenance'), widget=SwitchWidget(),
                                description=_('Temporarily disable submitting files. The tasks will be kept and once '
                                              'this setting is disabled the files will be submitted.'))
-    server_url = URLField(_('Server URL'), [DataRequired()],
+    server_url = URLField(_('Doconverter server URL'), [DataRequired()],
                           description=_("The URL to the conversion server's uploadFile.py script."))
     cloudconvert_api_key = StringField(_('CloudConvert API key'))
-    sandbox = StringField(_('Sandbox'), widget=SwitchWidget(), description=_('Use CloudConvert sandbox'))
+    sandbox = BooleanField(_('Sandbox'), widget=SwitchWidget(), description=_('Use CloudConvert sandbox'))
+    notify_threshold = IntegerField(_('CloudConvert credit threshold'), [Optional(), NumberRange(min=0)],
+                                    description=_('Send an email when credits drop below this threshold'))
+    notify_email = EmailField(_('Notification email'), description=_('Email to send the notifications to'))
     valid_extensions = TextListField(_('Extensions'),
                                      filters=[lambda exts: sorted({ext.lower().lstrip('.').strip() for ext in exts})],
                                      description=_('File extensions for which PDF conversion is supported. '
@@ -65,6 +68,8 @@ class ConversionPlugin(IndicoPlugin):
                         'server_url': '',
                         'cloudconvert_api_key': '',
                         'sandbox': False,
+                        'notify_threshold': None,
+                        'notify_email': '',
                         'valid_extensions': ['ppt', 'doc', 'pptx', 'docx', 'odp', 'sxi']}
 
     def init(self):

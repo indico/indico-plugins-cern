@@ -9,16 +9,19 @@ import os
 
 import requests
 from celery.exceptions import MaxRetriesExceededError, Retry
+from celery.schedules import crontab
 from flask import jsonify, request, session
 from itsdangerous import BadData
 
 from indico.core.celery import celery
 from indico.core.config import config
+from indico.core.notifications import make_email, send_email
 from indico.core.plugins import url_for_plugin
 from indico.modules.attachments.models.attachments import Attachment
 from indico.util.fs import secure_filename
 from indico.util.signing import secure_serializer
 from indico.web.flask.templating import get_template_module
+from indico.web.flask.util import url_for
 from indico.web.rh import RH
 
 from indico_conversion import pdf_state_cache
@@ -197,3 +200,28 @@ class RHConversionCheck(RH):
                     continue
                 containers[attachment.id] = tpl.render_attachments_folders(item=attachment.folder.object)
         return jsonify(finished=finished, pending=pending, containers=containers)
+
+
+@celery.periodic_task(bind=True, max_retries=None, run_every=crontab(minute='0', hour='2'))
+def check_cloudconvert_credits(task):
+    from indico_conversion.plugin import ConversionPlugin
+
+    api_key = ConversionPlugin.settings.get('cloudconvert_api_key')
+    client = CloudConvertRestClient(api_key=api_key, sandbox=False)
+    notify_threshold = ConversionPlugin.settings.get('notify_threshold')
+    notify_email = ConversionPlugin.settings.get('notify_email')
+
+    try:
+        credits = client.get_remaining_credits()
+    except requests.RequestException as err:
+        ConversionPlugin.logger.info('Could not fetch the remaining CloudConvert credits: %s', err)
+        task.retry(countdown=60)
+
+    if notify_threshold is not None and credits <= notify_threshold:
+        ConversionPlugin.logger.info('CloudConvert credits are below configured threshold; current value: %s', credits)
+        if notify_email:
+            plugin_settings_url = url_for('plugins.details', plugin=ConversionPlugin.name, _external=True)
+            template = get_template_module('conversion:emails/cloudconvert_low_credits.html', credits=credits,
+                                           plugin_settings_url=plugin_settings_url)
+            email = make_email(to_list=notify_email, template=template, html=True)
+            send_email(email)
