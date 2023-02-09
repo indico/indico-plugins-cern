@@ -10,7 +10,8 @@ import requests
 
 endpoints = {
     'live': 'https://api.cloudconvert.com/v2',
-    'sandbox': 'https://api.sandbox.cloudconvert.com/v2'
+    'sandbox': 'https://api.sandbox.cloudconvert.com/v2',
+    'user': 'https://api.cloudconvert.com/v2/users/me'
 }
 
 
@@ -74,3 +75,8 @@ class CloudConvertRestClient:
             'Content-Type': 'application/json',
             'Accept': 'application/json',
         }
+
+    def get_remaining_credits(self):
+        response = requests.get(endpoints['user'], headers=self.headers)
+        response.raise_for_status()
+        return response.json()['data']['credits']
