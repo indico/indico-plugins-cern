@@ -211,13 +211,16 @@ def check_cloudconvert_credits(task):
     notify_threshold = ConversionPlugin.settings.get('notify_threshold')
     notify_email = ConversionPlugin.settings.get('notify_email')
 
+    if notify_threshold is None:
+        return
+
     try:
         credits = client.get_remaining_credits()
     except requests.RequestException as err:
         ConversionPlugin.logger.info('Could not fetch the remaining CloudConvert credits: %s', err)
         task.retry(countdown=60)
 
-    if notify_threshold is not None and credits <= notify_threshold:
+    if credits <= notify_threshold:
         ConversionPlugin.logger.info('CloudConvert credits are below configured threshold; current value: %s', credits)
         if notify_email:
             plugin_settings_url = url_for('plugins.details', plugin=ConversionPlugin.name, _external=True)
