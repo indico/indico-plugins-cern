@@ -117,7 +117,7 @@ class ConversionPlugin(IndicoPlugin):
         # Prepare for submission (after commit)
         if 'convert_attachments' not in g:
             g.convert_attachments = set()
-        g.convert_attachments.add(attachment)
+        g.convert_attachments.add((attachment, attachment.is_protected))
         # Set cache entry to show the pending attachment
         pdf_state_cache.set(str(attachment.id), 'pending', timeout=info_ttl)
         if not g.get('attachment_conversion_msg_displayed'):
@@ -126,8 +126,8 @@ class ConversionPlugin(IndicoPlugin):
                     'automatically once the conversion finished.').format(file=attachment.file.filename))
 
     def _after_commit(self, sender, **kwargs):
-        for attachment in g.get('convert_attachments', ()):
-            if self.settings.get('use_cloudconvert') and not attachment.is_protected:
+        for attachment, is_protected in g.get('convert_attachments', ()):
+            if self.settings.get('use_cloudconvert') and not is_protected:
                 submit_attachment_cloudconvert.delay(attachment)
             else:
                 submit_attachment_doconverter.delay(attachment)
