@@ -144,7 +144,8 @@ def submit_attachment_cloudconvert(task, attachment):
         job = client.Job.create(payload=job_definition)
         upload_task_id = job['tasks'][0]['id']
         task = client.Task.find(id=upload_task_id)
-        client.Task.upload(task, attachment.file)
+        with attachment.file.open() as fd:
+            client.Task.upload(task, attachment.file.filename, fd, attachment.file.content_type)
     except requests.RequestException as exc:
         retry_task(task, attachment, exc)
     else:

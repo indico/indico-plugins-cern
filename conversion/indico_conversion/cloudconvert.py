@@ -44,17 +44,16 @@ class Job(Resource):
 class Task(Resource):
     resource = 'tasks'
 
-    def upload(self, task, file):
+    def upload(self, task, filename, fd, mimetype):
         if task['operation'] != 'import/upload':
             raise Exception("The task operation is not import/upload")
 
         form = task['result']['form']
-        with file.open() as fd:
-            response = requests.post(url=form['url'], files={'file': fd}, data=form['parameters'])
-            response.raise_for_status()
-            if response.status_code != 201:
-                raise requests.RequestException(f'Unexpected response status from server: {response.status_code}',
-                                                response=response)
+        response = requests.post(url=form['url'], files={'file': (filename, fd, mimetype)}, data=form['parameters'])
+        response.raise_for_status()
+        if response.status_code != 201:
+            raise requests.RequestException(f'Unexpected response status from server: {response.status_code}',
+                                            response=response)
 
 
 class CloudConvertRestClient:
