@@ -45,12 +45,12 @@ def retry_task(task, attachment, exception):
     try:
         task.retry(countdown=delay, max_retries=(MAX_TRIES - 1))
     except MaxRetriesExceededError:
-        ConversionPlugin.logger.error('Could not submit attachment %d (attempt %d/%d); giving up [%s]',
-                                      attachment.id, attempt, MAX_TRIES, exception)
+        ConversionPlugin.logger.error('Could not submit attachment %d (attempt %d/%d); giving up [%s]:[%s]',
+                                      attachment.id, attempt, MAX_TRIES, exception, exception.response.text)
         pdf_state_cache.delete(str(attachment.id))
     except Retry:
-        ConversionPlugin.logger.warning('Could not submit attachment %d (attempt %d/%d); retry in %ds [%s]',
-                                        attachment.id, attempt, MAX_TRIES, delay, exception)
+        ConversionPlugin.logger.warning('Could not submit attachment %d (attempt %d/%d); retry in %ds [%s]:[%s]',
+                                        attachment.id, attempt, MAX_TRIES, delay, exception, exception.response.text)
         raise
 
 
@@ -79,7 +79,7 @@ def submit_attachment_doconverter(task, attachment):
             response = requests.post(url, data=data, files={'uploadedfile': (filename, fd, file.content_type)})
             response.raise_for_status()
             if 'ok' not in response.text:
-                raise requests.RequestException(f'Unexpected response from server: {response.text}')
+                raise requests.RequestException(f'Unexpected response from server: {response.text}', response=response)
         except requests.RequestException as exc:
             retry_task(task, attachment, exc)
         else:
