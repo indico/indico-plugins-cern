@@ -229,11 +229,13 @@ def check_cloudconvert_credits(task):
         ConversionPlugin.logger.info('Could not fetch the remaining CloudConvert credits: %s', err)
         task.retry(countdown=60)
 
-    if credits <= notify_threshold:
-        ConversionPlugin.logger.info('CloudConvert credits are below configured threshold; current value: %s', credits)
+    if credits < notify_threshold:
+        ConversionPlugin.logger.warning('CloudConvert credits below configured threshold; current value: %s', credits)
         if notify_email:
             plugin_settings_url = url_for('plugins.details', plugin=ConversionPlugin.name, _external=True)
             template = get_template_module('conversion:emails/cloudconvert_low_credits.html', credits=credits,
                                            plugin_settings_url=plugin_settings_url)
             email = make_email(to_list=notify_email, template=template, html=True)
             send_email(email)
+    else:
+        ConversionPlugin.logger.info('CloudConvert credits: %s', credits)
