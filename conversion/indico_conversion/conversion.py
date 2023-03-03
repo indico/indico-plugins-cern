@@ -121,20 +121,25 @@ def submit_attachment_cloudconvert(task, attachment):
     sandbox = ConversionPlugin.settings.get('sandbox')
     client = CloudConvertRestClient(api_key=api_key, sandbox=sandbox)
 
+    import_task = f'import-file-{attachment.id}'
+    convert_task = f'convert-file-{attachment.id}'
+    export_task = f'export-file-{attachment.id}'
+    signed_id = secure_serializer.dumps(str(attachment.id), salt='pdf-conversion')
+
     job_definition = {
-        'tag': secure_serializer.dumps(str(attachment.id), salt='pdf-conversion'),
+        'tag': f'{attachment.file.id}__{signed_id}',
         'tasks': {
-            'import-my-file': {
+            import_task: {
                 'operation': 'import/upload',
             },
-            'convert-my-file': {
+            convert_task: {
                 'operation': 'convert',
-                'input': 'import-my-file',
+                'input': import_task,
                 'output_format': 'pdf',
             },
-            'export-my-file': {
+            export_task: {
                 'operation': 'export/url',
-                'input': 'convert-my-file'
+                'input': convert_task
             }
         },
         'webhook_url': url_for_plugin('conversion.cloudconvert_callback', _external=True)
@@ -170,8 +175,9 @@ class RHCloudConvertFinished(RH):
         url = task['result']['files'][0]['url']
 
         try:
-            payload = secure_serializer.loads(job['tag'], salt='pdf-conversion')
-        except BadData:
+            signed_id = job['tag'].split('__', 1)[1]
+            payload = secure_serializer.loads(signed_id, salt='pdf-conversion')
+        except (IndexError, BadData):
             ConversionPlugin.logger.exception('Received invalid payload (%s)', job['tag'])
             return jsonify(success=False)
 
