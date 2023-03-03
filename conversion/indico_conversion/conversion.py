@@ -120,7 +120,7 @@ def submit_attachment_cloudconvert(task, attachment):
         task.retry(countdown=900)
 
     api_key = ConversionPlugin.settings.get('cloudconvert_api_key')
-    sandbox = ConversionPlugin.settings.get('sandbox')
+    sandbox = ConversionPlugin.settings.get('cloudconvert_sandbox')
     client = CloudConvertRestClient(api_key=api_key, sandbox=sandbox)
 
     import_task = f'import-file-{attachment.id}'
@@ -217,8 +217,8 @@ def check_cloudconvert_credits(task):
 
     api_key = ConversionPlugin.settings.get('cloudconvert_api_key')
     client = CloudConvertRestClient(api_key=api_key, sandbox=False)
-    notify_threshold = ConversionPlugin.settings.get('notify_threshold')
-    notify_email = ConversionPlugin.settings.get('notify_email')
+    notify_threshold = ConversionPlugin.settings.get('cloudconvert_notify_threshold')
+    notify_email = ConversionPlugin.settings.get('cloudconvert_notify_email')
 
     if notify_threshold is None:
         return
