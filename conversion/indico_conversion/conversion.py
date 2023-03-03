@@ -45,12 +45,14 @@ def retry_task(task, attachment, exception):
     try:
         task.retry(countdown=delay, max_retries=(MAX_TRIES - 1))
     except MaxRetriesExceededError:
-        ConversionPlugin.logger.error('Could not submit attachment %d (attempt %d/%d); giving up [%s]:[%s]',
-                                      attachment.id, attempt, MAX_TRIES, exception, exception.response.text)
+        response_text = exception.response.text if exception.response else '<no response>'
+        ConversionPlugin.logger.error('Could not submit attachment %d (attempt %d/%d); giving up [%s]: %s',
+                                      attachment.id, attempt, MAX_TRIES, exception, response_text)
         pdf_state_cache.delete(str(attachment.id))
     except Retry:
-        ConversionPlugin.logger.warning('Could not submit attachment %d (attempt %d/%d); retry in %ds [%s]:[%s]',
-                                        attachment.id, attempt, MAX_TRIES, delay, exception, exception.response.text)
+        response_text = exception.response.text if exception.response else '<no response>'
+        ConversionPlugin.logger.warning('Could not submit attachment %d (attempt %d/%d); retry in %ds [%s]: %s',
+                                        attachment.id, attempt, MAX_TRIES, delay, exception, response_text)
         raise
 
 
