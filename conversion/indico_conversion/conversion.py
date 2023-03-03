@@ -173,7 +173,7 @@ class RHCloudConvertFinished(RH):
             return jsonify(success=False)
 
         job = request.json['job']
-        task = [t for t in job['tasks'] if t['name'] == 'export-my-file'][0]
+        task = [t for t in job['tasks'] if t['operation'] == 'export/url'][0]
         url = task['result']['files'][0]['url']
 
         try:
