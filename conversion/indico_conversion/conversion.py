@@ -15,6 +15,7 @@ from itsdangerous import BadData
 
 from indico.core.celery import celery
 from indico.core.config import config
+from indico.core.db import db
 from indico.core.notifications import make_email, send_email
 from indico.core.plugins import url_for_plugin
 from indico.modules.attachments.models.attachments import Attachment
@@ -24,7 +25,7 @@ from indico.web.flask.templating import get_template_module
 from indico.web.flask.util import url_for
 from indico.web.rh import RH
 
-from indico_conversion import pdf_state_cache
+from indico_conversion import cloudconvert_task_cache, pdf_state_cache
 from indico_conversion.cloudconvert import CloudConvertRestClient
 from indico_conversion.util import save_pdf
 
@@ -112,7 +113,7 @@ class RHDoconverterFinished(RH):
         return jsonify(success=True)
 
 
-@celery.task(bind=True, max_retries=3)
+@celery.task(bind=True, max_retries=None)
 def submit_attachment_cloudconvert(task, attachment):
     """Sends an attachment's file to the CloudConvert conversion service"""
     from indico_conversion.plugin import ConversionPlugin
@@ -149,14 +150,64 @@ def submit_attachment_cloudconvert(task, attachment):
 
     try:
         job = client.Job.create(payload=job_definition)
-        upload_task_id = job['tasks'][0]['id']
-        task = client.Task.find(id=upload_task_id)
+        upload_task = job['tasks'][0]
+        export_task = job['tasks'][-1]
+        assert upload_task['operation'] == 'import/upload'
+        assert export_task['operation'] == 'export/url'
         with attachment.file.open() as fd:
-            client.Task.upload(task, attachment.file.filename, fd, attachment.file.content_type)
+            client.Task.upload(upload_task, attachment.file.filename, fd, attachment.file.content_type)
+        # add polling in case we miss a webhook
+        export_task_id = export_task['id']
+        cloudconvert_task_cache.set(export_task_id, 'pending')
+        check_attachment_cloudconvert.apply_async(args=(attachment.id, export_task_id,), countdown=10)
     except requests.RequestException as exc:
         retry_task(task, attachment, exc)
     else:
         ConversionPlugin.logger.info('Submitted %r to CloudConvert', attachment)
+
+
+@celery.task(bind=True, max_retries=None)
+def check_attachment_cloudconvert(task, attachment_id, export_task_id):
+    from indico_conversion.plugin import ConversionPlugin
+
+    api_key = ConversionPlugin.settings.get('cloudconvert_api_key')
+    sandbox = ConversionPlugin.settings.get('cloudconvert_sandbox')
+    client = CloudConvertRestClient(api_key=api_key, sandbox=sandbox)
+    status = cloudconvert_task_cache.get(export_task_id, '<unknown>')
+
+    if status == 'done':
+        ConversionPlugin.logger.info('Converted file for attachment %d (task %s) already received via webhook',
+                                     attachment_id, export_task_id)
+        return
+    elif status != 'pending':
+        ConversionPlugin.logger.warning('Unexpected conversion state for attachment %d (task %s): %s',
+                                        attachment_id, export_task_id, status)
+        return
+
+    try:
+        export_task = client.Task.find(export_task_id)
+    except requests.RequestException:
+        task.retry(countdown=30)
+        return
+
+    if export_task['status'] != 'finished':
+        ConversionPlugin.logger.info('Conversion for attachment %d (task %s) not finished yet (%s)',
+                                     attachment_id, export_task_id, export_task['status'])
+        task.retry(countdown=30)
+        return
+
+    ConversionPlugin.logger.warning('Got successful conversion for attachment %d (task %s) via polling',
+                                    attachment_id, export_task_id)
+    url = export_task['result']['files'][0]['url']
+    attachment = Attachment.get(attachment_id)
+    if not attachment or attachment.is_deleted or attachment.folder.is_deleted:
+        ConversionPlugin.logger.info('Attachment has been deleted: %s', attachment)
+        return
+    resp = requests.get(url)
+    resp.raise_for_status()
+    save_pdf(attachment, resp.content)
+    cloudconvert_task_cache.delete(export_task_id)
+    db.session.commit()
 
 
 class RHCloudConvertFinished(RH):
@@ -189,7 +240,10 @@ class RHCloudConvertFinished(RH):
             ConversionPlugin.logger.info('Attachment has been deleted: %s', attachment)
             return jsonify(success=True)
 
-        save_pdf(attachment, requests.get(url).content)
+        resp = requests.get(url)
+        resp.raise_for_status()
+        save_pdf(attachment, resp.content)
+        cloudconvert_task_cache.set(task['id'], 'done', 3600)
         return jsonify(success=True)
 
 

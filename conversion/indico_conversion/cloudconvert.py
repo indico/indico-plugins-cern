@@ -44,6 +44,11 @@ class Job(Resource):
 class Task(Resource):
     resource = 'tasks'
 
+    def find(self, id):
+        url = f'{self.api_client.endpoint}/{self.resource}/{id}'
+        response = requests.get(url, headers=self.api_client.headers)
+        return self._process_response(response)
+
     def upload(self, task, filename, fd, mimetype):
         if task['operation'] != 'import/upload':
             raise Exception("The task operation is not import/upload")
