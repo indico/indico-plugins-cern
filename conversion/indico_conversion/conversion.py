@@ -204,7 +204,14 @@ def check_attachment_cloudconvert(task, attachment_id, export_task_id):
         ConversionPlugin.logger.info('Attachment has been deleted: %s', attachment)
         return
     resp = requests.get(url)
-    resp.raise_for_status()
+    try:
+        resp.raise_for_status()
+    except requests.RequestException as exc:
+        response_text = exc.response.text if exc.response else '<no response>'
+        ConversionPlugin.logger.warning('Could not download converted file for attachment %d (task %s): %s [%s]',
+                                        attachment_id, export_task_id, exc, response_text)
+        task.retry(countdown=60)
+        return
     save_pdf(attachment, resp.content)
     cloudconvert_task_cache.delete(export_task_id)
     db.session.commit()
@@ -240,7 +247,14 @@ class RHCloudConvertFinished(RH):
             return jsonify(success=True)
 
         resp = requests.get(url)
-        resp.raise_for_status()
+        try:
+            resp.raise_for_status()
+        except requests.RequestException as exc:
+            response_text = exc.response.text if exc.response else '<no response>'
+            ConversionPlugin.logger.error('Could not download converted file for attachment %d (task %s): %s [%s]',
+                                          attachment_id, task['id'], exc, response_text)
+            return jsonify(success=False)
+
         save_pdf(attachment, resp.content)
         cloudconvert_task_cache.set(task['id'], 'done', 3600)
         return jsonify(success=True)
