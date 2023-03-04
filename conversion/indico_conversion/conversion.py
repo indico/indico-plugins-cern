@@ -183,6 +183,11 @@ def check_attachment_cloudconvert(task, attachment_id, export_task_id):
         ConversionPlugin.logger.info('Converted file for attachment %d (task %s) already failed via webhook',
                                      attachment_id, export_task_id)
         return
+    elif status == 'processing':
+        ConversionPlugin.logger.info('Converted file for attachment %d (task %s) already being processed via webhook',
+                                     attachment_id, export_task_id)
+        task.retry(countdown=30)  # retry the task in case something fails during the webhook though
+        return
     elif status != 'pending':
         ConversionPlugin.logger.warning('Unexpected conversion state for attachment %d (task %s): %s',
                                         attachment_id, export_task_id, status)
@@ -256,17 +261,25 @@ class RHCloudConvertFinished(RH):
             ConversionPlugin.logger.info('Attachment has been deleted: %s', attachment)
             return jsonify(success=True)
 
-        url = task['result']['files'][0]['url']
-        resp = requests.get(url)
-        try:
-            resp.raise_for_status()
-        except requests.RequestException as exc:
-            response_text = exc.response.text if exc.response else '<no response>'
-            ConversionPlugin.logger.error('Could not download converted file for attachment %d (task %s): %s [%s]',
-                                          attachment_id, task['id'], exc, response_text)
-            return jsonify(success=False)
+        # make sure polling task doesn't also process the file in case of a race condition
+        cloudconvert_task_cache.set(task['id'], 'processing', 3600)
 
-        save_pdf(attachment, resp.content)
+        try:
+            url = task['result']['files'][0]['url']
+            resp = requests.get(url)
+            try:
+                resp.raise_for_status()
+            except requests.RequestException as exc:
+                response_text = exc.response.text if exc.response else '<no response>'
+                ConversionPlugin.logger.error('Could not download converted file for attachment %d (task %s): %s [%s]',
+                                              attachment_id, task['id'], exc, response_text)
+                return jsonify(success=False)
+
+            save_pdf(attachment, resp.content)
+        except Exception:
+            # if anything goes wrong here give the polling task a chance to succeed
+            cloudconvert_task_cache.set(task['id'], 'pending', 3600)
+            raise
         cloudconvert_task_cache.set(task['id'], 'done', 3600)
         return jsonify(success=True)
 
