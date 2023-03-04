@@ -130,7 +130,7 @@ def submit_attachment_cloudconvert(task, attachment):
     signed_id = secure_serializer.dumps(attachment.id, salt='pdf-conversion')
 
     job_definition = {
-        'tag': f'{attachment.file.id}__{signed_id}',
+        'tag': f'{attachment.id}__{signed_id}',
         'tasks': {
             import_task: {
                 'operation': 'import/upload',
