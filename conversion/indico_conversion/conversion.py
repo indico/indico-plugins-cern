@@ -179,6 +179,10 @@ def check_attachment_cloudconvert(task, attachment_id, export_task_id):
         ConversionPlugin.logger.info('Converted file for attachment %d (task %s) already received via webhook',
                                      attachment_id, export_task_id)
         return
+    elif status == 'failed':
+        ConversionPlugin.logger.info('Converted file for attachment %d (task %s) already failed via webhook',
+                                     attachment_id, export_task_id)
+        return
     elif status != 'pending':
         ConversionPlugin.logger.warning('Unexpected conversion state for attachment %d (task %s): %s',
                                         attachment_id, export_task_id, status)
@@ -190,6 +194,11 @@ def check_attachment_cloudconvert(task, attachment_id, export_task_id):
         task.retry(countdown=30)
         return
 
+    if export_task['status'] == 'error':
+        ConversionPlugin.logger.warning('Conversion for attachment %d (task %s) failed (%s)',
+                                        attachment_id, export_task_id, export_task['code'])
+        pdf_state_cache.delete(str(attachment_id))
+        return
     if export_task['status'] != 'finished':
         ConversionPlugin.logger.info('Conversion for attachment %d (task %s) not finished yet (%s)',
                                      attachment_id, export_task_id, export_task['status'])
@@ -226,13 +235,8 @@ class RHCloudConvertFinished(RH):
         from indico_conversion.plugin import ConversionPlugin
 
         event = request.json['event']
-        if event == 'job.failed':
-            ConversionPlugin.logger.error('CloudConvert conversion job failed: %s', request.json)
-            return jsonify(success=False)
-
         job = request.json['job']
         task = [t for t in job['tasks'] if t['operation'] == 'export/url'][0]
-        url = task['result']['files'][0]['url']
 
         try:
             signed_id = job['tag'].split('__', 1)[1]
@@ -241,11 +245,18 @@ class RHCloudConvertFinished(RH):
             ConversionPlugin.logger.exception('Received invalid payload (%s)', job['tag'])
             return jsonify(success=False)
 
+        if event == 'job.failed':
+            ConversionPlugin.logger.error('CloudConvert conversion job failed: %s', request.json)
+            cloudconvert_task_cache.set(task['id'], 'failed', 3600)
+            pdf_state_cache.delete(str(attachment_id))
+            return jsonify(success=False)
+
         attachment = Attachment.get(attachment_id)
         if not attachment or attachment.is_deleted or attachment.folder.is_deleted:
             ConversionPlugin.logger.info('Attachment has been deleted: %s', attachment)
             return jsonify(success=True)
 
+        url = task['result']['files'][0]['url']
         resp = requests.get(url)
         try:
             resp.raise_for_status()
