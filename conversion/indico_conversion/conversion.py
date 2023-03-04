@@ -127,7 +127,7 @@ def submit_attachment_cloudconvert(task, attachment):
     import_task = f'import-file-{attachment.id}'
     convert_task = f'convert-file-{attachment.id}'
     export_task = f'export-file-{attachment.id}'
-    signed_id = secure_serializer.dumps(str(attachment.id), salt='pdf-conversion')
+    signed_id = secure_serializer.dumps(attachment.id, salt='pdf-conversion')
 
     job_definition = {
         'tag': f'{attachment.file.id}__{signed_id}',
@@ -229,12 +229,11 @@ class RHCloudConvertFinished(RH):
 
         try:
             signed_id = job['tag'].split('__', 1)[1]
-            payload = secure_serializer.loads(signed_id, salt='pdf-conversion')
+            attachment_id = secure_serializer.loads(signed_id, salt='pdf-conversion')
         except (IndexError, BadData):
             ConversionPlugin.logger.exception('Received invalid payload (%s)', job['tag'])
             return jsonify(success=False)
 
-        attachment_id = int(payload)
         attachment = Attachment.get(attachment_id)
         if not attachment or attachment.is_deleted or attachment.folder.is_deleted:
             ConversionPlugin.logger.info('Attachment has been deleted: %s', attachment)
