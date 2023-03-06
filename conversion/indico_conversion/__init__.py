@@ -11,3 +11,4 @@ from indico.util.i18n import make_bound_gettext
 
 _ = make_bound_gettext('conversion')
 pdf_state_cache = make_scoped_cache('pdf-conversion')
+cloudconvert_task_cache = make_scoped_cache('pdf-conversion-cloudconvert-tasks')

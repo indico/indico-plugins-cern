@@ -10,8 +10,8 @@ from datetime import timedelta
 
 from flask import flash, g
 from flask_pluginengine import render_plugin_template, uses
-from wtforms.fields import BooleanField, URLField
-from wtforms.validators import DataRequired
+from wtforms.fields import BooleanField, EmailField, IntegerField, URLField
+from wtforms.validators import DataRequired, NumberRange, Optional
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin, plugin_engine, url_for_plugin
@@ -20,12 +20,13 @@ from indico.modules.attachments.models.attachments import AttachmentType
 from indico.modules.events.views import WPSimpleEventDisplay
 from indico.util.date_time import now_utc
 from indico.web.forms.base import IndicoForm
-from indico.web.forms.fields import TextListField
+from indico.web.forms.fields import IndicoPasswordField, TextListField
+from indico.web.forms.validators import HiddenUnless
 from indico.web.forms.widgets import SwitchWidget
 
 from indico_conversion import _, pdf_state_cache
 from indico_conversion.blueprint import blueprint
-from indico_conversion.conversion import submit_attachment
+from indico_conversion.conversion import submit_attachment_cloudconvert, submit_attachment_doconverter
 from indico_conversion.util import get_pdf_title
 
 
@@ -36,8 +37,24 @@ class SettingsForm(IndicoForm):
     maintenance = BooleanField(_('Maintenance'), widget=SwitchWidget(),
                                description=_('Temporarily disable submitting files. The tasks will be kept and once '
                                              'this setting is disabled the files will be submitted.'))
-    server_url = URLField(_('Server URL'), [DataRequired()],
+    use_cloudconvert = BooleanField(_('Use CloudConvert'), widget=SwitchWidget(),
+                                    description=_('Use Cloudconvert instead of Doconverter for public materials'))
+    server_url = URLField(_('Doconverter server URL'), [DataRequired()],
                           description=_("The URL to the conversion server's uploadFile.py script."))
+    cloudconvert_api_key = IndicoPasswordField(_('CloudConvert API key'),
+                                               [DataRequired(), HiddenUnless('use_cloudconvert', preserve_data=True)],
+                                               toggle=True)
+    cloudconvert_sandbox = BooleanField(_('Sandbox'),
+                                        [HiddenUnless('use_cloudconvert', preserve_data=True)],
+                                        widget=SwitchWidget(),
+                                        description=_('Use CloudConvert sandbox'))
+    cloudconvert_notify_threshold = IntegerField(_('CloudConvert credit threshold'),
+                                                 [Optional(), NumberRange(min=0), HiddenUnless('use_cloudconvert',
+                                                                                               preserve_data=True)],
+                                                 description=_('Send an email when credits drop below this threshold'))
+    cloudconvert_notify_email = EmailField(_('Notification email'), [HiddenUnless('use_cloudconvert',
+                                                                                  preserve_data=True)],
+                                           description=_('Email to send the notifications to'))
     valid_extensions = TextListField(_('Extensions'),
                                      filters=[lambda exts: sorted({ext.lower().lstrip('.').strip() for ext in exts})],
                                      description=_('File extensions for which PDF conversion is supported. '
@@ -52,8 +69,13 @@ class ConversionPlugin(IndicoPlugin):
     """
     configurable = True
     settings_form = SettingsForm
-    default_settings = {'maintenance': False,
+    default_settings = {'use_cloudconvert': False,
+                        'maintenance': False,
                         'server_url': '',
+                        'cloudconvert_api_key': '',
+                        'cloudconvert_sandbox': False,
+                        'cloudconvert_notify_threshold': None,
+                        'cloudconvert_notify_email': '',
                         'valid_extensions': ['ppt', 'doc', 'pptx', 'docx', 'odp', 'sxi']}
 
     def init(self):
@@ -101,7 +123,7 @@ class ConversionPlugin(IndicoPlugin):
         # Prepare for submission (after commit)
         if 'convert_attachments' not in g:
             g.convert_attachments = set()
-        g.convert_attachments.add(attachment)
+        g.convert_attachments.add((attachment, attachment.is_protected))
         # Set cache entry to show the pending attachment
         pdf_state_cache.set(str(attachment.id), 'pending', timeout=info_ttl)
         if not g.get('attachment_conversion_msg_displayed'):
@@ -110,8 +132,11 @@ class ConversionPlugin(IndicoPlugin):
                     'automatically once the conversion finished.').format(file=attachment.file.filename))
 
     def _after_commit(self, sender, **kwargs):
-        for attachment in g.get('convert_attachments', ()):
-            submit_attachment.delay(attachment)
+        for attachment, is_protected in g.get('convert_attachments', ()):
+            if self.settings.get('use_cloudconvert') and not is_protected:
+                submit_attachment_cloudconvert.delay(attachment)
+            else:
+                submit_attachment_doconverter.delay(attachment)
 
     def _event_display_after_attachment(self, attachment, top_level, has_label, **kwargs):
         if attachment.type != AttachmentType.file:

@@ -6,35 +6,60 @@
 # the LICENSE file for more details.
 
 import os
-from datetime import timedelta
 
 import requests
 from celery.exceptions import MaxRetriesExceededError, Retry
+from celery.schedules import crontab
 from flask import jsonify, request, session
 from itsdangerous import BadData
 
-from indico.core import signals
 from indico.core.celery import celery
 from indico.core.config import config
 from indico.core.db import db
+from indico.core.notifications import make_email, send_email
 from indico.core.plugins import url_for_plugin
-from indico.modules.attachments.models.attachments import Attachment, AttachmentFile, AttachmentType
+from indico.modules.attachments.models.attachments import Attachment
 from indico.util.fs import secure_filename
 from indico.util.signing import secure_serializer
 from indico.web.flask.templating import get_template_module
+from indico.web.flask.util import url_for
 from indico.web.rh import RH
 
-from indico_conversion import pdf_state_cache
-from indico_conversion.util import get_pdf_title
+from indico_conversion import cloudconvert_task_cache, pdf_state_cache
+from indico_conversion.cloudconvert import CloudConvertRestClient
+from indico_conversion.util import save_pdf
 
 
 MAX_TRIES = 20
 DELAYS = [30, 60, 120, 300, 600, 1800, 3600, 3600, 7200]
 
 
+def retry_task(task, attachment, exception):
+    from indico_conversion.plugin import ConversionPlugin
+
+    attempt = task.request.retries + 1
+    try:
+        delay = DELAYS[task.request.retries] if not config.DEBUG else 1
+    except IndexError:
+        # like this we can safely bump MAX_TRIES manually if necessary
+        delay = DELAYS[-1]
+    try:
+        task.retry(countdown=delay, max_retries=(MAX_TRIES - 1))
+    except MaxRetriesExceededError:
+        response_text = exception.response.text if exception.response else '<no response>'
+        ConversionPlugin.logger.error('Could not submit attachment %d (attempt %d/%d); giving up [%s]: %s',
+                                      attachment.id, attempt, MAX_TRIES, exception, response_text)
+        pdf_state_cache.delete(str(attachment.id))
+    except Retry:
+        response_text = exception.response.text if exception.response else '<no response>'
+        ConversionPlugin.logger.warning('Could not submit attachment %d (attempt %d/%d); retry in %ds [%s]: %s',
+                                        attachment.id, attempt, MAX_TRIES, delay, exception, response_text)
+        raise
+
+
 @celery.task(bind=True, max_retries=None)
-def submit_attachment(task, attachment):
-    """Sends an attachment's file to the conversion service"""
+def submit_attachment_doconverter(task, attachment):
+    """Sends an attachment's file to the Doconvert conversion service"""
     from indico_conversion.plugin import ConversionPlugin
     if ConversionPlugin.settings.get('maintenance'):
         task.retry(countdown=900)
@@ -44,7 +69,7 @@ def submit_attachment(task, attachment):
     }
     data = {
         'converter': 'pdf',
-        'urlresponse': url_for_plugin('conversion.callback', _external=True),
+        'urlresponse': url_for_plugin('conversion.doconverter_callback', _external=True),
         'dirresponse': secure_serializer.dumps(payload, salt='pdf-conversion')
     }
     file = attachment.file
@@ -57,29 +82,14 @@ def submit_attachment(task, attachment):
             response = requests.post(url, data=data, files={'uploadedfile': (filename, fd, file.content_type)})
             response.raise_for_status()
             if 'ok' not in response.text:
-                raise requests.RequestException(f'Unexpected response from server: {response.text}')
+                raise requests.RequestException(f'Unexpected response from server: {response.text}', response=response)
         except requests.RequestException as exc:
-            attempt = task.request.retries + 1
-            try:
-                delay = DELAYS[task.request.retries] if not config.DEBUG else 1
-            except IndexError:
-                # like this we can safely bump MAX_TRIES manually if necessary
-                delay = DELAYS[-1]
-            try:
-                task.retry(countdown=delay, max_retries=(MAX_TRIES - 1))
-            except MaxRetriesExceededError:
-                ConversionPlugin.logger.error('Could not submit attachment %d (attempt %d/%d); giving up [%s]',
-                                              attachment.id, attempt, MAX_TRIES, exc)
-                pdf_state_cache.delete(str(attachment.id))
-            except Retry:
-                ConversionPlugin.logger.warning('Could not submit attachment %d (attempt %d/%d); retry in %ds [%s]',
-                                                attachment.id, attempt, MAX_TRIES, delay, exc)
-                raise
+            retry_task(task, attachment, exc)
         else:
-            ConversionPlugin.logger.info('Submitted %r', attachment)
+            ConversionPlugin.logger.info('Submitted %r to Doconverter', attachment)
 
 
-class RHConversionFinished(RH):
+class RHDoconverterFinished(RH):
     """Callback to attach a converted file"""
 
     CSRF_ENABLED = False
@@ -98,20 +108,181 @@ class RHConversionFinished(RH):
         elif request.form['status'] != '1':
             ConversionPlugin.logger.error('Received invalid status %s for %s', request.form['status'], attachment)
             return jsonify(success=False)
-        name, ext = os.path.splitext(attachment.file.filename)
-        title = get_pdf_title(attachment)
-        pdf_attachment = Attachment(folder=attachment.folder, user=attachment.user, title=title,
-                                    description=attachment.description, type=AttachmentType.file,
-                                    protection_mode=attachment.protection_mode, acl=attachment.acl)
-        data = request.files['content'].stream.read()
-        pdf_attachment.file = AttachmentFile(user=attachment.file.user, filename=f'{name}.pdf',
-                                             content_type='application/pdf')
-        pdf_attachment.file.save(data)
-        db.session.add(pdf_attachment)
-        db.session.flush()
-        pdf_state_cache.set(str(attachment.id), 'finished', timeout=timedelta(minutes=15))
-        ConversionPlugin.logger.info('Added PDF attachment %s for %s', pdf_attachment, attachment)
-        signals.attachments.attachment_created.send(pdf_attachment, user=None)
+        pdf = request.files['content'].stream.read()
+        save_pdf(attachment, pdf)
+        return jsonify(success=True)
+
+
+@celery.task(bind=True, max_retries=None)
+def submit_attachment_cloudconvert(task, attachment):
+    """Sends an attachment's file to the CloudConvert conversion service"""
+    from indico_conversion.plugin import ConversionPlugin
+    if ConversionPlugin.settings.get('maintenance'):
+        task.retry(countdown=900)
+
+    api_key = ConversionPlugin.settings.get('cloudconvert_api_key')
+    sandbox = ConversionPlugin.settings.get('cloudconvert_sandbox')
+    client = CloudConvertRestClient(api_key=api_key, sandbox=sandbox)
+
+    import_task = f'import-file-{attachment.id}'
+    convert_task = f'convert-file-{attachment.id}'
+    export_task = f'export-file-{attachment.id}'
+    signed_id = secure_serializer.dumps(attachment.id, salt='pdf-conversion')
+
+    job_definition = {
+        'tag': f'{attachment.id}__{signed_id}',
+        'tasks': {
+            import_task: {
+                'operation': 'import/upload',
+            },
+            convert_task: {
+                'operation': 'convert',
+                'input': import_task,
+                'output_format': 'pdf',
+            },
+            export_task: {
+                'operation': 'export/url',
+                'input': convert_task
+            }
+        },
+        'webhook_url': url_for_plugin('conversion.cloudconvert_callback', _external=True)
+    }
+
+    try:
+        job = client.Job.create(payload=job_definition)
+        upload_task = job['tasks'][0]
+        export_task = job['tasks'][-1]
+        assert upload_task['operation'] == 'import/upload'
+        assert export_task['operation'] == 'export/url'
+        with attachment.file.open() as fd:
+            client.Task.upload(upload_task, attachment.file.filename, fd, attachment.file.content_type)
+        # add polling in case we miss a webhook
+        export_task_id = export_task['id']
+        cloudconvert_task_cache.set(export_task_id, 'pending')
+        check_attachment_cloudconvert.apply_async(args=(attachment.id, export_task_id,), countdown=10)
+    except requests.RequestException as exc:
+        retry_task(task, attachment, exc)
+    else:
+        ConversionPlugin.logger.info('Submitted %r to CloudConvert', attachment)
+
+
+@celery.task(bind=True, max_retries=None)
+def check_attachment_cloudconvert(task, attachment_id, export_task_id):
+    from indico_conversion.plugin import ConversionPlugin
+
+    api_key = ConversionPlugin.settings.get('cloudconvert_api_key')
+    sandbox = ConversionPlugin.settings.get('cloudconvert_sandbox')
+    client = CloudConvertRestClient(api_key=api_key, sandbox=sandbox)
+    status = cloudconvert_task_cache.get(export_task_id, '<unknown>')
+
+    if status == 'done':
+        ConversionPlugin.logger.info('Converted file for attachment %d (task %s) already received via webhook',
+                                     attachment_id, export_task_id)
+        return
+    elif status == 'failed':
+        ConversionPlugin.logger.info('Converted file for attachment %d (task %s) already failed via webhook',
+                                     attachment_id, export_task_id)
+        return
+    elif status == 'processing':
+        ConversionPlugin.logger.info('Converted file for attachment %d (task %s) already being processed via webhook',
+                                     attachment_id, export_task_id)
+        task.retry(countdown=30)  # retry the task in case something fails during the webhook though
+        return
+    elif status != 'pending':
+        ConversionPlugin.logger.warning('Unexpected conversion state for attachment %d (task %s): %s',
+                                        attachment_id, export_task_id, status)
+        return
+
+    try:
+        export_task = client.Task.find(export_task_id)
+    except requests.RequestException:
+        task.retry(countdown=30)
+        return
+
+    if export_task['status'] == 'error':
+        ConversionPlugin.logger.warning('Conversion for attachment %d (task %s) failed (%s)',
+                                        attachment_id, export_task_id, export_task['code'])
+        pdf_state_cache.delete(str(attachment_id))
+        return
+    if export_task['status'] != 'finished':
+        ConversionPlugin.logger.info('Conversion for attachment %d (task %s) not finished yet (%s)',
+                                     attachment_id, export_task_id, export_task['status'])
+        task.retry(countdown=30)
+        return
+
+    ConversionPlugin.logger.warning('Got successful conversion for attachment %d (task %s) via polling',
+                                    attachment_id, export_task_id)
+    url = export_task['result']['files'][0]['url']
+    attachment = Attachment.get(attachment_id)
+    if not attachment or attachment.is_deleted or attachment.folder.is_deleted:
+        ConversionPlugin.logger.info('Attachment has been deleted: %s', attachment)
+        cloudconvert_task_cache.delete(export_task_id)
+        return
+    resp = requests.get(url)
+    try:
+        resp.raise_for_status()
+    except requests.RequestException as exc:
+        response_text = exc.response.text if exc.response else '<no response>'
+        ConversionPlugin.logger.warning('Could not download converted file for attachment %d (task %s): %s [%s]',
+                                        attachment_id, export_task_id, exc, response_text)
+        task.retry(countdown=60)
+        return
+    save_pdf(attachment, resp.content)
+    cloudconvert_task_cache.delete(export_task_id)
+    db.session.commit()
+
+
+class RHCloudConvertFinished(RH):
+    """Callback to attach a converted file"""
+
+    CSRF_ENABLED = False
+
+    def _process(self):
+        from indico_conversion.plugin import ConversionPlugin
+
+        event = request.json['event']
+        job = request.json['job']
+        task = [t for t in job['tasks'] if t['operation'] == 'export/url'][0]
+
+        try:
+            signed_id = job['tag'].split('__', 1)[1]
+            attachment_id = secure_serializer.loads(signed_id, salt='pdf-conversion')
+        except (IndexError, BadData):
+            ConversionPlugin.logger.exception('Received invalid payload (%s)', job['tag'])
+            return jsonify(success=False)
+
+        if event == 'job.failed':
+            ConversionPlugin.logger.error('CloudConvert conversion job failed: %s', request.json)
+            cloudconvert_task_cache.set(task['id'], 'failed', 3600)
+            pdf_state_cache.delete(str(attachment_id))
+            return jsonify(success=False)
+
+        attachment = Attachment.get(attachment_id)
+        if not attachment or attachment.is_deleted or attachment.folder.is_deleted:
+            ConversionPlugin.logger.info('Attachment has been deleted: %s', attachment)
+            cloudconvert_task_cache.set(task['id'], 'done', 3600)
+            return jsonify(success=True)
+
+        # make sure polling task doesn't also process the file in case of a race condition
+        cloudconvert_task_cache.set(task['id'], 'processing', 3600)
+
+        try:
+            url = task['result']['files'][0]['url']
+            resp = requests.get(url)
+            try:
+                resp.raise_for_status()
+            except requests.RequestException as exc:
+                response_text = exc.response.text if exc.response else '<no response>'
+                ConversionPlugin.logger.error('Could not download converted file for attachment %d (task %s): %s [%s]',
+                                              attachment_id, task['id'], exc, response_text)
+                return jsonify(success=False)
+
+            save_pdf(attachment, resp.content)
+        except Exception:
+            # if anything goes wrong here give the polling task a chance to succeed
+            cloudconvert_task_cache.set(task['id'], 'pending', 3600)
+            raise
+        cloudconvert_task_cache.set(task['id'], 'done', 3600)
         return jsonify(success=True)
 
 
@@ -131,3 +302,33 @@ class RHConversionCheck(RH):
                     continue
                 containers[attachment.id] = tpl.render_attachments_folders(item=attachment.folder.object)
         return jsonify(finished=finished, pending=pending, containers=containers)
+
+
+@celery.periodic_task(bind=True, max_retries=None, run_every=crontab(minute='0', hour='2'))
+def check_cloudconvert_credits(task):
+    from indico_conversion.plugin import ConversionPlugin
+
+    api_key = ConversionPlugin.settings.get('cloudconvert_api_key')
+    client = CloudConvertRestClient(api_key=api_key, sandbox=False)
+    notify_threshold = ConversionPlugin.settings.get('cloudconvert_notify_threshold')
+    notify_email = ConversionPlugin.settings.get('cloudconvert_notify_email')
+
+    if notify_threshold is None:
+        return
+
+    try:
+        credits = client.get_remaining_credits()
+    except requests.RequestException as err:
+        ConversionPlugin.logger.info('Could not fetch the remaining CloudConvert credits: %s', err)
+        task.retry(countdown=60)
+
+    if credits < notify_threshold:
+        ConversionPlugin.logger.warning('CloudConvert credits below configured threshold; current value: %s', credits)
+        if notify_email:
+            plugin_settings_url = url_for('plugins.details', plugin=ConversionPlugin.name, _external=True)
+            template = get_template_module('conversion:emails/cloudconvert_low_credits.html', credits=credits,
+                                           plugin_settings_url=plugin_settings_url)
+            email = make_email(to_list=notify_email, template=template, html=True)
+            send_email(email)
+    else:
+        ConversionPlugin.logger.info('CloudConvert credits: %s', credits)
