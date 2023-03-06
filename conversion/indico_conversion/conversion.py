@@ -216,6 +216,7 @@ def check_attachment_cloudconvert(task, attachment_id, export_task_id):
     attachment = Attachment.get(attachment_id)
     if not attachment or attachment.is_deleted or attachment.folder.is_deleted:
         ConversionPlugin.logger.info('Attachment has been deleted: %s', attachment)
+        cloudconvert_task_cache.delete(export_task_id)
         return
     resp = requests.get(url)
     try:
@@ -259,6 +260,7 @@ class RHCloudConvertFinished(RH):
         attachment = Attachment.get(attachment_id)
         if not attachment or attachment.is_deleted or attachment.folder.is_deleted:
             ConversionPlugin.logger.info('Attachment has been deleted: %s', attachment)
+            cloudconvert_task_cache.set(task['id'], 'done', 3600)
             return jsonify(success=True)
 
         # make sure polling task doesn't also process the file in case of a race condition
