@@ -6,7 +6,9 @@
 # the LICENSE file for more details.
 
 import os
+from datetime import timedelta
 
+import dateutil.parser
 import requests
 from celery.exceptions import MaxRetriesExceededError, Retry
 from celery.schedules import crontab
@@ -19,6 +21,7 @@ from indico.core.db import db
 from indico.core.notifications import make_email, send_email
 from indico.core.plugins import url_for_plugin
 from indico.modules.attachments.models.attachments import Attachment
+from indico.util.date_time import now_utc
 from indico.util.fs import secure_filename
 from indico.util.signing import secure_serializer
 from indico.web.flask.templating import get_template_module
@@ -159,7 +162,7 @@ def submit_attachment_cloudconvert(task, attachment):
         # add polling in case we miss a webhook
         export_task_id = export_task['id']
         cloudconvert_task_cache.set(export_task_id, 'pending')
-        check_attachment_cloudconvert.apply_async(args=(attachment.id, export_task_id,), countdown=10)
+        check_attachment_cloudconvert.apply_async(args=(attachment.id, export_task_id,), countdown=15)
     except requests.RequestException as exc:
         retry_task(task, attachment, exc)
     else:
@@ -209,6 +212,13 @@ def check_attachment_cloudconvert(task, attachment_id, export_task_id):
                                      attachment_id, export_task_id, export_task['status'])
         task.retry(countdown=30)
         return
+
+    if (now_utc() - dateutil.parser.parse(export_task['ended_at'])) < timedelta(seconds=10):
+        # it's possible that the webhook and task run at the same time, and in that case we
+        # want to avoid duplicate files, so we never process the file if it *just* finished
+        ConversionPlugin.logger.info('Got successful conversion for attachment %d (task %s) via polling, waiting a bit',
+                                     attachment_id, export_task_id)
+        task.retry(countdown=5)
 
     ConversionPlugin.logger.warning('Got successful conversion for attachment %d (task %s) via polling',
                                     attachment_id, export_task_id)
