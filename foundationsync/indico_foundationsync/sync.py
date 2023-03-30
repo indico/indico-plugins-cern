@@ -23,14 +23,14 @@ from indico.modules.users.util import get_user_by_email
 try:
     import cx_Oracle
 except ImportError:
-    cx_Oracle = None
+    cx_Oracle = None  # noqa: N816
 
 
 class SkipRoom(Exception):
     pass
 
 
-def OutputTypeHandler(cursor, name, defaultType, size, precision, scale):
+def OutputTypeHandler(cursor, name, defaultType, size, precision, scale):  # noqa: N802,N803
     """
     Unicode output handler for oracle connections
     Source: http://www.oracle.com/technetwork/articles/dsl/tuininga-cx-oracle-084866.html
