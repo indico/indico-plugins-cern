@@ -132,10 +132,16 @@ class OutlookPlugin(IndicoPlugin):
         return OutlookUserPreferences
 
     def event_registration_state_changed(self, registration, **kwargs):
-        if registration.user and registration.state == RegistrationState.complete:
+        if not registration.user:
+            return
+        if registration.state == RegistrationState.complete:
             event = registration.registration_form.event
             self._record_change(event, registration.user, OutlookAction.add)
             self.logger.info('Registration added: adding %s in %r', registration.user, event)
+        elif registration.state == RegistrationState.withdrawn:
+            event = registration.registration_form.event
+            self._record_change(event, registration.user, OutlookAction.remove)
+            self.logger.info('Registration withdrawn: removing %s in %r', registration.user, event)
 
     def event_registration_deleted(self, registration, **kwargs):
         if registration.user:
