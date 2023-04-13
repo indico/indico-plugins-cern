@@ -19,7 +19,7 @@ def check_config():
     from indico_outlook.plugin import OutlookPlugin
 
     settings = OutlookPlugin.settings.get_all()
-    return all(settings[x] for x in ('service_url', 'username', 'password'))
+    return all(settings[x] for x in ('service_url', 'token'))
 
 
 def is_event_excluded(event):

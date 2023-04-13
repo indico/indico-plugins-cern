@@ -5,10 +5,8 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-import posixpath
 from pprint import pformat
 
-import pytz
 import requests
 from requests.exceptions import RequestException, Timeout
 from sqlalchemy.orm import joinedload
@@ -16,19 +14,11 @@ from werkzeug.datastructures import MultiDict
 
 from indico.core import signals
 from indico.core.db import db
-from indico.util.date_time import format_datetime
 from indico.util.signals import values_from_signal
 from indico.util.string import strip_control_chars
 
 from indico_outlook.models.queue import OutlookAction, OutlookQueueEntry
 from indico_outlook.util import check_config, is_event_excluded, latest_actions_only
-
-
-operation_map = {
-    OutlookAction.add: 'CreateEventInCalendar',
-    OutlookAction.update: 'UpdateExistingEventInCalendar',
-    OutlookAction.remove: 'DeleteEventInCalendar'
-}
 
 
 def update_calendar():
@@ -71,7 +61,6 @@ def _update_calendar_entry(entry, settings):
     logger = OutlookPlugin.logger
 
     logger.info('Processing %s', entry)
-    url = posixpath.join(settings['service_url'], operation_map[entry.action])
     user = entry.user
     if user is None:
         logger.debug('Ignoring %s for deleted user %s', entry.action.name, entry.user_id)
@@ -81,7 +70,10 @@ def _update_calendar_entry(entry, settings):
         return True
 
     unique_id = '{}{}_{}'.format(settings['id_prefix'], user.id, entry.event_id)
+    path = f'/api/v1/users/{user.email}/events/{unique_id}'
+    url = settings['service_url'].rstrip('/') + path
     if entry.action in {OutlookAction.add, OutlookAction.update}:
+        method = 'PUT'
         event = entry.event
         if event.is_deleted:
             logger.debug('Ignoring %s for deleted event %s', entry.action.name, entry.event_id)
@@ -89,16 +81,17 @@ def _update_calendar_entry(entry, settings):
         location = strip_control_chars(event.room_name)
         description = strip_control_chars(event.description)
         event_url = event.external_url
-        data = {'userEmail': user.email,
-                'uniqueID': unique_id,
-                'subject': strip_control_chars(event.title),
-                'location': location,
-                'description': f'<a href="{event_url}">{event_url}</a><br><br>{description}',
-                'status': OutlookPlugin.user_settings.get(user, 'status', settings['status']),
-                'startDate': format_datetime(event.start_dt, format='MM-dd-yyyy HH:mm', timezone=pytz.utc),
-                'endDate': format_datetime(event.end_dt, format='MM-dd-yyyy HH:mm', timezone=pytz.utc),
-                'isThereReminder': settings['reminder'],
-                'reminderTimeInMinutes': settings['reminder_minutes']}
+        data = {
+            'status': OutlookPlugin.user_settings.get(user, 'status', settings['status']),
+            'start': int(event.start_dt.timestamp()),
+            'end': int(event.end_dt.timestamp()),
+            'subject': strip_control_chars(event.title),
+            # XXX: the API expects 'body', we convert it below
+            'description': f'<a href="{event_url}">{event_url}</a><br><br>{description}',
+            'location': location,
+            'reminder_on': settings['reminder'],
+            'reminder_minutes': settings['reminder_minutes']
+        }
 
         # check whether the plugins want to add/override any data
         for update in values_from_signal(
@@ -110,8 +103,8 @@ def _update_calendar_entry(entry, settings):
         # the API expects the field to be named 'body', contrarily to our usage
         data['body'] = data.pop('description')
     elif entry.action == OutlookAction.remove:
-        data = {'userEmail': user.email,
-                'uniqueID': unique_id}
+        method = 'DELETE'
+        data = None
     else:
         raise ValueError(f'Unexpected action: {entry.action}')
 
@@ -119,10 +112,10 @@ def _update_calendar_entry(entry, settings):
         logger.debug('Calendar update request:\nURL: %s\nData: %s', url, pformat(data))
         return True
 
+    token = settings['token']
     try:
-        res = requests.post(url, data, auth=(settings['username'], settings['password']),
-                            timeout=settings['timeout'],
-                            headers={'Content-Type': 'application/x-www-form-urlencoded'})
+        res = requests.request(method, url, json=data, headers={'Authorization': f'Bearer {token}'},
+                               timeout=settings['timeout'])
     except Timeout:
         logger.warning('Request timed out')
         return False
@@ -130,7 +123,9 @@ def _update_calendar_entry(entry, settings):
         logger.exception('Request failed:\nURL: %s\nData: %s', url, pformat(data))
         return False
     else:
-        if res.status_code == 200:
+        logger.info('Request to %s %s finished with status %r and body %r', method, path, res.status_code, res.text)
+        # 404 is "already deleted" or "user has no mailbox" - both cases we consider a success
+        if res.ok or res.status_code == 404:
             return True
         logger.error('Request unsuccessful:\nURL: %s\nData: %s\nCode: %s\nResponse: %s',
                      url, pformat(data), res.status_code, res.text)

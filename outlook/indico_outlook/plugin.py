@@ -42,10 +42,8 @@ class SettingsForm(IndicoForm):
                          description=_("If enabled, requests are not sent to the API but logged instead"))
     service_url = URLField(_('Service URL'), [URL(require_tld=False)],
                            description=_("The URL of the CERN calendar service"))
-    username = StringField(_('Username'), [DataRequired()],
-                           description=_("The username used to authenticate with the CERN calendar service"))
-    password = IndicoPasswordField(_('Password'), [DataRequired()], toggle=True,
-                                   description=_("The password used to authenticate with the CERN calendar service"))
+    token = IndicoPasswordField(_('Token'), [DataRequired()], toggle=True,
+                                description=_("The token used to authenticate with the CERN calendar service"))
     status = SelectField(_('Status'), [DataRequired()], choices=_status_choices,
                          description=_("The default status of the event in the calendar"))
     reminder = BooleanField(_('Reminder'), description=_("Enable calendar reminder"))
@@ -94,8 +92,7 @@ class OutlookPlugin(IndicoPlugin):
     default_settings = {
         'debug': False,
         'service_url': None,
-        'username': None,
-        'password': None,
+        'token': None,
         'status': 'free',
         'reminder': True,
         'reminder_minutes': 15,
