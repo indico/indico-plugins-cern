@@ -16,7 +16,7 @@ from wtforms_sqlalchemy.fields import QuerySelectField
 from indico.core.config import config
 from indico.core.plugins import IndicoPlugin, PluginCategory
 from indico.core.settings.converters import ModelConverter
-from indico.modules.events.views import WPSimpleEventDisplay
+from indico.modules.events.views import WPConferenceDisplay, WPSimpleEventDisplay
 from indico.modules.rb.models.room_features import RoomFeature
 from indico.modules.vc.views import WPVCEventPage, WPVCManageEvent
 from indico.web.forms.base import IndicoForm
@@ -87,6 +87,7 @@ class RavemPlugin(IndicoPlugin):
         self.inject_bundle('main.js', WPSimpleEventDisplay)
         self.inject_bundle('main.js', WPVCEventPage)
         self.inject_bundle('main.js', WPVCManageEvent)
+        self.inject_bundle('main.js', WPConferenceDisplay)
 
     def get_blueprints(self):
         from indico_ravem.blueprint import blueprint
