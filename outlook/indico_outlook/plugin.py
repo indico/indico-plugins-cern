@@ -21,7 +21,7 @@ from indico.modules.events import Event
 from indico.modules.events.registration.models.registrations import RegistrationState
 from indico.modules.users import ExtraUserPreferences
 from indico.web.forms.base import IndicoForm
-from indico.web.forms.fields import IndicoPasswordField, TimeDeltaField
+from indico.web.forms.fields import IndicoPasswordField, MultipleItemsField, TimeDeltaField
 from indico.web.forms.validators import HiddenUnless
 from indico.web.forms.widgets import SwitchWidget
 
@@ -65,20 +65,35 @@ class OutlookUserPreferences(ExtraUserPreferences):
         'outlook_status': SelectField(_('Outlook entry status'), [HiddenUnless('extra_outlook_active',
                                                                                preserve_data=True)],
                                       choices=_status_choices,
-                                      description=_('The status for Outlook Calendar entries'))
+                                      description=_('The status for Outlook Calendar entries')),
+        'outlook_status_overrides': MultipleItemsField(
+            _('Outlook entry status overrides'),
+            fields=[
+                {'id': 'type', 'caption': _('Type'), 'required': True, 'type': 'select'},
+                {'id': 'id', 'caption': _('Category ID'), 'required': True, 'type': 'number', 'step': 1, 'coerce': int},
+                {'id': 'status', 'caption': _('Status'), 'required': True, 'type': 'select'},
+            ],
+            choices={
+                'type': {'category': _('Category'), 'category_tree': _('Category & Subcategories')},
+                'status': dict(_status_choices),
+            },
+            description=_('You can override the calendar entry status for specific categories.')
+        )
     }
 
     def load(self):
         default_status = OutlookPlugin.settings.get('status')
         return {
             'outlook_active': OutlookPlugin.user_settings.get(self.user, 'enabled'),
-            'outlook_status': OutlookPlugin.user_settings.get(self.user, 'status', default_status)
+            'outlook_status': OutlookPlugin.user_settings.get(self.user, 'status', default_status),
+            'outlook_status_overrides': OutlookPlugin.user_settings.get(self.user, 'status_overrides', [])
         }
 
     def save(self, data):
         OutlookPlugin.user_settings.set_multi(self.user, {
             'enabled': data['outlook_active'],
-            'status': data['outlook_status']
+            'status': data['outlook_status'],
+            'status_overrides': data['outlook_status_overrides']
         })
 
 
@@ -105,7 +120,8 @@ class OutlookPlugin(IndicoPlugin):
     }
     default_user_settings = {
         'enabled': True,  # XXX: if the default value ever changes, adapt `get_participating_users`!
-        'status': None
+        'status': None,
+        'status_overrides': [],
     }
 
     def init(self):

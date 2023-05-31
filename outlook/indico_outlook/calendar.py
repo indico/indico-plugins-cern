@@ -51,6 +51,20 @@ def update_calendar():
             db.session.commit()
 
 
+def _get_status(user, event, settings):
+    from indico_outlook.plugin import OutlookPlugin
+    status = OutlookPlugin.user_settings.get(user, 'status', settings['status'])
+    for override in OutlookPlugin.user_settings.get(user, 'status_overrides'):
+        if override['type'] == 'category' and override['id'] == event.category_id:
+            # we don't keep going for a specific category Id match
+            return override['status']
+        elif override['type'] == 'category_tree' and override['id'] in event.category_chain:
+            # for category tree matches we keep going in case there's a specific match later.
+            # we don't try to see which one is more specific becauase that'd be overkill!
+            status = override['status']
+    return status
+
+
 def _update_calendar_entry(entry, settings):
     """Executes a single calendar update
 
@@ -82,7 +96,7 @@ def _update_calendar_entry(entry, settings):
         description = strip_control_chars(event.description)
         event_url = event.external_url
         data = {
-            'status': OutlookPlugin.user_settings.get(user, 'status', settings['status']),
+            'status': _get_status(user, event, settings),
             'start': int(event.start_dt.timestamp()),
             'end': int(event.end_dt.timestamp()),
             'subject': strip_control_chars(event.title),
