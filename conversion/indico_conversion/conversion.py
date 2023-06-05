@@ -314,7 +314,7 @@ class RHConversionCheck(RH):
         return jsonify(finished=finished, pending=pending, containers=containers)
 
 
-@celery.periodic_task(bind=True, max_retries=None, run_every=crontab(minute='0', hour='2'))
+@celery.periodic_task(bind=True, max_retries=3, run_every=crontab(minute='0', hour='2'))
 def check_cloudconvert_credits(task):
     from indico_conversion.plugin import ConversionPlugin
 
@@ -330,7 +330,7 @@ def check_cloudconvert_credits(task):
         credits = client.get_remaining_credits()
     except requests.RequestException as err:
         ConversionPlugin.logger.info('Could not fetch the remaining CloudConvert credits: %s', err)
-        task.retry(countdown=60)
+        task.retry(countdown=1800)
 
     if credits < notify_threshold:
         ConversionPlugin.logger.warning('CloudConvert credits below configured threshold; current value: %s', credits)
