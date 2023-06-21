@@ -6,7 +6,7 @@ $header-text-color: $light-gray;
 
 @import 'themes/indico';
 
-@include header-logo('themes_cern:rucio_logo.png', 15px, 200px, 12%);
+@include header-logo('themes_cern:rucio_logo.png', 15px, 200px, 10%);
 
 .event-header .details {
   [class^='icon-']::before,
