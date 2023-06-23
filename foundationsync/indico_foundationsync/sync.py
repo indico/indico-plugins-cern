@@ -10,6 +10,7 @@ import re
 from collections import Counter, defaultdict
 from contextlib import contextmanager
 
+import oracledb
 from html2text import HTML2Text
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -20,26 +21,11 @@ from indico.modules.rb.models.rooms import Room
 from indico.modules.users.util import get_user_by_email
 
 
-try:
-    import cx_Oracle
-except ImportError:
-    cx_Oracle = None  # noqa: N816
-
-
 class SkipRoom(Exception):
     pass
 
 
-def OutputTypeHandler(cursor, name, defaultType, size, precision, scale):  # noqa: N802,N803
-    """
-    Unicode output handler for oracle connections
-    Source: http://www.oracle.com/technetwork/articles/dsl/tuininga-cx-oracle-084866.html
-    """
-    if defaultType in (cx_Oracle.STRING, cx_Oracle.FIXED_CHAR):
-        return cursor.var(str, size, cursor.arraysize)
-
-
-def _get_room_role_map(connection, logger):
+def _get_room_role_map(connection):
     roles = defaultdict(set)
     cursor = connection.cursor()
     cursor.execute('SELECT BUILDING, FLOOR, ROOM_NUMBER, EMAIL FROM aispub.app_indico_space_managers')
@@ -56,9 +42,6 @@ class FoundationSync:
         self.db_name = db_name
         self._logger = logger
 
-        if cx_Oracle is None:
-            raise RuntimeError('cx_Oracle is not installed')
-
         try:
             self._location = Location.query.filter_by(name='CERN', is_deleted=False).one()
         except NoResultFound:
@@ -68,12 +51,11 @@ class FoundationSync:
     @contextmanager
     def connect_to_foundation(self):
         try:
-            connection = cx_Oracle.connect(self.db_name)
-            connection.outputtypehandler = OutputTypeHandler
+            connection = oracledb.connect(self.db_name, config_dir='/etc')
             self._logger.debug("Connected to Foundation DB")
             yield connection
             connection.close()
-        except cx_Oracle.DatabaseError:
+        except oracledb.DatabaseError:
             self._logger.exception("Problem connecting to DB")
             raise
 
@@ -169,7 +151,7 @@ class FoundationSync:
 
     def fetch_rooms(self, connection, room_name=None):
         self._logger.debug("Fetching AIS Role information...")
-        room_role_map = _get_room_role_map(connection, self._logger)
+        room_role_map = _get_room_role_map(connection)
 
         self._logger.debug("Fetching room information...")
 
