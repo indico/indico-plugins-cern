@@ -22,7 +22,7 @@ from indico.modules.users.util import get_user_by_email
 from indico.util.console import cformat
 
 
-GIS_URL = 'https://maps.cern.ch/arcgis/rest/services/Batiments/GeocodeServer/findAddressCandidates?ZIP={}&f=json'
+GIS_URL = 'https://maps.cern.ch/arcgis/rest/services/Batiments/GeocodeServer/findAddressCandidates?postal={}&f=json'
 ROOM_FIELDS = ('id', 'division', 'building', 'floor', 'number', 'verbose_name', 'owner', 'acl_entries')
 group_cache = {}
 latlon_cache = {}
