@@ -155,7 +155,7 @@ def test_registration_modified_active(dummy_regform, api_delete, api_post):
         'last_name': 'Osiris',
         'email': '1337@example.test'
     })
-    api_delete.call_count == 0
+    assert api_delete.call_count == 0
     assert api_post.call_count == 2
     api_post.assert_called_with(dummy_regform.event, [registration], update=True)
 
