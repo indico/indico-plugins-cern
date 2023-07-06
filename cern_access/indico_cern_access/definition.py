@@ -71,7 +71,7 @@ class CERNAccessRequestDefinition(RequestDefinitionBase):
             if old_start_dt != start_dt or old_end_dt != end_dt:
                 times_changed = True
         include_accompanying_persons_disabled = False
-        if req.data['include_accompanying_persons'] and not data['include_accompanying_persons']:
+        if req.data and req.data['include_accompanying_persons'] and not data['include_accompanying_persons']:
             include_accompanying_persons_disabled = True
         super().send(req, data)
         update_access_request(req)

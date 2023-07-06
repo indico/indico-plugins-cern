@@ -128,7 +128,6 @@ def generate_access_id(person_id):
 
 def build_access_request_data(id, first_name, last_name, event, license_plate=None, reservation_code=None):
     """Return a dictionary with data required by ADaMS API."""
-
     start_dt, end_dt = get_access_dates(get_last_request(event))
     tz = timezone('Europe/Zurich')
     data = {'$id': generate_access_id(id),
@@ -140,13 +139,11 @@ def build_access_request_data(id, first_name, last_name, event, license_plate=No
             '$ed': end_dt.astimezone(tz).strftime('%Y-%m-%dT%H:%M')}
     if license_plate:
         data['$lp'] = license_plate
-
     return data
 
 
 def build_access_request_data_from_reg(registration, event, generate_code, for_qr_code=False):
     """Build the access request data dictionary from a registration."""
-
     if for_qr_code:
         return {'_adams_nonce': registration.cern_access_request.adams_nonce}
 

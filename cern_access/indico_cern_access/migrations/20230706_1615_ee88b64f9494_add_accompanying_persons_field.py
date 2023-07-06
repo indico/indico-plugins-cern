@@ -1,8 +1,8 @@
 """Add accompanying persons field
 
 Revision ID: ee88b64f9494
-Revises: e90cc0f72adc
-Create Date: 2022-05-11 15:03:50.255420
+Revises: 40e98cd40ab0
+Create Date: 2023-07-06 16:15:50.255420
 """
 
 import sqlalchemy as sa
@@ -12,7 +12,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = 'ee88b64f9494'
-down_revision = 'e90cc0f72adc'
+down_revision = '40e98cd40ab0'
 branch_labels = None
 depends_on = None
 
