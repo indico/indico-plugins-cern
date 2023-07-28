@@ -1,4 +1,4 @@
-@import 'base/palette';
+@use 'base/palette' as *;
 
 $header-bg-color: #f14f25;
 $header-icon-color: $light-black;

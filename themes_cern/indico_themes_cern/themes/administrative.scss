@@ -1,5 +1,5 @@
-@import 'base/palette';
-@import 'base/typography';
+@use 'base/palette' as *;
+@use 'base/typography' as *;
 
 body {
   font-family: verdana, arial, sans-serif;
@@ -162,6 +162,6 @@ td.subItemOrder {
 }
 
 .materialDisplayName {
-  @extend %font-family-body;
+  @include font-family-body();
   font-size: 0.7em;
 }

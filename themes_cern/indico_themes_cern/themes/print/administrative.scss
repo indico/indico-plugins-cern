@@ -1,4 +1,4 @@
-@import 'base/layout';
+@use 'base/layout' as *;
 
 .manage-button,
 .event-manage-button,

@@ -5,8 +5,8 @@
 // them and/or modify them under the terms of the MIT License; see
 // the LICENSE file for more details.
 
-@import 'base/palette';
-@import 'base/animation';
+@use 'base/palette' as *;
+@use 'base/animation' as *;
 
 .folder.folder-root > .attachment.pdf-pending {
   border-color: $light-black !important;

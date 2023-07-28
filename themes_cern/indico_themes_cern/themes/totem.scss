@@ -1,4 +1,4 @@
-@import 'base/palette';
+@use 'base/palette' as *;
 @import 'themes/indico';
 
 @include header-logo('themes_cern:totem_logo.png', 15px 45px, 180px);

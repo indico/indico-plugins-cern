@@ -5,7 +5,7 @@
 // them and/or modify them under the terms of the MIT License; see
 // the LICENSE file for more details.
 
-@import 'base/palette';
+@use 'base/palette' as *;
 
 .building {
   margin-bottom: 3em;

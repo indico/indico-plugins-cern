@@ -5,13 +5,14 @@
 // them and/or modify them under the terms of the MIT License; see
 // the LICENSE file for more details.
 
-@import '~rb:styles/palette';
+@import 'rb:~styles/palette';
 
 $white: #fff;
 $highlight-color: #cf816d;
 $dark-highlight-color: #b1604b;
 $primary-color: #2185d0;
 
-%rb-splash-background {
+@mixin rb-splash-background {
   background-image: url('burotel:images/splash.jpg');
+  background-size: cover;
 }
