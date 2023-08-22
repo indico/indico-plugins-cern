@@ -14,9 +14,10 @@ import {useSelector} from 'react-redux';
 import {createSelector} from 'reselect';
 
 import {FinalCheckbox, FieldCondition} from 'indico/react/forms';
+import {Param} from 'indico/react/i18n';
 import {toMoment} from 'indico/utils/date';
 
-import {Translate, Param} from './i18n';
+import {Translate} from './i18n';
 import RegistrationIdentityDataForm from './RegistrationIdentityDataForm';
 
 const renderAccessDates = (start, end) => {

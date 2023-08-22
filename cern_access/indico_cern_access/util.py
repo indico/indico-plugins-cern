@@ -180,6 +180,7 @@ def handle_event_time_update(event):
 
 def handle_include_accompanying_persons_disabled(event):
     registrations = get_requested_registrations(event=event, only_active=True)
+    #TODO
     print('Hayo')
     for reg in registrations:
         accompanying = reg.accompanying_persons
@@ -233,8 +234,7 @@ def add_access_requests(registrations, data, state, nonces):
     for registration in registrations:
         create_access_request(registration, state, data[registration.id]['$rc'],
                               nonces[generate_access_id(registration.id)])
-        # save the accompanying persons' reservation codes
-        # TODO save the acc person's nonce
+        # save the accompanying persons' reservation codes and nonces
         _, accompanying_persons = get_accompanying_persons(registration, get_last_request(registration.event))
         request_persons = deepcopy(registration.cern_access_request.accompanying_persons)
         for person in accompanying_persons:

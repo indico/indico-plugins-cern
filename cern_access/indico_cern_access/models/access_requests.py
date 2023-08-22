@@ -10,7 +10,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 
 from indico.core.db.sqlalchemy import PyIntEnum, db
 from indico.util.enum import RichIntEnum
-from indico.util.string import format_repr
+from indico.util.string import format_full_name, format_repr
 
 from indico_cern_access import _
 from indico_cern_access.models.archived_requests import ArchivedCERNAccessRequest
@@ -98,6 +98,14 @@ class CERNAccessRequest(db.Model):
     @has_identity_info.expression
     def has_identity_info(cls):
         return cls.birth_place.isnot(None) & cls.nationality.isnot(None) & cls.birth_date.isnot(None)
+
+    @property
+    def accompanying_persons_codes(self):
+        persons = self.registration.accompanying_persons
+        # TODO use the format_display_full_name util to generate the full name
+        persons_names = {p['id']: format_full_name(p['firstName'], p['lastName']) for p in persons}
+        return [{'name': persons_names[id], 'code': data['reservation_code']}
+                for id, data in self.accompanying_persons.items()]
 
     def clear_identity_data(self):
         self.birth_date = None

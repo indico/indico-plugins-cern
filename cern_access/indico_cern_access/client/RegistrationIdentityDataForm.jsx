@@ -8,7 +8,7 @@
 import _ from 'lodash';
 import moment from 'moment';
 import PropTypes from 'prop-types';
-import React, {useMemo} from 'react';
+import React from 'react';
 import {Dropdown, Form, Input} from 'semantic-ui-react';
 
 import {FinalSingleDatePicker, SingleDatePicker} from 'indico/react/components';

@@ -16,9 +16,9 @@ import {Form as FinalForm} from 'react-final-form';
 import {Form} from 'semantic-ui-react';
 
 import {FinalSubmitButton, handleSubmitError} from 'indico/react/forms';
-import {Translate} from 'indico/react/i18n';
 import {indicoAxios} from 'indico/utils/axios';
 
+import {Translate} from './i18n';
 import RegistrationIdentityDataForm from './RegistrationIdentityDataForm';
 
 function EnterPersonalDataForm({registration, isManagement, ...rest}) {
