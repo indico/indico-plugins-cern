@@ -24,7 +24,15 @@ def upgrade():
         schema='plugin_cern_access'
     )
     op.alter_column('access_requests', 'accompanying_persons', server_default=None, schema='plugin_cern_access')
+    op.add_column(
+        'archived_access_requests',
+        sa.Column('accompanying_persons', postgresql.JSONB(astext_type=sa.Text()), nullable=False, server_default='{}'),
+        schema='plugin_cern_access'
+    )
+    op.alter_column('archived_access_requests', 'accompanying_persons', server_default=None,
+                    schema='plugin_cern_access')
 
 
 def downgrade():
     op.drop_column('access_requests', 'accompanying_persons', schema='plugin_cern_access')
+    op.drop_column('archived_access_requests', 'accompanying_persons', schema='plugin_cern_access')
