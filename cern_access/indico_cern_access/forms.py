@@ -48,30 +48,30 @@ class CERNAccessForm(RequestFormBase):
                                                  [DataRequired(_('At least one registration form has to be selected'))],
                                                  widget=JinjaWidget('regform_list_widget.html', 'cern_access'))
     during_registration = BooleanField(_('Show during user registration'), widget=SwitchWidget(),
-                                       description=_("When enabled, users can request site access while registering "
-                                                     "and provide their additional personal data in the registration "
-                                                     "form. In any case, site access is only granted after a manager "
-                                                     "explicitly enables it for the registrants."))
+                                       description=_('When enabled, users can request site access while registering '
+                                                     'and provide their additional personal data in the registration '
+                                                     'form. In any case, site access is only granted after a manager '
+                                                     'explicitly enables it for the registrants.'))
     during_registration_preselected = BooleanField(_('Preselect during user registration'),
                                                    [HiddenUnless('during_registration')], widget=SwitchWidget(),
-                                                   description=_("Preselect the option to request site access during "
-                                                                 "registration. Recommended if most registrants will "
-                                                                 "need it."))
+                                                   description=_('Preselect the option to request site access during '
+                                                                 'registration. Recommended if most registrants will '
+                                                                 'need it.'))
     during_registration_required = BooleanField(_('Require during user registration'),
                                                 [HiddenUnless('during_registration_preselected')],
                                                 widget=SwitchWidget(),
-                                                description=_("Require all users to provide data for site access. "
-                                                              "Registration without entering the data will not be "
-                                                              "possible."))
-    include_accompanying_persons = BooleanField(_("Include registrant's accompanying persons"), widget=SwitchWidget(),
-                                                description=_("Request access for each of the participant's "
-                                                              "accompanying persons."))
+                                                description=_('Require all users to provide data for site access. '
+                                                              'Registration without entering the data will not be '
+                                                              'possible.'))
+    include_accompanying_persons = BooleanField(_("Include registrants' accompanying persons"), widget=SwitchWidget(),
+                                                description=_("Request access for each of the participants' "
+                                                              'accompanying persons.'))
     start_dt_override = IndicoDateTimeField(_('Start date override'), [Optional()],
-                                            description=_("If set, CERN access will be granted starting at the "
+                                            description=_('If set, CERN access will be granted starting at the '
                                                           "specified date instead of the event's start date"))
     end_dt_override = IndicoDateTimeField(_('End date override'), [Optional(), LinkedDateTime('start_dt_override',
                                                                                               not_equal=True)],
-                                          description=_("If set, CERN access will be granted until the specified date "
+                                          description=_('If set, CERN access will be granted until the specified date '
                                                         "instead of the event's end date"))
 
     def __init__(self, *args, **kwargs):

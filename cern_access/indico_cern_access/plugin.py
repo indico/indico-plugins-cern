@@ -402,7 +402,9 @@ class CERNAccessPlugin(IndicoPlugin):
             return
         event = registration.event
         if person['is_accompanying']:
-            request_person = registration.cern_access_request.accompanying_persons[person['id']]
+            request_person = registration.cern_access_request.accompanying_persons.get(person['id'])
+            if not request_person:
+                return
             ticket_data['_adams_nonce'] = request_person['adams_nonce']
         else:
             ticket_data.update(build_access_request_data_from_reg(registration, event, generate_code=False,

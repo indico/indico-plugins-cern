@@ -178,19 +178,6 @@ def handle_event_time_update(event):
             update_access_requests(registrations, state)
 
 
-def handle_include_accompanying_persons_disabled(event):
-    registrations = get_requested_registrations(event=event, only_active=True)
-    #TODO
-    print('Hayo')
-    for reg in registrations:
-        accompanying = reg.accompanying_persons
-        print(reg)
-        print(reg.cern_access_request.request_state)
-        print(reg.cern_access_request.has_identity_info)
-        print(not not reg.cern_access_request)
-        print(accompanying)
-
-
 def update_access_request(req):
     """Add, update and delete CERN access requests from registration forms."""
 
