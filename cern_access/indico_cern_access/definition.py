@@ -16,9 +16,9 @@ from indico.web.forms.base import FormDefaults
 
 from indico_cern_access import _
 from indico_cern_access.forms import CERNAccessForm
-from indico_cern_access.util import (check_access, get_access_dates, handle_event_time_update, is_authorized_user,
-                                     is_category_blacklisted, is_event_too_early, update_access_request,
-                                     withdraw_event_access_request)
+from indico_cern_access.util import (check_access, get_access_dates, get_requested_registrations,
+                                     handle_event_time_update, is_authorized_user, is_category_blacklisted,
+                                     is_event_too_early, update_access_request, withdraw_event_access_request)
 
 
 class CERNAccessRequestDefinition(RequestDefinitionBase):
@@ -40,7 +40,10 @@ class CERNAccessRequestDefinition(RequestDefinitionBase):
             if default_data['end_dt_override']:
                 default_data['end_dt_override'] = dateutil.parser.parse(default_data['end_dt_override'])
         with plugin_context(cls.plugin):
-            return cls.form(prefix='request-', obj=FormDefaults(default_data), event=event, request=existing_request)
+            form = cls.form(prefix='request-', obj=FormDefaults(default_data), event=event, request=existing_request)
+        if existing_request and get_requested_registrations(event=event, only_active=True):
+            form.include_accompanying_persons.render_kw = {'disabled': True}
+        return form
 
     @classmethod
     def render_form(cls, event, **kwargs):
