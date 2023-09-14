@@ -5,6 +5,7 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
+import itertools
 import json
 from datetime import time, timedelta
 
@@ -25,6 +26,7 @@ from indico.modules.events import Event
 from indico.modules.events.registration.controllers.display import RHRegistrationForm
 from indico.modules.events.registration.forms import TicketsForm
 from indico.modules.events.registration.models.forms import RegistrationForm
+from indico.modules.events.registration.models.items import RegistrationFormItem
 from indico.modules.events.registration.placeholders.registrations import (EventTitlePlaceholder, FirstNamePlaceholder,
                                                                            LastNamePlaceholder)
 from indico.modules.events.registration.util import RegistrationSchemaBase
@@ -161,7 +163,16 @@ class CERNAccessPlugin(IndicoPlugin):
         cern_access_data = {k: data.pop(k) for k in list(data) if k.startswith('cern_access_')}
         if req.data['during_registration_required']:
             cern_access_data['cern_access_request_cern_access'] = True
-        g.cern_access_request_data = RequestAccessSchema().load(cern_access_data)
+        if req.data['include_accompanying_persons']:
+            query = (RegistrationFormItem.query
+                     .with_parent(regform)
+                     .filter_by(input_type='accompanying_persons', is_enabled=True, is_deleted=False))
+            fields = [f.html_field_name for f in query.all()]
+            accompanying_persons = list(itertools.chain.from_iterable(data[f] for f in fields if f in data))
+        else:
+            accompanying_persons = []
+        g.cern_access_request_data = (RequestAccessSchema(context={'accompanying_persons': accompanying_persons})
+                                      .load(cern_access_data))
 
     def _generate_accompanying_person_id(self, schema, temporary_id, permanent_id, **kwargs):
         if hasattr(g, 'accompaning_person_tmp_ids'):

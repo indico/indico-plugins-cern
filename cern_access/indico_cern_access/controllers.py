@@ -29,7 +29,7 @@ from indico.util.countries import get_countries
 from indico.util.date_time import now_utc
 from indico.util.placeholders import replace_placeholders
 from indico.util.spreadsheets import send_csv, send_xlsx
-from indico.web.args import use_args
+from indico.web.args import use_args, use_rh_kwargs
 from indico.web.flask.templating import get_template_module
 from indico.web.rh import RH
 from indico.web.util import jsonify_data, jsonify_template
@@ -143,7 +143,7 @@ class RHRegistrationAccessIdentityData(RHRegistrationFormRegistrationBase):
                                                       access_request=access_request, start_dt=self.start_dt,
                                                       end_dt=self.end_dt, expired=self.expired)
 
-    @use_args(RequestAccessSchema)
+    @use_rh_kwargs(RequestAccessSchema)
     def _process_PUT(self, data):
         access_request = self.registration.cern_access_request
         if access_request is None or access_request.has_identity_info or self.expired:
@@ -162,7 +162,7 @@ class RHRegistrationEnterIdentityData(RHManageRegistrationBase):
                                 registration=self.registration, countries=get_countries(), accompanying=accompanying,
                                 accompanying_persons=accompanying_persons)
 
-    @use_args(RequestAccessSchema)
+    @use_rh_kwargs(RequestAccessSchema)
     def _process_PUT(self, data):
         _save_registration_access_data(self.registration, data)
         return '', 204

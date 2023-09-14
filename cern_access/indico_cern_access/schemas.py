@@ -12,18 +12,21 @@ from marshmallow import ValidationError, fields, post_load, validate, validates_
 from indico.core.marshmallow import mm
 from indico.util.marshmallow import validate_with_message
 
-from indico_cern_access.util import sanitize_license_plate
+from indico_cern_access.util import get_accompanying_persons, get_last_request, sanitize_license_plate
 
 
 class AccompanyingPersonAccessSchema(mm.Schema):
-    birth_date = fields.Date(load_default=None,
+    birth_date = fields.Date(required=True,
                              validate=validate_with_message(lambda x: x <= date.today(),
                                                             'The specified date is in the future'))
-    nationality = fields.String(load_default='')
-    birth_place = fields.String(load_default='')
+    nationality = fields.String(required=True)
+    birth_place = fields.String(required=True)
 
 
 class RequestAccessSchema(mm.Schema):
+    class Meta:
+        rh_context = ('registration', 'accompanying_persons')
+
     request_cern_access = fields.Bool(load_default=False, data_key='cern_access_request_cern_access')
     birth_date = fields.Date(load_default=None, data_key='cern_access_birth_date',
                              validate=validate_with_message(lambda x: x <= date.today(),
@@ -47,6 +50,12 @@ class RequestAccessSchema(mm.Schema):
         for field in required_fields:
             if not data[field]:
                 errors[self.fields[field].data_key] = ['This field is required.']
+        if reg := self.context.get('registration'):
+            _, accompanying_persons = get_accompanying_persons(reg, get_last_request(reg.event))
+        else:
+            accompanying_persons = self.context['accompanying_persons']
+        if any(p['id'] not in data['accompanying_persons'] for p in accompanying_persons):
+            errors[self.fields['accompanying_persons'].data_key] = ['Missing data for accompanying person']
         if data['by_car'] and data['license_plate']:
             try:
                 validate.And(

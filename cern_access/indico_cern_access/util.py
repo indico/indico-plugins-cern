@@ -349,7 +349,7 @@ def grant_access(registrations, regform, email_subject=None, email_body=None, em
     new_registrations = [reg for reg in registrations
                          if not (reg.cern_access_request and
                                  not reg.cern_access_request.is_withdrawn and
-                                 reg.cern_access_request.request_state == CERNAccessRequestState.active)]
+                                 reg.cern_access_request.is_active)]
     state, data, nonces = send_adams_post_request(event, new_registrations)
     add_access_requests(new_registrations, data, state, nonces)
     registrations_without_data = []
@@ -383,7 +383,7 @@ def revoke_access(registrations):
     requested_registrations = [reg for reg in registrations if
                                reg.cern_access_request and not
                                reg.cern_access_request.is_withdrawn and
-                               reg.cern_access_request.request_state == CERNAccessRequestState.active]
+                               reg.cern_access_request.is_active]
     withdraw_access_requests(requested_registrations)
     notify_access_withdrawn(requested_registrations)
 
