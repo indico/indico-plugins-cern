@@ -5,17 +5,15 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from datetime import date
-
 import pytest
-from conftest import PERSONAL_DATA
+from conftest import generate_personal_data
 
 from indico.core import signals
-from indico.modules.events.registration.util import create_registration, modify_registration
+from indico.modules.events.registration.util import modify_registration
 
-from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState
+from indico_cern_access.models.access_requests import CERNAccessRequestState
 from indico_cern_access.models.archived_requests import ArchivedCERNAccessRequest
-from indico_cern_access.util import generate_access_id, grant_access
+from indico_cern_access.util import get_accompanying_persons, get_last_request, generate_access_id, grant_access
 
 
 @pytest.fixture
@@ -30,28 +28,20 @@ def api_delete(mocker):
 def api_post(mocker):
     """Mock up POST request to ADAMS."""
     def _mock_post(event, registrations, **kwargs):
-        nonces = {generate_access_id(reg.id): f'nonce#{reg.id}' for reg in registrations}
-        return CERNAccessRequestState.active, {reg.id: {'$rc': 'test'} for reg in registrations}, nonces
+        res = {}
+        nonces = {}
+        for reg in registrations:
+            res[reg.id] = {'$rc': 'test'}
+            nonces[generate_access_id(reg.id)] = f'nonce#{reg.id}'
+            _, accompanying_persons = get_accompanying_persons(reg, get_last_request(reg.event))
+            for person in accompanying_persons:
+                res[person['id']] = {'$rc': 'test'}
+                nonces[generate_access_id(person['id'])] = f"nonce#{person['id']}"
+        return CERNAccessRequestState.active, res, nonces
 
     mock = mocker.patch('indico_cern_access.plugin.send_adams_post_request', side_effect=_mock_post, autospec=True)
     mocker.patch('indico_cern_access.util.send_adams_post_request', new=mock)
     return mock
-
-
-@pytest.fixture
-def dummy_access_request(dummy_regform):
-    """Create a registration and corresponding request."""
-    reg = create_registration(dummy_regform, {
-        'email': 'test@example.com',
-        'first_name': 'Test',
-        'last_name': 'Dude'
-    })
-    reg.cern_access_request = CERNAccessRequest(birth_date=date(2000, 1, 1),
-                                                nationality='XX',
-                                                birth_place='bar',
-                                                license_plate=None,
-                                                request_state=CERNAccessRequestState.not_requested,
-                                                reservation_code='')
 
 
 def setup_fixtures(func):
@@ -61,7 +51,13 @@ def setup_fixtures(func):
                                    [{
                                        'during_registration': True,
                                        'during_registration_required': True,
-                                       'personal_data': PERSONAL_DATA
+                                       'personal_data': generate_personal_data(),
+                                       'include_accompanying_persons': False
+                                   }, {
+                                       'during_registration': True,
+                                       'during_registration_required': True,
+                                       'personal_data': generate_personal_data(),
+                                       'include_accompanying_persons': True
                                    }],
                                    indirect=True)(func)
     return func
@@ -140,7 +136,7 @@ def test_event_deleted(dummy_regform, api_delete, api_post):
                          [{
                              'during_registration': False,
                              'during_registration_required': False,
-                             'personal_data': {}
+                             'include_accompanying_persons': True,
                          }],
                          indirect=True)
 def test_registration_modified_active(dummy_regform, api_delete, api_post):
