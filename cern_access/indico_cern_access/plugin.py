@@ -18,6 +18,7 @@ from wtforms_sqlalchemy.fields import QuerySelectField
 
 from indico.core import signals
 from indico.core.db import db
+from indico.core.errors import UserValueError
 from indico.core.plugins import IndicoPlugin
 from indico.core.settings.converters import DatetimeConverter, ModelConverter, TimedeltaConverter
 from indico.modules.designer import TemplateType
@@ -27,6 +28,7 @@ from indico.modules.events.registration.controllers.display import RHRegistratio
 from indico.modules.events.registration.forms import TicketsForm
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.registration.models.items import RegistrationFormItem
+from indico.modules.events.registration.models.registrations import Registration, RegistrationData
 from indico.modules.events.registration.placeholders.registrations import (EventTitlePlaceholder, FirstNamePlaceholder,
                                                                            LastNamePlaceholder)
 from indico.modules.events.registration.util import RegistrationSchemaBase
@@ -127,6 +129,7 @@ class CERNAccessPlugin(IndicoPlugin):
         self.connect(signals.event.timetable.times_changed, self._event_time_changed, sender=Event)
         self.connect(signals.event.registration_personal_data_modified, self._registration_modified)
         self.connect(signals.event.registration_form_deleted, self._registration_form_deleted)
+        self.connect(signals.event.registration_form_field_deleted, self._registration_form_field_deleted)
         self.connect(signals.event.deleted, self._event_deleted)
         self.connect(signals.event.updated, self._event_title_changed)
         self.connect(signals.event.is_ticketing_handled, self._is_ticketing_handled)
@@ -293,6 +296,20 @@ class CERNAccessPlugin(IndicoPlugin):
                 # Notify users who have already got a badge
                 notify_access_withdrawn(active_requests)
             registration_form.cern_access_request.request_state = CERNAccessRequestState.withdrawn
+
+    def _registration_form_field_deleted(self, field, **kwargs):
+        if field.input_type != 'accompanying_persons':
+            return
+        req = get_last_request(field.registration_form.event)
+        if not req or not req.data.get('include_accompanying_persons'):
+            return
+        query = (RegistrationData.query
+                 .join(Registration)
+                 .join(CERNAccessRequest)
+                 .filter(RegistrationData.data != [], RegistrationData.field_data.has(field=field),
+                         ~CERNAccessRequest.is_withdrawn))
+        if query.count():
+            raise UserValueError(_('This field can not be deleted due to an active CERN access request.'))
 
     def _event_deleted(self, event, **kwargs):
         """
