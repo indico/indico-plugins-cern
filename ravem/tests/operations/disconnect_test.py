@@ -19,28 +19,28 @@ from indico_ravem.plugin import RavemPlugin
 from indico_ravem.util import RavemException
 
 
-@pytest.mark.usefixtures("db")
+@pytest.mark.usefixtures('db')
 @pytest.mark.parametrize(
-    *gen_params(connected_fixtures, "room_name", "service_type", "connected", "data")
+    *gen_params(connected_fixtures, 'room_name', 'service_type', 'connected', 'data')
 )
 def test_disconnect_room(mocked_responses, room_name, service_type, connected, data):
-    RavemPlugin.settings.set("api_endpoint", RAVEM_TEST_API_ENDPOINT)
+    RavemPlugin.settings.set('api_endpoint', RAVEM_TEST_API_ENDPOINT)
     service_api = get_api(service_type)
     vc_room_id = service_api.get_room_id(data)
     req_details = mocked_responses.add(
         mocked_responses.GET,
-        RAVEM_TEST_API_ENDPOINT + "rooms/details",
+        RAVEM_TEST_API_ENDPOINT + 'rooms/details',
         status=200,
-        content_type="application/json",
+        content_type='application/json',
         body=json.dumps(
             {
-                "roomName": room_name,
-                "deviceType": service_type,
-                "services": [
+                'roomName': room_name,
+                'deviceType': service_type,
+                'services': [
                     {
-                        "status": connected,
-                        "eventName": vc_room_id,
-                        "name": "videoconference",
+                        'status': connected,
+                        'eventName': vc_room_id,
+                        'name': 'videoconference',
                     }
                 ],
             }
@@ -49,10 +49,10 @@ def test_disconnect_room(mocked_responses, room_name, service_type, connected, d
     )
     req_connect = mocked_responses.add(
         mocked_responses.POST,
-        RAVEM_TEST_API_ENDPOINT + service_type + "/disconnect",
+        RAVEM_TEST_API_ENDPOINT + service_type + '/disconnect',
         status=200,
-        content_type="application/json",
-        body=json.dumps({"result": "OK"}),
+        content_type='application/json',
+        body=json.dumps({'result': 'OK'}),
         match=[matchers.json_params_matcher({'roomName': room_name})]
     )
 
@@ -66,31 +66,31 @@ def test_disconnect_room(mocked_responses, room_name, service_type, connected, d
     assert req_connect.call_count == 1
 
 
-@pytest.mark.usefixtures("db")
+@pytest.mark.usefixtures('db')
 @pytest.mark.parametrize(
-    *gen_params(connected_fixtures, "room_name", "service_type", "connected", "data")
+    *gen_params(connected_fixtures, 'room_name', 'service_type', 'connected', 'data')
 )
 def test_disconnect_room_error(
     caplog, mocked_responses, room_name, service_type, connected, data
 ):
-    RavemPlugin.settings.set("api_endpoint", RAVEM_TEST_API_ENDPOINT)
-    error_message = "Some internal error"
+    RavemPlugin.settings.set('api_endpoint', RAVEM_TEST_API_ENDPOINT)
+    error_message = 'Some internal error'
     service_api = get_api(service_type)
     vc_room_id = service_api.get_room_id(data)
     mocked_responses.add(
         mocked_responses.GET,
-        RAVEM_TEST_API_ENDPOINT + "rooms/details",
+        RAVEM_TEST_API_ENDPOINT + 'rooms/details',
         status=200,
-        content_type="application/json",
+        content_type='application/json',
         body=json.dumps(
             {
-                "roomName": room_name,
-                "deviceType": service_type,
-                "services": [
+                'roomName': room_name,
+                'deviceType': service_type,
+                'services': [
                     {
-                        "status": connected,
-                        "eventName": vc_room_id,
-                        "name": "videoconference",
+                        'status': connected,
+                        'eventName': vc_room_id,
+                        'name': 'videoconference',
                     }
                 ],
             }
@@ -98,10 +98,10 @@ def test_disconnect_room_error(
     )
     mocked_responses.add(
         mocked_responses.POST,
-        RAVEM_TEST_API_ENDPOINT + service_type + "/disconnect",
+        RAVEM_TEST_API_ENDPOINT + service_type + '/disconnect',
         status=200,
-        content_type="application/json",
-        body=json.dumps({"error": error_message}),
+        content_type='application/json',
+        body=json.dumps({'error': error_message}),
     )
 
     vc_room = MagicMock()
@@ -113,36 +113,36 @@ def test_disconnect_room_error(
 
     assert (
         str(excinfo.value)
-        == "Failed to disconnect the room {} from the videoconference room {} with error: {}".format(
+        == 'Failed to disconnect the room {} from the videoconference room {} with error: {}'.format(
             room_name, vc_room_id, error_message
         )
     )
-    log = extract_logs(caplog, one=True, name="indico.plugin.ravem")
+    log = extract_logs(caplog, one=True, name='indico.plugin.ravem')
     assert log.message == str(excinfo.value)
 
 
-@pytest.mark.usefixtures("db")
+@pytest.mark.usefixtures('db')
 @pytest.mark.parametrize(
-    *gen_params(disconnected_fixtures, "room_name", "service_type", "connected", "data")
+    *gen_params(disconnected_fixtures, 'room_name', 'service_type', 'connected', 'data')
 )
 def test_disconnect_room_not_connected(
     mocked_responses, room_name, service_type, connected, data
 ):
-    RavemPlugin.settings.set("api_endpoint", RAVEM_TEST_API_ENDPOINT)
+    RavemPlugin.settings.set('api_endpoint', RAVEM_TEST_API_ENDPOINT)
     mocked_responses.add(
         mocked_responses.GET,
-        RAVEM_TEST_API_ENDPOINT + "rooms/details",
+        RAVEM_TEST_API_ENDPOINT + 'rooms/details',
         status=200,
-        content_type="application/json",
+        content_type='application/json',
         body=json.dumps(
             {
-                "roomName": room_name,
-                "deviceType": service_type,
-                "services": [
+                'roomName': room_name,
+                'deviceType': service_type,
+                'services': [
                     {
-                        "status": connected,
-                        "eventName": None,
-                        "name": "videoconference",
+                        'status': connected,
+                        'eventName': None,
+                        'name': 'videoconference',
                     }
                 ],
             }
@@ -156,33 +156,33 @@ def test_disconnect_room_not_connected(
     with pytest.raises(RavemException) as excinfo:
         disconnect_room(room_name, vc_room)
 
-    assert str(excinfo.value) == f"The room {room_name} is already disconnected."
-    assert excinfo.value.reason == "already-disconnected"
+    assert str(excinfo.value) == f'The room {room_name} is already disconnected.'
+    assert excinfo.value.reason == 'already-disconnected'
 
 
-@pytest.mark.usefixtures("db")
+@pytest.mark.usefixtures('db')
 @pytest.mark.parametrize(
-    *gen_params(connected_fixtures, "room_name", "service_type", "connected", "data")
+    *gen_params(connected_fixtures, 'room_name', 'service_type', 'connected', 'data')
 )
 def test_disconnect_room_connected_other(
     mocked_responses, room_name, service_type, connected, data
 ):
-    RavemPlugin.settings.set("api_endpoint", RAVEM_TEST_API_ENDPOINT)
+    RavemPlugin.settings.set('api_endpoint', RAVEM_TEST_API_ENDPOINT)
     different_vc_room = 123
     mocked_responses.add(
         mocked_responses.GET,
-        RAVEM_TEST_API_ENDPOINT + "rooms/details",
+        RAVEM_TEST_API_ENDPOINT + 'rooms/details',
         status=200,
-        content_type="application/json",
+        content_type='application/json',
         body=json.dumps(
             {
-                "roomName": room_name,
-                "deviceType": service_type,
-                "services": [
+                'roomName': room_name,
+                'deviceType': service_type,
+                'services': [
                     {
-                        "status": connected,
-                        "eventName": different_vc_room,
-                        "name": "videoconference",
+                        'status': connected,
+                        'eventName': different_vc_room,
+                        'name': 'videoconference',
                     }
                 ],
             }
@@ -198,15 +198,15 @@ def test_disconnect_room_connected_other(
         disconnect_room(room_name, vc_room)
 
     assert str(excinfo.value) == \
-        f"The room {room_name} is connected to another videoconference room: {different_vc_room}"
-    assert excinfo.value.reason == "connected-other"
+        f'The room {room_name} is connected to another videoconference room: {different_vc_room}'
+    assert excinfo.value.reason == 'connected-other'
 
     mocked_responses.add(
         mocked_responses.POST,
-        RAVEM_TEST_API_ENDPOINT + service_type + "/disconnect",
+        RAVEM_TEST_API_ENDPOINT + service_type + '/disconnect',
         status=200,
-        content_type="application/json",
-        body=json.dumps({"result": "OK"}),
+        content_type='application/json',
+        body=json.dumps({'result': 'OK'}),
     )
 
     disconnect_room(room_name, vc_room, force=True)

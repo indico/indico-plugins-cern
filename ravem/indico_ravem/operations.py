@@ -36,15 +36,15 @@ def get_room_status(room_name, room_verbose_name=None):
     """
     _room_name = room_verbose_name or room_name
     response = BaseAPI.get_endpoint_status(room_name)
-    if response.get("error"):
+    if response.get('error'):
         RavemPlugin.logger.error(
-            "Failed to get status of room %s with error: %s",
+            'Failed to get status of room %s with error: %s',
             _room_name,
-            response["error"],
+            response['error'],
         )
         raise RavemException(
             _(
-                "Failed to get status of room {room} with error: {response[error]}"
+                'Failed to get status of room {room} with error: {response[error]}'
             ).format(room=_room_name, response=response)
         )
     status = next(s for s in response['services'] if s['name'] == 'videoconference')
@@ -90,29 +90,29 @@ def connect_room(room_name, vc_room, force=False, room_verbose_name=None):
     """
     _room_name = room_verbose_name or room_name
     status = get_room_status(room_name)
-    _ensure_room_service(room_name, vc_room.type, status["service_type"])
+    _ensure_room_service(room_name, vc_room.type, status['service_type'])
     service_api = get_api(vc_room.type)
     vc_room_id = service_api.get_room_id(vc_room.data)
     if status['connected']:
         if status['vc_room_id'] == vc_room_id:
             raise RavemException(
-                _("The room {room} is already connected to the videoconference room {vc_room}")
+                _('The room {room} is already connected to the videoconference room {vc_room}')
                 .format(room=_room_name, vc_room=vc_room_id),
                 'already-connected'
             )
         if not force:
             raise RavemException(
-                _("The room {room} is connected to another videoconference room: {vc_room}")
+                _('The room {room} is connected to another videoconference room: {vc_room}')
                 .format(room=_room_name, vc_room=status['vc_room_id']),
                 'connected-other'
             )
         disconnect_response = service_api.disconnect_endpoint(room_name, vc_room_id)
         if disconnect_response.get('error'):
-            RavemPlugin.logger.error("Failed to disconnect the room %s from the videoconference room %s with error: %s",
+            RavemPlugin.logger.error('Failed to disconnect the room %s from the videoconference room %s with error: %s',
                                      _room_name, status['vc_room_id'], disconnect_response['error'])
             raise RavemException(
-                _("Failed to disconnect the room {room} from the videoconference room {vc_room} with error: "
-                  "{response[error]}").format(room=_room_name, vc_room=status['vc_room_id'],
+                _('Failed to disconnect the room {room} from the videoconference room {vc_room} with error: '
+                  '{response[error]}').format(room=_room_name, vc_room=status['vc_room_id'],
                                               response=disconnect_response)
             )
 
@@ -127,19 +127,19 @@ def connect_room(room_name, vc_room, force=False, room_verbose_name=None):
                 break
             sleep(polling_interval)
         else:
-            RavemPlugin.logger.error("Failed to disconnect the room %s from the videoconference room %s "
-                                     "with an unknown error", _room_name, status['vc_room_id'])
-            raise RavemException(_("Failed to disconnect the room {room} from the videoconference room {vc_room} with "
-                                   "an unknown error").format(room=_room_name, vc_room=status['vc_room_id']))
+            RavemPlugin.logger.error('Failed to disconnect the room %s from the videoconference room %s '
+                                     'with an unknown error', _room_name, status['vc_room_id'])
+            raise RavemException(_('Failed to disconnect the room {room} from the videoconference room {vc_room} with '
+                                   'an unknown error').format(room=_room_name, vc_room=status['vc_room_id']))
 
     response = service_api.connect_endpoint(room_name, vc_room_id)
 
     if response.get('error'):
-        RavemPlugin.logger.error("Failed to connect the room %s to the videoconference room %s with error: %s",
+        RavemPlugin.logger.error('Failed to connect the room %s to the videoconference room %s with error: %s',
                                  _room_name, vc_room_id, response['error'])
         raise RavemException(
-            _("Failed to connect the room {room} to the videoconference room {vc_room} "
-              "with error: {response[error]}").format(room=_room_name, vc_room=vc_room_id, response=response)
+            _('Failed to connect the room {room} to the videoconference room {vc_room} '
+              'with error: {response[error]}').format(room=_room_name, vc_room=vc_room_id, response=response)
         )
     return response.get('success', False)
 
@@ -173,18 +173,18 @@ def disconnect_room(room_name, vc_room, force=False, room_verbose_name=None):
     vc_room_id = service_api.get_room_id(vc_room.data)
     if not status['connected']:
         raise RavemException(
-            _("The room {room} is already disconnected.").format(room=_room_name),
+            _('The room {room} is already disconnected.').format(room=_room_name),
             'already-disconnected'
         )
     if status['vc_room_id'] != vc_room_id:
         if not force:
             raise RavemException(
-                _("The room {room} is connected to another videoconference room: {vc_room}")
+                _('The room {room} is connected to another videoconference room: {vc_room}')
                 .format(room=_room_name, vc_room=status['vc_room_id']),
                 'connected-other'
             )
         else:
-            RavemPlugin.logger.info("Force disconnect of room %s from videoconference %s",
+            RavemPlugin.logger.info('Force disconnect of room %s from videoconference %s',
                                     _room_name, status['vc_room_id'])
 
     response = service_api.disconnect_endpoint(room_name, vc_room_id)
@@ -196,11 +196,11 @@ def disconnect_room(room_name, vc_room, force=False, room_verbose_name=None):
                 'already-disconnected'
             )
 
-        RavemPlugin.logger.error("Failed to disconnect the room %s from the videoconference room %s with error: %s",
+        RavemPlugin.logger.error('Failed to disconnect the room %s from the videoconference room %s with error: %s',
                                  _room_name, vc_room_id, response['error'])
         raise RavemException(
-            _("Failed to disconnect the room {room} from the videoconference room {vc_room} with error: "
-              "{response[error]}").format(room=_room_name, vc_room=vc_room_id, response=response)
+            _('Failed to disconnect the room {room} from the videoconference room {vc_room} with error: '
+              '{response[error]}').format(room=_room_name, vc_room=vc_room_id, response=response)
         )
     return response.get('success', False)
 
@@ -216,10 +216,10 @@ def _ensure_room_service(room_name, room_service, device_type):
     """Ensure the virtual room conference service matches with what the physical room supports"""
     if room_service and device_type != room_service:
         RavemPlugin.logger.error(
-            "%s is not supported in the room %s", room_service, room_name
+            '%s is not supported in the room %s', room_service, room_name
         )
         raise RavemException(
-            _("{service} is not supported in the room {room}").format(
+            _('{service} is not supported in the room {room}').format(
                 service=room_service, room=room_name
             )
         )

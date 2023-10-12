@@ -60,7 +60,7 @@ def test_event_vc_room_not_found(mocker, rh_class):
         with pytest.raises(NotFound) as excinfo:
             rh._process_args()
 
-    assert excinfo.value.description == f"Event VC Room not found for id {id_}"
+    assert excinfo.value.description == f'Event VC Room not found for id {id_}'
 
 
 @pytest.mark.usefixtures('db', 'request_context')
@@ -80,7 +80,7 @@ def test_event_vc_room_without_link_object(mocker, rh_class):
         with pytest.raises(IndicoError) as excinfo:
             rh._process_args()
 
-    assert str(excinfo.value) == f"Event VC Room ({id_}) is not linked to anything"
+    assert str(excinfo.value) == f'Event VC Room ({id_}) is not linked to anything'
 
 
 @pytest.mark.usefixtures('db', 'request_context')
@@ -100,7 +100,7 @@ def test_link_object_without_conference(mocker, rh_class):
         with pytest.raises(IndicoError) as excinfo:
             rh._process_args()
 
-    assert str(excinfo.value) == f"Event VC Room ({id_}) does not have an event"
+    assert str(excinfo.value) == f'Event VC Room ({id_}) does not have an event'
 
 
 @pytest.mark.usefixtures('db', 'request_context')
@@ -121,7 +121,7 @@ def test_event_id_not_matching_event_id(mocker, rh_class):
         with pytest.raises(IndicoError) as excinfo:
             rh._process_args()
 
-    assert str(excinfo.value) == f"Event VC Room ({id_}) does not have an event with the id {evcr_event_id}"
+    assert str(excinfo.value) == f'Event VC Room ({id_}) does not have an event with the id {evcr_event_id}'
 
 
 @pytest.mark.usefixtures('db', 'request_context')
@@ -141,7 +141,7 @@ def test_invalid_room(mocker, rh_class):
         with pytest.raises(IndicoError) as excinfo:
             rh._process_args()
 
-    assert str(excinfo.value) == f"Event VC Room ({id_}) is not linked to an event with a room"
+    assert str(excinfo.value) == f'Event VC Room ({id_}) is not linked to an event with a room'
 
 
 @pytest.mark.usefixtures('db', 'request_context')
@@ -161,7 +161,7 @@ def test_invalid_room_name(mocker, rh_class):
         with pytest.raises(IndicoError) as excinfo:
             rh._process_args()
 
-    assert str(excinfo.value) == f"Event VC Room ({id_}) is not linked to an event with a valid room"
+    assert str(excinfo.value) == f'Event VC Room ({id_}) is not linked to an event with a valid room'
 
 
 @pytest.mark.usefixtures('db', 'request_context')
@@ -289,4 +289,4 @@ def test_exception_raised_on_unauthorized_access(mocker, rh_class):
         with pytest.raises(RavemException) as excinfo:
             rh._check_access()
 
-    assert str(excinfo.value) == "Not authorized to access the room with RAVEM"
+    assert str(excinfo.value) == 'Not authorized to access the room with RAVEM'
