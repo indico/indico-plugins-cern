@@ -5,15 +5,13 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-import httpretty as httpretty_
 import pytest
+import responses
 
 from indico_ravem.api import ZoomAPI
 
 
-RAVEM_TEST_HOST = 'http://ravem.test'
-RAVEM_TEST_PATH = '/api/services/'
-RAVEM_TEST_API_ENDPOINT = RAVEM_TEST_HOST + RAVEM_TEST_PATH
+RAVEM_TEST_API_ENDPOINT = 'http://ravem.test/api/services/'
 
 connected_fixtures = [
     {
@@ -47,14 +45,10 @@ def gen_params(fixtures, *params):
     return params, ([fixture[param] for param in params] for fixture in fixtures)
 
 
-@pytest.yield_fixture
-def httpretty():
-    httpretty_.reset()
-    httpretty_.enable()
-    try:
-        yield httpretty_
-    finally:
-        httpretty_.disable()
+@pytest.fixture
+def mocked_responses():
+    with responses.RequestsMock() as rsps:
+        yield rsps
 
 
 @pytest.fixture(autouse=True)
