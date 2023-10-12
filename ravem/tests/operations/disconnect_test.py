@@ -29,7 +29,7 @@ def test_disconnect_room(mocked_responses, room_name, service_type, connected, d
     vc_room_id = service_api.get_room_id(data)
     req_details = mocked_responses.add(
         mocked_responses.GET,
-        RAVEM_TEST_API_ENDPOINT + 'rooms/details',
+        f'{RAVEM_TEST_API_ENDPOINT}/rooms/details',
         status=200,
         content_type='application/json',
         body=json.dumps(
@@ -49,7 +49,7 @@ def test_disconnect_room(mocked_responses, room_name, service_type, connected, d
     )
     req_connect = mocked_responses.add(
         mocked_responses.POST,
-        RAVEM_TEST_API_ENDPOINT + service_type + '/disconnect',
+        f'{RAVEM_TEST_API_ENDPOINT}/{service_type}/disconnect',
         status=200,
         content_type='application/json',
         body=json.dumps({'result': 'OK'}),
@@ -79,7 +79,7 @@ def test_disconnect_room_error(
     vc_room_id = service_api.get_room_id(data)
     mocked_responses.add(
         mocked_responses.GET,
-        RAVEM_TEST_API_ENDPOINT + 'rooms/details',
+        f'{RAVEM_TEST_API_ENDPOINT}/rooms/details',
         status=200,
         content_type='application/json',
         body=json.dumps(
@@ -98,7 +98,7 @@ def test_disconnect_room_error(
     )
     mocked_responses.add(
         mocked_responses.POST,
-        RAVEM_TEST_API_ENDPOINT + service_type + '/disconnect',
+        f'{RAVEM_TEST_API_ENDPOINT}/{service_type}/disconnect',
         status=200,
         content_type='application/json',
         body=json.dumps({'error': error_message}),
@@ -131,7 +131,7 @@ def test_disconnect_room_not_connected(
     RavemPlugin.settings.set('api_endpoint', RAVEM_TEST_API_ENDPOINT)
     mocked_responses.add(
         mocked_responses.GET,
-        RAVEM_TEST_API_ENDPOINT + 'rooms/details',
+        f'{RAVEM_TEST_API_ENDPOINT}/rooms/details',
         status=200,
         content_type='application/json',
         body=json.dumps(
@@ -171,7 +171,7 @@ def test_disconnect_room_connected_other(
     different_vc_room = 123
     mocked_responses.add(
         mocked_responses.GET,
-        RAVEM_TEST_API_ENDPOINT + 'rooms/details',
+        f'{RAVEM_TEST_API_ENDPOINT}/rooms/details',
         status=200,
         content_type='application/json',
         body=json.dumps(
@@ -203,7 +203,7 @@ def test_disconnect_room_connected_other(
 
     mocked_responses.add(
         mocked_responses.POST,
-        RAVEM_TEST_API_ENDPOINT + service_type + '/disconnect',
+        f'{RAVEM_TEST_API_ENDPOINT}/{service_type}/disconnect',
         status=200,
         content_type='application/json',
         body=json.dumps({'result': 'OK'}),

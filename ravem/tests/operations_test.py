@@ -25,7 +25,7 @@ def test_unknown_service(mocked_responses):
     room_name = 'test'
     mocked_responses.add(
         mocked_responses.GET,
-        RAVEM_TEST_API_ENDPOINT + 'rooms/details',
+        f'{RAVEM_TEST_API_ENDPOINT}/rooms/details',
         status=200,
         content_type='application/json',
         body=json.dumps(
@@ -61,7 +61,7 @@ def test_get_room_status(mocked_responses, room_name, service_type, connected, d
     vc_room_id = service_api.get_room_id(data)
     req = mocked_responses.add(
         mocked_responses.GET,
-        RAVEM_TEST_API_ENDPOINT + 'rooms/details',
+        f'{RAVEM_TEST_API_ENDPOINT}/rooms/details',
         status=200,
         content_type='application/json',
         body=json.dumps(
@@ -95,7 +95,7 @@ def test_get_room_status_error(caplog, mocked_responses, room_name, error):
     RavemPlugin.settings.set('api_endpoint', RAVEM_TEST_API_ENDPOINT)
     req = mocked_responses.add(
         mocked_responses.GET,
-        RAVEM_TEST_API_ENDPOINT + 'rooms/details',
+        f'{RAVEM_TEST_API_ENDPOINT}/rooms/details',
         status=200,
         content_type='application/json',
         body=json.dumps({'error': error}),
