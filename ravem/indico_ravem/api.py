@@ -68,7 +68,7 @@ class ZoomAPI(BaseAPI):
     SERVICE_TYPE = 'zoom'
 
     def get_room_id(self, vc_room_data):
-        return str(vc_room_data["zoom_id"])
+        return str(vc_room_data['zoom_id'])
 
     def connect_endpoint(self, room_name, vc_room_id):
         return ravem_api_call('%s/connect' % self.SERVICE_TYPE, method='POST',

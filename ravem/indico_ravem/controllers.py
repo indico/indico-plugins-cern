@@ -23,15 +23,15 @@ __all__ = ('RHRavemRoomStatus', 'RHRavemConnectRoom', 'RHRavemDisconnectRoom')
 class RHRavemBase(RH):
     def _check_access(self):
         if not has_access(self.event_vc_room):
-            raise RavemException(_("Not authorized to access the room with RAVEM"))
+            raise RavemException(_('Not authorized to access the room with RAVEM'))
 
     def get_event_vc_room(self, id_):
         event_vc_room = VCRoomEventAssociation.query.get(id_)
         if not event_vc_room:
-            raise NotFound(_("Event VC Room not found for id {id}").format(id=id_))
+            raise NotFound(_('Event VC Room not found for id {id}').format(id=id_))
         if not event_vc_room.link_object:
             raise IndicoError(
-                _("Event VC Room ({id}) is not linked to anything").format(id=id_)
+                _('Event VC Room ({id}) is not linked to anything').format(id=id_)
             )
         return event_vc_room
 
@@ -42,16 +42,16 @@ class RHRavemBase(RH):
         event_id = request.view_args['event_id']
         event = self.event_vc_room.link_object.event
         if not event:
-            raise IndicoError(_("Event VC Room ({id}) does not have an event").format(id=id_))
+            raise IndicoError(_('Event VC Room ({id}) does not have an event').format(id=id_))
         if event.id != event_id:
-            raise IndicoError(_("Event VC Room ({id}) does not have an event with the id {conf.id}")
+            raise IndicoError(_('Event VC Room ({id}) does not have an event with the id {conf.id}')
                               .format(id=id_, conf=event))
 
         self.room = self.event_vc_room.link_object.room if self.event_vc_room.link_object else None
         if not self.room:
-            raise IndicoError(_("Event VC Room ({id}) is not linked to an event with a room").format(id=id_))
+            raise IndicoError(_('Event VC Room ({id}) is not linked to an event with a room').format(id=id_))
         if not self.room.name:
-            raise IndicoError(_("Event VC Room ({id}) is not linked to an event with a valid room").format(id=id_))
+            raise IndicoError(_('Event VC Room ({id}) is not linked to an event with a valid room').format(id=id_))
 
 
 class RHRavemRoomStatus(RHRavemBase):

@@ -121,7 +121,7 @@ def test_raises_timeout(mocker):
     with pytest.raises(Timeout) as excinfo:
         ravem_api_call('test_endpoint')
 
-    assert str(excinfo.value) == "Timeout while contacting the room."
+    assert str(excinfo.value) == 'Timeout while contacting the room.'
     assert request.call_count == 1
 
 
@@ -143,7 +143,7 @@ def test_unexpected_exception_is_logged(mocker, caplog, method, params):
 
     assert str(excinfo.value) == 'this is unexpected'
     log = extract_logs(caplog, one=True, name='indico.plugin.ravem')
-    assert log.message == "failed call: {} {} with {}: {}".format(method.upper(), 'test_endpoint', params,
+    assert log.message == 'failed call: {} {} with {}: {}'.format(method.upper(), 'test_endpoint', params,
                                                                   'this is unexpected')
     assert request.call_count == 1
 
