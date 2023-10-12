@@ -246,7 +246,7 @@ jobs:
       - name: Install extra dependencies
         if: matrix.plugin == 'ravem'
         run: |
-          pip install 'httpretty==1.0.5'
+          pip install responses
           pip install git+https://github.com/indico/indico-plugins.git@${INDICO_BRANCH}#subdirectory=vc_zoom
 
       - name: Install plugin

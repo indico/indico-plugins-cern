@@ -9,7 +9,8 @@ import json
 from unittest.mock import MagicMock
 
 import pytest
-from conftest import RAVEM_TEST_API_ENDPOINT, RAVEM_TEST_PATH, fixtures, gen_params
+from conftest import RAVEM_TEST_API_ENDPOINT, fixtures, gen_params
+from responses import matchers
 
 from indico.testing.util import extract_logs
 
@@ -19,11 +20,11 @@ from indico_ravem.util import RavemException
 
 
 @pytest.mark.usefixtures("db")
-def test_unknown_service(httpretty):
+def test_unknown_service(mocked_responses):
     RavemPlugin.settings.set("api_endpoint", RAVEM_TEST_API_ENDPOINT)
     room_name = 'test'
-    httpretty.register_uri(
-        httpretty.GET,
+    mocked_responses.add(
+        mocked_responses.GET,
         RAVEM_TEST_API_ENDPOINT + "rooms/details",
         status=200,
         content_type="application/json",
@@ -54,12 +55,12 @@ def test_unknown_service(httpretty):
 @pytest.mark.parametrize(
     *gen_params(fixtures, "room_name", "service_type", "connected", "data")
 )
-def test_get_room_status(httpretty, room_name, service_type, connected, data):
+def test_get_room_status(mocked_responses, room_name, service_type, connected, data):
     RavemPlugin.settings.set("api_endpoint", RAVEM_TEST_API_ENDPOINT)
     service_api = get_api(service_type)
     vc_room_id = service_api.get_room_id(data)
-    httpretty.register_uri(
-        httpretty.GET,
+    req = mocked_responses.add(
+        mocked_responses.GET,
         RAVEM_TEST_API_ENDPOINT + "rooms/details",
         status=200,
         content_type="application/json",
@@ -76,14 +77,11 @@ def test_get_room_status(httpretty, room_name, service_type, connected, data):
                 ],
             }
         ),
+        match=[matchers.query_param_matcher({'where': 'room_name', 'value': room_name})]
     )
 
     status = get_room_status(room_name)
-    assert len(httpretty.httpretty.latest_requests) == 1
-    request = httpretty.last_request()
-
-    assert request.path.startswith(RAVEM_TEST_PATH + "rooms/details")
-    assert request.querystring == {"where": ["room_name"], "value": [room_name]}
+    assert req.call_count == 1
 
     assert status["room_name"] == room_name
     assert status["connected"] == connected
@@ -93,14 +91,15 @@ def test_get_room_status(httpretty, room_name, service_type, connected, data):
 
 @pytest.mark.usefixtures("db")
 @pytest.mark.parametrize(*gen_params(fixtures, "room_name", "error"))
-def test_get_room_status_error(caplog, httpretty, room_name, error):
+def test_get_room_status_error(caplog, mocked_responses, room_name, error):
     RavemPlugin.settings.set("api_endpoint", RAVEM_TEST_API_ENDPOINT)
-    httpretty.register_uri(
-        httpretty.GET,
+    req = mocked_responses.add(
+        mocked_responses.GET,
         RAVEM_TEST_API_ENDPOINT + "rooms/details",
         status=200,
         content_type="application/json",
         body=json.dumps({"error": error}),
+        match=[matchers.query_param_matcher({'where': 'room_name', 'value': room_name})]
     )
 
     room_verbose_name = "room_verbose_name"
@@ -111,8 +110,4 @@ def test_get_room_status_error(caplog, httpretty, room_name, error):
     log = extract_logs(caplog, one=True, name="indico.plugin.ravem")
     assert log.message == f"Failed to get status of room {room_verbose_name} with error: {error}"
 
-    assert len(httpretty.httpretty.latest_requests) == 1
-    request = httpretty.last_request()
-
-    assert request.path.startswith(RAVEM_TEST_PATH + "rooms/details")
-    assert request.querystring == {"where": ["room_name"], "value": [room_name]}
+    assert req.call_count == 1

@@ -9,7 +9,8 @@ import json
 from unittest.mock import MagicMock
 
 import pytest
-from conftest import RAVEM_TEST_API_ENDPOINT, RAVEM_TEST_PATH, connected_fixtures, disconnected_fixtures, gen_params
+from conftest import RAVEM_TEST_API_ENDPOINT, connected_fixtures, disconnected_fixtures, gen_params
+from responses import matchers
 
 from indico.testing.util import extract_logs
 
@@ -22,12 +23,12 @@ from indico_ravem.util import RavemException
 @pytest.mark.parametrize(
     *gen_params(connected_fixtures, "room_name", "service_type", "connected", "data")
 )
-def test_disconnect_room(httpretty, room_name, service_type, connected, data):
+def test_disconnect_room(mocked_responses, room_name, service_type, connected, data):
     RavemPlugin.settings.set("api_endpoint", RAVEM_TEST_API_ENDPOINT)
     service_api = get_api(service_type)
     vc_room_id = service_api.get_room_id(data)
-    httpretty.register_uri(
-        httpretty.GET,
+    req_details = mocked_responses.add(
+        mocked_responses.GET,
         RAVEM_TEST_API_ENDPOINT + "rooms/details",
         status=200,
         content_type="application/json",
@@ -44,13 +45,15 @@ def test_disconnect_room(httpretty, room_name, service_type, connected, data):
                 ],
             }
         ),
+        match=[matchers.query_param_matcher({'where': 'room_name', 'value': room_name})]
     )
-    httpretty.register_uri(
-        httpretty.POST,
+    req_connect = mocked_responses.add(
+        mocked_responses.POST,
         RAVEM_TEST_API_ENDPOINT + service_type + "/disconnect",
         status=200,
         content_type="application/json",
         body=json.dumps({"result": "OK"}),
+        match=[matchers.json_params_matcher({'roomName': room_name})]
     )
 
     vc_room = MagicMock()
@@ -59,15 +62,8 @@ def test_disconnect_room(httpretty, room_name, service_type, connected, data):
 
     disconnect_room(room_name, vc_room)
 
-    assert len(httpretty.httpretty.latest_requests) == 2
-    status_request = httpretty.httpretty.latest_requests[0]
-    request = httpretty.last_request()
-
-    assert request.path.startswith(RAVEM_TEST_PATH + service_type + "/disconnect")
-    assert request.parsed_body == {"roomName": room_name}
-
-    assert status_request.path.startswith(RAVEM_TEST_PATH + "rooms/details")
-    assert status_request.querystring == {"where": ["room_name"], "value": [room_name]}
+    assert req_details.call_count == 1
+    assert req_connect.call_count == 1
 
 
 @pytest.mark.usefixtures("db")
@@ -75,14 +71,14 @@ def test_disconnect_room(httpretty, room_name, service_type, connected, data):
     *gen_params(connected_fixtures, "room_name", "service_type", "connected", "data")
 )
 def test_disconnect_room_error(
-    caplog, httpretty, room_name, service_type, connected, data
+    caplog, mocked_responses, room_name, service_type, connected, data
 ):
     RavemPlugin.settings.set("api_endpoint", RAVEM_TEST_API_ENDPOINT)
     error_message = "Some internal error"
     service_api = get_api(service_type)
     vc_room_id = service_api.get_room_id(data)
-    httpretty.register_uri(
-        httpretty.GET,
+    mocked_responses.add(
+        mocked_responses.GET,
         RAVEM_TEST_API_ENDPOINT + "rooms/details",
         status=200,
         content_type="application/json",
@@ -100,8 +96,8 @@ def test_disconnect_room_error(
             }
         ),
     )
-    httpretty.register_uri(
-        httpretty.POST,
+    mocked_responses.add(
+        mocked_responses.POST,
         RAVEM_TEST_API_ENDPOINT + service_type + "/disconnect",
         status=200,
         content_type="application/json",
@@ -130,11 +126,11 @@ def test_disconnect_room_error(
     *gen_params(disconnected_fixtures, "room_name", "service_type", "connected", "data")
 )
 def test_disconnect_room_not_connected(
-    httpretty, room_name, service_type, connected, data
+    mocked_responses, room_name, service_type, connected, data
 ):
     RavemPlugin.settings.set("api_endpoint", RAVEM_TEST_API_ENDPOINT)
-    httpretty.register_uri(
-        httpretty.GET,
+    mocked_responses.add(
+        mocked_responses.GET,
         RAVEM_TEST_API_ENDPOINT + "rooms/details",
         status=200,
         content_type="application/json",
@@ -169,12 +165,12 @@ def test_disconnect_room_not_connected(
     *gen_params(connected_fixtures, "room_name", "service_type", "connected", "data")
 )
 def test_disconnect_room_connected_other(
-    httpretty, room_name, service_type, connected, data
+    mocked_responses, room_name, service_type, connected, data
 ):
     RavemPlugin.settings.set("api_endpoint", RAVEM_TEST_API_ENDPOINT)
     different_vc_room = 123
-    httpretty.register_uri(
-        httpretty.GET,
+    mocked_responses.add(
+        mocked_responses.GET,
         RAVEM_TEST_API_ENDPOINT + "rooms/details",
         status=200,
         content_type="application/json",
@@ -205,8 +201,8 @@ def test_disconnect_room_connected_other(
         f"The room {room_name} is connected to another videoconference room: {different_vc_room}"
     assert excinfo.value.reason == "connected-other"
 
-    httpretty.register_uri(
-        httpretty.POST,
+    mocked_responses.add(
+        mocked_responses.POST,
         RAVEM_TEST_API_ENDPOINT + service_type + "/disconnect",
         status=200,
         content_type="application/json",
