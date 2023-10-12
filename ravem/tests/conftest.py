@@ -11,7 +11,7 @@ import responses
 from indico_ravem.api import ZoomAPI
 
 
-RAVEM_TEST_API_ENDPOINT = 'http://ravem.test/api/services/'
+RAVEM_TEST_API_ENDPOINT = 'http://ravem.test'
 
 connected_fixtures = [
     {
