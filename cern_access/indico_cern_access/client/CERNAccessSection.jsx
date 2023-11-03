@@ -42,9 +42,10 @@ const getStaticRegformData = createSelector(
 
 export default function CERNAccessSection() {
   const data = useSelector(getStaticRegformData);
-  if (!data) {
-    return null;
-  }
+  return data ? <CERNAccessSectionDisplay data={data} /> : null;
+}
+
+function CERNAccessSectionDisplay(data) {
   const {countries, start, end, preselected, required, accompanying} = data;
   const items = useSelector(state => state.items);
   const formState = useFormState();
@@ -58,7 +59,7 @@ export default function CERNAccessSection() {
           .filter(f => f.inputType === 'accompanying_persons')
           .map(f => formState.values[f.htmlName])
       ),
-    [formState]
+    [formState, items]
   );
 
   const dates = renderAccessDates(start, end);
