@@ -308,8 +308,8 @@ class CERNAccessPlugin(IndicoPlugin):
                  .join(CERNAccessRequest)
                  .filter(RegistrationData.data != [], RegistrationData.field_data.has(field=field),
                          ~CERNAccessRequest.is_withdrawn))
-        if query.count():
-            raise UserValueError(_('This field can not be deleted due to an active CERN access request.'))
+        if query.has_rows():
+            raise UserValueError(_('This field cannot be deleted due to an active CERN access request.'))
 
     def _event_deleted(self, event, **kwargs):
         """

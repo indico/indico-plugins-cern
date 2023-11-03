@@ -14,12 +14,11 @@ from indico.modules.events.registration.controllers.display import RHRegistratio
 from indico.modules.events.registration.models.form_fields import RegistrationFormField
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.registration.models.items import RegistrationFormSection
-from indico.modules.events.registration.util import create_personal_data_fields
+from indico.modules.events.registration.util import create_personal_data_fields, create_registration
 from indico.modules.events.requests.models.requests import Request
-from indico.modules.events.registration.util import create_registration
 
-from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState
 from indico_cern_access.definition import CERNAccessRequestDefinition
+from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState
 from indico_cern_access.plugin import CERNAccessPlugin
 from indico_cern_access.util import get_last_request
 

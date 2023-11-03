@@ -13,7 +13,7 @@ from indico.modules.events.registration.util import modify_registration
 
 from indico_cern_access.models.access_requests import CERNAccessRequestState
 from indico_cern_access.models.archived_requests import ArchivedCERNAccessRequest
-from indico_cern_access.util import get_accompanying_persons, get_last_request, generate_access_id, grant_access
+from indico_cern_access.util import generate_access_id, get_accompanying_persons, get_last_request, grant_access
 
 
 @pytest.fixture
