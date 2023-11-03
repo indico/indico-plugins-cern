@@ -41,11 +41,11 @@ function AccessCodeModal({name, code, accompanyingCodes, triggerSelector}) {
             </p>
             <Table basic celled>
               <Table.Body>
-                {_.sortBy(accompanyingCodes, 'name').map(({name, code}) => (
-                  <Table.Row key={code}>
-                    <Table.Cell>{name}</Table.Cell>
+                {_.sortBy(accompanyingCodes, 'name').map(({name: accName, code: accCode}) => (
+                  <Table.Row key={accCode}>
+                    <Table.Cell>{accName}</Table.Cell>
                     <Table.Cell>
-                      <code style={{fontWeight: 'bold'}}>{code}</code>
+                      <code style={{fontWeight: 'bold'}}>{accCode}</code>
                     </Table.Cell>
                   </Table.Row>
                 ))}
@@ -55,7 +55,9 @@ function AccessCodeModal({name, code, accompanyingCodes, triggerSelector}) {
         )}
       </Modal.Content>
       <Modal.Actions>
-        <Translate as={Button} onClick={() => setOpen(false)}>Close</Translate>
+        <Translate as={Button} onClick={() => setOpen(false)}>
+          Close
+        </Translate>
       </Modal.Actions>
     </Modal>
   );
@@ -71,7 +73,7 @@ AccessCodeModal.propTypes = {
     })
   ).isRequired,
   triggerSelector: PropTypes.string.isRequired,
-}
+};
 
 window.setupAccessCodeButton = function setupAccessCodeButton(container, trigger) {
   const element = document.querySelector(container);
@@ -85,4 +87,4 @@ window.setupAccessCodeButton = function setupAccessCodeButton(container, trigger
     />,
     element
   );
-}
+};

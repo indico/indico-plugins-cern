@@ -49,9 +49,15 @@ export default function CERNAccessSection() {
   const items = useSelector(state => state.items);
   const formState = useFormState();
   const canHaveAccompanyingPersons =
-    accompanying && Object.values(items).filter(f => f.inputType === 'accompanying_persons').length > 0;
+    accompanying &&
+    Object.values(items).filter(f => f.inputType === 'accompanying_persons').length > 0;
   const accompanyingPersons = useMemo(
-    () => _.flatten(Object.values(items).filter(f => f.inputType === 'accompanying_persons').map(f => formState.values[f.htmlName])),
+    () =>
+      _.flatten(
+        Object.values(items)
+          .filter(f => f.inputType === 'accompanying_persons')
+          .map(f => formState.values[f.htmlName])
+      ),
     [formState]
   );
 
@@ -99,13 +105,13 @@ export default function CERNAccessSection() {
           <div className="text">
             {canHaveAccompanyingPersons ? (
               <Translate>
-                In case you or an accompanying person do not have a valid CERN badge, you can request
-                temporary CERN site access here.
+                In case you or an accompanying person do not have a valid CERN badge, you can
+                request temporary CERN site access here.
               </Translate>
             ) : (
               <Translate>
-                In case you do not have a valid CERN badge, you can request temporary CERN site access
-                here.
+                In case you do not have a valid CERN badge, you can request temporary CERN site
+                access here.
               </Translate>
             )}
           </div>

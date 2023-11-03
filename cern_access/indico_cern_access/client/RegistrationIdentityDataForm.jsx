@@ -12,7 +12,13 @@ import React from 'react';
 import {Dropdown, Form, Input} from 'semantic-ui-react';
 
 import {FinalSingleDatePicker, SingleDatePicker} from 'indico/react/components';
-import {FieldCondition, FinalCheckbox, FinalDropdown, FinalField, FinalInput} from 'indico/react/forms';
+import {
+  FieldCondition,
+  FinalCheckbox,
+  FinalDropdown,
+  FinalField,
+  FinalInput,
+} from 'indico/react/forms';
 import {serializeDate, toMoment} from 'indico/utils/date';
 
 import {Translate} from './i18n';
@@ -45,18 +51,18 @@ const accompanyingPersonShape = {
 function AccompanyingPersonsComponent({onChange, value, countryOptions, accompanyingPersons}) {
   const handleOnChange = (id, field, newFieldValue) => {
     const newValueEntry = {...value[id]};
-    const newValue = {...value}
+    const newValue = {...value};
     newValueEntry[field] = newFieldValue;
-    newValue[id] = newValueEntry
+    newValue[id] = newValueEntry;
     onChange(newValue);
-  }
+  };
   const makeOnChange = (id, field) => (evt, {value: v}) => handleOnChange(id, field, v);
 
   return (
     <table styleName="accompanying-persons-table">
       <thead>
         <tr>
-          <th></th>
+          <th />
           <th style={{width: '15em'}}>
             <Translate>Birth date</Translate>
           </th>
@@ -77,7 +83,7 @@ function AccompanyingPersonsComponent({onChange, value, countryOptions, accompan
             <td>
               <SingleDatePicker
                 name="birth_date"
-                isOutsideRange={value => value.isAfter()}
+                isOutsideRange={v => v.isAfter()}
                 placeholder={moment.localeData().longDateFormat('L')}
                 date={toMoment(value[id]?.birth_date, 'YYYY-MM-DD')}
                 onDateChange={date => handleOnChange(id, 'birth_date', serializeDate(date))}
@@ -114,21 +120,29 @@ function AccompanyingPersonsComponent({onChange, value, countryOptions, accompan
 
 AccompanyingPersonsComponent.propTypes = {
   onChange: PropTypes.func.isRequired,
-  value: PropTypes.objectOf(PropTypes.shape({
-    id: PropTypes.string,
-    birth_date: PropTypes.string,
-    nationality: PropTypes.string,
-    birth_place: PropTypes.string,
-  })).isRequired,
-  countryOptions: PropTypes.arrayOf(PropTypes.shape({
-    key: PropTypes.string.isRequired,
-    value: PropTypes.string.isRequired,
-    text: PropTypes.string.isRequired,
-  })).isRequired,
+  value: PropTypes.objectOf(
+    PropTypes.shape({
+      id: PropTypes.string,
+      birth_date: PropTypes.string,
+      nationality: PropTypes.string,
+      birth_place: PropTypes.string,
+    })
+  ).isRequired,
+  countryOptions: PropTypes.arrayOf(
+    PropTypes.shape({
+      key: PropTypes.string.isRequired,
+      value: PropTypes.string.isRequired,
+      text: PropTypes.string.isRequired,
+    })
+  ).isRequired,
   accompanyingPersons: PropTypes.arrayOf(PropTypes.shape(accompanyingPersonShape)).isRequired,
 };
 
-export default function RegistrationIdentityDataForm({countries, accompanying, accompanyingPersons}) {
+export default function RegistrationIdentityDataForm({
+  countries,
+  accompanying,
+  accompanyingPersons,
+}) {
   const countryOptions = Object.entries(countries).map(([k, v]) => ({
     key: k,
     value: k,
@@ -178,9 +192,7 @@ export default function RegistrationIdentityDataForm({countries, accompanying, a
               required
             />
           ) : (
-            <Translate>
-              No accompanying persons were added yet.
-            </Translate>
+            <Translate>No accompanying persons were added yet.</Translate>
           )}
         </>
       )}
