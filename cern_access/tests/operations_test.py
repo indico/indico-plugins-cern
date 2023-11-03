@@ -105,6 +105,7 @@ def test_registration_delete_inactive(dummy_regform, api_delete, api_post):
 def test_registration_delete_permanent_inactive(dummy_regform, api_delete, api_post, db):
     """Delete an inactive registration, ADAMS should not be contacted and the request should not be archived."""
     registration = dummy_regform.registrations[0]
+    num_accompanying = len(registration.cern_access_request.accompanying_persons)
     registration.cern_access_request.clear_identity_data()
     db.session.delete(registration)
     db.session.flush()
@@ -112,6 +113,7 @@ def test_registration_delete_permanent_inactive(dummy_regform, api_delete, api_p
     assert api_delete.call_count == 0
     assert api_post.call_count == 0
     assert not ArchivedCERNAccessRequest.query.has_rows()
+    assert len(registration.cern_access_request.accompanying_persons) == num_accompanying
 
 
 @setup_fixtures

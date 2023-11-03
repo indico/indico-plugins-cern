@@ -166,7 +166,7 @@ class CERNAccessPlugin(IndicoPlugin):
         cern_access_data = {k: data.pop(k) for k in list(data) if k.startswith('cern_access_')}
         if req.data['during_registration_required']:
             cern_access_data['cern_access_request_cern_access'] = True
-        if req.data['include_accompanying_persons']:
+        if req.data.get('include_accompanying_persons', False):
             query = (RegistrationFormItem.query
                      .with_parent(regform)
                      .filter_by(input_type='accompanying_persons', is_enabled=True, is_deleted=False))

@@ -72,6 +72,8 @@ class CERNAccessRequestDefinition(RequestDefinitionBase):
             old_start_dt, old_end_dt = get_access_dates(req)
             if old_start_dt != start_dt or old_end_dt != end_dt:
                 times_changed = True
+            if get_requested_registrations(event=req.event, only_active=True):
+                del data['include_accompanying_persons']
         super().send(req, data)
         update_access_request(req)
         req.state = RequestState.accepted

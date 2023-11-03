@@ -112,7 +112,10 @@ class CERNAccessRequest(db.Model):
         self.nationality = None
         self.birth_place = None
         self.license_plate = None
-        self.accompanying_persons = {}
+        for person in self.accompanying_persons.values():
+            person['license_plate'] = None
+        self.accompanying_persons = {id: {k: data[k] for k in ('reservation_code', 'adams_nonce') if k in data}
+                                     for id, data in self.accompanying_persons.items()}
 
     def archive(self):
         db.session.add(ArchivedCERNAccessRequest.create_from_request(self))
