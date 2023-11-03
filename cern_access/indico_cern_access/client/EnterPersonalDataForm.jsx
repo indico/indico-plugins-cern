@@ -67,13 +67,13 @@ EnterPersonalDataForm.propTypes = {
   isManagement: PropTypes.bool.isRequired,
 };
 
-window.setupEnterPersonalDataForm = function setupEnterPersonalDataForm(
+window.setupEnterPersonalDataForm = function setupEnterPersonalDataForm({
   registration,
   isManagement,
   countries,
   accompanying,
-  accompanyingPersons
-) {
+  accompanyingPersons,
+}) {
   ReactDOM.render(
     <EnterPersonalDataForm
       registration={registration}

@@ -23,11 +23,11 @@
 <div id="registration-identity-data-form-container"></div>
 
 <script>
-    setupEnterPersonalDataForm(
-        {{ registration.locator | tojson }},
-        true,
-        {{ countries | tojson }},
-        {{ accompanying | tojson }},
-        {{ accompanying_persons | tojson }}
-    );
+    setupEnterPersonalDataForm({
+        registration: {{ registration.locator | tojson }},
+        isManagement: true,
+        countries: {{ countries | tojson }},
+        accompanying: {{ accompanying | tojson }},
+        accompanyingPersons: {{ accompanying_persons | tojson }}
+    });
 </script>

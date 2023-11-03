@@ -33,13 +33,13 @@
             {% endcall %}
             <div id="registration-identity-data-form-container"></div>
             <script>
-                setupEnterPersonalDataForm(
-                    {{ access_request.registration.locator.registrant | tojson }},
-                    false,
-                    {{ countries | tojson }},
-                    {{ accompanying | tojson }},
-                    {{ accompanying_persons | tojson }}
-                );
+                setupEnterPersonalDataForm({
+                    registration: {{ access_request.registration.locator.registrant | tojson }},
+                    isManagement: false,
+                    countries: {{ countries | tojson }},
+                    accompanying: {{ accompanying | tojson }},
+                    accompanyingPersons: {{ accompanying_persons | tojson }}
+                });
             </script>
         {% endif %}
     {% else %}
