@@ -49,8 +49,8 @@ const BookingBootstrapForm = parametrize(DefaultBookingBootstrapForm, () => ({
   hideOptions: {
     single: true,
     daily: false,
-    recurring: false,
-    recurringOptions: true,
+    recurringWeekly: false,
+    recurringMonthly: false,
     timeSlot: true,
   },
   defaults: {
@@ -132,8 +132,8 @@ const BookingEditForm = parametrize(DefaultBookingEditForm, {
   hideOptions: {
     single: true,
     daily: false,
-    recurring: false,
-    recurringOptions: true,
+    recurringWeekly: true,
+    recurringMonthly: false,
     timeSlot: true,
   },
 });
