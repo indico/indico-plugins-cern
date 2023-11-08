@@ -74,6 +74,14 @@ window.setupEnterPersonalDataForm = function setupEnterPersonalDataForm({
   accompanying,
   accompanyingPersons,
 }) {
+  const container = document.querySelector('#registration-identity-data-form-container');
+  $(container)
+    .closest('.ui-dialog-content')
+    .css('overflow', 'inherit');
+  $(container)
+    .closest('.exclusivePopup')
+    .css('overflow', 'inherit');
+
   ReactDOM.render(
     <EnterPersonalDataForm
       registration={registration}
@@ -82,6 +90,6 @@ window.setupEnterPersonalDataForm = function setupEnterPersonalDataForm({
       accompanying={accompanying}
       accompanyingPersons={accompanyingPersons}
     />,
-    document.querySelector('#registration-identity-data-form-container')
+    container
   );
 };
