@@ -8,6 +8,7 @@
 import createDecorator from 'final-form-calculate';
 import _ from 'lodash';
 import moment from 'moment';
+import PropTypes from 'prop-types';
 import React, {useMemo} from 'react';
 import {useFormState} from 'react-final-form';
 import {useSelector} from 'react-redux';
@@ -42,11 +43,10 @@ const getStaticRegformData = createSelector(
 
 export default function CERNAccessSection() {
   const data = useSelector(getStaticRegformData);
-  return data ? <CERNAccessSectionDisplay data={data} /> : null;
+  return data ? <CERNAccessSectionDisplay {...data} /> : null;
 }
 
-function CERNAccessSectionDisplay(data) {
-  const {countries, start, end, preselected, required, accompanying} = data;
+function CERNAccessSectionDisplay({countries, start, end, preselected, required, accompanying}) {
   const items = useSelector(state => state.items);
   const formState = useFormState();
   const canHaveAccompanyingPersons =
@@ -138,6 +138,15 @@ function CERNAccessSectionDisplay(data) {
     </>
   );
 }
+
+CERNAccessSectionDisplay.propTypes = {
+  countries: PropTypes.object.isRequired,
+  start: PropTypes.string.isRequired,
+  end: PropTypes.string.isRequired,
+  preselected: PropTypes.bool.isRequired,
+  required: PropTypes.bool.isRequired,
+  accompanying: PropTypes.bool.isRequired,
+};
 
 export const formDecorator = createDecorator(
   {
