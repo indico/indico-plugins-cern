@@ -384,7 +384,7 @@ class CERNAccessPlugin(IndicoPlugin):
         # if request includes accompanying persons, we don't allow modifying them
         if (item.input_type == 'accompanying_persons'
                 and get_last_request(registration.event).data.get('include_accompanying_persons', False)):
-            return _('The Accompanying Persons field has been locked due to an active CERN access request.')
+            return _('This field can no longer be modified because access to the CERN site has already been granted.')
         return None
 
     def _form_validated(self, form, **kwargs):
