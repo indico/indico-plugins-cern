@@ -197,7 +197,7 @@ class CERNAccessPlugin(IndicoPlugin):
         start_dt, end_dt = get_access_dates(req)
         return {
             'data-cern-access': json.dumps({
-                'countries': get_countries(),
+                'countries': list(get_countries().items()),
                 'start': start_dt.astimezone(event.tzinfo).isoformat(),
                 'end': end_dt.astimezone(event.tzinfo).isoformat(),
                 'required': required,

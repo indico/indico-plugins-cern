@@ -143,7 +143,7 @@ export default function RegistrationIdentityDataForm({
   accompanying,
   accompanyingPersons,
 }) {
-  const countryOptions = Object.entries(countries).map(([k, v]) => ({
+  const countryOptions = countries.map(([k, v]) => ({
     key: k,
     value: k,
     text: `${isoToFlag(k)} ${v}`,
@@ -231,7 +231,7 @@ export default function RegistrationIdentityDataForm({
 }
 
 RegistrationIdentityDataForm.propTypes = {
-  countries: PropTypes.object.isRequired,
+  countries: PropTypes.array.isRequired,
   accompanying: PropTypes.bool.isRequired,
   accompanyingPersons: PropTypes.arrayOf(PropTypes.shape(accompanyingPersonShape)).isRequired,
 };

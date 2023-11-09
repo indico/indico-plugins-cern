@@ -140,7 +140,7 @@ function CERNAccessSectionDisplay({countries, start, end, preselected, required,
 }
 
 CERNAccessSectionDisplay.propTypes = {
-  countries: PropTypes.object.isRequired,
+  countries: PropTypes.array.isRequired,
   start: PropTypes.string.isRequired,
   end: PropTypes.string.isRequired,
   preselected: PropTypes.bool.isRequired,

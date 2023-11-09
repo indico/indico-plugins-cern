@@ -138,7 +138,8 @@ class RHRegistrationAccessIdentityData(RHRegistrationFormRegistrationBase):
         accompanying, accompanying_persons = get_accompanying_persons(self.registration, self.cern_access_request)
         access_request = self.registration.cern_access_request
         email_ticket = self.registration.registration_form.ticket_on_email
-        return WPAccessRequestDetails.render_template('identity_data_form.html', self.event, countries=get_countries(),
+        return WPAccessRequestDetails.render_template('identity_data_form.html', self.event,
+                                                      countries=list(get_countries().items()),
                                                       email_ticket=email_ticket, accompanying=accompanying,
                                                       accompanying_persons=accompanying_persons,
                                                       access_request=access_request, start_dt=self.start_dt,
