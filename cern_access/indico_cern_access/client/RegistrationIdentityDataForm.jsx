@@ -189,6 +189,21 @@ export default function RegistrationIdentityDataForm({
               countryOptions={countryOptions}
               accompanyingPersons={accompanyingPersons}
               isEqual={_.isEqual}
+              validate={value => {
+                if (
+                  accompanyingPersons.some(({id}) => {
+                    const personData = value[id];
+                    return (
+                      !personData ||
+                      !personData.birth_place ||
+                      !personData.birth_date ||
+                      !personData.nationality
+                    );
+                  })
+                ) {
+                  return Translate.string('Data for accompanying persons must be provided.');
+                }
+              }}
               required
             />
           ) : (
