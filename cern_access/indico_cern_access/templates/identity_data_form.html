@@ -34,8 +34,7 @@
             <div id="registration-identity-data-form-container"></div>
             <script>
                 setupEnterPersonalDataForm({
-                    registration: {{ access_request.registration.locator.registrant | tojson }},
-                    isManagement: false,
+                    url: {{ url_for('.access_identity_data', access_request.registration.locator.registrant) | tojson }},
                     countries: {{ countries | tojson }},
                     accompanying: {{ accompanying | tojson }},
                     accompanyingPersons: {{ accompanying_persons | tojson }}

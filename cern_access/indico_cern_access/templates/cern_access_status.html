@@ -12,13 +12,11 @@
 
     <td class="i-table id-column" id="cern-access-status-{{ registration.id }}" data-text="{{ sort_text }}">
         {% if access_requested and not registration.cern_access_request.has_identity_info %}
-            <a class="icon-user-check semantic-text warning"
+            <a class="icon-user-check semantic-text warning js-enter-cern-data"
                title="{% trans %}Needs additional data. Click to enter it on behalf of the user{% endtrans %}"
                data-href="{{ url_for_plugin('cern_access.enter_identity_data', registration) }}"
                data-title="{% trans name=registration.full_name %}Enter personal data for {{ name }}{% endtrans %}"
-               data-update="#cern-access-status-{{ registration.id }}"
-               data-replace-update
-               data-ajax-dialog></a>
+               data-update="#cern-access-status-{{ registration.id }}"></a>
         {% elif not access_requested and registration.cern_access_request.has_identity_info %}
             <i class="icon-user-chairperson semantic-text highlight"
                title="{% trans %}Additional data provided. Access to CERN still needs to be granted.{% endtrans %}"></i>

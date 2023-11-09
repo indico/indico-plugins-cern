@@ -29,8 +29,9 @@ from indico.util.countries import get_countries
 from indico.util.date_time import now_utc
 from indico.util.placeholders import replace_placeholders
 from indico.util.spreadsheets import send_csv, send_xlsx
-from indico.web.args import use_args, use_rh_args, use_rh_kwargs
+from indico.web.args import use_args, use_rh_args
 from indico.web.flask.templating import get_template_module
+from indico.web.flask.util import url_for
 from indico.web.rh import RH
 from indico.web.util import jsonify_data, jsonify_template
 
@@ -158,14 +159,14 @@ class RHRegistrationAccessIdentityData(RHRegistrationFormRegistrationBase):
 class RHRegistrationEnterIdentityData(RHManageRegistrationBase):
     def _process_GET(self):
         accompanying, accompanying_persons = get_accompanying_persons(self.registration, get_last_request(self.event))
-        return jsonify_template('identity_data_form_management.html', render_plugin_template,
-                                registration=self.registration, countries=get_countries(), accompanying=accompanying,
-                                accompanying_persons=accompanying_persons)
+        return jsonify(url=url_for('.enter_identity_data', self.registration), countries=list(get_countries().items()),
+                       accompanying=accompanying, accompanying_persons=accompanying_persons)
 
-    @use_rh_kwargs(RequestAccessSchema)
+    @use_rh_args(RequestAccessSchema)
     def _process_PUT(self, data):
         _save_registration_access_data(self.registration, data)
-        return '', 204
+        return jsonify_data(html=render_plugin_template('cern_access_status.html', registration=self.registration,
+                                                        header=False))
 
     def _check_access(self):
         RHManageRegistrationBase._check_access(self)
