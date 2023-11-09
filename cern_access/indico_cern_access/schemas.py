@@ -51,7 +51,7 @@ class RequestAccessSchema(mm.Schema):
             if not data[field]:
                 errors[self.fields[field].data_key] = ['This field is required.']
         if reg := self.context.get('registration'):
-            _, accompanying_persons = get_accompanying_persons(reg, get_last_request(reg.event))
+            accompanying_persons = get_accompanying_persons(reg, get_last_request(reg.event))[1]
         else:
             accompanying_persons = self.context['accompanying_persons']
         if any(p['id'] not in data['accompanying_persons'] for p in accompanying_persons):

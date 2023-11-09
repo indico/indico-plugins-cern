@@ -33,7 +33,7 @@ def api_post(mocker):
         for reg in registrations:
             res[reg.id] = {'$rc': 'test'}
             nonces[generate_access_id(reg.id)] = f'nonce#{reg.id}'
-            _, accompanying_persons = get_accompanying_persons(reg, get_last_request(reg.event))
+            accompanying_persons = get_accompanying_persons(reg, get_last_request(reg.event))[1]
             for person in accompanying_persons:
                 res[person['id']] = {'$rc': 'test'}
                 nonces[generate_access_id(person['id'])] = f"nonce#{person['id']}"

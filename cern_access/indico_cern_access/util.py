@@ -157,7 +157,7 @@ def build_access_request_data_list_from_reg(registration, event, generate_code):
     """Build the access request data from a registration including accompanying persons."""
     # since we don't support updates to accompanying persons, we always generate new codes
     data = {registration.id: build_access_request_data_from_reg(registration, event, generate_code)}
-    _, accompanying_persons = get_accompanying_persons(registration, get_last_request(registration.event))
+    accompanying_persons = get_accompanying_persons(registration, get_last_request(registration.event))[1]
     for person in accompanying_persons:
         if generate_code:
             reservation_code = None
@@ -222,7 +222,7 @@ def add_access_requests(registrations, data, state, nonces):
         create_access_request(registration, state, data[registration.id]['$rc'],
                               nonces[generate_access_id(registration.id)])
         # save the accompanying persons' reservation codes and nonces
-        _, accompanying_persons = get_accompanying_persons(registration, get_last_request(registration.event))
+        accompanying_persons = get_accompanying_persons(registration, get_last_request(registration.event))[1]
         request_persons = deepcopy(registration.cern_access_request.accompanying_persons)
         for person in accompanying_persons:
             reservation_code = data[person['id']]['$rc']
