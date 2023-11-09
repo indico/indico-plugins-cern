@@ -64,8 +64,19 @@
                 {% endtrans %}
             {% endif %}
             {% trans code=access_request.reservation_code %}
-                <br>Registration code: <strong>{{ code }}</strong>.
+                <br>Your registration code: <strong>{{ code }}</strong>.
             {% endtrans %}
+            {% if access_request.accompanying_persons_codes %}
+                <br><br>
+                {% trans %}Access codes for your accompanying persons:{% endtrans %}
+                <ul>
+                    {% for person in access_request.accompanying_persons_codes %}
+                        <li>
+                            <strong>{{ person.code }}</strong> - {{ person.name }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
         {% endcall %}
         {% if ticket_available %}
             <div class="group right">
