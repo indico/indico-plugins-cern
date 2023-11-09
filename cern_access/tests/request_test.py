@@ -15,19 +15,17 @@ from indico.modules.events.registration.util import create_registration, make_re
 from indico.web.args import parser
 
 
-@pytest.mark.parametrize('mock_access_request',
-                         [{
-                             'during_registration': True,
-                             'during_registration_required': False,
-                             'personal_data': generate_personal_data(False),
-                             'include_accompanying_persons': False,
-                         }, {
-                             'during_registration': True,
-                             'during_registration_required': True,
-                             'personal_data': generate_personal_data(False),
-                             'include_accompanying_persons': False,
-                         }],
-                         indirect=True)
+@pytest.mark.parametrize('mock_access_request', [{
+    'during_registration': True,
+    'during_registration_required': False,
+    'personal_data': generate_personal_data(False),
+    'include_accompanying_persons': False,
+}, {
+    'during_registration': True,
+    'during_registration_required': True,
+    'personal_data': generate_personal_data(False),
+    'include_accompanying_persons': False,
+}], indirect=True)
 @pytest.mark.usefixtures('smtp', 'mock_access_request')
 def test_during_registration(dummy_regform):
     """Data is provided during registration."""
@@ -42,17 +40,15 @@ def test_during_registration(dummy_regform):
     assert len(registration.cern_access_request.accompanying_persons) == 0
 
 
-@pytest.mark.parametrize('mock_access_request',
-                         [{
-                             'during_registration': True,
-                             'during_registration_required': False,
-                             'include_accompanying_persons': False,
-                         }, {
-                             'during_registration': True,
-                             'during_registration_required': False,
-                             'include_accompanying_persons': True,
-                         }],
-                         indirect=True)
+@pytest.mark.parametrize('mock_access_request', [{
+    'during_registration': True,
+    'during_registration_required': False,
+    'include_accompanying_persons': False,
+}, {
+    'during_registration': True,
+    'during_registration_required': False,
+    'include_accompanying_persons': True,
+}], indirect=True)
 @pytest.mark.usefixtures('smtp', 'mock_access_request')
 def test_during_registration_optional_negative(dummy_regform):
     """Data can be provided during registration (it is not)."""
@@ -62,15 +58,13 @@ def test_during_registration_optional_negative(dummy_regform):
     assert registration.cern_access_request is None
 
 
-@pytest.mark.parametrize('mock_access_request',
-                         [{
-                             'during_registration': True,
-                             'during_registration_required': False,
-                             'personal_data': generate_personal_data(True, True),
-                             'accompanying_persons': generate_accompanying_persons(True),
-                             'include_accompanying_persons': True,
-                         }],
-                         indirect=True)
+@pytest.mark.parametrize('mock_access_request', [{
+    'during_registration': True,
+    'during_registration_required': False,
+    'personal_data': generate_personal_data(True, True),
+    'accompanying_persons': generate_accompanying_persons(True),
+    'include_accompanying_persons': True,
+}], indirect=True)
 @pytest.mark.usefixtures('smtp', 'mock_access_request')
 def test_during_registration_accompanying_positive(dummy_regform):
     """Data can be provided during registration (it is)."""
@@ -103,13 +97,11 @@ def test_during_registration_accompanying_positive(dummy_regform):
     assert ac2['birth_place'] == 'Grenoble'
 
 
-@pytest.mark.parametrize('mock_access_request',
-                         [{
-                             'during_registration': True,
-                             'during_registration_required': True,
-                             'include_accompanying_persons': False,
-                         }],
-                         indirect=True)
+@pytest.mark.parametrize('mock_access_request', [{
+    'during_registration': True,
+    'during_registration_required': True,
+    'include_accompanying_persons': False,
+}], indirect=True)
 @pytest.mark.usefixtures('smtp', 'mock_access_request')
 def test_during_registration_required_negative(dummy_regform):
     """Data must be provided during registration (it is not)."""
@@ -121,14 +113,12 @@ def test_during_registration_required_negative(dummy_regform):
     }
 
 
-@pytest.mark.parametrize('mock_access_request',
-                         [{
-                             'during_registration': True,
-                             'during_registration_required': True,
-                             'accompanying_persons': generate_accompanying_persons(True),
-                             'include_accompanying_persons': True,
-                         }],
-                         indirect=True)
+@pytest.mark.parametrize('mock_access_request', [{
+    'during_registration': True,
+    'during_registration_required': True,
+    'accompanying_persons': generate_accompanying_persons(True),
+    'include_accompanying_persons': True,
+}], indirect=True)
 @pytest.mark.usefixtures('smtp', 'mock_access_request')
 def test_during_registration_required_accompanying_negative(dummy_regform):
     """Data must be provided during registration (it is not)."""
@@ -141,15 +131,13 @@ def test_during_registration_required_accompanying_negative(dummy_regform):
     }
 
 
-@pytest.mark.parametrize('mock_access_request',
-                         [{
-                             'during_registration': True,
-                             'during_registration_required': True,
-                             'personal_data': generate_personal_data(False),
-                             'accompanying_persons': generate_accompanying_persons(True),
-                             'include_accompanying_persons': True,
-                         }],
-                         indirect=True)
+@pytest.mark.parametrize('mock_access_request', [{
+    'during_registration': True,
+    'during_registration_required': True,
+    'personal_data': generate_personal_data(False),
+    'accompanying_persons': generate_accompanying_persons(True),
+    'include_accompanying_persons': True,
+}], indirect=True)
 @pytest.mark.usefixtures('smtp', 'mock_access_request')
 def test_during_registration_required_accompanying_with_data_negative(dummy_regform):
     """Data must be provided during registration (it is not)."""

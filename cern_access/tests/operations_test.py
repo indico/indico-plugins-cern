@@ -47,19 +47,17 @@ def api_post(mocker):
 def setup_fixtures(func):
     """Set up fixtures (utlity decorator)."""
     func = pytest.mark.usefixtures('smtp', 'mock_access_request', 'dummy_access_request')(func)
-    func = pytest.mark.parametrize('mock_access_request',
-                                   [{
-                                       'during_registration': True,
-                                       'during_registration_required': True,
-                                       'personal_data': generate_personal_data(),
-                                       'include_accompanying_persons': False
-                                   }, {
-                                       'during_registration': True,
-                                       'during_registration_required': True,
-                                       'personal_data': generate_personal_data(),
-                                       'include_accompanying_persons': True
-                                   }],
-                                   indirect=True)(func)
+    func = pytest.mark.parametrize('mock_access_request', [{
+        'during_registration': True,
+        'during_registration_required': True,
+        'personal_data': generate_personal_data(),
+        'include_accompanying_persons': False
+    }, {
+        'during_registration': True,
+        'during_registration_required': True,
+        'personal_data': generate_personal_data(),
+        'include_accompanying_persons': True
+    }], indirect=True)(func)
     return func
 
 
@@ -134,13 +132,11 @@ def test_event_deleted(dummy_regform, api_delete, api_post):
 
 
 @pytest.mark.usefixtures('smtp', 'mock_access_request', 'dummy_access_request')
-@pytest.mark.parametrize('mock_access_request',
-                         [{
-                             'during_registration': False,
-                             'during_registration_required': False,
-                             'include_accompanying_persons': True,
-                         }],
-                         indirect=True)
+@pytest.mark.parametrize('mock_access_request', [{
+    'during_registration': False,
+    'during_registration_required': False,
+    'include_accompanying_persons': True,
+}], indirect=True)
 def test_registration_modified_active(dummy_regform, api_delete, api_post):
     """Modify the name of the registrant, request active, ADAMS contacted (POST)."""
     registration = dummy_regform.registrations[0]

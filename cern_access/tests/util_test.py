@@ -36,14 +36,12 @@ def test_license_plate_handling_error():
     assert sanitize_license_plate('VALID 1234 \U0001F4A9') is None
 
 
-@pytest.mark.parametrize('mock_access_request',
-                         [{
-                             'during_registration': True,
-                             'during_registration_required': False,
-                             'personal_data': generate_personal_data(True),
-                             'include_accompanying_persons': True,
-                         }],
-                         indirect=True)
+@pytest.mark.parametrize('mock_access_request', [{
+    'during_registration': True,
+    'during_registration_required': False,
+    'personal_data': generate_personal_data(True),
+    'include_accompanying_persons': True,
+}], indirect=True)
 @pytest.mark.usefixtures('smtp', 'mock_access_request', 'dummy_access_request')
 def test_get_accompanying_persons(dummy_regform):
     reg = dummy_regform.registrations[0]
@@ -52,14 +50,12 @@ def test_get_accompanying_persons(dummy_regform):
     assert len(accompanying_persons) == 2
 
 
-@pytest.mark.parametrize('mock_access_request',
-                         [{
-                             'during_registration': True,
-                             'during_registration_required': False,
-                             'personal_data': generate_personal_data(True),
-                             'include_accompanying_persons': False,
-                         }],
-                         indirect=True)
+@pytest.mark.parametrize('mock_access_request', [{
+    'during_registration': True,
+    'during_registration_required': False,
+    'personal_data': generate_personal_data(True),
+    'include_accompanying_persons': False,
+}], indirect=True)
 @pytest.mark.usefixtures('smtp', 'mock_access_request', 'dummy_access_request')
 def test_get_accompanying_persons_not_include(dummy_regform):
     reg = dummy_regform.registrations[0]
@@ -68,14 +64,12 @@ def test_get_accompanying_persons_not_include(dummy_regform):
     assert len(accompanying_persons) == 0
 
 
-@pytest.mark.parametrize('mock_access_request',
-                         [{
-                             'during_registration': True,
-                             'during_registration_required': False,
-                             'personal_data': generate_personal_data(True),
-                             'include_accompanying_persons': True,
-                         }],
-                         indirect=True)
+@pytest.mark.parametrize('mock_access_request', [{
+    'during_registration': True,
+    'during_registration_required': False,
+    'personal_data': generate_personal_data(True),
+    'include_accompanying_persons': True,
+}], indirect=True)
 @pytest.mark.usefixtures('smtp', 'mock_access_request', 'dummy_access_request')
 def test_adams_post_request(dummy_regform, mocker):
     mocker.patch('indico_cern_access.util._send_adams_http_request', return_value=_Response())
@@ -84,14 +78,12 @@ def test_adams_post_request(dummy_regform, mocker):
     assert len(data) == 3
 
 
-@pytest.mark.parametrize('mock_access_request',
-                         [{
-                             'during_registration': True,
-                             'during_registration_required': False,
-                             'personal_data': generate_personal_data(True),
-                             'include_accompanying_persons': False,
-                         }],
-                         indirect=True)
+@pytest.mark.parametrize('mock_access_request', [{
+    'during_registration': True,
+    'during_registration_required': False,
+    'personal_data': generate_personal_data(True),
+    'include_accompanying_persons': False,
+}], indirect=True)
 @pytest.mark.usefixtures('smtp', 'mock_access_request', 'dummy_access_request')
 def test_adams_post_request_not_include_accompanying(dummy_regform, mocker):
     mocker.patch('indico_cern_access.util._send_adams_http_request', return_value=_Response())
