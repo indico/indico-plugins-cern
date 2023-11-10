@@ -8,6 +8,8 @@
 import {registerPluginComponent, registerPluginObject} from 'indico/utils/plugins';
 
 import CERNAccessSection, {formDecorator} from './CERNAccessSection';
+import './enter_personal_data';
+import './access_code_modal';
 import './main.scss';
 
 const PLUGIN_NAME = 'cern_access';

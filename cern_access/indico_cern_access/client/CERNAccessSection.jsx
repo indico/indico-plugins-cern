@@ -6,19 +6,20 @@
 // the LICENSE file for more details.
 
 import createDecorator from 'final-form-calculate';
+import _ from 'lodash';
 import moment from 'moment';
-import React from 'react';
+import PropTypes from 'prop-types';
+import React, {useMemo} from 'react';
+import {useFormState} from 'react-final-form';
 import {useSelector} from 'react-redux';
 import {createSelector} from 'reselect';
-import {Form} from 'semantic-ui-react';
 
-import {FinalSingleDatePicker} from 'indico/react/components';
-import {FinalCheckbox, FinalDropdown, FinalInput, FieldCondition} from 'indico/react/forms';
+import {FinalCheckbox, FieldCondition} from 'indico/react/forms';
+import {Param} from 'indico/react/i18n';
 import {toMoment} from 'indico/utils/date';
 
-import {Translate, Param} from './i18n';
-
-import './CERNAccessSection.module.scss';
+import {Translate} from './i18n';
+import RegistrationIdentityDataForm from './RegistrationIdentityDataForm';
 
 const renderAccessDates = (start, end) => {
   const startDT = toMoment(start, moment.HTML5_FMT.DATETIME_LOCAL);
@@ -35,39 +36,31 @@ const renderAccessDates = (start, end) => {
   }
 };
 
-// eslint-disable-next-line react/prop-types
-function CERNAccessItem({as: InputComponent, title, required, ...inputProps}) {
-  return (
-    <div styleName="form-item">
-      <div styleName="content">
-        <Form.Field required={required} styleName="field">
-          {title && <label>{title}</label>}
-          <InputComponent required={required} {...inputProps} />
-        </Form.Field>
-      </div>
-    </div>
-  );
-}
-
 const getStaticRegformData = createSelector(
   state => state.staticData.extraData.cernAccess,
   data => (data ? JSON.parse(data) : null)
 );
 
-const isoToFlag = country =>
-  String.fromCodePoint(...country.split('').map(c => c.charCodeAt() + 0x1f1a5));
-
 export default function CERNAccessSection() {
   const data = useSelector(getStaticRegformData);
-  if (!data) {
-    return null;
-  }
-  const {countries, start, end, preselected, required} = data;
-  const countryOptions = Object.entries(countries).map(([k, v]) => ({
-    key: k,
-    value: k,
-    text: `${isoToFlag(k)} ${v}`,
-  }));
+  return data ? <CERNAccessSectionDisplay {...data} /> : null;
+}
+
+function CERNAccessSectionDisplay({countries, start, end, preselected, required, accompanying}) {
+  const items = useSelector(state => state.items);
+  const formState = useFormState();
+  const canHaveAccompanyingPersons =
+    accompanying &&
+    Object.values(items).filter(f => f.inputType === 'accompanying_persons').length > 0;
+  const accompanyingPersons = useMemo(
+    () =>
+      _.flatten(
+        Object.values(items)
+          .filter(f => f.inputType === 'accompanying_persons')
+          .map(f => formState.values[f.htmlName])
+      ),
+    [formState, items]
+  );
 
   const dates = renderAccessDates(start, end);
   const form = (
@@ -90,62 +83,11 @@ export default function CERNAccessSection() {
           </Translate>
         </div>
       </div>
-      <Form as="div" className="i-box-content">
-        <CERNAccessItem
-          name="cern_access_birth_date"
-          title={Translate.string('Birth date')}
-          as={FinalSingleDatePicker}
-          required
-          isOutsideRange={value => value.isAfter()}
-          enableOutsideDays
-          placeholder={moment.localeData().longDateFormat('L')}
-        />
-        <CERNAccessItem
-          name="cern_access_nationality"
-          title={Translate.string('Country of birth')}
-          as={FinalDropdown}
-          options={countryOptions}
-          required
-          search
-          selection
-        />
-        <CERNAccessItem
-          name="cern_access_birth_place"
-          title={Translate.string('Place of birth')}
-          as={FinalInput}
-          required
-        />
-        <h2 className="vehicle-section-title">
-          <i className="car-icon" />
-          <Translate>Vehicle Registration</Translate>
-        </h2>
-        <CERNAccessItem
-          name="cern_access_by_car"
-          title=""
-          label={Translate.string("I'm coming by car")}
-          as={FinalCheckbox}
-        />
-        <FieldCondition when="cern_access_by_car" is>
-          <CERNAccessItem
-            name="cern_access_license_plate"
-            title={Translate.string('License plate')}
-            as={FinalInput}
-            required
-            nullIfEmpty
-            validate={val => {
-              if (!val) {
-                return undefined;
-              } else if (val.length < 3) {
-                return Translate.string('Must be at least 3 characters');
-              } else if (!val.match(/^[0-9A-Za-z]+([- ][ ]*[0-9A-Za-z]+)*$/)) {
-                return Translate.string(
-                  'Wrong format. Only letters and numbers separated by dashes (-) or spaces allowed'
-                );
-              }
-            }}
-          />
-        </FieldCondition>
-      </Form>
+      <RegistrationIdentityDataForm
+        countries={countries}
+        accompanying={canHaveAccompanyingPersons}
+        accompanyingPersons={accompanyingPersons}
+      />
     </div>
   );
 
@@ -162,10 +104,17 @@ export default function CERNAccessSection() {
             <Translate>Request access to the CERN site</Translate>
           </div>
           <div className="text">
-            <Translate>
-              In case you do not have a valid CERN badge, you can request temporary CERN site access
-              here.
-            </Translate>
+            {canHaveAccompanyingPersons ? (
+              <Translate>
+                In case you or an accompanying person do not have a valid CERN badge, you can
+                request temporary CERN site access here.
+              </Translate>
+            ) : (
+              <Translate>
+                In case you do not have a valid CERN badge, you can request temporary CERN site
+                access here.
+              </Translate>
+            )}
           </div>
         </div>
         <div className="toolbar">
@@ -190,6 +139,15 @@ export default function CERNAccessSection() {
   );
 }
 
+CERNAccessSectionDisplay.propTypes = {
+  countries: PropTypes.array.isRequired,
+  start: PropTypes.string.isRequired,
+  end: PropTypes.string.isRequired,
+  preselected: PropTypes.bool.isRequired,
+  required: PropTypes.bool.isRequired,
+  accompanying: PropTypes.bool.isRequired,
+};
+
 export const formDecorator = createDecorator(
   {
     field: 'cern_access_request_cern_access',
@@ -200,6 +158,7 @@ export const formDecorator = createDecorator(
             cern_access_birth_date: null,
             cern_access_nationality: '',
             cern_access_birth_place: '',
+            cern_access_accompanying_persons: {},
             cern_access_by_car: false,
             cern_access_license_plate: null,
           };

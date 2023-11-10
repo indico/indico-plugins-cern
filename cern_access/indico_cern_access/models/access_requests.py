@@ -5,9 +5,11 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from indico.core.db.sqlalchemy import PyIntEnum, db
+from indico.modules.events.registration.fields.accompanying import AccompanyingPerson
 from indico.util.enum import RichIntEnum
 from indico.util.string import format_repr
 
@@ -60,6 +62,11 @@ class CERNAccessRequest(db.Model):
         db.String,
         nullable=True
     )
+    accompanying_persons = db.Column(
+        JSONB,
+        nullable=False,
+        default={}
+    )
 
     registration = db.relationship(
         'Registration',
@@ -93,11 +100,22 @@ class CERNAccessRequest(db.Model):
     def has_identity_info(cls):
         return cls.birth_place.isnot(None) & cls.nationality.isnot(None) & cls.birth_date.isnot(None)
 
+    @property
+    def accompanying_persons_codes(self):
+        persons = self.registration.accompanying_persons
+        persons_names = {p['id']: AccompanyingPerson(p).display_full_name for p in persons}
+        return [{'name': persons_names[id], 'code': data['reservation_code']}
+                for id, data in self.accompanying_persons.items()]
+
     def clear_identity_data(self):
         self.birth_date = None
         self.nationality = None
         self.birth_place = None
         self.license_plate = None
+        for person in self.accompanying_persons.values():
+            person['license_plate'] = None
+        self.accompanying_persons = {id: {k: data[k] for k in ('reservation_code', 'adams_nonce') if k in data}
+                                     for id, data in self.accompanying_persons.items()}
 
     def archive(self):
         db.session.add(ArchivedCERNAccessRequest.create_from_request(self))

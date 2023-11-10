@@ -8,7 +8,7 @@
 from collections import Counter
 from datetime import timedelta
 
-from flask import current_app, jsonify, redirect, render_template, request
+from flask import current_app, jsonify, render_template, request
 from flask_pluginengine import current_plugin, render_plugin_template
 from webargs import fields
 from webargs.flaskparser import abort
@@ -25,20 +25,23 @@ from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.registration.models.registrations import Registration
 from indico.modules.events.requests.controllers import RHRequestsEventRequestDetailsBase
 from indico.modules.events.requests.models.requests import Request, RequestState
+from indico.util.countries import get_countries
 from indico.util.date_time import now_utc
 from indico.util.placeholders import replace_placeholders
 from indico.util.spreadsheets import send_csv, send_xlsx
-from indico.web.args import use_args
+from indico.web.args import use_args, use_rh_args
 from indico.web.flask.templating import get_template_module
 from indico.web.flask.util import url_for
 from indico.web.rh import RH
 from indico.web.util import jsonify_data, jsonify_template
 
 from indico_cern_access import _
-from indico_cern_access.forms import AccessIdentityDataForm, GrantAccessEmailForm
+from indico_cern_access.forms import GrantAccessEmailForm
 from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState
-from indico_cern_access.util import (get_access_dates, get_last_request, grant_access, revoke_access,
-                                     sanitize_license_plate, send_adams_post_request, send_ticket)
+from indico_cern_access.schemas import RequestAccessSchema
+from indico_cern_access.util import (get_access_dates, get_accompanying_persons, get_last_request, grant_access,
+                                     revoke_access, sanitize_accompanying_persons, sanitize_license_plate,
+                                     send_adams_post_request, send_ticket)
 from indico_cern_access.views import WPAccessRequestDetails
 
 
@@ -102,63 +105,75 @@ class RHRegistrationPreviewCERNAccessEmail(RHRegistrationsActionBase):
         return jsonify(html=html)
 
 
+def _save_registration_access_data(registration, data):
+    for field in data:
+        if field in ('by_car', 'request_cern_access'):
+            continue
+        value = data[field]
+        if field == 'accompanying_persons':
+            value = sanitize_accompanying_persons(value, registration)
+        elif field == 'license_plate':
+            value = sanitize_license_plate(value) if data['by_car'] and value else None
+        setattr(registration.cern_access_request, field, value)
+    db.session.flush()
+
+    if registration.registration_form.ticket_on_email:
+        send_ticket(registration)
+
+
 class RHRegistrationAccessIdentityData(RHRegistrationFormRegistrationBase):
     def _process_args(self):
         RHRegistrationFormRegistrationBase._process_args(self)
         self.cern_access_request = get_last_request(self.event)
         if not self.cern_access_request:
             raise NotFound
+        self.start_dt, self.end_dt = get_access_dates(self.cern_access_request)
+        self.expired = now_utc() > self.end_dt
 
     def _check_access(self):
         # no access restrictions for this page
         pass
 
-    def _process(self):
-        start_dt, end_dt = get_access_dates(self.cern_access_request)
-        expired = now_utc() > end_dt
-        form = AccessIdentityDataForm()
+    def _process_GET(self):
+        accompanying, accompanying_persons = get_accompanying_persons(self.registration, self.cern_access_request)
         access_request = self.registration.cern_access_request
         email_ticket = self.registration.registration_form.ticket_on_email
-        if access_request is not None and not access_request.has_identity_info and form.validate_on_submit():
-            if expired:
-                raise Forbidden
+        return WPAccessRequestDetails.render_template('identity_data_form.html', self.event,
+                                                      countries=list(get_countries().items()),
+                                                      email_ticket=email_ticket, accompanying=accompanying,
+                                                      accompanying_persons=accompanying_persons,
+                                                      access_request=access_request, start_dt=self.start_dt,
+                                                      end_dt=self.end_dt, expired=self.expired)
 
-            form.populate_obj(access_request, skip={'license_plate'})
-            access_request.license_plate = (
-                sanitize_license_plate(form.license_plate.data) if form.by_car.data and form.license_plate.data
-                else None
-            )
-
-            db.session.flush()
-
-            # if the user has entered car plate info, we have to provide it to ADAMS
-            if form.by_car.data:
-                send_adams_post_request(self.event, [self.registration], update=True)
-            if email_ticket:
-                send_ticket(self.registration)
-            return redirect(url_for('.access_identity_data', self.registration.locator.uuid))
-
-        return WPAccessRequestDetails.render_template('identity_data_form.html', self.event, form=form,
-                                                      access_request=access_request, start_dt=start_dt, end_dt=end_dt,
-                                                      expired=expired, email_ticket=email_ticket)
+    @use_rh_args(RequestAccessSchema)
+    def _process_PUT(self, data):
+        access_request = self.registration.cern_access_request
+        if access_request is None or access_request.has_identity_info or self.expired:
+            raise Forbidden
+        _save_registration_access_data(self.registration, data)
+        # if the user has entered car plate info, we have to provide it to ADAMS
+        if data['by_car']:
+            send_adams_post_request(self.event, [self.registration], update=True)
+        return '', 204
 
 
 class RHRegistrationEnterIdentityData(RHManageRegistrationBase):
-    def _process(self):
+    def _process_GET(self):
+        accompanying, accompanying_persons = get_accompanying_persons(self.registration, get_last_request(self.event))
+        return jsonify(url=url_for('.enter_identity_data', self.registration), countries=list(get_countries().items()),
+                       accompanying=accompanying, accompanying_persons=accompanying_persons)
+
+    @use_rh_args(RequestAccessSchema)
+    def _process_PUT(self, data):
+        _save_registration_access_data(self.registration, data)
+        return jsonify_data(html=render_plugin_template('cern_access_status.html', registration=self.registration,
+                                                        header=False))
+
+    def _check_access(self):
+        RHManageRegistrationBase._check_access(self)
         access_request = self.registration.cern_access_request
         if not access_request or access_request.has_identity_info:
             raise UserValueError(_('The personal data for this registrant has already been entered'))
-        form = AccessIdentityDataForm()
-        email_ticket = self.registration.registration_form.ticket_on_email
-        if form.validate_on_submit():
-            form.populate_obj(access_request)
-            db.session.flush()
-            if email_ticket:
-                send_ticket(self.registration)
-            return jsonify_data(html=render_plugin_template('cern_access_status.html', registration=self.registration,
-                                                            header=False))
-        return jsonify_template('identity_data_form_management.html', render_plugin_template, form=form,
-                                registration=self.registration)
 
 
 class RHExportCERNAccessBase(RHRequestsEventRequestDetailsBase):

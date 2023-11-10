@@ -1,7 +1,6 @@
 {% extends 'layout/base.html' %}
 
-{% from 'cern_access:_common.html' import render_access_dates, render_security_policy, render_identity_form %}
-{% from 'forms/_form.html' import simple_form, form_rows, form_row_static %}
+{% from 'cern_access:_common.html' import render_access_dates, render_security_policy %}
 {% from 'message_box.html' import message_box %}
 
 {% block page_class %}meeting-page{% endblock %}
@@ -32,10 +31,15 @@
             {% call message_box('info') %}
                 {{ render_security_policy(start_dt, end_dt) }}
             {% endcall %}
-            {% call simple_form(form, back_button=false) %}
-                {{ form_row_static(_('Name'), access_request.registration.full_name) }}
-                {{ render_identity_form(form) }}
-            {% endcall %}
+            <div id="registration-identity-data-form-container"></div>
+            <script>
+                setupEnterPersonalDataForm({
+                    url: {{ url_for('.access_identity_data', access_request.registration.locator.registrant) | tojson }},
+                    countries: {{ countries | tojson }},
+                    accompanying: {{ accompanying | tojson }},
+                    accompanyingPersons: {{ accompanying_persons | tojson }}
+                });
+            </script>
         {% endif %}
     {% else %}
         {# checking is_ticket_blocked is enough for regular users but without the extra check
@@ -60,8 +64,19 @@
                 {% endtrans %}
             {% endif %}
             {% trans code=access_request.reservation_code %}
-                <br>Registration code: <strong>{{ code }}</strong>.
+                <br>Your registration code: <strong>{{ code }}</strong>.
             {% endtrans %}
+            {% if access_request.accompanying_persons_codes %}
+                <br><br>
+                {% trans %}Access codes for your accompanying persons:{% endtrans %}
+                <ul>
+                    {% for person in access_request.accompanying_persons_codes %}
+                        <li>
+                            <strong>{{ person.code }}</strong> - {{ person.name }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
         {% endcall %}
         {% if ticket_available %}
             <div class="group right">

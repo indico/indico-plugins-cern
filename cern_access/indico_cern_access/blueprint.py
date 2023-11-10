@@ -27,8 +27,8 @@ blueprint.add_url_rule('/manage/registration/<int:reg_form_id>/registrations/cer
 blueprint.add_url_rule('/manage/registration/<int:reg_form_id>/registrations/cern-access.xlsx',
                        'registrations_cern_access_excel', RHExportCERNAccessExcel, defaults={'type': 'cern-access'})
 blueprint.add_url_rule('/manage/registration/<int:reg_form_id>/registrations/<int:registration_id>/cern-access-data',
-                       'enter_identity_data', RHRegistrationEnterIdentityData, methods=('GET', 'POST'))
+                       'enter_identity_data', RHRegistrationEnterIdentityData, methods=('GET', 'PUT'))
 blueprint.add_url_rule('/registrations/<int:reg_form_id>/access-identity-data', 'access_identity_data',
-                       RHRegistrationAccessIdentityData, methods=('GET', 'POST'))
+                       RHRegistrationAccessIdentityData, methods=('GET', 'PUT'))
 
 blueprint.add_url_rule('!/api/plugin/cern-access/visitors', 'api_stats', RHStatsAPI)

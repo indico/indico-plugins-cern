@@ -5,6 +5,8 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
+from sqlalchemy.dialects.postgresql import JSONB
+
 from indico.core.db import db
 from indico.util.string import format_repr
 
@@ -55,6 +57,11 @@ class ArchivedCERNAccessRequest(db.Model):
         db.String,
         nullable=True
     )
+    accompanying_persons = db.Column(
+        JSONB,
+        nullable=False,
+        default={}
+    )
 
     event = db.relationship(
         'Event',
@@ -77,6 +84,7 @@ class ArchivedCERNAccessRequest(db.Model):
             nationality=req.nationality,
             birth_place=req.birth_place,
             license_plate=req.license_plate,
+            accompanying_persons=req.accompanying_persons,
         )
 
     def __repr__(self):

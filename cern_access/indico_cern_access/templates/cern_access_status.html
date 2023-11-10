@@ -12,21 +12,25 @@
 
     <td class="i-table id-column" id="cern-access-status-{{ registration.id }}" data-text="{{ sort_text }}">
         {% if access_requested and not registration.cern_access_request.has_identity_info %}
-            <a class="icon-user-check semantic-text warning"
+            <a class="icon-user-check semantic-text warning js-enter-cern-data"
                title="{% trans %}Needs additional data. Click to enter it on behalf of the user{% endtrans %}"
                data-href="{{ url_for_plugin('cern_access.enter_identity_data', registration) }}"
                data-title="{% trans name=registration.full_name %}Enter personal data for {{ name }}{% endtrans %}"
-               data-update="#cern-access-status-{{ registration.id }}"
-               data-replace-update
-               data-ajax-dialog></a>
+               data-update="#cern-access-status-{{ registration.id }}"></a>
         {% elif not access_requested and registration.cern_access_request.has_identity_info %}
-            <a class="icon-user-chairperson semantic-text highlight"
-               title="{% trans %}Additional data provided. Access to CERN still needs to be granted.{% endtrans %}"></a>
+            <i class="icon-user-chairperson semantic-text highlight"
+               title="{% trans %}Additional data provided. Access to CERN still needs to be granted.{% endtrans %}"></i>
         {% elif access_requested and registration.cern_access_request.is_active %}
-            <a class="icon-user-check semantic-text success js-copy-cern-access-code"
-               title="{% trans %}Access to CERN granted. Click to see access code.{% endtrans %}"
-               data-cern-access-message="{% trans name=registration.full_name %}Access Code for <strong>{{ name }}</strong>{% endtrans %}"
-               data-cern-access-code="{{ registration.cern_access_request.reservation_code }}"></a>
+            <a class="icon-user-check semantic-text success"
+               id="access-code-button-{{ registration.id }}"
+               title="{% trans %}Access to CERN granted. Click to see access code.{% endtrans %}"></a>
+            <div id="access-code-container-{{ registration.id }}"
+                 data-name="{{ registration.full_name }}"
+                 data-code="{{ registration.cern_access_request.reservation_code }}"
+                 data-accompanying-codes="{{ registration.cern_access_request.accompanying_persons_codes | tojson | forceescape }}"></div>
+            <script>
+                setupAccessCodeButton('#access-code-container-{{ registration.id }}', '#access-code-button-{{ registration.id }}');
+            </script>
         {% else %}
             <i class="icon-user-block" title="{% trans %}No visitor access to CERN requested{% endtrans %}"></i>
         {% endif %}
@@ -34,13 +38,5 @@
 {% elif header %}
     <th class="i-table id-column">
         <i class="icon-id-badge" title="{% trans %}CERN site access{% endtrans %}"></i>
-        <script>
-            $('#registration-list .js-list-table-wrapper').on('click', '.js-copy-cern-access-code', function() {
-                var $this = $(this);
-                var msg = $this.data('cern-access-message');
-                var code = '<code style="font-weight: bold; font-size: 2em;">{0}</code>'.format($this.data('cern-access-code'));
-                alertPopup(msg + '<br>' + code);
-            });
-        </script>
     </th>
 {% endif %}

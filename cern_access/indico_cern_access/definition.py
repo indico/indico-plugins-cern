@@ -16,9 +16,9 @@ from indico.web.forms.base import FormDefaults
 
 from indico_cern_access import _
 from indico_cern_access.forms import CERNAccessForm
-from indico_cern_access.util import (check_access, get_access_dates, handle_event_time_update, is_authorized_user,
-                                     is_category_blacklisted, is_event_too_early, update_access_request,
-                                     withdraw_event_access_request)
+from indico_cern_access.util import (check_access, get_access_dates, get_requested_registrations,
+                                     handle_event_time_update, is_authorized_user, is_category_blacklisted,
+                                     is_event_too_early, update_access_request, withdraw_event_access_request)
 
 
 class CERNAccessRequestDefinition(RequestDefinitionBase):
@@ -27,7 +27,8 @@ class CERNAccessRequestDefinition(RequestDefinitionBase):
     form = CERNAccessForm
     form_defaults = {'during_registration': True,
                      'during_registration_preselected': False,
-                     'during_registration_required': False}
+                     'during_registration_required': False,
+                     'include_accompanying_persons': True}
 
     @classmethod
     def create_form(cls, event, existing_request=None):
@@ -39,7 +40,10 @@ class CERNAccessRequestDefinition(RequestDefinitionBase):
             if default_data['end_dt_override']:
                 default_data['end_dt_override'] = dateutil.parser.parse(default_data['end_dt_override'])
         with plugin_context(cls.plugin):
-            return cls.form(prefix='request-', obj=FormDefaults(default_data), event=event, request=existing_request)
+            form = cls.form(prefix='request-', obj=FormDefaults(default_data), event=event, request=existing_request)
+        if existing_request and get_requested_registrations(event=event, only_active=True):
+            form.include_accompanying_persons.render_kw = {'disabled': True}
+        return form
 
     @classmethod
     def render_form(cls, event, **kwargs):
@@ -68,6 +72,8 @@ class CERNAccessRequestDefinition(RequestDefinitionBase):
             old_start_dt, old_end_dt = get_access_dates(req)
             if old_start_dt != start_dt or old_end_dt != end_dt:
                 times_changed = True
+            if get_requested_registrations(event=req.event, only_active=True):
+                del data['include_accompanying_persons']
         super().send(req, data)
         update_access_request(req)
         req.state = RequestState.accepted
