@@ -110,8 +110,8 @@ class RoomAssistancePlugin(IndicoPlugin):
             request.definition.reject(request, {'comment': render_plugin_template('auto_reject_no_supported_room.txt')},
                                       User.get_system_user())
             request.data = dict(request.data, occurrences=[])
-            flash(_("The new event location is not in the list of the rooms supported by the room assistance team. "
-                    "Room assistance request has been rejected and support will not be provided."), 'warning')
+            flash(_('The new event location is not in the list of the rooms supported by the room assistance team. '
+                    'Room assistance request has been rejected and support will not be provided.'), 'warning')
         if changes.keys() & {'start_dt', 'end_dt'}:
             tz = pytz.timezone(config.DEFAULT_TIMEZONE)
             occurrences = {dateutil.parser.parse(occ).astimezone(tz) for occ in request.data['occurrences']}
@@ -132,5 +132,5 @@ class RoomAssistancePlugin(IndicoPlugin):
                 new_data['occurrences'] = [occ.astimezone(pytz.utc).isoformat() for occ in occurrences
                                            if occ.date() in req_dates & event_dates]
                 request.data = new_data
-                flash(_("Room assistance had been requested for days that are not between the updated start/end "
-                        "dates. Support will not be provided on these days anymore."), 'warning')
+                flash(_('Room assistance had been requested for days that are not between the updated start/end '
+                        'dates. Support will not be provided on these days anymore.'), 'warning')

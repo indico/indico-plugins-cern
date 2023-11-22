@@ -58,7 +58,7 @@ def _check_no_parallel_bookings(booking):
     """Ensure that the user has no other bookings in that interval."""
     overlapping = query_user_overlapping_bookings(booking).first()
     if overlapping:
-        raise ExpectedError(_("There is a parallel booking for this person in {0}, from {1} to {2}").format(
+        raise ExpectedError(_('There is a parallel booking for this person in {0}, from {1} to {2}').format(
             overlapping.room.full_name,
             format_date(overlapping.start_dt),
             format_date(overlapping.end_dt)

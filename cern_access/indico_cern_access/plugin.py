@@ -64,12 +64,12 @@ class PluginSettingsForm(IndicoForm):
     authorized_users = PrincipalListField(_('Authorized users'), allow_groups=True,
                                           description=_('List of users/groups who can send requests'))
     excluded_categories = MultipleItemsField('Excluded categories', fields=[{'id': 'id', 'caption': 'Category ID'}])
-    access_ticket_template = QuerySelectField(_("Access ticket template"), allow_blank=True,
-                                              blank_text=_("No access ticket selected"), get_label='title',
-                                              description=_("Ticket template allowing access to CERN"))
-    earliest_start_dt = IndicoDateTimeField(_("Earliest start date"), [Optional()], default_time=time(0, 0),
-                                            description=_("The earliest date an event can start to qualify for CERN "
-                                                          "access badges"))
+    access_ticket_template = QuerySelectField(_('Access ticket template'), allow_blank=True,
+                                              blank_text=_('No access ticket selected'), get_label='title',
+                                              description=_('Ticket template allowing access to CERN'))
+    earliest_start_dt = IndicoDateTimeField(_('Earliest start date'), [Optional()], default_time=time(0, 0),
+                                            description=_('The earliest date an event can start to qualify for CERN '
+                                                          'access badges'))
     delete_personal_data_after = TimeDeltaField(_('Delete personal data'), [DataRequired()], units=('days',),
                                                 description=_('Personal data will be deleted once the event has '
                                                               'finished and the duration specified here has been '

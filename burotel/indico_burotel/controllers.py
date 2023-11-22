@@ -52,8 +52,8 @@ class RHUserExperiment(RHProtected):
 
 class RHBurotelStats(RHProtected):
     @use_kwargs({
-        'start_month': fields.DateTime("%Y-%m"),
-        'end_month': fields.DateTime("%Y-%m")
+        'start_month': fields.DateTime('%Y-%m'),
+        'end_month': fields.DateTime('%Y-%m')
     }, location='query')
     def process(self, start_month, end_month):
         start_dt, end_dt = get_month_dates(start_month, end_month)
@@ -65,8 +65,8 @@ class RHBurotelStats(RHProtected):
             data=result,
             num_days=num_days,
             months=[{
-                'name': format_datetime(m, "MMMM YYYY", locale=session.lang),
-                'id': format_datetime(m, "YYYY-M"),
+                'name': format_datetime(m, 'MMMM YYYY', locale=session.lang),
+                'id': format_datetime(m, 'YYYY-M'),
                 'num_days': ((m + relativedelta(months=1, days=-1)) - m).days + 1
             } for m in months]
         )

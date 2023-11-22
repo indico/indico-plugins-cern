@@ -100,9 +100,9 @@ class ConversionPlugin(IndicoPlugin):
     def _add_form_fields(self, form_cls, **kwargs):
         exts = ', '.join(self.settings.get('valid_extensions'))
         return 'convert_to_pdf', \
-               BooleanField(_("Convert to PDF"), widget=SwitchWidget(),
-                            description=_("If enabled, your files will be be converted to PDF if possible. "
-                                          "The following file types can be converted: {exts}").format(exts=exts),
+               BooleanField(_('Convert to PDF'), widget=SwitchWidget(),
+                            description=_('If enabled, your files will be be converted to PDF if possible. '
+                                          'The following file types can be converted: {exts}').format(exts=exts),
                             default=True)
 
     def _form_validated(self, form, **kwargs):

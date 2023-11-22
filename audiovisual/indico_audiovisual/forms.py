@@ -29,8 +29,8 @@ from indico_audiovisual.util import contribution_id, get_contributions, is_av_ma
 class AVRequestForm(RequestFormBase):
     services = IndicoSelectMultipleCheckboxField(_('Services'), [DataRequired()], choices=list(SERVICES.items()),
                                                  widget=JinjaWidget('service_type_widget.html', 'audiovisual'),
-                                                 description=_("Please choose whether you want a webcast, recording or "
-                                                               "both."))
+                                                 description=_('Please choose whether you want a webcast, recording or '
+                                                               'both.'))
     all_contributions = BooleanField(_('All contributions'),
                                      description=_('Uncheck this if you want to select only certain contributions.'))
     contributions = IndicoSelectMultipleCheckboxField(_('Contributions'),
@@ -40,7 +40,7 @@ class AVRequestForm(RequestFormBase):
                                                                          'audiovisual',
                                                                          SubContribution=SubContribution))
     webcast_audience = SelectField(_('Webcast Audience'),
-                                   description=_("Select the audience to which the webcast will be restricted"))
+                                   description=_('Select the audience to which the webcast will be restricted'))
     language = SelectField(_('Language'),
                            choices=[('en', _('English')), ('fr', _('French')), ('other', _('Other'))],
                            description=_('Select the main spoken language during the event'))
@@ -54,7 +54,7 @@ class AVRequestForm(RequestFormBase):
         self._update_contribution_fields()
 
     def _update_audiences(self):
-        audiences = [('', _("No restriction - everyone can watch the public webcast"))]
+        audiences = [('', _('No restriction - everyone can watch the public webcast'))]
         audiences += sorted((x['audience'], x['audience']) for x in current_plugin.settings.get('webcast_audiences'))
         self.webcast_audience.choices = audiences
 
@@ -83,8 +83,8 @@ class AVRequestForm(RequestFormBase):
 
 class AVRequestManagerForm(RequestManagerForm):
     custom_webcast_url = URLField(_('Webcast URL'),
-                                  description=_("Custom URL to view the webcast. Can contain {event_id} which will be "
-                                                "replaced with the ID of this event."))
+                                  description=_('Custom URL to view the webcast. Can contain {event_id} which will be '
+                                                'replaced with the ID of this event.'))
     webcast_hidden = BooleanField(_('Hide webcast'),
                                   description=_('Do not show a link to the webcast on the event page'))
     ignore_capability = BooleanField(_('Ignore room capability'),

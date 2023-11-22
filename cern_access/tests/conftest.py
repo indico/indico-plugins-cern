@@ -69,7 +69,7 @@ def dummy_regform(dummy_event, db):
     # event has to be in the future (badge request)
     dummy_event.start_dt += timedelta(days=1)
     dummy_event.end_dt += timedelta(days=1)
-    regform = RegistrationForm(event=dummy_event, title="Dummy Registration Form", currency="CHF")
+    regform = RegistrationForm(event=dummy_event, title='Dummy Registration Form', currency='CHF')
     create_personal_data_fields(regform)
     db.session.flush()
     return regform

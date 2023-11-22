@@ -51,7 +51,7 @@ class Task(Resource):
 
     def upload(self, task, filename, fd, mimetype):
         if task['operation'] != 'import/upload':
-            raise Exception("The task operation is not import/upload")
+            raise Exception('The task operation is not import/upload')
 
         form = task['result']['form']
         response = requests.post(url=form['url'], files={'file': (filename, fd, mimetype)}, data=form['parameters'])

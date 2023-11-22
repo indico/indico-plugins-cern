@@ -22,7 +22,7 @@ from indico_cern_access import _
 
 
 class GrantAccessEmailForm(EmailRegistrantsForm):
-    save_default = BooleanField(_("Save as default"), widget=SwitchWidget(),
+    save_default = BooleanField(_('Save as default'), widget=SwitchWidget(),
                                 description=_("Save this email's content as the default that will be used the next "
                                               "time a CERN access request is sent for a registrant in this event."))
 

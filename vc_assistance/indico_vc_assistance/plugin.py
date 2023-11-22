@@ -38,9 +38,9 @@ class PluginSettingsForm(IndicoForm):
                                                   'assistance.'))
     support_email = EmailField(_('Support email'), [DataRequired()],
                                description=_('Videoconference email support address'))
-    room_feature = QuerySelectField(_("Room feature"), [DataRequired()], allow_blank=True,
+    room_feature = QuerySelectField(_('Room feature'), [DataRequired()], allow_blank=True,
                                     query_factory=lambda: RoomFeature.query, get_label='title',
-                                    description=_("The feature indicating that a room supports videoconference."))
+                                    description=_('The feature indicating that a room supports videoconference.'))
 
 
 class VCAssistanceRequestPlugin(IndicoPlugin):
@@ -102,8 +102,8 @@ class VCAssistanceRequestPlugin(IndicoPlugin):
         if not req or req.state != RequestState.accepted:
             return
         if 'start_dt' in changes and not start_time_within_working_hours(event):
-            flash(_("The new event start time is out of working hours so videoconference assistance cannot be "
-                    "provided."), 'warning')
+            flash(_('The new event start time is out of working hours so videoconference assistance cannot be '
+                    'provided.'), 'warning')
         if 'location_data' in changes and not has_vc_rooms_attached_to_capable(event):
             flash(_("The new event location doesn't have videoconference capabilities so videoconference "
                     "assistance cannot be provided."), 'warning')

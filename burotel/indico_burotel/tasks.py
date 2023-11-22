@@ -57,7 +57,7 @@ def _find_person_id(plugin, user):
         except (TypeError, KeyError):
             pass
 
-    plugin.logger.error("Could not retrieve CERN Person ID for %r", user)
+    plugin.logger.error('Could not retrieve CERN Person ID for %r', user)
     return None
 
 
@@ -162,7 +162,7 @@ def update_access_permissions(booking, modify_dates=None):
             logger.info('Removing ADaMS access from %s: %s, %s - %s (booking rejected/cancelled)',
                         booking.room, booking.booked_for_user, old_start_dt, old_end_dt)
             _adams_request('cancel', booking.booked_for_user, booking.room, old_start_dt, old_end_dt)
-            booking.add_edit_log(ReservationEditLog(user_name="Burotel", info=[
+            booking.add_edit_log(ReservationEditLog(user_name='Burotel', info=[
                 'Removing current access to {} ({}), {} - {} (booking created)'.format(
                     user.full_name, user.id, old_start_dt, old_end_dt
                 )
@@ -171,7 +171,7 @@ def update_access_permissions(booking, modify_dates=None):
         logger.info('Granting ADaMS access to %s: %s, %s - %s',
                     booking.room, booking.booked_for_user, booking.start_dt, booking.end_dt)
         _adams_request('create', booking.booked_for_user, booking.room, booking.start_dt.date(), booking.end_dt.date())
-        booking.add_edit_log(ReservationEditLog(user_name="Burotel", info=[
+        booking.add_edit_log(ReservationEditLog(user_name='Burotel', info=[
             'Granting ADaMS access to {} ({}), {} - {} (booking created)'.format(
                 user.full_name, user.id, booking.start_dt.date(), booking.end_dt.date()
             )
@@ -180,7 +180,7 @@ def update_access_permissions(booking, modify_dates=None):
         logger.info('Removing ADaMS access from %s: %s, %s - %s (booking rejected/cancelled)',
                     booking.room, booking.booked_for_user, booking.start_dt, booking.end_dt)
         _adams_request('cancel', booking.booked_for_user, booking.room, booking.start_dt.date(), booking.end_dt.date())
-        booking.add_edit_log(ReservationEditLog(user_name="Burotel", info=[
+        booking.add_edit_log(ReservationEditLog(user_name='Burotel', info=[
             'Removing ADaMS access from {} ({}), {} - {} (booking rejected/cancelled)'.format(
                 user.full_name, user.id, booking.start_dt.date(), booking.end_dt.date()
             )

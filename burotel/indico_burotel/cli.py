@@ -49,10 +49,10 @@ def check_changed_fields(original, new):
 
 
 def get_location(building):
-    location = Location.query.filter(Location.name == f"Area {building}", ~Location.is_deleted).first()
+    location = Location.query.filter(Location.name == f'Area {building}', ~Location.is_deleted).first()
     if not location:
-        location = Location(name=f"Area {building}")
-        print(cformat("%{green!}+%{reset} Adding new location for building {}").format(building))
+        location = Location(name=f'Area {building}')
+        print(cformat('%{green!}+%{reset} Adding new location for building {}').format(building))
         db.session.add(location)
         db.session.flush()
     return location
@@ -80,7 +80,7 @@ def get_principal(name):
 def get_room(room_id):
     room = Room.get(room_id)
     if not room:
-        print(cformat("%{yellow}! Desk with ID {} not found.").format(room_id))
+        print(cformat('%{yellow}! Desk with ID {} not found.').format(room_id))
     return room
 
 
@@ -134,7 +134,7 @@ def get_latlon_building(building_num):
 
         # these coordinates are relative to a local EPSG reference.
         # we'll have to convert them to EPSG:4326, used by GPS
-        latlon_ref = Proj(init="epsg:4326")
+        latlon_ref = Proj(init='epsg:4326')
         lon, lat = transform(epsg_ref, latlon_ref, x, y)
 
         latlon_cache[building_num] = (lat, lon)
@@ -144,7 +144,7 @@ def get_latlon_building(building_num):
 
 @cli.command()
 @click.argument('csv_file', type=click.File('r'))
-@click.option('--add-missing', is_flag=True, help="Add UPDATE rooms that do not exist locally")
+@click.option('--add-missing', is_flag=True, help='Add UPDATE rooms that do not exist locally')
 @click.option('--dry-run', is_flag=True, help="Don't actually change the database, just report on the changes")
 def update(csv_file, add_missing, dry_run):
     """Update the Burotels from a CSV file."""
@@ -194,10 +194,10 @@ def update(csv_file, add_missing, dry_run):
                                               Room.verbose_name == verbose_name).first()
             if existing_room:
                 # a room with the exact same designation already exists
-                print(cformat("%{yellow}!%{reset} A desk with the name %{cyan}{}%{reset} already exists")
+                print(cformat('%{yellow}!%{reset} A desk with the name %{cyan}{}%{reset} already exists')
                       .format(existing_room.full_name))
                 continue
-            print(cformat("%{green!}+%{reset} New desk %{cyan}{}/{}-{} {}").format(
+            print(cformat('%{green!}+%{reset} New desk %{cyan}{}/{}-{} {}').format(
                 building, floor, number, verbose_name))
             num_adds += 1
             if not dry_run:

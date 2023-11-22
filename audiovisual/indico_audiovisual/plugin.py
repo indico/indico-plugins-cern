@@ -61,16 +61,16 @@ class PluginSettingsForm(IndicoForm):
                                 description=_("A ping is sent via HTTP GET to this URL whenever a webcast request "
                                               "enters/leaves the 'accepted' state."))
     webcast_url = URLField(_('Webcast URL'), [DataRequired()],
-                           description=_("The URL to watch the webcast for an event. Can contain {event_id} which "
-                                         "will be replaced with the ID of the event."))
+                           description=_('The URL to watch the webcast for an event. Can contain {event_id} which '
+                                         'will be replaced with the ID of the event.'))
     agreement_paper_url = URLField(_('Agreement Paper URL'),
-                                   description=_("The URL to the agreement that can be printed and signed offline."))
+                                   description=_('The URL to the agreement that can be printed and signed offline.'))
     recording_cds_url = URLField(_('CDS URL'),
-                                 description=_("The URL used when creating recording links. Must contain the {cds_id} "
-                                               "placeholder."))
-    room_feature = QuerySelectField(_("Room feature"), [DataRequired()], allow_blank=True,
+                                 description=_('The URL used when creating recording links. Must contain the {cds_id} '
+                                               'placeholder.'))
+    room_feature = QuerySelectField(_('Room feature'), [DataRequired()], allow_blank=True,
                                     query_factory=lambda: RoomFeature.query, get_label='title',
-                                    description=_("The feature indicating that a room supports webcast/recording."))
+                                    description=_('The feature indicating that a room supports webcast/recording.'))
 
     def validate_recording_cds_url(self, field):
         if field.data and '{cds_id}' not in field.data:

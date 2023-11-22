@@ -45,18 +45,18 @@ class FoundationSync:
         try:
             self._location = Location.query.filter_by(name='CERN', is_deleted=False).one()
         except NoResultFound:
-            self._logger.exception("Synchronization failed: Location CERN not found in Indico DB")
+            self._logger.exception('Synchronization failed: Location CERN not found in Indico DB')
             raise
 
     @contextmanager
     def connect_to_foundation(self):
         try:
             connection = oracledb.connect(self.db_name, config_dir='/etc')
-            self._logger.debug("Connected to Foundation DB")
+            self._logger.debug('Connected to Foundation DB')
             yield connection
             connection.close()
         except oracledb.DatabaseError:
-            self._logger.exception("Problem connecting to DB")
+            self._logger.exception('Problem connecting to DB')
             raise
 
     def _html_to_markdown(self, s):
@@ -131,7 +131,7 @@ class FoundationSync:
             room.update_principal(principal, full_access=True)
 
     def fetch_buildings_coordinates(self, connection):
-        self._logger.debug("Fetching the building geocoordinates...")
+        self._logger.debug('Fetching the building geocoordinates...')
 
         coordinates = {}
         cursor = connection.cursor()
@@ -146,14 +146,14 @@ class FoundationSync:
             if latitude and longitude and building_number:
                 coordinates[building_number] = {'latitude': latitude, 'longitude': longitude}
 
-        self._logger.debug("Fetched geocoordinates for %d buildings", len(coordinates))
+        self._logger.debug('Fetched geocoordinates for %d buildings', len(coordinates))
         return coordinates
 
     def fetch_rooms(self, connection, room_name=None):
-        self._logger.debug("Fetching AIS Role information...")
+        self._logger.debug('Fetching AIS Role information...')
         room_role_map = _get_room_role_map(connection)
 
-        self._logger.debug("Fetching room information...")
+        self._logger.debug('Fetching room information...')
 
         counter = Counter()
         foundation_rooms = []
@@ -176,7 +176,7 @@ class FoundationSync:
                 self._logger.debug("Fetched data for room with id='%s'", room_id)
             except SkipRoom as e:
                 counter['skipped'] += 1
-                self._logger.info("Skipped room %s: %s", room_id, e)
+                self._logger.info('Skipped room %s: %s', room_id, e)
                 continue
 
             room = Room.query.filter_by(building=room_data['building'], floor=room_data['floor'],
@@ -186,10 +186,10 @@ class FoundationSync:
                 del room_data['owner']
                 if room is None:
                     counter['skipped'] += 1
-                    self._logger.info("Skipped room %s: %s", room_id, email_warning)
+                    self._logger.info('Skipped room %s: %s', room_id, email_warning)
                     continue
                 elif not room.is_deleted:
-                    self._logger.warning("Problem with room %s: %s", room_id, email_warning)
+                    self._logger.warning('Problem with room %s: %s', room_id, email_warning)
 
             # Insert new room
             new_room = False
@@ -209,7 +209,7 @@ class FoundationSync:
             if changes and not new_room:
                 counter['updated'] += 1
                 for change in changes:
-                    self._logger.info("Updated room %s: %s", room_id, change)
+                    self._logger.info('Updated room %s: %s', room_id, change)
             foundation_rooms.append(room)
 
         # Deactivate rooms not found in Foundation
@@ -225,9 +225,9 @@ class FoundationSync:
             self._logger.info("Deactivated room '%s'", room.full_name)
             room.is_deleted = True
             counter['deactivated'] += 1
-        self._logger.info("Deactivated %d rooms not found in Foundation", counter['deactivated'])
+        self._logger.info('Deactivated %d rooms not found in Foundation', counter['deactivated'])
 
-        self._logger.info("Rooms summary: %d in Foundation - %d skipped - %d inserted - %d updated - %d deactivated",
+        self._logger.info('Rooms summary: %d in Foundation - %d skipped - %d inserted - %d updated - %d deactivated',
                           counter['found'], counter['skipped'], counter['inserted'], counter['updated'],
                           counter['deactivated'])
         return True
@@ -237,7 +237,7 @@ class FoundationSync:
             try:
                 ok = self.fetch_rooms(connection, room_name)
             except Exception:
-                self._logger.exception("Synchronization with Foundation failed")
+                self._logger.exception('Synchronization with Foundation failed')
                 raise
             if dry_run or not ok:
                 db.session.rollback()

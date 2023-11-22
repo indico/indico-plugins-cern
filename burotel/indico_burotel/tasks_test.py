@@ -41,8 +41,8 @@ class NoCSRFTestClient:
 
 @pytest.fixture(autouse=True)
 def room_attributes(db):
-    attr_approval = RoomAttribute(name='confirmation-by-secretariat', title="Secretariat must confirm")
-    attr_lock = RoomAttribute(name='electronic-lock', title="Electronic Lock")
+    attr_approval = RoomAttribute(name='confirmation-by-secretariat', title='Secretariat must confirm')
+    attr_lock = RoomAttribute(name='electronic-lock', title='Electronic Lock')
     db.session.add(attr_approval)
     db.session.add(attr_lock)
     db.session.flush()
@@ -70,8 +70,8 @@ def test_update_called_on_create(db, dummy_user, mocker, create_room, no_csrf_cl
         sess.set_session_user(dummy_user)
 
     assert no_csrf_client.post(url_for('rb.create_booking'), data={
-        'start_dt': "2020-02-01",
-        'end_dt': "2020-02-02",
+        'start_dt': '2020-02-01',
+        'end_dt': '2020-02-02',
         'repeat_frequency': 'DAY',
         'repeat_interval': 1,
         'booked_for_user': dummy_user.identifier,
@@ -86,8 +86,8 @@ def test_update_called_on_create(db, dummy_user, mocker, create_room, no_csrf_cl
     db.session.flush()
 
     assert no_csrf_client.post(url_for('rb.create_booking'), data={
-        'start_dt': "2020-02-03",
-        'end_dt': "2020-02-04",
+        'start_dt': '2020-02-03',
+        'end_dt': '2020-02-04',
         'repeat_frequency': 'DAY',
         'repeat_interval': 1,
         'booked_for_user': dummy_user.identifier,
@@ -110,8 +110,8 @@ def test_update_called_on_accept(create_room, mocker, no_csrf_client, dummy_user
         sess.set_session_user(dummy_user)
 
     response = no_csrf_client.post(url_for('rb.create_booking'), data={
-        'start_dt': "2020-02-01",
-        'end_dt': "2020-02-02",
+        'start_dt': '2020-02-01',
+        'end_dt': '2020-02-02',
         'repeat_frequency': 'DAY',
         'repeat_interval': 1,
         'booked_for_user': dummy_user.identifier,
@@ -185,8 +185,8 @@ def test_update_called_on_reject(dummy_user, create_room, mocker, no_csrf_client
         sess.set_session_user(dummy_user)
 
     response = no_csrf_client.post(url_for('rb.create_booking'), data={
-        'start_dt': "2020-02-05",
-        'end_dt': "2020-02-06",
+        'start_dt': '2020-02-05',
+        'end_dt': '2020-02-06',
         'repeat_frequency': 'DAY',
         'repeat_interval': 1,
         'booked_for_user': dummy_user.identifier,
@@ -219,8 +219,8 @@ def test_auto_cancel(db, create_room, mocker, no_csrf_client, dummy_user, room_a
         sess.set_session_user(dummy_user)
 
     response = no_csrf_client.post(url_for('rb.create_booking'), data={
-        'start_dt': "2020-03-02",  # This is a Monday
-        'end_dt': "2020-03-10",
+        'start_dt': '2020-03-02',  # This is a Monday
+        'end_dt': '2020-03-10',
         'repeat_frequency': 'DAY',
         'repeat_interval': 1,
         'booked_for_user': dummy_user.identifier,
@@ -266,8 +266,8 @@ def test_auto_cancel_weekend(db, create_room, mocker, no_csrf_client, dummy_user
         sess.set_session_user(dummy_user)
 
     response = no_csrf_client.post(url_for('rb.create_booking'), data={
-        'start_dt': "2020-03-05",  # This is a Thursday
-        'end_dt': "2020-03-15",
+        'start_dt': '2020-03-05',  # This is a Thursday
+        'end_dt': '2020-03-15',
         'repeat_frequency': 'DAY',
         'repeat_interval': 1,
         'booked_for_user': dummy_user.identifier,
@@ -323,8 +323,8 @@ def test_no_auto_cancel(db, create_room, mocker, no_csrf_client, dummy_user, roo
         sess.set_session_user(dummy_user)
 
     response = no_csrf_client.post(url_for('rb.create_booking'), data={
-        'start_dt': "2020-03-02",  # This is a Monday
-        'end_dt': "2020-03-10",
+        'start_dt': '2020-03-02',  # This is a Monday
+        'end_dt': '2020-03-10',
         'repeat_frequency': 'DAY',
         'repeat_interval': 1,
         'booked_for_user': dummy_user.identifier,

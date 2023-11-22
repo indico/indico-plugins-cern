@@ -92,7 +92,7 @@ class RHRegistrationPreviewCERNAccessEmail(RHRegistrationsActionBase):
 
     def _process(self):
         if not self.registrations:
-            raise NoReportError.wrap_exc(BadRequest(_("The selected registrants have been removed.")))
+            raise NoReportError.wrap_exc(BadRequest(_('The selected registrants have been removed.')))
         registration = self.registrations[0]
         email_body = replace_placeholders('cern-access-email', request.form['body'], regform=self.regform,
                                           registration=registration)

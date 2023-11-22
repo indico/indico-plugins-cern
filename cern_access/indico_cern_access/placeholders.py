@@ -20,7 +20,7 @@ from indico_cern_access.util import get_access_dates, get_last_request
 class TicketAccessDatesPlaceholder(DesignerPlaceholder):
     group = 'event'
     name = 'cern_access_dates'
-    description = _("CERN Badges - Access Dates")
+    description = _('CERN Badges - Access Dates')
     admin_only = True
 
     @classmethod
@@ -36,7 +36,7 @@ class TicketAccessDatesPlaceholder(DesignerPlaceholder):
 class TicketLicensePlatePlaceholder(DesignerPlaceholder):
     group = 'registrant'
     name = 'cern_access_plate'
-    description = _("CERN Badges - License Plate")
+    description = _('CERN Badges - License Plate')
     admin_only = True
 
     @classmethod
@@ -49,7 +49,7 @@ class FormLinkPlaceholder(ParametrizedPlaceholder):
     required = True
     param_required = True
     param_friendly_name = 'link text'
-    description = _("Link to the personal data form")
+    description = _('Link to the personal data form')
 
     @classmethod
     def render(cls, param, regform, registration):

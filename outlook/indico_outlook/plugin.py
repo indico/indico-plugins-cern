@@ -39,20 +39,20 @@ _status_choices = [('free', _('Free')),
 
 class SettingsForm(IndicoForm):
     debug = BooleanField(_('Debug mode'), widget=SwitchWidget(),
-                         description=_("If enabled, requests are not sent to the API but logged instead"))
+                         description=_('If enabled, requests are not sent to the API but logged instead'))
     service_url = URLField(_('Service URL'), [URL(require_tld=False)],
-                           description=_("The URL of the CERN calendar service"))
+                           description=_('The URL of the CERN calendar service'))
     token = IndicoPasswordField(_('Token'), [DataRequired()], toggle=True,
-                                description=_("The token used to authenticate with the CERN calendar service"))
+                                description=_('The token used to authenticate with the CERN calendar service'))
     status = SelectField(_('Status'), [DataRequired()], choices=_status_choices,
-                         description=_("The default status of the event in the calendar"))
-    reminder = BooleanField(_('Reminder'), description=_("Enable calendar reminder"))
+                         description=_('The default status of the event in the calendar'))
+    reminder = BooleanField(_('Reminder'), description=_('Enable calendar reminder'))
     reminder_minutes = IntegerField(_('Reminder time'), [NumberRange(min=0)],
-                                    description=_("Remind users X minutes before the event"))
+                                    description=_('Remind users X minutes before the event'))
     id_prefix = StringField(_('Prefix'),
-                            description=_("Prefix for calendar item IDs. If you change this, existing calendar entries "
-                                          "cannot be deleted/updated anymore!"))
-    timeout = FloatField(_('Request timeout'), [NumberRange(min=0.25)], description=_("Request timeout in seconds"))
+                            description=_('Prefix for calendar item IDs. If you change this, existing calendar entries '
+                                          'cannot be deleted/updated anymore!'))
+    timeout = FloatField(_('Request timeout'), [NumberRange(min=0.25)], description=_('Request timeout in seconds'))
     max_event_duration = TimeDeltaField(_('Maximum Duration'), [DataRequired()], units=('days',),
                                         description=_('Events lasting longer will not be sent to Exchange'))
 
