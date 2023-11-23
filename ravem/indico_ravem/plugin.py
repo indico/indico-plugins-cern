@@ -28,7 +28,7 @@ from indico_ravem import _
 
 class SettingsForm(IndicoForm):  # pragma: no cover
     debug = BooleanField(_('Debug mode'), widget=SwitchWidget(),
-                         description=_('If enabled, no actual connect/disconnect requests are sent'),)
+                         description=_('If enabled, no actual connect/disconnect requests are sent'))
     api_endpoint = URLField(_('API endpoint'), [DataRequired()], filters=[lambda x: x.rstrip('/') + '/'],
                             description=_('The endpoint for the RAVEM API'))
     access_token = IndicoPasswordField(_('Access token'), [DataRequired()], toggle=True,

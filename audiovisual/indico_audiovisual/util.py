@@ -72,8 +72,8 @@ def get_contributions(event):
     contribs = (Contribution.query
                 .with_parent(event)
                 .filter(Contribution.is_scheduled)
-                .filter(db.or_(Contribution.session == None,  # noqa
-                               Contribution.session.has(db.or_(Session.type == None,  # noqa
+                .filter(db.or_(Contribution.session == None,  # noqa: E711
+                               Contribution.session.has(db.or_(Session.type == None,  # noqa: E711
                                                                Session.type.has(is_poster=False)))))
                 .options(joinedload('timetable_entry').load_only('start_dt'),
                          joinedload('session_block'),
@@ -255,9 +255,9 @@ def find_requests(talks=False, from_dt=None, to_dt=None, services=None, states=N
         query = query.join(Event).filter(Event.happens_between(from_dt, to_dt))
 
     if has_comment:
-        query = query.filter(Request.data['comments'].astext != '')
+        query = query.filter(Request.data['comments'].astext != '')  # noqa: PLC1901
     elif has_comment is not None:
-        query = query.filter(Request.data['comments'].astext == '')
+        query = query.filter(Request.data['comments'].astext == '')  # noqa: PLC1901
 
     # We only want the latest one for each event
     query = limit_groups(query, Request, Request.event_id, Request.created_dt.desc(), 1)

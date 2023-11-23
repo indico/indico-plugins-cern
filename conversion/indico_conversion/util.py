@@ -16,7 +16,7 @@ from indico_conversion import pdf_state_cache
 
 
 def get_pdf_title(attachment):
-    name, ext = os.path.splitext(attachment.file.filename)
+    ext = os.path.splitext(attachment.file.filename)[1]
     if attachment.title.endswith(ext):
         return attachment.title[:-len(ext)] + '.pdf'
     else:
@@ -25,7 +25,7 @@ def get_pdf_title(attachment):
 
 def save_pdf(attachment, pdf):
     from indico_conversion.plugin import ConversionPlugin
-    name, ext = os.path.splitext(attachment.file.filename)
+    name = os.path.splitext(attachment.file.filename)[0]
     title = get_pdf_title(attachment)
     pdf_attachment = Attachment(folder=attachment.folder, user=attachment.user, title=title,
                                 description=attachment.description, type=AttachmentType.file,

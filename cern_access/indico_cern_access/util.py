@@ -393,7 +393,7 @@ def check_access(req):
     category_blacklisted = is_category_blacklisted(req.event.category)
     too_early = is_event_too_early(req.event)
     if not user_authorized or category_blacklisted or too_early:
-        raise Forbidden()
+        raise Forbidden
 
 
 def get_access_dates(req):
@@ -429,14 +429,13 @@ def sanitize_accompanying_persons(value, registration):
         previous_value = (registration.cern_access_request.accompanying_persons.get(id)
                           if registration.cern_access_request
                           else None)
-        new_person = {
+        return {
             'birth_date': person['birth_date'].strftime('%Y-%m-%d'),
             'nationality': person['nationality'],
             'birth_place': person['birth_place'],
             'reservation_code': previous_value.get('reservation_code', '') if previous_value else '',
             'adams_nonce': previous_value.get('adams_nonce', '') if previous_value else '',
         }
-        return new_person
 
     return {id: _fix_person_attrs(id, person)
             for id, person in value.items()

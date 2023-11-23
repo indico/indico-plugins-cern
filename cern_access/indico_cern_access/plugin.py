@@ -406,7 +406,7 @@ class CERNAccessPlugin(IndicoPlugin):
         ticket_template = DesignerTemplate.get_or_404(form.ticket_template_id.data)
         if not access_tpl:
             return
-        if ticket_template == access_tpl or ticket_template.backside_template == access_tpl:
+        if access_tpl in (ticket_template, ticket_template.backside_template):
             if (not regform.cern_access_request or
                     (regform.cern_access_request and
                         regform.cern_access_request.request_state != CERNAccessRequestState.active)):
@@ -418,7 +418,7 @@ class CERNAccessPlugin(IndicoPlugin):
         access_tpl = self.settings.get('access_ticket_template')
         if not access_tpl:
             return
-        if template == access_tpl or template.backside_template == access_tpl:
+        if access_tpl in (template, template.backside_template):
             if (not regform.cern_access_request or
                     (regform.cern_access_request and
                         regform.cern_access_request.request_state != CERNAccessRequestState.active)):

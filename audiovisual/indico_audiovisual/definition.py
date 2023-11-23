@@ -220,7 +220,7 @@ class SpeakerReleaseAgreement(AgreementDefinitionBase):
     @classmethod
     def render_data(cls, event, data):
         try:
-            type_, url, title = _talk_info_from_agreement_data(event, data)
+            _type, url, title = _talk_info_from_agreement_data(event, data)
         except RuntimeError as e:
             return [f'({e})']
         return [Markup(f'<a href="{url}">{escape(title)}</a>')]

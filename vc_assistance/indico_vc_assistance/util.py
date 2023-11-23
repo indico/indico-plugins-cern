@@ -60,8 +60,8 @@ def has_vc_capable_rooms(event):
     capable_rooms = get_vc_capable_rooms()
     return (event.room in capable_rooms
             or any(c.room for c in event.contributions if c.room in capable_rooms)
-            or any([(s.room, sb.room) for s in event.sessions for sb in s.blocks
-                    if sb.room in capable_rooms or s.room in capable_rooms]))
+            or any((s.room, sb.room) for s in event.sessions for sb in s.blocks
+                   if sb.room in capable_rooms or s.room in capable_rooms))
 
 
 def has_vc_rooms_attached_to_capable(event):
@@ -128,8 +128,8 @@ def get_contributions(event):
     contribs = (Contribution.query
                 .with_parent(event)
                 .filter(Contribution.is_scheduled)
-                .filter(db.or_(Contribution.session == None,  # noqa
-                               Contribution.session.has(db.or_(Session.type == None,  # noqa
+                .filter(db.or_(Contribution.session == None,  # noqa: E711
+                               Contribution.session.has(db.or_(Session.type == None,  # noqa: E711
                                                                Session.type.has(is_poster=False)))))
                 .options(joinedload('timetable_entry').load_only('start_dt'),
                          joinedload('session_block'),

@@ -66,8 +66,8 @@ class OutlookQueueEntry(db.Model):
     )
 
     def __repr__(self):
-        return '<OutlookQueueEntry({}, {}, {}, {})>'.format(self.id, self.event_id, self.user_id,
-                                                            OutlookAction(self.action).name)
+        action = OutlookAction(self.action).name
+        return f'<OutlookQueueEntry({self.id}, {self.event_id}, {self.user_id}, {action})>'
 
     @classmethod
     def record(cls, event, user, action):

@@ -162,7 +162,7 @@ def submit_attachment_cloudconvert(task, attachment):
         # add polling in case we miss a webhook
         export_task_id = export_task['id']
         cloudconvert_task_cache.set(export_task_id, 'pending')
-        check_attachment_cloudconvert.apply_async(args=(attachment.id, export_task_id,), countdown=15)
+        check_attachment_cloudconvert.apply_async(args=(attachment.id, export_task_id), countdown=15)
     except requests.RequestException as exc:
         retry_task(task, attachment, exc)
     else:

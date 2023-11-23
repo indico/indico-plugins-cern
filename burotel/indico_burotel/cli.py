@@ -85,7 +85,7 @@ def get_room(room_id):
 
 
 def change_room(room, changes):
-    for field, _, new_value in changes:
+    for field, __, new_value in changes:
         if field == 'acl_entries':
             # clear the ACL and add the new principals
             room.acl_entries.clear()

@@ -116,7 +116,7 @@ def calculate_monthly_stats(start_dt, end_dt):
             }
 
     # resulted sorted by building/experiment
-    result = [(number, [(experiment, data) for experiment, data in sorted(v.items())])
+    result = [(number, sorted(v.items()))
               for number, v in sorted(bldg_map.items(), key=lambda x: natural_sort_key(x[0]))]
 
     return result, months

@@ -29,7 +29,6 @@ class BaseAPI(metaclass=ABCMeta):
     @abstractmethod
     def get_room_id(self, vc_room_data):
         """Returns the provider specific room ID."""
-        pass
 
     @abstractmethod
     def connect_endpoint(self, room_name, vc_room_id):
@@ -45,7 +44,6 @@ class BaseAPI(metaclass=ABCMeta):
         :param vc_room_id: str -- the provider specific id of the
             videoconference room
         """
-        pass
 
     @abstractmethod
     def disconnect_endpoint(self, room_name, vc_room_id):
@@ -61,7 +59,6 @@ class BaseAPI(metaclass=ABCMeta):
         :param vc_room_id: str -- the provider specific id of the
             videoconference room
         """
-        pass
 
 
 class ZoomAPI(BaseAPI):

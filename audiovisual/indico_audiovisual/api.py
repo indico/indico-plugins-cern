@@ -190,7 +190,7 @@ class AVExportHook(HTTPAPIHook):
     def export_webcast_recording(self, user):
         results = find_requests(talks=True, from_dt=self._fromDT, to_dt=self._toDT, services=self._services,
                                 states=(RequestState.accepted, RequestState.pending))
-        for req, contrib, _ in results:
+        for req, contrib, __ in results:
             yield _serialize_obj(req, contrib, self._alarm)
 
 
