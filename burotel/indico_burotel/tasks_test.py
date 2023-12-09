@@ -18,7 +18,6 @@ from indico.web.flask.util import url_for
 from indico_burotel.tasks import auto_cancel_bookings
 
 
-pytest_plugins = 'indico.modules.rb.testing.fixtures'
 pytestmark = [pytest.mark.usefixtures('smtp')]
 
 
