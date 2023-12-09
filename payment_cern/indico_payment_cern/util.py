@@ -46,7 +46,7 @@ def create_hash(seed, form_data):
     return sha512(data_str.encode()).hexdigest().upper()
 
 
-def get_order_id(registration, prefix):
+def get_order_id(registration, prefix, max_len=30):
     """Generates the order ID specific to a registration.
 
     Note: The format of the payment id in the end MUST NOT change
@@ -56,6 +56,6 @@ def get_order_id(registration, prefix):
     beforehand.
     """
     payment_id = f'c{registration.event_id}r{registration.id}'
-    order_id_extra_len = 30 - len(payment_id)
+    order_id_extra_len = max_len - len(payment_id)
     order_id = prefix + remove_non_alpha(remove_accents(registration.last_name + registration.first_name))
     return order_id[:order_id_extra_len].upper().strip() + payment_id

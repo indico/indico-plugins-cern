@@ -8,19 +8,26 @@
 from indico.core.plugins import IndicoPluginBlueprint
 
 from indico_payment_cern.controllers import (RHPaymentCancel, RHPaymentCancelBackground, RHPaymentDecline,
-                                             RHPaymentSuccess, RHPaymentSuccessBackground, RHPaymentUncertain)
+                                             RHPaymentSuccess, RHPaymentSuccessBackground, RHPaymentUncertain,
+                                             RHPostFinanceCheckIndicoTransaction, RHPostFinanceInitPayment,
+                                             RHPostFinanceReturn, RHPostFinanceWebhook)
 
 
 blueprint = IndicoPluginBlueprint(
     'payment_cern', __name__,
-    url_prefix='/event/<int:event_id>/registrations/<int:reg_form_id>/payment/response/cern'
+    url_prefix='/event/<int:event_id>/registrations/<int:reg_form_id>/payment'
 )
-blueprint.add_url_rule('/cancel', 'cancel', RHPaymentCancel, methods=('GET', 'POST'))
-blueprint.add_url_rule('/decline', 'decline', RHPaymentDecline, methods=('GET', 'POST'))
-blueprint.add_url_rule('/uncertain', 'uncertain', RHPaymentUncertain, methods=('GET', 'POST'))
-blueprint.add_url_rule('/success', 'success', RHPaymentSuccess, methods=('GET', 'POST'))
+blueprint.add_url_rule('/response/cern/cancel', 'cancel', RHPaymentCancel, methods=('GET', 'POST'))
+blueprint.add_url_rule('/response/cern/decline', 'decline', RHPaymentDecline, methods=('GET', 'POST'))
+blueprint.add_url_rule('/response/cern/uncertain', 'uncertain', RHPaymentUncertain, methods=('GET', 'POST'))
+blueprint.add_url_rule('/response/cern/success', 'success', RHPaymentSuccess, methods=('GET', 'POST'))
 # ID-less URL for the callback where we cannot customize anything besides a single variable
 blueprint.add_url_rule('!/payment/cern/success', 'background-success', RHPaymentSuccessBackground,
                        methods=('GET', 'POST'))
 blueprint.add_url_rule('!/payment/cern/cancel', 'background-cancel', RHPaymentCancelBackground,
                        methods=('GET', 'POST'))
+# New system
+blueprint.add_url_rule('/cern/init', 'init', RHPostFinanceInitPayment, methods=('POST',))
+blueprint.add_url_rule('/cern/return', 'return', RHPostFinanceReturn)
+blueprint.add_url_rule('/cern/check-transaction', 'check_transaction', RHPostFinanceCheckIndicoTransaction)
+blueprint.add_url_rule('!/payment/cern/postfinance-webhook', 'pf_webhook', RHPostFinanceWebhook, methods=('POST',))

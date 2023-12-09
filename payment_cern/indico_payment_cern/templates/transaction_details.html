@@ -2,8 +2,23 @@
 {% block details %}
     <dt>{% trans %}Extra fee{% endtrans %}</dt>
     <dd>{{ format_currency(transaction.amount - transaction.registration.price, transaction.currency, locale=session.lang) }}</dd>
-    <dt>{% trans %}Payment Method{% endtrans %}</dt>
-    <dd>{{ transaction.data.BRAND }}</dd>
-    <dt>{% trans %}Transaction ID{% endtrans %}</dt>
-    <dd>{{ transaction.data.PAYID }}</dd>
+    {% if 'meta_data' in transaction.data %}
+        <dt>{% trans %}Payment Method{% endtrans %}</dt>
+        <dd>{{ transaction.data.meta_data.payment_method_title }}</dd>
+        <dt>{% trans %}Transaction ID{% endtrans %}</dt>
+        <dd>{{ transaction.data.id }}</dd>
+        <dt>{% trans %}Order ID{% endtrans %}</dt>
+        <dd>{{ transaction.data.meta_data.order_id }}</dd>
+        <dt>{% trans %}Transaction State{% endtrans %}</dt>
+        <dd>{{ transaction.data.state|title }}</dd>
+        {% if transaction.data.authorization_environment != 'LIVE' %}
+            <dt>{% trans %}Postfinance environment{% endtrans %}</dt>
+            <dd><strong>{{ transaction.data.authorization_environment|title }}</strong></dd>
+        {% endif %}
+    {% else %}
+        <dt>{% trans %}Payment Method{% endtrans %}</dt>
+        <dd>{{ transaction.data.BRAND }}</dd>
+        <dt>{% trans %}Transaction ID{% endtrans %}</dt>
+        <dd>{{ transaction.data.PAYID }}</dd>
+    {% endif %}
 {% endblock %}

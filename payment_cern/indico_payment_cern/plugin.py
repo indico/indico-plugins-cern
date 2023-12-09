@@ -11,6 +11,7 @@ from hashlib import sha512
 
 from flask import request, session
 from flask_pluginengine import render_plugin_template
+from postfinancecheckout.models import TransactionEnvironmentSelectionStrategy
 from wtforms.fields import BooleanField, EmailField, StringField, URLField
 from wtforms.validators import DataRequired
 
@@ -19,9 +20,12 @@ from indico.core.errors import UserValueError
 from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.modules.events.payment import (PaymentEventSettingsFormBase, PaymentPluginMixin,
                                            PaymentPluginSettingsFormBase)
+from indico.modules.users import EnumConverter
 from indico.util.string import remove_accents, str_to_ascii
 from indico.web.flask.util import url_for
-from indico.web.forms.fields import MultipleItemsField, OverrideMultipleItemsField, PrincipalListField
+from indico.web.forms.fields import (IndicoEnumSelectField, MultipleItemsField, OverrideMultipleItemsField,
+                                     PrincipalListField)
+from indico.web.forms.widgets import SwitchWidget
 
 from indico_payment_cern import _
 from indico_payment_cern.blueprint import blueprint
@@ -35,12 +39,40 @@ PAYMENT_METHODS_FIELDS = [{'id': 'name', 'caption': _('Name'), 'required': True}
                           {'id': 'disabled_currencies', 'caption': _('Disabled currencies'), 'required': False}]
 
 
+PF_ENV_STRATEGIES = {
+    TransactionEnvironmentSelectionStrategy.FORCE_TEST_ENVIRONMENT: _('Force test'),
+    TransactionEnvironmentSelectionStrategy.FORCE_PRODUCTION_ENVIRONMENT: _('Force production'),
+    TransactionEnvironmentSelectionStrategy.USE_CONFIGURATION: _('Use configuration'),
+}
+
+
 class PluginSettingsForm(PaymentPluginSettingsFormBase):
+    _fieldsets = [
+        (_('General'), [
+            'authorized_users', 'fp_email_address', 'fp_department_name', 'order_id_prefix', 'payment_methods',
+            'use_new_system',
+        ]),
+        (_('Legacy system'), [
+            'payment_url', 'shop_id_chf', 'shop_id_eur', 'hash_seed_chf', 'hash_seed_eur', 'hash_seed_out_chf',
+            'hash_seed_out_eur', 'server_url_suffix',
+        ]),
+        (_('New system'), [
+            'postfinance_space_id', 'postfinance_user_id', 'postfinance_api_secret', 'postfinance_webhook_secret',
+            'postfinance_env_strategy',
+        ]),
+    ]
+
+    # General
     authorized_users = PrincipalListField(_('Authorized users'), allow_groups=True,
                                           description=_('List of users/groups who are authorized to configure the CERN '
                                                         'Payment module for any event.'))
     fp_email_address = EmailField(_('FP email adress'), [DataRequired()], description=_('Email address to contact FP.'))
     fp_department_name = StringField(_('FP department name'), [DataRequired()])
+    order_id_prefix = StringField(_('Order ID Prefix'))
+    payment_methods = MultipleItemsField(_('Payment Methods'), fields=PAYMENT_METHODS_FIELDS, unique_field='name')
+    use_new_system = BooleanField(_('Use new system'), widget=SwitchWidget(),
+                                  description=_('Use the new Postfinance payment system'))
+    # Legacy
     payment_url = URLField(_('Payment URL'), [DataRequired()], description=_('URL used for the epayment'))
     shop_id_chf = StringField(_('Shop ID (CHF)'), [DataRequired()])
     shop_id_eur = StringField(_('Shop ID (EUR)'), [DataRequired()])
@@ -49,8 +81,16 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
     hash_seed_out_chf = StringField(_('Hash seed out (CHF)'), [DataRequired()])
     hash_seed_out_eur = StringField(_('Hash seed out (EUR)'), [DataRequired()])
     server_url_suffix = StringField(_('Server URL Suffix'), description='Server URL Suffix (indico[suffix].cern.ch)')
-    order_id_prefix = StringField(_('Order ID Prefix'))
-    payment_methods = MultipleItemsField(_('Payment Methods'), fields=PAYMENT_METHODS_FIELDS, unique_field='name')
+    # New
+    postfinance_space_id = StringField(_('PostFinance space ID'), [DataRequired()])
+    postfinance_user_id = StringField(_('PostFinance user ID'), [DataRequired()])
+    postfinance_api_secret = StringField(_('PostFinance API secret'), [DataRequired()])
+    postfinance_webhook_secret = StringField(_('Webhook secret'),
+                                             description=_('If set, the webhook URL on postfinance must be configured '
+                                                           'to send "Bearer YOUR SECRET" as the Authorization header'))
+    postfinance_env_strategy = IndicoEnumSelectField(_('Environment strategy'), [DataRequired()],
+                                                     enum=TransactionEnvironmentSelectionStrategy,
+                                                     titles=PF_ENV_STRATEGIES)
 
 
 class EventSettingsForm(PaymentEventSettingsFormBase):
@@ -59,6 +99,8 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
                                              edit_fields=['fee'],
                                              description=_('Here the fees of the various payment methods can be '
                                                            'overridden.'))
+    force_test_mode = BooleanField(_('Force test mode'),
+                                   description=_("Uses Postfinance's test mode (no real money involved)"))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -87,12 +129,22 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
                         'hash_seed_out_eur': '',
                         'server_url_suffix': '',
                         'order_id_prefix': '',
-                        'payment_methods': []}
+                        'payment_methods': [],
+                        'use_new_system': False,
+                        'postfinance_space_id': '',
+                        'postfinance_user_id': '',
+                        'postfinance_api_secret': '',
+                        'postfinance_webhook_secret': '',
+                        'postfinance_env_strategy': TransactionEnvironmentSelectionStrategy.USE_CONFIGURATION}
     acl_settings = {'authorized_users'}
+    settings_converters = {
+        'postfinance_env_strategy': EnumConverter(TransactionEnvironmentSelectionStrategy),
+    }
     default_event_settings = {'enabled': False,
                               'method_name': None,
                               'apply_fees': True,
-                              'custom_fees': {}}
+                              'custom_fees': {},
+                              'force_test_mode': False}
     valid_currencies = {'EUR', 'CHF'}
 
     def init(self):
