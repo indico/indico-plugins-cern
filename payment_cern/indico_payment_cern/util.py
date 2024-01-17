@@ -5,8 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from hashlib import sha512
-
 from flask_pluginengine import current_plugin
 
 from indico.util.string import remove_accents, remove_non_alpha
@@ -38,12 +36,6 @@ def get_payment_methods(event, currency):
 def get_payment_method(event, currency, name):
     """Returns a specific payment method with the correct fee"""
     return next((x for x in get_payment_methods(event, currency) if x['name'] == name), None)
-
-
-def create_hash(seed, form_data):
-    """Creates the weird hash for postfinance"""
-    data_str = seed.join(f'{key}={value}' for key, value in sorted(form_data.items()) if value) + seed
-    return sha512(data_str.encode()).hexdigest().upper()
 
 
 def get_order_id(registration, prefix, max_len=30):

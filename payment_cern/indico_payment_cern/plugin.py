@@ -5,14 +5,12 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-import re
 from decimal import Decimal
-from hashlib import sha512
 
-from flask import request, session
+from flask import request
 from flask_pluginengine import render_plugin_template
 from postfinancecheckout.models import TransactionEnvironmentSelectionStrategy
-from wtforms.fields import BooleanField, EmailField, StringField, URLField
+from wtforms.fields import BooleanField, EmailField, StringField
 from wtforms.validators import DataRequired
 
 from indico.core import signals
@@ -21,15 +19,12 @@ from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.modules.events.payment import (PaymentEventSettingsFormBase, PaymentPluginMixin,
                                            PaymentPluginSettingsFormBase)
 from indico.modules.users import EnumConverter
-from indico.util.string import remove_accents, str_to_ascii
-from indico.web.flask.util import url_for
 from indico.web.forms.fields import (IndicoEnumSelectField, MultipleItemsField, OverrideMultipleItemsField,
                                      PrincipalListField)
-from indico.web.forms.widgets import SwitchWidget
 
 from indico_payment_cern import _
 from indico_payment_cern.blueprint import blueprint
-from indico_payment_cern.util import create_hash, get_order_id, get_payment_method, get_payment_methods
+from indico_payment_cern.util import get_payment_method, get_payment_methods
 
 
 PAYMENT_METHODS_FIELDS = [{'id': 'name', 'caption': _('Name'), 'required': True},
@@ -50,13 +45,8 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
     _fieldsets = [
         (_('General'), [
             'authorized_users', 'fp_email_address', 'fp_department_name', 'order_id_prefix', 'payment_methods',
-            'use_new_system',
         ]),
-        (_('Legacy system'), [
-            'payment_url', 'shop_id_chf', 'shop_id_eur', 'hash_seed_chf', 'hash_seed_eur', 'hash_seed_out_chf',
-            'hash_seed_out_eur', 'server_url_suffix',
-        ]),
-        (_('New system'), [
+        (_('PostFinance Checkout'), [
             'postfinance_space_id', 'postfinance_user_id', 'postfinance_api_secret', 'postfinance_webhook_secret',
             'postfinance_env_strategy',
         ]),
@@ -70,18 +60,7 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
     fp_department_name = StringField(_('FP department name'), [DataRequired()])
     order_id_prefix = StringField(_('Order ID Prefix'))
     payment_methods = MultipleItemsField(_('Payment Methods'), fields=PAYMENT_METHODS_FIELDS, unique_field='name')
-    use_new_system = BooleanField(_('Use new system'), widget=SwitchWidget(),
-                                  description=_('Use the new Postfinance payment system'))
-    # Legacy
-    payment_url = URLField(_('Payment URL'), [DataRequired()], description=_('URL used for the epayment'))
-    shop_id_chf = StringField(_('Shop ID (CHF)'), [DataRequired()])
-    shop_id_eur = StringField(_('Shop ID (EUR)'), [DataRequired()])
-    hash_seed_chf = StringField(_('Hash seed (CHF)'), [DataRequired()])
-    hash_seed_eur = StringField(_('Hash seed (EUR)'), [DataRequired()])
-    hash_seed_out_chf = StringField(_('Hash seed out (CHF)'), [DataRequired()])
-    hash_seed_out_eur = StringField(_('Hash seed out (EUR)'), [DataRequired()])
-    server_url_suffix = StringField(_('Server URL Suffix'), description='Server URL Suffix (indico[suffix].cern.ch)')
-    # New
+    # Postfinance Checkout
     postfinance_space_id = StringField(_('PostFinance space ID'), [DataRequired()])
     postfinance_user_id = StringField(_('PostFinance user ID'), [DataRequired()])
     postfinance_api_secret = StringField(_('PostFinance API secret'), [DataRequired()])
@@ -120,17 +99,8 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     default_settings = {'method_name': 'Credit Card',
                         'fp_email_address': '',
                         'fp_department_name': '',
-                        'payment_url': '',
-                        'shop_id_chf': '',
-                        'shop_id_eur': '',
-                        'hash_seed_chf': '',
-                        'hash_seed_eur': '',
-                        'hash_seed_out_chf': '',
-                        'hash_seed_out_eur': '',
-                        'server_url_suffix': '',
                         'order_id_prefix': '',
                         'payment_methods': [],
-                        'use_new_system': False,
                         'postfinance_space_id': '',
                         'postfinance_user_id': '',
                         'postfinance_api_secret': '',
@@ -182,58 +152,10 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             modifier = Decimal(1 / (1 - method['fee'] / 100))
             data['amount'] = base_amount * modifier
             data['fee'] = data['amount'] - base_amount
-            data['form_data'] = self._generate_form_data(data['amount'], data)
         else:
-            data['form_data'] = None
             data['fee'] = None
             if data['event_settings']['apply_fees']:  # we don't know the final price
                 data['amount'] = None
-
-    def _get_order_id(self, data):
-        return get_order_id(data['registration'], data['settings']['order_id_prefix'])
-
-    def _generate_form_data(self, amount, data):
-        if amount is None:
-            return {}
-        registration = data['registration']
-        personal_data = registration.get_personal_data()
-        event = data['event']
-        currency = data['currency']
-        seed = data['settings'][f'hash_seed_{currency.lower()}']
-        shop_id = data['settings'][f'shop_id_{currency.lower()}']
-        method = get_payment_method(event, currency, data['selected_method'])
-        if method is None:
-            raise UserValueError(_('Invalid currency'))
-        template_page = ''  # yes, apparently it's supposed to be empty..
-        template_hash = sha512((seed + template_page).encode()).hexdigest()
-        order_id = self._get_order_id(data)
-        locator = registration.locator.uuid
-
-        address = re.sub(r'(\r?\n)+', ', ', personal_data.get('address', ''))
-        form_data = {
-            'PSPID': shop_id,
-            'ORDERID': order_id,
-            'AMOUNT': int(amount * 100),
-            'CURRENCY': currency,
-            'LANGUAGE': session.lang,
-            'CN': str_to_ascii(remove_accents(registration.full_name[:35])),
-            'EMAIL': registration.email[:50],
-            'OWNERADDRESS': address[:35],
-            'OWNERTELNO': personal_data.get('phone', '')[:30],
-            'TP': template_page + '&hash=' + template_hash,
-            'PM': method['type'],
-            'BRAND': method['name'],
-            'PARAMVAR': data['settings']['server_url_suffix'],
-            'HOMEURL': url_for('event_registration.display_regform', locator, _external=True),
-            'ACCEPTURL': url_for_plugin('payment_cern.success', locator, _external=True),
-            'CANCELURL': url_for_plugin('payment_cern.cancel', locator, _external=True),
-            'DECLINEURL': url_for_plugin('payment_cern.decline', locator, _external=True),
-            'EXCEPTIONURL': url_for_plugin('payment_cern.uncertain', locator, _external=True),
-            'BACKURL': url_for('payment.event_payment', locator, _external=True)
-        }
-
-        form_data['SHASIGN'] = create_hash(seed, form_data)
-        return form_data
 
     def _merge_users(self, target, source, **kwargs):
         self.settings.acls.merge_users(target, source)
