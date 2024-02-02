@@ -5,7 +5,7 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 
 from indico_ravem.util import ravem_api_call
 
@@ -13,7 +13,7 @@ from indico_ravem.util import ravem_api_call
 __all__ = ('BaseAPI', 'ZoomAPI')
 
 
-class BaseAPI(metaclass=ABCMeta):
+class BaseAPI(ABC):
     @staticmethod
     def get_endpoint_status(room_name):
         """Returns the status of an physical room.
