@@ -92,7 +92,7 @@ def has_access(event_vc_room, _split_re=re.compile(r'[\s,;]+')):
 
     # No physical room or room is not videoconference capable
     feature = RavemPlugin.settings.get('room_feature')
-    if not room or feature and not (set(feature.equipment_types) & set(room.available_equipment)):
+    if not room or (feature and not (set(feature.equipment_types) & set(room.available_equipment))):
         return False
 
     ips = {_f for _f in (x.strip() for x in _split_re.split(room.get_attribute_value('ip', ''))) if _f}
