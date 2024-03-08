@@ -8,13 +8,7 @@
 from datetime import timedelta
 
 import icalendar
-from sqlalchemy.orm import joinedload
 
-from indico.core.db import db
-from indico.modules.events.models.events import Event
-from indico.modules.rb.models.reservations import Reservation, ReservationLink, ReservationOccurrence
-from indico.modules.rb.models.rooms import Room
-from indico.modules.vc.models.vc_rooms import VCRoom, VCRoomEventAssociation
 from indico.web.http_api import HTTPAPIHook
 from indico.web.http_api.util import get_query_parameter
 
@@ -110,80 +104,3 @@ def _ical_serialize_vc_alarm(record):
     alarm.add('summary', _ical_summary(record))
     alarm.add('description', str(record['url']))
     return alarm
-
-
-class RoomVCListHook(HTTPAPIHook):
-    """
-    Get a list of all room bookings for a given room in a given time period.
-    This will also output, for each of them, the associated event (if any)
-    and associated VC room (if any)
-    """
-    TYPES = ('room-vc-list',)
-    RE = r'(?P<building>\d{1,4})\/(?P<floor>[\d\w])-(?P<number>[\d\w]{1,3})'
-    VALID_FORMATS = ('json',)
-    GUEST_ALLOWED = False
-
-    def _getParams(self):
-        super()._getParams()
-        self.room = Room.query.filter(
-            ~Room.is_deleted,
-            Room.building == self._pathParams['building'],
-            Room.floor == self._pathParams['floor'],
-            Room.number == self._pathParams['number']
-        ).one()
-
-    def _has_access(self, user):
-        return is_vc_support(user)
-
-    def export_room_vc_list(self, user):
-        query = (
-            db.session.query(
-                ReservationOccurrence,
-                VCRoomEventAssociation,
-                Event
-            )
-            .filter(
-                Reservation.room == self.room,
-                ReservationOccurrence.is_valid,
-                Reservation.is_accepted,
-                db.or_(Event.id.is_(None), ~Event.is_deleted)
-            )
-            .options(joinedload('reservation'))
-            .join(Reservation)
-            .outerjoin(ReservationLink)
-            .outerjoin(Event, ReservationLink.event_id == Event.id)
-            .outerjoin(VCRoomEventAssociation, Event.id == VCRoomEventAssociation.linked_event_id)
-            .outerjoin(VCRoom)
-        )
-
-        if self._fromDT is not None:
-            query = query.filter(ReservationOccurrence.date >= self._fromDT.date())
-
-        if self._toDT is not None:
-            query = query.filter(ReservationOccurrence.date <= self._toDT.date())
-
-        for occurrence, assoc, event in query:
-            vc_data = assoc.vc_room.data if assoc else None
-            reservation = occurrence.reservation
-            yield {
-                'event': {
-                    'id': event.id,
-                    'title': event.title,
-                    'start_dt': event.start_dt.astimezone(self._tz),
-                    'end_dt': event.end_dt.astimezone(self._tz),
-                    'url': event.external_url
-                } if event else None,
-                'booking': {
-                    'id': reservation.id,
-                    'start_dt': occurrence.start_dt,
-                    'end_dt': occurrence.end_dt,
-                    'url': reservation.external_details_url,
-                    'creator': reservation.created_by_user.full_name
-                },
-                'vc_room': {
-                    'url': vc_data['url'],
-                    'vidyo_id': vc_data['vidyo_id'],
-                    'description': vc_data['description'],
-                    'extension': assoc.vc_room.vidyo_extension.extension
-                } if vc_data else None
-            }
