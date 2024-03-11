@@ -116,7 +116,6 @@ const BookRoomModal = parametrize(DefaultBookRoomModal, () => ({
     booking: Translate.string('Book a Desk'),
     preBooking: Translate.string('Pre-book a Desk'),
   },
-  reasonRequired: false,
 }));
 
 const Calendar = parametrize(DefaultCalendar, {
