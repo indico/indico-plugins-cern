@@ -9,7 +9,7 @@ from indico.core.plugins import WPJinjaMixinPlugin
 from indico.web.breadcrumbs import render_breadcrumbs
 from indico.web.views import WPDecorated
 
-from indico_audiovisual import _
+from indico_vc_assistance import _
 
 
 class WPVCAssistance(WPJinjaMixinPlugin, WPDecorated):
