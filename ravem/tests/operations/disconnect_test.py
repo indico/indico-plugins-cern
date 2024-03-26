@@ -111,11 +111,9 @@ def test_disconnect_room_error(
     with pytest.raises(RavemException) as excinfo:
         disconnect_room(room_name, vc_room)
 
-    assert (
-        str(excinfo.value)
-        == 'Failed to disconnect the room {} from the videoconference room {} with error: {}'.format(
-            room_name, vc_room_id, error_message
-        )
+    assert str(excinfo.value) == (
+        f'Failed to disconnect the room {room_name} from the videoconference room {vc_room_id} '
+        f'with error: {error_message}'
     )
     log = extract_logs(caplog, one=True, name='indico.plugin.ravem')
     assert log.message == str(excinfo.value)

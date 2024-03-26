@@ -162,28 +162,25 @@ def update_access_permissions(booking, modify_dates=None):
             logger.info('Removing ADaMS access from %s: %s, %s - %s (booking rejected/cancelled)',
                         booking.room, booking.booked_for_user, old_start_dt, old_end_dt)
             _adams_request('cancel', booking.booked_for_user, booking.room, old_start_dt, old_end_dt)
+            date_range = f'{old_start_dt} - {old_end_dt}'
             booking.add_edit_log(ReservationEditLog(user_name='Burotel', info=[
-                'Removing current access to {} ({}), {} - {} (booking created)'.format(
-                    user.full_name, user.id, old_start_dt, old_end_dt
-                )
+                f'Removing current access to {user.full_name} ({user.id}), {date_range} (booking created)'
             ]))
 
         logger.info('Granting ADaMS access to %s: %s, %s - %s',
                     booking.room, booking.booked_for_user, booking.start_dt, booking.end_dt)
         _adams_request('create', booking.booked_for_user, booking.room, booking.start_dt.date(), booking.end_dt.date())
+        date_range = f'{booking.start_dt.date()} - {booking.end_dt.date()}'
         booking.add_edit_log(ReservationEditLog(user_name='Burotel', info=[
-            'Granting ADaMS access to {} ({}), {} - {} (booking created)'.format(
-                user.full_name, user.id, booking.start_dt.date(), booking.end_dt.date()
-            )
+            f'Granting ADaMS access to {user.full_name} ({user.id}), {date_range} (booking created)'
         ]))
     elif booking.state in {ReservationState.cancelled, ReservationState.rejected}:
         logger.info('Removing ADaMS access from %s: %s, %s - %s (booking rejected/cancelled)',
                     booking.room, booking.booked_for_user, booking.start_dt, booking.end_dt)
         _adams_request('cancel', booking.booked_for_user, booking.room, booking.start_dt.date(), booking.end_dt.date())
+        date_range = f'{booking.start_dt.date()} - {booking.end_dt.date()}'
         booking.add_edit_log(ReservationEditLog(user_name='Burotel', info=[
-            'Removing ADaMS access from {} ({}), {} - {} (booking rejected/cancelled)'.format(
-                user.full_name, user.id, booking.start_dt.date(), booking.end_dt.date()
-            )
+            f'Removing ADaMS access from {user.full_name} ({user.id}), {date_range} (booking rejected/cancelled)'
         ]))
     else:
         return
