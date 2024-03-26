@@ -101,7 +101,7 @@ class FoundationSync:
         return data, email_warning
 
     def _prepare_row(self, row, cursor):
-        return dict(zip([d[0] for d in cursor.description], row))
+        return dict(zip([d[0] for d in cursor.description], row, strict=True))
 
     def _update_room(self, room, room_data, changes):
         room.is_deleted = False
