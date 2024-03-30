@@ -18,6 +18,12 @@ on:
       - reopened
       - synchronize
       - labeled
+  workflow_dispatch:
+    inputs:
+      add-version-suffix:
+        type: boolean
+        default: true
+        description: Append version suffix
 
 permissions:
   contents: read
@@ -30,6 +36,7 @@ jobs:
       directory: cern
       extra-plugins-repo: indico/indico-plugins
       extra-plugins-dir: public
+      add-version-suffix: ${{ github.event_name != 'workflow_dispatch' || inputs.add-version-suffix }}
 
   bundle:
     name: Bundle wheels 📦
