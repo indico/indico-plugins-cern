@@ -101,6 +101,7 @@ class ConversionPlugin(IndicoPlugin):
 
     def _add_file_form_fields(self, form_cls, **kwargs):
         exts = ', '.join(self.settings.get('valid_extensions'))
+        print('_add_file_form_fields exts', exts)
         return 'convert_to_pdf', \
                BooleanField(_('Convert to PDF'), widget=SwitchWidget(),
                             description=_('If enabled, your files will be be converted to PDF if possible. '
@@ -108,6 +109,7 @@ class ConversionPlugin(IndicoPlugin):
                             default=True)
 
     def _add_url_form_fields(self, form_cls, **kwargs):
+        print('_add_url_form_fields')
         return 'convert_to_pdf', \
                BooleanField(_('Convert to PDF'), widget=SwitchWidget(),
                             description=_('If enabled, your URL will be be converted to PDF if possible '
@@ -116,6 +118,8 @@ class ConversionPlugin(IndicoPlugin):
 
     def _form_validated(self, form, **kwargs):
         classes = [AddAttachmentFilesForm, AddAttachmentLinkForm]
+        print('_form_validated', form, classes)
+        print(dir(form))
         if plugin_engine.has_plugin('owncloud'):
             from indico_owncloud.forms import AddAttachmentOwncloudForm
             classes.append(AddAttachmentOwncloudForm)
@@ -128,6 +132,7 @@ class ConversionPlugin(IndicoPlugin):
             g.convert_url_to_pdf = form.convert_to_pdf.data
         
     def _attachment_created(self, attachment, **kwargs):
+        print('_attachment_created', attachment)
         # The first method needs to be adapted to handle both the existing 'file with valid extension' case and the new 'google slides link' case.
 
         if not g.get('convert_attachments_pdf') or attachment.type != AttachmentType.file:
@@ -147,8 +152,10 @@ class ConversionPlugin(IndicoPlugin):
                     'automatically once the conversion finished.').format(file=attachment.file.filename))
 
     def _link_created(self, link, **kwargs):
+        print('_link_created', link)
         if not g.get('convert_url_to_pdf'):
             return
+        print('_link_created 2')
         # Prepare for submission (after commit)
         if 'convert_attachments' not in g:
             g.convert_attachments = set()
@@ -161,6 +168,7 @@ class ConversionPlugin(IndicoPlugin):
                     'automatically once the conversion finished.').format(file=link.file.filename))
 
     def _after_commit(self, sender, **kwargs):
+        print('after_commit', sender)
         for attachment, is_protected in g.get('convert_attachments', ()):
             if self.settings.get('use_cloudconvert') and not is_protected:
                 submit_attachment_cloudconvert.delay(attachment)
