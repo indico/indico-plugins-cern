@@ -15,7 +15,7 @@ from wtforms.validators import DataRequired, NumberRange, Optional
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin, plugin_engine, url_for_plugin
-from indico.modules.attachments.forms import AddAttachmentFilesForm
+from indico.modules.attachments.forms import AddAttachmentFilesForm, AddAttachmentLinkForm
 from indico.modules.attachments.models.attachments import AttachmentType
 from indico.modules.events.views import WPSimpleEventDisplay
 from indico.util.date_time import now_utc
@@ -80,12 +80,14 @@ class ConversionPlugin(IndicoPlugin):
 
     def init(self):
         super().init()
-        self.connect(signals.core.add_form_fields, self._add_form_fields, sender=AddAttachmentFilesForm)
+        self.connect(signals.core.add_form_fields, self._add_file_form_fields, sender=AddAttachmentFilesForm)
+        self.connect(signals.core.add_form_fields, self._add_url_form_fields, sender=AddAttachmentLinkForm)
         if plugin_engine.has_plugin('owncloud'):
             from indico_owncloud.forms import AddAttachmentOwncloudForm
-            self.connect(signals.core.add_form_fields, self._add_form_fields, sender=AddAttachmentOwncloudForm)
+            self.connect(signals.core.add_form_fields, self._add_file_form_fields, sender=AddAttachmentOwncloudForm)
         self.connect(signals.core.form_validated, self._form_validated)
         self.connect(signals.attachments.attachment_created, self._attachment_created)
+        self.connect(signals.attachments.attachment_created, self._link_created)
         self.connect(signals.core.after_commit, self._after_commit)
         self.template_hook('event-display-after-attachment', self._event_display_after_attachment)
         self.inject_bundle('main.css', WPSimpleEventDisplay)
@@ -97,7 +99,7 @@ class ConversionPlugin(IndicoPlugin):
     def get_vars_js(self):
         return {'urls': {'check': url_for_plugin('conversion.check')}}
 
-    def _add_form_fields(self, form_cls, **kwargs):
+    def _add_file_form_fields(self, form_cls, **kwargs):
         exts = ', '.join(self.settings.get('valid_extensions'))
         return 'convert_to_pdf', \
                BooleanField(_('Convert to PDF'), widget=SwitchWidget(),
@@ -105,16 +107,29 @@ class ConversionPlugin(IndicoPlugin):
                                           'The following file types can be converted: {exts}').format(exts=exts),
                             default=True)
 
+    def _add_url_form_fields(self, form_cls, **kwargs):
+        return 'convert_to_pdf', \
+               BooleanField(_('Convert to PDF'), widget=SwitchWidget(),
+                            description=_('If enabled, your URL will be be converted to PDF if possible '
+                                          '(currently only Google Slides are supported).'),
+                            default=True)
+
     def _form_validated(self, form, **kwargs):
-        classes = [AddAttachmentFilesForm]
+        classes = [AddAttachmentFilesForm, AddAttachmentLinkForm]
         if plugin_engine.has_plugin('owncloud'):
             from indico_owncloud.forms import AddAttachmentOwncloudForm
             classes.append(AddAttachmentOwncloudForm)
         if not isinstance(form, tuple(classes)):
             return
-        g.convert_attachments_pdf = form.ext__convert_to_pdf.data
-
+        # Not sure about this bit below...
+        if isinstance(form, AddAttachmentFilesForm):
+            g.convert_attachments_pdf = form.ext__convert_to_pdf.data
+        elif isinstance(form, AddAttachmentLinkForm):
+            g.convert_url_to_pdf = form.convert_to_pdf.data
+        
     def _attachment_created(self, attachment, **kwargs):
+        # The first method needs to be adapted to handle both the existing 'file with valid extension' case and the new 'google slides link' case.
+
         if not g.get('convert_attachments_pdf') or attachment.type != AttachmentType.file:
             return
         ext = os.path.splitext(attachment.file.filename)[1].lstrip('.').lower()
@@ -130,6 +145,20 @@ class ConversionPlugin(IndicoPlugin):
             g.attachment_conversion_msg_displayed = True
             flash(_('Your file(s) have been sent to the conversion system. The PDF file(s) will be attached '
                     'automatically once the conversion finished.').format(file=attachment.file.filename))
+
+    def _link_created(self, link, **kwargs):
+        if not g.get('convert_url_to_pdf'):
+            return
+        # Prepare for submission (after commit)
+        if 'convert_attachments' not in g:
+            g.convert_attachments = set()
+        g.convert_attachments.add((link, link.is_protected))
+        # Set cache entry to show the pending attachment
+        pdf_state_cache.set(str(link.id), 'pending', timeout=info_ttl)
+        if not g.get('attachment_conversion_msg_displayed'):
+            g.attachment_conversion_msg_displayed = True
+            flash(_('Your URL has been sent to the conversion system. The PDF file will be attached '
+                    'automatically once the conversion finished.').format(file=link.file.filename))
 
     def _after_commit(self, sender, **kwargs):
         for attachment, is_protected in g.get('convert_attachments', ()):
