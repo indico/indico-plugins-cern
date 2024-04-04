@@ -26,7 +26,7 @@ from indico.web.forms.widgets import SwitchWidget
 
 from indico_conversion import _, pdf_state_cache
 from indico_conversion.blueprint import blueprint
-from indico_conversion.conversion import submit_attachment_cloudconvert, submit_attachment_doconverter
+from indico_conversion.conversion import submit_attachment_cloudconvert, submit_attachment_doconverter, request_pdf_from_googledrive
 from indico_conversion.util import get_pdf_title
 
 
@@ -43,6 +43,9 @@ class SettingsForm(IndicoForm):
                           description=_("The URL to the conversion server's uploadFile.py script."))
     cloudconvert_api_key = IndicoPasswordField(_('CloudConvert API key'),
                                                [DataRequired(), HiddenUnless('use_cloudconvert', preserve_data=True)],
+                                               toggle=True)
+    googledrive_api_key = IndicoPasswordField(_('GoogleDrive API key'),
+                                               [DataRequired()],
                                                toggle=True)
     cloudconvert_sandbox = BooleanField(_('Sandbox'),
                                         [HiddenUnless('use_cloudconvert', preserve_data=True)],
@@ -73,6 +76,7 @@ class ConversionPlugin(IndicoPlugin):
                         'maintenance': False,
                         'server_url': '',
                         'cloudconvert_api_key': '',
+                        'googledrive_api_key': '',
                         'cloudconvert_sandbox': False,
                         'cloudconvert_notify_threshold': None,
                         'cloudconvert_notify_email': '',
@@ -87,7 +91,6 @@ class ConversionPlugin(IndicoPlugin):
             self.connect(signals.core.add_form_fields, self._add_file_form_fields, sender=AddAttachmentOwncloudForm)
         self.connect(signals.core.form_validated, self._form_validated)
         self.connect(signals.attachments.attachment_created, self._attachment_created)
-        self.connect(signals.attachments.attachment_created, self._link_created)
         self.connect(signals.core.after_commit, self._after_commit)
         self.template_hook('event-display-after-attachment', self._event_display_after_attachment)
         self.inject_bundle('main.css', WPSimpleEventDisplay)
@@ -129,51 +132,51 @@ class ConversionPlugin(IndicoPlugin):
         if isinstance(form, AddAttachmentFilesForm):
             g.convert_attachments_pdf = form.ext__convert_to_pdf.data
         elif isinstance(form, AddAttachmentLinkForm):
-            g.convert_url_to_pdf = form.convert_to_pdf.data
+            g.convert_attachments_pdf = form.ext__convert_to_pdf.data
         
     def _attachment_created(self, attachment, **kwargs):
         print('_attachment_created', attachment)
+        print('_attachment_created type', attachment.type)
         # The first method needs to be adapted to handle both the existing 'file with valid extension' case and the new 'google slides link' case.
 
-        if not g.get('convert_attachments_pdf') or attachment.type != AttachmentType.file:
+        if not g.get('convert_attachments_pdf'):
             return
-        ext = os.path.splitext(attachment.file.filename)[1].lstrip('.').lower()
-        if ext not in self.settings.get('valid_extensions'):
-            return
+        print('_attachment_created 2a')
+        if attachment.type == AttachmentType.file:
+            print('file')
+            ext = os.path.splitext(attachment.file.filename)[1].lstrip('.').lower()
+            if ext not in self.settings.get('valid_extensions'):
+                return
+        else:
+            print('link')
+            if not attachment.link_url.startswith('https://docs.google.com/presentation/'):
+                return
+        print('_attachment_created 3')
         # Prepare for submission (after commit)
         if 'convert_attachments' not in g:
             g.convert_attachments = set()
         g.convert_attachments.add((attachment, attachment.is_protected))
         # Set cache entry to show the pending attachment
         pdf_state_cache.set(str(attachment.id), 'pending', timeout=info_ttl)
+        print('_attachment_created 4')
         if not g.get('attachment_conversion_msg_displayed'):
             g.attachment_conversion_msg_displayed = True
-            flash(_('Your file(s) have been sent to the conversion system. The PDF file(s) will be attached '
-                    'automatically once the conversion finished.').format(file=attachment.file.filename))
-
-    def _link_created(self, link, **kwargs):
-        print('_link_created', link)
-        if not g.get('convert_url_to_pdf'):
-            return
-        print('_link_created 2')
-        # Prepare for submission (after commit)
-        if 'convert_attachments' not in g:
-            g.convert_attachments = set()
-        g.convert_attachments.add((link, link.is_protected))
-        # Set cache entry to show the pending attachment
-        pdf_state_cache.set(str(link.id), 'pending', timeout=info_ttl)
-        if not g.get('attachment_conversion_msg_displayed'):
-            g.attachment_conversion_msg_displayed = True
-            flash(_('Your URL has been sent to the conversion system. The PDF file will be attached '
-                    'automatically once the conversion finished.').format(file=link.file.filename))
+            if attachment.type == AttachmentType.file:
+                flash(_('Your file(s) have been sent to the conversion system. The PDF file(s) will be attached '
+                        'automatically once the conversion finished.').format(file=attachment.file.filename))
+            elif attachment.type == AttachmentType.link:
+                flash(_('Your google link has been sent to the conversion system. The PDF file will be attached '
+                        'automatically once the conversion finished.'))
 
     def _after_commit(self, sender, **kwargs):
-        print('after_commit', sender)
         for attachment, is_protected in g.get('convert_attachments', ()):
-            if self.settings.get('use_cloudconvert') and not is_protected:
-                submit_attachment_cloudconvert.delay(attachment)
-            else:
-                submit_attachment_doconverter.delay(attachment)
+            if attachment.type == AttachmentType.file:
+                if self.settings.get('use_cloudconvert') and not is_protected:
+                    submit_attachment_cloudconvert.delay(attachment)
+                else:
+                    submit_attachment_doconverter.delay(attachment)
+            elif attachment.type == AttachmentType.link:
+                request_pdf_from_googledrive.delay(attachment)
 
     def _event_display_after_attachment(self, attachment, top_level, has_label, **kwargs):
         if attachment.type != AttachmentType.file:

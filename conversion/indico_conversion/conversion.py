@@ -110,7 +110,6 @@ def request_pdf_from_googledrive(task, attachment):
     # use requests to get the file from this URL: 
     mime_type = 'application/pdf'
     api_key = ConversionPlugin.settings.get('googledrive_api_key')
-    api_key = 'AIzaSyAsUIsoYr4YdQ7_hxGT46gnn93Qxc_tdKc'
     request_text = f'[https://www.googleapis.com/drive/v3/files/{file_id}/export?mimeType={mime_type}&key={api_key}](https://www.googleapis.com/drive/v3/files/%7Bfileid%7D/export?mimeType=%7Bmime_type%7D&key=%7Bapi_key%7D)'
     try:
         response = requests.get(request_text)
