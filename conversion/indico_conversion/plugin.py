@@ -104,7 +104,6 @@ class ConversionPlugin(IndicoPlugin):
 
     def _add_file_form_fields(self, form_cls, **kwargs):
         exts = ', '.join(self.settings.get('valid_extensions'))
-        print('_add_file_form_fields exts', exts)
         return 'convert_to_pdf', \
                BooleanField(_('Convert to PDF'), widget=SwitchWidget(),
                             description=_('If enabled, your files will be be converted to PDF if possible. '
@@ -112,7 +111,6 @@ class ConversionPlugin(IndicoPlugin):
                             default=True)
 
     def _add_url_form_fields(self, form_cls, **kwargs):
-        print('_add_url_form_fields')
         return 'convert_to_pdf', \
                BooleanField(_('Convert to PDF'), widget=SwitchWidget(),
                             description=_('If enabled, your URL will be be converted to PDF if possible '
@@ -121,8 +119,6 @@ class ConversionPlugin(IndicoPlugin):
 
     def _form_validated(self, form, **kwargs):
         classes = [AddAttachmentFilesForm, AddAttachmentLinkForm]
-        print('_form_validated', form, classes)
-        print(dir(form))
         if plugin_engine.has_plugin('owncloud'):
             from indico_owncloud.forms import AddAttachmentOwncloudForm
             classes.append(AddAttachmentOwncloudForm)
@@ -135,38 +131,28 @@ class ConversionPlugin(IndicoPlugin):
             g.convert_attachments_pdf = form.ext__convert_to_pdf.data
         
     def _attachment_created(self, attachment, **kwargs):
-        print('_attachment_created', attachment)
-        print('_attachment_created type', attachment.type)
-        # The first method needs to be adapted to handle both the existing 'file with valid extension' case and the new 'google slides link' case.
-
         if not g.get('convert_attachments_pdf'):
             return
-        print('_attachment_created 2a')
         if attachment.type == AttachmentType.file:
-            print('file')
             ext = os.path.splitext(attachment.file.filename)[1].lstrip('.').lower()
             if ext not in self.settings.get('valid_extensions'):
                 return
-        else:
-            print('link')
-            if not attachment.link_url.startswith('https://docs.google.com/presentation/'):
-                return
-        print('_attachment_created 3')
+        elif not attachment.link_url.startswith('https://docs.google.com/presentation/'):
+            return
         # Prepare for submission (after commit)
         if 'convert_attachments' not in g:
             g.convert_attachments = set()
         g.convert_attachments.add((attachment, attachment.is_protected))
         # Set cache entry to show the pending attachment
         pdf_state_cache.set(str(attachment.id), 'pending', timeout=info_ttl)
-        print('_attachment_created 4')
         if not g.get('attachment_conversion_msg_displayed'):
             g.attachment_conversion_msg_displayed = True
             if attachment.type == AttachmentType.file:
                 flash(_('Your file(s) have been sent to the conversion system. The PDF file(s) will be attached '
-                        'automatically once the conversion finished.').format(file=attachment.file.filename))
+                        'automatically once the conversion is finished.').format(file=attachment.file.filename))
             elif attachment.type == AttachmentType.link:
-                flash(_('Your google link has been sent to the conversion system. The PDF file will be attached '
-                        'automatically once the conversion finished.'))
+                flash(_('Google drive has been requested to make a PDF out of your link. The PDF file will be attached '
+                        'automatically once the conversion is finished.'))
 
     def _after_commit(self, sender, **kwargs):
         for attachment, is_protected in g.get('convert_attachments', ()):
@@ -179,9 +165,7 @@ class ConversionPlugin(IndicoPlugin):
                 request_pdf_from_googledrive.delay(attachment)
 
     def _event_display_after_attachment(self, attachment, top_level, has_label, **kwargs):
-        if attachment.type != AttachmentType.file:
-            return None
-        if now_utc() - attachment.file.created_dt > info_ttl:
+        if attachment.file and (now_utc() - attachment.file.created_dt > info_ttl):
             return None
         if pdf_state_cache.get(str(attachment.id)) != 'pending':
             return None
