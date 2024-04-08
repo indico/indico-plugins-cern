@@ -92,6 +92,7 @@ def submit_attachment_doconverter(task, attachment):
         else:
             ConversionPlugin.logger.info('Submitted %r to Doconverter', attachment)
 
+
 @celery.task(bind=True, max_retries=None)
 def request_pdf_from_googledrive(task, attachment):
     """Uses the Google Drive API to convert a Google Drive file to a PDF."""  
@@ -112,14 +113,12 @@ def request_pdf_from_googledrive(task, attachment):
     ConversionPlugin.logger.info('request_text %r', request_text)
     try:
         response = requests.get(request_text)
-        response.raise_for_status()
-        if 'ok' not in response.text:
-            raise requests.RequestException(f'Unexpected response from server: {response.text}', response=response)
     except requests.RequestException as exc:
         retry_task(task, attachment, exc)
     else:
         pdf = response.content
         save_pdf(attachment, pdf)
+        db.session.commit()
     
 
 class RHDoconverterFinished(RH):
@@ -149,7 +148,6 @@ class RHDoconverterFinished(RH):
 @celery.task(bind=True, max_retries=None)
 def submit_attachment_cloudconvert(task, attachment):
     """Sends an attachment's file to the CloudConvert conversion service"""
-
     from indico_conversion.plugin import ConversionPlugin
     if ConversionPlugin.settings.get('maintenance'):
         task.retry(countdown=900)

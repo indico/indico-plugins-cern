@@ -26,7 +26,11 @@ from indico.web.forms.widgets import SwitchWidget
 
 from indico_conversion import _, pdf_state_cache
 from indico_conversion.blueprint import blueprint
-from indico_conversion.conversion import submit_attachment_cloudconvert, submit_attachment_doconverter, request_pdf_from_googledrive
+from indico_conversion.conversion import (
+    submit_attachment_cloudconvert,
+    submit_attachment_doconverter,
+    request_pdf_from_googledrive
+)
 from indico_conversion.util import get_pdf_title
 
 
