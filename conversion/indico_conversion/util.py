@@ -32,7 +32,6 @@ def save_pdf(attachment, pdf):
         name = os.path.splitext(attachment.file.filename)[0]
     else:
         name = attachment.title
-    
     title = get_pdf_title(attachment)
     pdf_attachment = Attachment(folder=attachment.folder, user=attachment.user, title=title,
                                 description=attachment.description, type=AttachmentType.file,
@@ -40,7 +39,7 @@ def save_pdf(attachment, pdf):
     if attachment.type == AttachmentType.file:
         user = attachment.file.user
     else:
-        user = attachment.user 
+        user = attachment.user
     pdf_attachment.file = AttachmentFile(user=user, filename=f'{name}.pdf',
                                          content_type='application/pdf')
     pdf_attachment.file.save(pdf)

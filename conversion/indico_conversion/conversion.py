@@ -95,7 +95,7 @@ def submit_attachment_doconverter(task, attachment):
 
 @celery.task(bind=True, max_retries=None)
 def request_pdf_from_googledrive(task, attachment):
-    """Uses the Google Drive API to convert a Google Drive file to a PDF."""  
+    """Uses the Google Drive API to convert a Google Drive file to a PDF."""
     from indico_conversion.plugin import ConversionPlugin
     ConversionPlugin.logger.info('request_pdf_from_googledrive %r', attachment)
     # URLS have form: https://docs.google.com/presentation/d/<FILEID>
@@ -106,7 +106,7 @@ def request_pdf_from_googledrive(task, attachment):
     except ValueError:
         return
 
-    # use requests to get the file from this URL: 
+    # use requests to get the file from this URL:
     mime_type = 'application/pdf'
     api_key = ConversionPlugin.settings.get('googledrive_api_key')
     request_text = f'https://www.googleapis.com/drive/v3/files/{file_id}/export?mimeType={mime_type}&key={api_key}'
@@ -119,7 +119,7 @@ def request_pdf_from_googledrive(task, attachment):
         pdf = response.content
         save_pdf(attachment, pdf)
         db.session.commit()
-    
+
 
 class RHDoconverterFinished(RH):
     """Callback to attach a converted file"""

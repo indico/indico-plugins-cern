@@ -26,11 +26,8 @@ from indico.web.forms.widgets import SwitchWidget
 
 from indico_conversion import _, pdf_state_cache
 from indico_conversion.blueprint import blueprint
-from indico_conversion.conversion import (
-    submit_attachment_cloudconvert,
-    submit_attachment_doconverter,
-    request_pdf_from_googledrive
-)
+from indico_conversion.conversion import (request_pdf_from_googledrive, submit_attachment_cloudconvert,
+                                          submit_attachment_doconverter)
 from indico_conversion.util import get_pdf_title
 
 
@@ -49,8 +46,8 @@ class SettingsForm(IndicoForm):
                                                [DataRequired(), HiddenUnless('use_cloudconvert', preserve_data=True)],
                                                toggle=True)
     googledrive_api_key = IndicoPasswordField(_('GoogleDrive API key'),
-                                               [DataRequired()],
-                                               toggle=True)
+                                              [DataRequired()],
+                                              toggle=True)
     cloudconvert_sandbox = BooleanField(_('Sandbox'),
                                         [HiddenUnless('use_cloudconvert', preserve_data=True)],
                                         widget=SwitchWidget(),
@@ -133,7 +130,7 @@ class ConversionPlugin(IndicoPlugin):
             g.convert_attachments_pdf = form.ext__convert_to_pdf.data
         elif isinstance(form, AddAttachmentLinkForm):
             g.convert_attachments_pdf = form.ext__convert_to_pdf.data
-        
+
     def _attachment_created(self, attachment, **kwargs):
         if not g.get('convert_attachments_pdf'):
             return
