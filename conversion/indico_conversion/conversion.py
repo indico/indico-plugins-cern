@@ -63,7 +63,6 @@ def retry_task(task, attachment, exception):
 @celery.task(bind=True, max_retries=None)
 def submit_attachment_doconverter(task, attachment):
     """Sends an attachment's file to the Doconvert conversion service"""
-    print('submit_attachment_doconverter', task, attachment)
 
     from indico_conversion.plugin import ConversionPlugin
     if ConversionPlugin.settings.get('maintenance'):
@@ -95,22 +94,22 @@ def submit_attachment_doconverter(task, attachment):
 
 @celery.task(bind=True, max_retries=None)
 def request_pdf_from_googledrive(task, attachment):
-    """Uses the Google Drive API to convert a Google Drive file to a PDF."""
-    print('request_pdf_from_googledrive', task, attachment)
+    """Uses the Google Drive API to convert a Google Drive file to a PDF."""  
     from indico_conversion.plugin import ConversionPlugin
-    
+    ConversionPlugin.logger.info('request_pdf_from_googledrive %r', attachment)
     # URLS have form: https://docs.google.com/presentation/d/<FILEID>
     # So look for docs.google.com, and then extract the fileID
     url_list = attachment.link_url.split('/')
     try:
-        file_id = url_list[url_list.index('docs.google.com') + 2]
+        file_id = url_list[url_list.index('docs.google.com') + 3]
     except ValueError:
         return
-    
+
     # use requests to get the file from this URL: 
     mime_type = 'application/pdf'
     api_key = ConversionPlugin.settings.get('googledrive_api_key')
-    request_text = f'[https://www.googleapis.com/drive/v3/files/{file_id}/export?mimeType={mime_type}&key={api_key}](https://www.googleapis.com/drive/v3/files/%7Bfileid%7D/export?mimeType=%7Bmime_type%7D&key=%7Bapi_key%7D)'
+    request_text = f'https://www.googleapis.com/drive/v3/files/{file_id}/export?mimeType={mime_type}&key={api_key}'
+    ConversionPlugin.logger.info('request_text %r', request_text)
     try:
         response = requests.get(request_text)
         response.raise_for_status()
@@ -119,9 +118,10 @@ def request_pdf_from_googledrive(task, attachment):
     except requests.RequestException as exc:
         retry_task(task, attachment, exc)
     else:
-        pdf = response.files['content'].stream.read()
+        pdf = response.content
         save_pdf(attachment, pdf)
     
+
 class RHDoconverterFinished(RH):
     """Callback to attach a converted file"""
 
@@ -149,7 +149,6 @@ class RHDoconverterFinished(RH):
 @celery.task(bind=True, max_retries=None)
 def submit_attachment_cloudconvert(task, attachment):
     """Sends an attachment's file to the CloudConvert conversion service"""
-    print('submit_attachment_cloudconvert', task, attachment)
 
     from indico_conversion.plugin import ConversionPlugin
     if ConversionPlugin.settings.get('maintenance'):
