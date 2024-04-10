@@ -159,7 +159,7 @@ export default function RegistrationIdentityDataForm({
         isOutsideRange={value => value.isAfter()}
         enableOutsideDays
         placeholder={moment.localeData().longDateFormat('L')}
-        yearsBefore={120}
+        yearsBefore={100}
         yearsAfter={0}
       />
       <CERNAccessItem
