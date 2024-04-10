@@ -89,6 +89,8 @@ function AccompanyingPersonsComponent({onChange, value, countryOptions, accompan
                 onDateChange={date => handleOnChange(id, 'birth_date', serializeDate(date))}
                 enableOutsideDays
                 required
+                yearsBefore={100}
+                yearsAfter={0}
               />
             </td>
             <td>
@@ -159,6 +161,8 @@ export default function RegistrationIdentityDataForm({
         isOutsideRange={value => value.isAfter()}
         enableOutsideDays
         placeholder={moment.localeData().longDateFormat('L')}
+        yearsBefore={100}
+        yearsAfter={0}
       />
       <CERNAccessItem
         name="cern_access_nationality"
