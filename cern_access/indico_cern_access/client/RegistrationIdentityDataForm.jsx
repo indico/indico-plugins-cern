@@ -89,6 +89,8 @@ function AccompanyingPersonsComponent({onChange, value, countryOptions, accompan
                 onDateChange={date => handleOnChange(id, 'birth_date', serializeDate(date))}
                 enableOutsideDays
                 required
+                yearsBefore={100}
+                yearsAfter={0}
               />
             </td>
             <td>
