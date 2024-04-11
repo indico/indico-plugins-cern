@@ -46,7 +46,7 @@ class SettingsForm(IndicoForm):
                                                [DataRequired(), HiddenUnless('use_cloudconvert', preserve_data=True)],
                                                toggle=True)
     googledrive_api_key = IndicoPasswordField(_('GoogleDrive API key'),
-                                              [DataRequired()],
+                                              [],
                                               toggle=True)
     cloudconvert_sandbox = BooleanField(_('Sandbox'),
                                         [HiddenUnless('use_cloudconvert', preserve_data=True)],
@@ -114,8 +114,8 @@ class ConversionPlugin(IndicoPlugin):
     def _add_url_form_fields(self, form_cls, **kwargs):
         return 'convert_to_pdf', \
                BooleanField(_('Convert to PDF'), widget=SwitchWidget(),
-                            description=_('If enabled, your URL will be be converted to PDF if possible '
-                                          '(currently only Google Slides are supported).'),
+                            description=_('If enabled, files hosted on Google Drive will be attempted to be converted'
+                                          ' to PDF.'),
                             default=True)
 
     def _form_validated(self, form, **kwargs):
@@ -125,11 +125,7 @@ class ConversionPlugin(IndicoPlugin):
             classes.append(AddAttachmentOwncloudForm)
         if not isinstance(form, tuple(classes)):
             return
-        # Not sure about this bit below...
-        if isinstance(form, AddAttachmentFilesForm):
-            g.convert_attachments_pdf = form.ext__convert_to_pdf.data
-        elif isinstance(form, AddAttachmentLinkForm):
-            g.convert_attachments_pdf = form.ext__convert_to_pdf.data
+        g.convert_attachments_pdf = form.ext__convert_to_pdf.data
 
     def _attachment_created(self, attachment, **kwargs):
         if not g.get('convert_attachments_pdf'):
@@ -138,7 +134,7 @@ class ConversionPlugin(IndicoPlugin):
             ext = os.path.splitext(attachment.file.filename)[1].lstrip('.').lower()
             if ext not in self.settings.get('valid_extensions'):
                 return
-        elif not attachment.link_url.startswith('https://docs.google.com/presentation/'):
+        elif not attachment.link_url.startswith('https://docs.google.com/'):
             return
         # Prepare for submission (after commit)
         if 'convert_attachments' not in g:
