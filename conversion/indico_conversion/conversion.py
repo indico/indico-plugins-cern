@@ -96,8 +96,9 @@ def submit_attachment_doconverter(task, attachment):
 @celery.task(bind=True, max_retries=None)
 def request_pdf_from_googledrive(task, attachment):
     """Uses the Google Drive API to convert a Google Drive file to a PDF."""
-    from indico_conversion.plugin import ConversionPlugin
     from urllib.parse import urlparse
+
+    from indico_conversion.plugin import ConversionPlugin
 
     ConversionPlugin.logger.info('request_pdf_from_googledrive %r', attachment)
     # URLS have form: https://docs.google.com/presentation/d/<FILEID>
