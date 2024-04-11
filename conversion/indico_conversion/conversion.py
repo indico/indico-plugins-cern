@@ -97,12 +97,14 @@ def submit_attachment_doconverter(task, attachment):
 def request_pdf_from_googledrive(task, attachment):
     """Uses the Google Drive API to convert a Google Drive file to a PDF."""
     from indico_conversion.plugin import ConversionPlugin
+    from urllib.parse import urlparse
+
     ConversionPlugin.logger.info('request_pdf_from_googledrive %r', attachment)
     # URLS have form: https://docs.google.com/presentation/d/<FILEID>
-    # So look for docs.google.com, and then extract the fileID
-    url_list = attachment.link_url.split('/')
+    # or:             https://docs.google.com/document/d/<FILEID>
+    # So extract the fileID from the path
     try:
-        file_id = url_list[url_list.index('docs.google.com') + 3]
+        file_id = urlparse(attachment.link_url).path.split('/')[3]
     except ValueError:
         return
 
@@ -110,7 +112,6 @@ def request_pdf_from_googledrive(task, attachment):
     mime_type = 'application/pdf'
     api_key = ConversionPlugin.settings.get('googledrive_api_key')
     request_text = f'https://www.googleapis.com/drive/v3/files/{file_id}/export?mimeType={mime_type}&key={api_key}'
-    ConversionPlugin.logger.info('request_text %r', request_text)
     try:
         response = requests.get(request_text)
     except requests.RequestException as exc:
