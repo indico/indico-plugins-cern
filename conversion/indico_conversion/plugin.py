@@ -114,8 +114,8 @@ class ConversionPlugin(IndicoPlugin):
     def _add_url_form_fields(self, form_cls, **kwargs):
         return 'convert_to_pdf', \
                BooleanField(_('Convert to PDF'), widget=SwitchWidget(),
-                            description=_('If enabled, files hosted on Google Drive will be attempted to be converted'
-                                          ' to PDF.'),
+                            description=_('If enabled, files hosted on Google Drive will be attempted to be converted '
+                                          'to PDF.'),
                             default=True)
 
     def _form_validated(self, form, **kwargs):
