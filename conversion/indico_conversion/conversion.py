@@ -63,7 +63,6 @@ def retry_task(task, attachment, exception):
 @celery.task(bind=True, max_retries=None)
 def submit_attachment_doconverter(task, attachment):
     """Sends an attachment's file to the Doconvert conversion service"""
-
     from indico_conversion.plugin import ConversionPlugin
     if ConversionPlugin.settings.get('maintenance'):
         task.retry(countdown=900)
