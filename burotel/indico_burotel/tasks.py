@@ -93,7 +93,7 @@ def _adams_request(action, user, room, start_dt, end_dt):
 
     if not person_id:
         logger.error("Task failed: can't find a Person ID for %s", user)
-        return
+        return False
 
     url = BurotelPlugin.settings.get('adams_service_url').format(
         action=action,
@@ -111,11 +111,13 @@ def _adams_request(action, user, room, start_dt, end_dt):
         raise Retry(message='Request timeout')
     except RequestException as e:
         logger.exception('Request failed (%d): %s', e.response.status_code, e.response.content)
+        return False
     else:
         if res.status_code == 200:
-            return
+            return True
         logger.error('Unexpected response status code:\nURL: %s\nCode: %s\nResponse: %s',
                      url, res.status_code, res.text)
+        return False
 
 
 # this task needs a request context since cancelling a booking will trigger an adams update
@@ -161,26 +163,35 @@ def update_access_permissions(booking, modify_dates=None):
             )
             logger.info('Removing ADaMS access from %s: %s, %s - %s (booking rejected/cancelled)',
                         booking.room, booking.booked_for_user, old_start_dt, old_end_dt)
-            _adams_request('cancel', booking.booked_for_user, booking.room, old_start_dt, old_end_dt)
+            suffix = ''
+            if not _adams_request('cancel', booking.booked_for_user, booking.room, old_start_dt, old_end_dt):
+                suffix = ' [FAILED]'
             date_range = f'{old_start_dt} - {old_end_dt}'
             booking.add_edit_log(ReservationEditLog(user_name='Burotel', info=[
-                f'Removing current access to {user.full_name} ({user.id}), {date_range} (booking created)'
+                f'Removing current access from {user.full_name} ({user.id}), {date_range} (booking created){suffix}'
             ]))
 
         logger.info('Granting ADaMS access to %s: %s, %s - %s',
                     booking.room, booking.booked_for_user, booking.start_dt, booking.end_dt)
-        _adams_request('create', booking.booked_for_user, booking.room, booking.start_dt.date(), booking.end_dt.date())
+        suffix = ''
+        if not _adams_request('create', booking.booked_for_user, booking.room, booking.start_dt.date(),
+                              booking.end_dt.date()):
+            suffix = ' [FAILED]'
         date_range = f'{booking.start_dt.date()} - {booking.end_dt.date()}'
         booking.add_edit_log(ReservationEditLog(user_name='Burotel', info=[
-            f'Granting ADaMS access to {user.full_name} ({user.id}), {date_range} (booking created)'
+            f'Granting ADaMS access to {user.full_name} ({user.id}), {date_range} (booking created){suffix}'
         ]))
     elif booking.state in {ReservationState.cancelled, ReservationState.rejected}:
         logger.info('Removing ADaMS access from %s: %s, %s - %s (booking rejected/cancelled)',
                     booking.room, booking.booked_for_user, booking.start_dt, booking.end_dt)
-        _adams_request('cancel', booking.booked_for_user, booking.room, booking.start_dt.date(), booking.end_dt.date())
+        suffix = ''
+        if not _adams_request('cancel', booking.booked_for_user, booking.room, booking.start_dt.date(),
+                              booking.end_dt.date()):
+            suffix = ' [FAILED]'
         date_range = f'{booking.start_dt.date()} - {booking.end_dt.date()}'
         booking.add_edit_log(ReservationEditLog(user_name='Burotel', info=[
-            f'Removing ADaMS access from {user.full_name} ({user.id}), {date_range} (booking rejected/cancelled)'
+            f'Removing ADaMS access from {user.full_name} ({user.id}), {date_range} '
+            f'(booking rejected/cancelled){suffix}'
         ]))
     else:
         return
