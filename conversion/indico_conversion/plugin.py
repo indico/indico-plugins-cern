@@ -134,8 +134,14 @@ class ConversionPlugin(IndicoPlugin):
             ext = os.path.splitext(attachment.file.filename)[1].lstrip('.').lower()
             if ext not in self.settings.get('valid_extensions'):
                 return
-        elif not attachment.link_url.startswith('https://docs.google.com/'):
-            return
+        else:
+            from urllib.parse import urlparse
+            parsed_url = urlparse(attachment.link_url)
+            split_path = parsed_url.path.split('/')
+            if parsed_url.netloc != 'docs.google.com' or len(split_path) < 5:
+                # We expect a URL of form:
+                # https://docs.google.com/<TYPE>/d/<FILEID>[/edit]
+                return
         # Prepare for submission (after commit)
         if 'convert_attachments' not in g:
             g.convert_attachments = set()
