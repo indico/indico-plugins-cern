@@ -100,13 +100,12 @@ def request_pdf_from_googledrive(task, attachment):
 
     from indico_conversion.plugin import ConversionPlugin
 
-    ConversionPlugin.logger.info('request_pdf_from_googledrive %r', attachment)
-    # URLS have form: https://docs.google.com/presentation/d/<FILEID>
-    # or:             https://docs.google.com/document/d/<FILEID>
+    # URLS have form: https://docs.google.com/<TYPE>/d/<FILEID>[/edit]
     # So extract the fileID from the path
     try:
         file_id = urlparse(attachment.link_url).path.split('/')[3]
-    except ValueError:
+    except (ValueError, IndexError) as error:
+        ConversionPlugin.logger.warning('Problem parsing URL: ', error)
         return
 
     # use requests to get the file from this URL:
@@ -115,7 +114,10 @@ def request_pdf_from_googledrive(task, attachment):
     request_text = f'https://www.googleapis.com/drive/v3/files/{file_id}/export?mimeType={mime_type}&key={api_key}'
     try:
         response = requests.get(request_text)
-    except requests.RequestException as exc:
+    except requests.HTTPError as exc:
+        if exc.response.status_code == 404:
+            ConversionPlugin.logger.warning('Google Drive file %s not found', attachment.link_url)
+            return
         retry_task(task, attachment, exc)
     else:
         pdf = response.content
