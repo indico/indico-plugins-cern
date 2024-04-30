@@ -42,7 +42,7 @@ class RHCloneEvent(RHEventBase):
 
 
 def get_user_category(parent, user):
-    category = Category.query.filter(Category.title == get_category_title(user)).first()
+    category = Category.query.filter_by(title=get_category_title(user)).first()
     if category:
         if category.is_deleted:
             category.is_deleted = False
