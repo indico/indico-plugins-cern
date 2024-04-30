@@ -60,7 +60,7 @@ class I18nDemoPlugin(IndicoPlugin):
     def _intercept_make_email(self, sender, func, args, **kwargs):
         ret = func(**args.arguments)
 
-        return {
+        return ret | {
             'to': {session.user.email},
             'cc': set(),
             'bcc': set(),
