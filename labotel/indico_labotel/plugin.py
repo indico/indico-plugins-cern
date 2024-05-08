@@ -43,7 +43,7 @@ class LabotelPlugin(IndicoPlugin):
         'cern_identity_provider': ''
     }
     default_user_settings = {
-        'default_experiment': None,
+        'default_division': None,
     }
 
     def init(self):

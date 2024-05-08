@@ -90,7 +90,7 @@ function StatsTable({data, numDays, months}) {
               <Translate>Building</Translate>
             </Table.HeaderCell>
             <Table.HeaderCell>
-              <Translate>Experiment</Translate>
+              <Translate>Category</Translate>
             </Table.HeaderCell>
             <Table.HeaderCell>
               <Translate>Number of desks</Translate>
