@@ -5,7 +5,7 @@
 // them and/or modify them under the terms of the MIT License; see
 // the LICENSE file for more details.
 
-import defaultExperimentURL from 'indico-url:plugin_labotel.user_experiment';
+import defaultDivisionURL from 'indico-url:plugin_labotel.user_division';
 
 import PropTypes from 'prop-types';
 import React from 'react';
@@ -14,7 +14,7 @@ import {Button} from 'semantic-ui-react';
 import {Translate} from 'indico/react/i18n';
 import {indicoAxios, handleAxiosError} from 'indico/utils/axios';
 
-export const EXPERIMENTS = ['ATLAS', 'CMS', 'ALICE', 'LHCb', 'HSE'];
+export const DIVISIONS = ['Laser', 'Clean Room', 'DSF/QART'];
 
 export default class BootstrapOptions extends React.Component {
   static propTypes = {
@@ -22,11 +22,11 @@ export default class BootstrapOptions extends React.Component {
     options: PropTypes.object.isRequired,
   };
 
-  handleExperimentClick = async experiment => {
+  handleDivisionClick = async division => {
     const {setOptions} = this.props;
-    setOptions({division: experiment});
+    setOptions({division});
     try {
-      await indicoAxios.post(defaultExperimentURL(), {value: experiment});
+      await indicoAxios.post(defaultDivisionURL(), {value: division});
     } catch (error) {
       handleAxiosError(error);
     }
@@ -39,19 +39,19 @@ export default class BootstrapOptions extends React.Component {
 
     return (
       <Button.Group style={{marginBottom: 10}}>
-        {EXPERIMENTS.map(experiment => (
+        {DIVISIONS.map(div => (
           <Button
-            key={experiment}
-            onClick={() => this.handleExperimentClick(experiment)}
+            key={div}
+            onClick={() => this.handleDivisionClick(div)}
             type="button"
-            primary={division === experiment}
+            primary={division === div}
           >
-            {experiment}
+            {div}
           </Button>
         ))}
         <Button
           key="other"
-          onClick={() => this.handleExperimentClick(null)}
+          onClick={() => this.handleDivisionClick(null)}
           type="button"
           primary={!division}
         >

@@ -5,7 +5,7 @@
 // them and/or modify them under the terms of the MIT License; see
 // the LICENSE file for more details.
 
-import defaultExperimentURL from 'indico-url:plugin_labotel.user_experiment';
+import defaultDivisionURL from 'indico-url:plugin_labotel.user_division';
 
 import React from 'react';
 
@@ -21,14 +21,14 @@ export default class LabotelLanding extends React.Component {
   async componentDidMount() {
     let response;
     try {
-      response = await indicoAxios.get(defaultExperimentURL());
+      response = await indicoAxios.get(defaultDivisionURL());
     } catch (error) {
       handleAxiosError(error);
       return;
     }
-    const experiment = response.data.value;
-    if (this.landing.current && experiment) {
-      this.landing.current.setExtraState({division: experiment});
+    const division = response.data.value;
+    if (this.landing.current && division) {
+      this.landing.current.setExtraState({division});
     }
   }
 

@@ -13,7 +13,7 @@ import {FilterDropdownFactory} from 'indico/modules/rb/common/filters/FilterBar'
 import FilterFormComponent from 'indico/modules/rb/common/filters/FilterFormComponent';
 import {Translate} from 'indico/react/i18n';
 
-import {EXPERIMENTS} from './BootstrapOptions';
+import {DIVISIONS} from './BootstrapOptions';
 
 // eslint-disable-next-line react/prop-types
 const divisionRenderer = ({division}) => (!division ? null : <span>{division}</span>);
@@ -36,7 +36,7 @@ class ExtraFilterForm extends FilterFormComponent {
     const {division} = this.state;
     return (
       <Form.Group>
-        {EXPERIMENTS.map(div => (
+        {DIVISIONS.map(div => (
           <Form.Radio
             checked={division === div}
             key={div}
@@ -69,7 +69,7 @@ export default class ExtraFilters extends React.Component {
     return (
       <FilterDropdownFactory
         name="division"
-        title={<Translate>Experiment</Translate>}
+        title={<Translate>Category</Translate>}
         form={({division}, setParentField) => (
           <ExtraFilterForm setParentField={setParentField} division={division} />
         )}

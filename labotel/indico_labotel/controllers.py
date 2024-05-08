@@ -37,17 +37,17 @@ class RHLanding(RHRoomBookingBase):
         return WPLabotelBase.display('room_booking.html')
 
 
-class RHUserExperiment(RHProtected):
+class RHUserDivision(RHProtected):
     def _process_GET(self):
         from indico_labotel.plugin import LabotelPlugin
-        return jsonify(value=LabotelPlugin.user_settings.get(session.user, 'default_experiment'))
+        return jsonify(value=LabotelPlugin.user_settings.get(session.user, 'default_division'))
 
     @use_kwargs({
-        'value': fields.String(validate=validate.OneOf({'ATLAS', 'CMS', 'ALICE', 'LHCb', 'HSE'}), allow_none=True)
+        'value': fields.String(validate=validate.OneOf({'Laser', 'Clean Room', 'DSF/QART'}), allow_none=True)
     })
     def _process_POST(self, value):
         from indico_labotel.plugin import LabotelPlugin
-        LabotelPlugin.user_settings.set(session.user, 'default_experiment', value)
+        LabotelPlugin.user_settings.set(session.user, 'default_division', value)
 
 
 class RHLabotelStats(RHProtected):
@@ -83,7 +83,7 @@ class RHLabotelStatsCSV(RHProtected):
         # number of days within the boundary dates (inclusive)
         num_days = ((end_dt - start_dt).days + 1)
 
-        headers = ['Building', 'Experiment', 'Number of labs']
+        headers = ['Building', 'Category', 'Number of labs']
         for m in months:
             headers += [m.strftime('%b %Y'), m.strftime('%b %Y (%%)')]
         headers.append('Total')
@@ -94,7 +94,7 @@ class RHLabotelStatsCSV(RHProtected):
             for experiment, row_data in experiments:
                 row = {
                     'Building': building,
-                    'Experiment': experiment,
+                    'Category': experiment,
                     'Number of labs': row_data['desk_count']
                 }
                 for i, m in enumerate(row_data['months']):
