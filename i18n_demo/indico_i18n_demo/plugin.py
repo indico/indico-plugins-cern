@@ -5,7 +5,7 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from flask import session
+from flask import session, has_request_context
 from flask_pluginengine.plugin import render_plugin_template
 from wtforms.fields import IntegerField
 from wtforms.validators import NumberRange, Optional
@@ -60,8 +60,7 @@ class I18nDemoPlugin(IndicoPlugin):
     def _intercept_make_email(self, sender, func, args, **kwargs):
         ret = func(**args.arguments)
 
-        return ret | {
-            'to': {session.user.email},
+        overrides = {
             'cc': set(),
             'bcc': set(),
             'from': config.NO_REPLY_EMAIL,
@@ -71,3 +70,12 @@ class I18nDemoPlugin(IndicoPlugin):
             'body': ret['body'],
             'html': ret['html'],
         }
+
+        if has_request_context():
+            # If we're outside the request context (i.e. in a celery task),
+            # we can't access the session so we just keep the original address.
+            # This can happen for data export and event reminders (and maybe some other places?).
+            # In those cases, we trust the users not to spam random people.
+            overrides['to'] = session.user.email
+
+        return ret | overrides
