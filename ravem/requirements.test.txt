@@ -1,2 +1,1 @@
-HTTPretty>=0.8.8
-responses==0.25.0
+responses
