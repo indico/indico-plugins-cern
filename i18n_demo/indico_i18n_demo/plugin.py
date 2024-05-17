@@ -5,7 +5,7 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from flask import session, has_request_context
+from flask import has_request_context, session
 from flask_pluginengine.plugin import render_plugin_template
 from wtforms.fields import IntegerField
 from wtforms.validators import NumberRange, Optional
