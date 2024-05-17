@@ -68,8 +68,8 @@ class ZoomAPI(BaseAPI):
         return str(vc_room_data['zoom_id'])
 
     def connect_endpoint(self, room_name, vc_room_id):
-        return ravem_api_call('%s/connect' % self.SERVICE_TYPE, method='POST',
+        return ravem_api_call(f'{self.SERVICE_TYPE}/connect', method='POST',
                               json={'meetingId': vc_room_id, 'roomName': room_name})
 
     def disconnect_endpoint(self, room_name, vc_room_id):
-        return ravem_api_call('%s/disconnect' % self.SERVICE_TYPE, method='POST', json={'roomName': room_name})
+        return ravem_api_call(f'{self.SERVICE_TYPE}/disconnect', method='POST', json={'roomName': room_name})
