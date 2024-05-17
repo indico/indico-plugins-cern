@@ -45,7 +45,7 @@ def test_correct_auth_method(mocker):
 
     assert request.call_count == 1
     assert 'Authorization' in request.call_args[1]['headers']
-    assert request.call_args[1]['headers']['Authorization'] == 'Bearer %s' % token
+    assert request.call_args[1]['headers']['Authorization'] == f'Bearer {token}'
 
 
 @pytest.mark.usefixtures('db')

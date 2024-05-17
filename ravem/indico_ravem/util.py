@@ -40,7 +40,7 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
     access_token = RavemPlugin.settings.get('access_token')
     headers = {
         'Accept': 'application/json',
-        'Authorization': 'Bearer %s' % access_token,
+        'Authorization': f'Bearer {access_token}',
     }
     timeout = RavemPlugin.settings.get('timeout') or None
     url = urljoin(root_endpoint, api_endpoint)
