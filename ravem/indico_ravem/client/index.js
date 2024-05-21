@@ -197,10 +197,7 @@
 
       const name = btn.data('roomName');
       const vcRoomName = btn.data('vcRoomName');
-      const html = [
-        `<i class="icon ${states[newState].icon}"></i> ${name}`
-      ].join('');
-
+      const html = `<i class="icon ${states[newState].icon}"></i> ${name}`;
       btn.html(html);
       btn.toggleClass('disabled', !states[newState].action); // Whether the button should be disabled
 
