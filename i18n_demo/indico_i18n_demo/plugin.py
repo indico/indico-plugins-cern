@@ -55,7 +55,7 @@ class I18nDemoPlugin(IndicoPlugin):
             return
 
         if event.category != test_category and not event.category.is_descendant_of(test_category):
-            return render_plugin_template('clone_button.html', event=event)
+            return render_plugin_template('clone_button.html', event=event, disabled=not session.user)
 
     def _intercept_make_email(self, sender, func, args, **kwargs):
         ret = func(**args.arguments)
