@@ -7,18 +7,18 @@
 
 from flask import flash, redirect, session
 from flask_pluginengine import current_plugin
-from werkzeug.exceptions import BadRequest, Forbidden
+from werkzeug.exceptions import BadRequest
 
 from indico.core.db.sqlalchemy.protection import ProtectionMode
 from indico.modules.categories.models.categories import Category
 from indico.modules.categories.operations import create_category as _create_category
 from indico.modules.events.cloning import get_event_cloners
-from indico.modules.events.controllers.base import RHEventBase
+from indico.modules.events.controllers.base import RHProtectedEventBase
 from indico.modules.events.operations import clone_event
 from indico.web.flask.util import url_for
 
 
-class RHCloneEvent(RHEventBase):
+class RHCloneEvent(RHProtectedEventBase):
     """Clone an event to a user's personal category.
 
     If the category does not exist, it will be created.
@@ -29,9 +29,6 @@ class RHCloneEvent(RHEventBase):
     def _process(self):
         if not (category_id := current_plugin.settings.get('test_category_id')):
             raise BadRequest('No test category ID configured')
-
-        if not session.user:
-            raise Forbidden('You must be logged in to clone events')
 
         test_category = Category.get(int(category_id))
         user_category = get_user_category(test_category, session.user)
