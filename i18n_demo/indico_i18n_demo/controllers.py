@@ -7,7 +7,7 @@
 
 from flask import flash, redirect, session
 from flask_pluginengine import current_plugin
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import BadRequest, Forbidden
 
 from indico.core.db.sqlalchemy.protection import ProtectionMode
 from indico.modules.categories.models.categories import Category
@@ -29,6 +29,9 @@ class RHCloneEvent(RHEventBase):
     def _process(self):
         if not (category_id := current_plugin.settings.get('test_category_id')):
             raise BadRequest('No test category ID configured')
+
+        if not session.user:
+            raise Forbidden('You must be logged in to clone events')
 
         test_category = Category.get(int(category_id))
         user_category = get_user_category(test_category, session.user)

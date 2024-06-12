@@ -1,9 +1,11 @@
-<button type="button"
-        class="ui tiny compact button ui-qtip"
-        style="margin-left: 2em;"
-        title="Clone event into your personal category with full management rights"
-        data-href="{{ url_for('plugin_i18n_demo.clone_event', event) }}"
-        data-method="POST">
-    <i aria-hidden="true" class="icon clone alternate"></i>
-    Clone
-</button>
+{% set enabled_message = 'Clone event into your personal category with full management rights' %}
+{% set disabled_message = 'You must be logged in to clone events' %}
+<span class="ui-qtip" style="margin-left: 2em;" title="{{ disabled_message if disabled else enabled_message }}">
+    <button type="button"
+            class="ui tiny compact button {{ 'disabled' if disabled }}"
+            data-href="{{ url_for('plugin_i18n_demo.clone_event', event) }}"
+            data-method="POST">
+        <i aria-hidden="true" class="icon clone alternate"></i>
+        Clone
+    </button>
+</span>
