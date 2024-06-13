@@ -253,6 +253,7 @@ def withdraw_access_requests(registrations):
 
 def withdraw_event_access_request(req):
     """Withdraw all CERN access requests of an event."""
+    from indico_cern_access.plugin import CERNAccessPlugin
     requested_forms = get_requested_forms(req.event)
     requested_registrations = get_requested_registrations(req.event)
     if requested_registrations:
@@ -261,7 +262,8 @@ def withdraw_event_access_request(req):
         regform.cern_access_request.request_state = CERNAccessRequestState.withdrawn
         remove_access_template(regform)
     withdraw_access_requests(requested_registrations)
-    notify_access_withdrawn(requested_registrations)
+    if not CERNAccessPlugin.instance._is_past_event(req.event):
+        notify_access_withdrawn(requested_registrations)
 
 
 def get_random_reservation_code():
