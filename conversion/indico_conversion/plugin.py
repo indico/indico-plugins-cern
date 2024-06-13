@@ -159,7 +159,7 @@ class ConversionPlugin(IndicoPlugin):
             g.attachment_conversion_msg_displayed = True
             if attachment.type == AttachmentType.file:
                 flash(_('Your file(s) have been sent to the conversion system. The PDF file(s) will be attached '
-                        'automatically once the conversion is finished.').format(file=attachment.file.filename))
+                        'automatically once the conversion is finished.'))
             elif attachment.type == AttachmentType.link:
                 flash(_('A PDF file has been requested for your Google drive link. The file will be attached '
                         'automatically once the conversion is finished.'))
