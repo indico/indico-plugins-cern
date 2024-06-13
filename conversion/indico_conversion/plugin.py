@@ -46,9 +46,6 @@ class SettingsForm(IndicoForm):
     cloudconvert_api_key = IndicoPasswordField(_('CloudConvert API key'),
                                                [DataRequired(), HiddenUnless('use_cloudconvert', preserve_data=True)],
                                                toggle=True)
-    googledrive_api_key = IndicoPasswordField(_('GoogleDrive API key'),
-                                              [],
-                                              toggle=True)
     cloudconvert_sandbox = BooleanField(_('Sandbox'),
                                         [HiddenUnless('use_cloudconvert', preserve_data=True)],
                                         widget=SwitchWidget(),
@@ -64,6 +61,8 @@ class SettingsForm(IndicoForm):
                                      filters=[lambda exts: sorted({ext.lower().lstrip('.').strip() for ext in exts})],
                                      description=_('File extensions for which PDF conversion is supported. '
                                                    'One extension per line.'))
+    googledrive_api_key = IndicoPasswordField(_('GoogleDrive API key'), toggle=True,
+                                              description=_('API key used for converting files on Google Docs.'))
 
 
 @uses('owncloud')
