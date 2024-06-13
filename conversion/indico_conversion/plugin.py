@@ -161,7 +161,7 @@ class ConversionPlugin(IndicoPlugin):
                 flash(_('Your file(s) have been sent to the conversion system. The PDF file(s) will be attached '
                         'automatically once the conversion is finished.').format(file=attachment.file.filename))
             elif attachment.type == AttachmentType.link:
-                flash(_('Google drive has been requested to make a PDF out of your link. The PDF file will be attached '
+                flash(_('A PDF file has been requested for your Google drive link. The file will be attached '
                         'automatically once the conversion is finished.'))
 
     def _after_commit(self, sender, **kwargs):
