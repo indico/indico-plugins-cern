@@ -7,6 +7,7 @@
 
 import os
 from datetime import timedelta
+from urllib.parse import urlparse
 
 import dateutil.parser
 import requests
@@ -95,12 +96,9 @@ def submit_attachment_doconverter(task, attachment):
 @celery.task(bind=True, max_retries=None)
 def request_pdf_from_googledrive(task, attachment):
     """Uses the Google Drive API to convert a Google Drive file to a PDF."""
-    from urllib.parse import urlparse
-
     from indico_conversion.plugin import ConversionPlugin
 
-    # URLS have form: https://docs.google.com/<TYPE>/d/<FILEID>[/edit]
-    # So extract the fileID from the path
+    # Google drive URLs have this pattern: https://docs.google.com/<TYPE>/d/<FILEID>[/edit]
     try:
         file_id = urlparse(attachment.link_url).path.split('/')[3]
     except (ValueError, IndexError) as error:

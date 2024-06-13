@@ -146,7 +146,7 @@ class ConversionPlugin(IndicoPlugin):
             parsed_url = urlparse(attachment.link_url)
             split_path = parsed_url.path.split('/')
             if parsed_url.netloc != 'docs.google.com' or len(split_path) < 5:
-                # We expect a URL of form:
+                # We expect a URL matching this pattern:
                 # https://docs.google.com/<TYPE>/d/<FILEID>[/edit]
                 return
         # Prepare for submission (after commit)
