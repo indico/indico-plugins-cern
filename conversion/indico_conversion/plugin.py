@@ -7,6 +7,7 @@
 
 import os
 from datetime import timedelta
+from urllib.parse import urlparse
 
 from flask import flash, g
 from flask_pluginengine import render_plugin_template, uses
@@ -135,7 +136,8 @@ class ConversionPlugin(IndicoPlugin):
             if ext not in self.settings.get('valid_extensions'):
                 return
         else:
-            from urllib.parse import urlparse
+            if not ConversionPlugin.settings.get('googledrive_api_key'):
+                return
             parsed_url = urlparse(attachment.link_url)
             split_path = parsed_url.path.split('/')
             if parsed_url.netloc != 'docs.google.com' or len(split_path) < 5:
