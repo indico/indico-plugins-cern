@@ -111,9 +111,9 @@ def request_pdf_from_googledrive(task, attachment):
     # use requests to get the file from this URL:
     mime_type = 'application/pdf'
     api_key = ConversionPlugin.settings.get('googledrive_api_key')
-    request_text = f'https://www.googleapis.com/drive/v3/files/{file_id}/export?mimeType={mime_type}&key={api_key}'
+    request_text = f'https://www.googleapis.com/drive/v3/files/{file_id}/export?mimeType={mime_type}'
     try:
-        response = requests.get(request_text)
+        response = requests.get(request_text, headers={'x-goog-api-key': api_key})
     except requests.HTTPError as exc:
         if exc.response.status_code == 404:
             ConversionPlugin.logger.warning('Google Drive file %s not found', attachment.link_url)
