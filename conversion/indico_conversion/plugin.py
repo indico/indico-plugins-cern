@@ -119,7 +119,9 @@ class ConversionPlugin(IndicoPlugin):
                             default=True)
 
     def _form_validated(self, form, **kwargs):
-        classes = [AddAttachmentFilesForm, AddAttachmentLinkForm]
+        classes = [AddAttachmentFilesForm]
+        if ConversionPlugin.settings.get('googledrive_api_key'):
+            classes.append(AddAttachmentLinkForm)
         if plugin_engine.has_plugin('owncloud'):
             from indico_owncloud.forms import AddAttachmentOwncloudForm
             classes.append(AddAttachmentOwncloudForm)
