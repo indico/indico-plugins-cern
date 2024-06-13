@@ -116,9 +116,29 @@ def request_pdf_from_googledrive(task, attachment):
     except requests.HTTPError as exc:
         if exc.response.status_code == 404:
             ConversionPlugin.logger.warning('Google Drive file %s not found', attachment.link_url)
+            pdf_state_cache.delete(str(attachment.id))
             return
         retry_task(task, attachment, exc)
     else:
+        content_type = response.headers['Content-type']
+        if content_type.startswith('application/json'):
+            payload = response.json()
+            try:
+                error_code = payload['error']['code']
+            except (TypeError, KeyError):
+                error_code = 0
+            if error_code == 404:
+                ConversionPlugin.logger.info('Google Drive file %s not found (or not public)', attachment.link_url)
+            else:
+                ConversionPlugin.logger.warning('Google Drive file %s could not be converted: %s', attachment.link_url,
+                                                payload)
+            pdf_state_cache.delete(str(attachment.id))
+            return
+        elif content_type != 'application/pdf':
+            ConversionPlugin.logger.warning('Google Drive file %s conversion response is not a PDF: %s',
+                                            attachment.link_url, content_type)
+            pdf_state_cache.delete(str(attachment.id))
+            return
         pdf = response.content
         save_pdf(attachment, pdf)
         db.session.commit()
