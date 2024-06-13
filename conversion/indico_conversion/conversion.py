@@ -63,7 +63,7 @@ def retry_task(task, attachment, exception):
 
 @celery.task(bind=True, max_retries=None)
 def submit_attachment_doconverter(task, attachment):
-    """Sends an attachment's file to the Doconvert conversion service"""
+    """Send an attachment's file to the Doconverter conversion service."""
     from indico_conversion.plugin import ConversionPlugin
     if ConversionPlugin.settings.get('maintenance'):
         task.retry(countdown=900)
@@ -95,7 +95,7 @@ def submit_attachment_doconverter(task, attachment):
 
 @celery.task(bind=True, max_retries=None)
 def request_pdf_from_googledrive(task, attachment):
-    """Uses the Google Drive API to convert a Google Drive file to a PDF."""
+    """Use the Google Drive API to convert a Google Drive file to a PDF."""
     from indico_conversion.plugin import ConversionPlugin
 
     # Google drive URLs have this pattern: https://docs.google.com/<TYPE>/d/<FILEID>[/edit]
@@ -146,7 +146,7 @@ def request_pdf_from_googledrive(task, attachment):
 
 
 class RHDoconverterFinished(RH):
-    """Callback to attach a converted file"""
+    """Callback to attach a converted file."""
 
     CSRF_ENABLED = False
 
@@ -171,7 +171,7 @@ class RHDoconverterFinished(RH):
 
 @celery.task(bind=True, max_retries=None)
 def submit_attachment_cloudconvert(task, attachment):
-    """Sends an attachment's file to the CloudConvert conversion service"""
+    """Send an attachment's file to the CloudConvert conversion service."""
     from indico_conversion.plugin import ConversionPlugin
     if ConversionPlugin.settings.get('maintenance'):
         task.retry(countdown=900)
@@ -296,7 +296,7 @@ def check_attachment_cloudconvert(task, attachment_id, export_task_id):
 
 
 class RHCloudConvertFinished(RH):
-    """Callback to attach a converted file"""
+    """Callback to attach a converted file."""
 
     CSRF_ENABLED = False
 
