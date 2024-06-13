@@ -100,9 +100,12 @@ def request_pdf_from_googledrive(task, attachment):
 
     # Google drive URLs have this pattern: https://docs.google.com/<TYPE>/d/<FILEID>[/edit]
     try:
-        file_id = urlparse(attachment.link_url).path.split('/')[3]
-    except (ValueError, IndexError) as error:
-        ConversionPlugin.logger.warning('Problem parsing URL: ', error)
+        parsed_url = urlparse(attachment.link_url)
+        if parsed_url.netloc != 'docs.google.com':
+            raise ValueError('Not a google docs URL')
+        file_id = parsed_url.path.split('/')[3]
+    except (ValueError, IndexError) as exc:
+        ConversionPlugin.logger.warning('Could not parse URL %s: %s', attachment.link_url, exc)
         return
 
     # use requests to get the file from this URL:
