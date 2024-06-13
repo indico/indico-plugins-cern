@@ -7,6 +7,7 @@
 
 import os
 from datetime import timedelta
+from urllib.parse import urlparse
 
 import dateutil.parser
 import requests
@@ -62,7 +63,7 @@ def retry_task(task, attachment, exception):
 
 @celery.task(bind=True, max_retries=None)
 def submit_attachment_doconverter(task, attachment):
-    """Sends an attachment's file to the Doconvert conversion service"""
+    """Send an attachment's file to the Doconverter conversion service."""
     from indico_conversion.plugin import ConversionPlugin
     if ConversionPlugin.settings.get('maintenance'):
         task.retry(countdown=900)
@@ -92,8 +93,60 @@ def submit_attachment_doconverter(task, attachment):
             ConversionPlugin.logger.info('Submitted %r to Doconverter', attachment)
 
 
+@celery.task(bind=True, max_retries=None)
+def request_pdf_from_googledrive(task, attachment):
+    """Use the Google Drive API to convert a Google Drive file to a PDF."""
+    from indico_conversion.plugin import ConversionPlugin
+
+    # Google drive URLs have this pattern: https://docs.google.com/<TYPE>/d/<FILEID>[/edit]
+    try:
+        parsed_url = urlparse(attachment.link_url)
+        if parsed_url.netloc != 'docs.google.com':
+            raise ValueError('Not a google docs URL')
+        file_id = parsed_url.path.split('/')[3]
+    except (ValueError, IndexError) as exc:
+        ConversionPlugin.logger.warning('Could not parse URL %s: %s', attachment.link_url, exc)
+        return
+
+    # use requests to get the file from this URL:
+    mime_type = 'application/pdf'
+    api_key = ConversionPlugin.settings.get('googledrive_api_key')
+    request_text = f'https://www.googleapis.com/drive/v3/files/{file_id}/export?mimeType={mime_type}'
+    try:
+        response = requests.get(request_text, headers={'x-goog-api-key': api_key})
+    except requests.HTTPError as exc:
+        if exc.response.status_code == 404:
+            ConversionPlugin.logger.warning('Google Drive file %s not found', attachment.link_url)
+            pdf_state_cache.delete(str(attachment.id))
+            return
+        retry_task(task, attachment, exc)
+    else:
+        content_type = response.headers['Content-type']
+        if content_type.startswith('application/json'):
+            payload = response.json()
+            try:
+                error_code = payload['error']['code']
+            except (TypeError, KeyError):
+                error_code = 0
+            if error_code == 404:
+                ConversionPlugin.logger.info('Google Drive file %s not found (or not public)', attachment.link_url)
+            else:
+                ConversionPlugin.logger.warning('Google Drive file %s could not be converted: %s', attachment.link_url,
+                                                payload)
+            pdf_state_cache.delete(str(attachment.id))
+            return
+        elif content_type != 'application/pdf':
+            ConversionPlugin.logger.warning('Google Drive file %s conversion response is not a PDF: %s',
+                                            attachment.link_url, content_type)
+            pdf_state_cache.delete(str(attachment.id))
+            return
+        pdf = response.content
+        save_pdf(attachment, pdf)
+        db.session.commit()
+
+
 class RHDoconverterFinished(RH):
-    """Callback to attach a converted file"""
+    """Callback to attach a converted file."""
 
     CSRF_ENABLED = False
 
@@ -118,7 +171,7 @@ class RHDoconverterFinished(RH):
 
 @celery.task(bind=True, max_retries=None)
 def submit_attachment_cloudconvert(task, attachment):
-    """Sends an attachment's file to the CloudConvert conversion service"""
+    """Send an attachment's file to the CloudConvert conversion service."""
     from indico_conversion.plugin import ConversionPlugin
     if ConversionPlugin.settings.get('maintenance'):
         task.retry(countdown=900)
@@ -243,7 +296,7 @@ def check_attachment_cloudconvert(task, attachment_id, export_task_id):
 
 
 class RHCloudConvertFinished(RH):
-    """Callback to attach a converted file"""
+    """Callback to attach a converted file."""
 
     CSRF_ENABLED = False
 
