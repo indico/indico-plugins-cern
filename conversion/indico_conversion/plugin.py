@@ -112,10 +112,14 @@ class ConversionPlugin(IndicoPlugin):
                             default=True)
 
     def _add_url_form_fields(self, form_cls, **kwargs):
+        if not ConversionPlugin.settings.get('googledrive_api_key'):
+            return
         return 'convert_to_pdf', \
                BooleanField(_('Convert to PDF'), widget=SwitchWidget(),
                             description=_('If enabled, files hosted on Google Drive will be attempted to be converted '
-                                          'to PDF.'),
+                                          'to PDF. Note that this will only work if the file on Google Drive is public '
+                                          'and that it will be converted only once, so any future changes made to it '
+                                          'will not be resembled in the PDF stored in Indico.'),
                             default=True)
 
     def _form_validated(self, form, **kwargs):
