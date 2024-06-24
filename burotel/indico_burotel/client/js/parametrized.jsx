@@ -124,6 +124,7 @@ const Calendar = parametrize(DefaultCalendar, {
 
 const TimelineItem = parametrize(DefaultTimelineItem, {
   dayBased: true,
+  hideRepeatingTimeline: true,
 });
 
 const BookingEditForm = parametrize(DefaultBookingEditForm, {
