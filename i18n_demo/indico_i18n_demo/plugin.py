@@ -67,8 +67,15 @@ class I18nDemoPlugin(IndicoPlugin):
             # In those cases, we trust the users not to spam random people.
             return ret
 
+        if session.get('register_verification_email_sent'):
+            # Let verification emails through
+            return ret
+
+        # If the user is logged in, redirect the email to them, otherwise do not send it
+        # (If 'to', 'cc' and 'bcc' are all empty, djangomail won't send the email)
+        to = {session.user.email} if session.user else set()
         overrides = {
-            'to': session.user.email,
+            'to': to,
             'cc': set(),
             'bcc': set(),
             'from': config.NO_REPLY_EMAIL,
