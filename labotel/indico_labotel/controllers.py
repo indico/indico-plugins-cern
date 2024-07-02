@@ -43,7 +43,7 @@ class RHUserDivision(RHProtected):
         return jsonify(value=LabotelPlugin.user_settings.get(session.user, 'default_division'))
 
     @use_kwargs({
-        'value': fields.String(validate=validate.OneOf({'Laser', 'Clean Room', 'DSF/QART'}), allow_none=True)
+        'value': fields.String(validate=validate.OneOf({'Laser', 'Clean Room', 'DSF', 'QART'}), allow_none=True)
     })
     def _process_POST(self, value):
         from indico_labotel.plugin import LabotelPlugin
