@@ -43,8 +43,8 @@ const RoomFilterBar = parametrize(RoomFilterBarBase, {
 const BookRoom = parametrize(DefaultBookRoom, {
   showSuggestions: false,
   labels: {
-    bookButton: Translate.string('Book Lab'),
-    preBookButton: Translate.string('Pre-Book Lab'),
+    bookButton: null,
+    preBookButton: null,
     detailsButton: Translate.string('See details'),
   },
 });
