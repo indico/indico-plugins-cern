@@ -1,0 +1,13 @@
+@use 'base/palette' as *;
+
+$header-bg-color: #27567a;
+
+@import 'themes/indico';
+
+div.event-header {
+  background: url('themes_cern:oqi_logo.png'), url('themes_cern:oqi_background.png');
+  background-size: 10%, 100% 100%;
+  background-repeat: no-repeat, no-repeat;
+  background-position: 15px, 0;
+  padding-left: 125px;
+}
