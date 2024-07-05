@@ -180,6 +180,11 @@ definitions:
     stylesheet: smarthep.scss
     title: SMARTHEP meeting
 
+  oqi:
+    <<: *standard_themes_cern
+    stylesheet: oqi.scss
+    title: Open Quantum Institute
+
   # Meetings - CERN Administrative
   administrative: &administrative
     event_types: [conference, meeting]
