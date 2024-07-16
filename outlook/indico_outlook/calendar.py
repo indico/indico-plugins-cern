@@ -18,7 +18,7 @@ from indico.util.signals import values_from_signal
 from indico.util.string import strip_control_chars
 
 from indico_outlook.models.queue import OutlookAction, OutlookQueueEntry
-from indico_outlook.util import check_config, is_event_excluded, latest_actions_only
+from indico_outlook.util import check_config, is_event_excluded
 
 
 def update_calendar():
@@ -36,11 +36,25 @@ def update_calendar():
     entries = MultiDict(((entry.user_id, entry.event_id), entry) for entry in query)
     delete_ids = set()
     try:
+        # entry_list is grouped by user+event
         for entry_list in entries.listvalues():
             entry_ids = {x.id for x in entry_list}
-            for entry in latest_actions_only(entry_list):
+            seen = set()
+            todo = []
+            # pick the latest entry for each action
+            for entry in reversed(entry_list):
+                if entry.action in seen:
+                    continue
+                seen.add(entry.action)
                 if is_event_excluded(entry.event):
                     continue
+                todo.append(entry)
+            # execute those entries in the original order, so cases like
+            # "add, update, delete, add, update, update" are correctly
+            # handled as "delete, add, update" to handle edge cases where
+            # someone was removed from the registration and added back
+            # without processing entries in between
+            for entry in reversed(todo):
                 if not _update_calendar_entry(entry, settings):
                     entry_ids.remove(entry.id)
             # record all ids which didn't fail for deletion
