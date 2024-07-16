@@ -1,0 +1,18 @@
+// This file is part of the CERN Indico plugins.
+// Copyright (C) 2014 - 2024 CERN
+//
+// The CERN Indico plugins are free software; you can redistribute
+// them and/or modify them under the terms of the MIT License; see
+// the LICENSE file for more details.
+
+@import 'rb:~styles/palette';
+
+$white: #fff;
+$highlight-color: #3ba754;
+$dark-highlight-color: #3a9952;
+$primary-color: #2185d0;
+
+@mixin rb-splash-background {
+  background-image: url('labotel:images/splash.jpg');
+  background-size: cover;
+}

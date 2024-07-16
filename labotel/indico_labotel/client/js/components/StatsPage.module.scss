@@ -1,0 +1,44 @@
+// This file is part of the CERN Indico plugins.
+// Copyright (C) 2014 - 2024 CERN
+//
+// The CERN Indico plugins are free software; you can redistribute
+// them and/or modify them under the terms of the MIT License; see
+// the LICENSE file for more details.
+
+@import 'rb:styles/palette';
+
+.stats-page {
+  padding: 5em;
+}
+
+.stats-chart-wrapper {
+  padding: 5em;
+  background-color: rgba(0, 27, 45, 0.9);
+}
+
+.stats-chart {
+  width: 100%;
+  height: 500px;
+}
+
+:global(.ui.table td) {
+  &.cell-normal {
+    :global(.percentage) {
+      color: $dark-gray;
+      font-size: 0.8em;
+    }
+  }
+
+  &.cell-highlight {
+    :global(.percentage) {
+      color: $dark-gray;
+      font-size: 0.8em;
+    }
+    font-weight: bold;
+    background-color: $pastel-gray;
+  }
+}
+
+.stats-csv-button:global(.ui.button) {
+  margin-left: auto;
+}
