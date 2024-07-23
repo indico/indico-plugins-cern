@@ -1,2 +1,8 @@
-{% from 'ravem:_ravem_button.html' import ravem_button %}
-{{ ravem_button(room_name, event_vc_room) }}
+    <a href="#" class="ui mini button js-ravem-button"
+       style="margin: 0;"
+       data-room-name="{{ room_name }}"
+       data-vc-room-name="{{ event_vc_room.vc_room.name }}"
+       data-status-url="{{ url_for_plugin('ravem.room_status', event_vc_room.event, event_vc_room_id=event_vc_room.id) }}"
+       data-connect-url="{{ url_for_plugin('ravem.connect_room', event_vc_room.event, event_vc_room_id=event_vc_room.id) }}"
+       data-disconnect-url="{{ url_for_plugin('ravem.disconnect_room', event_vc_room.event, event_vc_room_id=event_vc_room.id) }}">
+    </a>
