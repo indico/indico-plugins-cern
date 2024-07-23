@@ -10,7 +10,7 @@
   const ravemButton = (function makeRavemButton() {
     const states = {
       connected: {
-        icon: 'icon-no-camera',
+        icon: 'x',
         tooltip: $t.gettext('Disconnect {0} from the videoconference room {1}'),
         action: 'disconnect',
         handler: function disconnectHandler(data, btn) {
@@ -45,7 +45,7 @@
         },
       },
       disconnected: {
-        icon: 'icon-camera',
+        icon: 'video',
         tooltip: $t.gettext('Connect {0} to the videoconference room {1}'),
         action: 'connect',
         handler: function connectHandler(data, btn) {
@@ -198,9 +198,7 @@
       const name = btn.data('roomName');
       const vcRoomName = btn.data('vcRoomName');
       const html = [
-        '<span class="',
-        states[newState].icon,
-        '"><strong style="margin-left: 0.4em;">{0}</strong></span>'.format(name),
+        `<i class="icon ${states[newState].icon}"></i> ${name}`
       ].join('');
 
       btn.html(html);
