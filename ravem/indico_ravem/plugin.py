@@ -80,9 +80,9 @@ class RavemPlugin(IndicoPlugin):
         self.template_hook('manage-event-vc-extra-buttons',
                            partial(self.inject_connect_button, 'ravem_button.html'))
         self.template_hook('event-vc-extra-buttons',
-                           partial(self.inject_connect_button, 'ravem_button_group.html'))
+                           partial(self.inject_connect_button, 'ravem_button.html'))
         self.template_hook('event-timetable-vc-extra-buttons',
-                           partial(self.inject_connect_button, 'ravem_button_group.html'))
+                           partial(self.inject_connect_button, 'ravem_button.html'))
 
         self.inject_bundle('main.js', WPSimpleEventDisplay)
         self.inject_bundle('main.js', WPVCEventPage)
