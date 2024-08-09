@@ -1,0 +1,10 @@
+{
+  "extends": "../../src/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "../../src"
+  },
+  "include": [
+    "../../src/indico/web/client/js/types",
+    "burotel/indico_burotel/client/**/*"
+  ]
+}
