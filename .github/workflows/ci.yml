@@ -58,7 +58,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
-          key: pip|${{ runner.os }}|3.12|${{ hashFiles('**/setup.cfg') }}
+          key: pip|${{ runner.os }}|3.12|${{ hashFiles('**/pyproject.toml') }}
 
       - uses: actions/cache@v4
         id: cache-npm
@@ -125,9 +125,6 @@ jobs:
         run: |
           echo "VIRTUAL_ENV=$(pwd)/.venv" >> $GITHUB_ENV
           echo "$(pwd)/.venv/bin" >> $GITHUB_PATH
-
-      - name: Check manifests
-        run: python .github/utils/check_manifests.py
 
       - name: Check import sorting
         if: success() || failure()

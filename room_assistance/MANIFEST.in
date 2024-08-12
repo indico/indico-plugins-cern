@@ -1,5 +1,0 @@
-graft indico_room_assistance/static
-graft indico_room_assistance/templates
-graft indico_room_assistance/translations
-
-global-exclude *.pyc __pycache__ .keep

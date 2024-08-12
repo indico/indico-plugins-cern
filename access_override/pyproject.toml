@@ -1,0 +1,26 @@
+[project]
+name = 'indico-plugin-access-override'
+version = '3.3-dev'
+license = 'MIT'
+authors = [{ name = 'Indico Team', email = 'indico-team@cern.ch' }]
+classifiers = [
+    'Environment :: Plugins',
+    'Environment :: Web Environment',
+    'License :: OSI Approved :: MIT License',
+    'Programming Language :: Python :: 3.12',
+]
+requires-python = '>=3.12.2, <3.13'
+dependencies = ['indico>=3.3.dev0']
+
+[project.urls]
+GitHub = 'https://github.com/indico/indico-plugins-cern'
+
+[project.entry-points.'indico.plugins']
+access_override = 'indico_access_override:AccessOverridePlugin'
+
+[build-system]
+requires = ['hatchling==1.25.0']
+build-backend = 'hatchling.build'
+
+[tool.hatch.build.targets.wheel]
+only-include = ['indico_access_override.py']
