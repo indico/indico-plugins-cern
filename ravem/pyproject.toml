@@ -22,7 +22,7 @@ ravem = 'indico_ravem.plugin:RavemPlugin'
 requires = ['hatchling==1.25.0']
 build-backend = 'hatchling.build'
 
-[tool.hatch.build.targets.wheel]
+[tool.hatch.build]
 packages = ['indico_ravem']
 exclude = [
     '*.no-header',

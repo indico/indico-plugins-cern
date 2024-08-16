@@ -22,7 +22,7 @@ i18n_demo = 'indico_i18n_demo.plugin:I18nDemoPlugin'
 requires = ['hatchling==1.25.0']
 build-backend = 'hatchling.build'
 
-[tool.hatch.build.targets.wheel]
+[tool.hatch.build]
 packages = ['indico_i18n_demo']
 exclude = [
     '*.no-header',

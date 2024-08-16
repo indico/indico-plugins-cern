@@ -22,7 +22,7 @@ audiovisual = 'indico_audiovisual.plugin:AVRequestsPlugin'
 requires = ['hatchling==1.25.0']
 build-backend = 'hatchling.build'
 
-[tool.hatch.build.targets.wheel]
+[tool.hatch.build]
 packages = ['indico_audiovisual']
 exclude = [
     '*.no-header',

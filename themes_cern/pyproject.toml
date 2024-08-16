@@ -22,7 +22,7 @@ themes_cern = 'indico_themes_cern.plugin:CERNThemesPlugin'
 requires = ['hatchling==1.25.0']
 build-backend = 'hatchling.build'
 
-[tool.hatch.build.targets.wheel]
+[tool.hatch.build]
 packages = ['indico_themes_cern']
 exclude = [
     '*.no-header',

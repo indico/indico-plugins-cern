@@ -22,7 +22,7 @@ cronjobs_cern = 'indico_cronjobs_cern.plugin:CERNCronjobsPlugin'
 requires = ['hatchling==1.25.0']
 build-backend = 'hatchling.build'
 
-[tool.hatch.build.targets.wheel]
+[tool.hatch.build]
 packages = ['indico_cronjobs_cern']
 exclude = [
     '*.no-header',

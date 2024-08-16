@@ -22,7 +22,7 @@ cern_access = 'indico_cern_access.plugin:CERNAccessPlugin'
 requires = ['hatchling==1.25.0']
 build-backend = 'hatchling.build'
 
-[tool.hatch.build.targets.wheel]
+[tool.hatch.build]
 packages = ['indico_cern_access']
 exclude = [
     '*.no-header',

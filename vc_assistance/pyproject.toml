@@ -22,7 +22,7 @@ vc_assistance = 'indico_vc_assistance.plugin:VCAssistanceRequestPlugin'
 requires = ['hatchling==1.25.0']
 build-backend = 'hatchling.build'
 
-[tool.hatch.build.targets.wheel]
+[tool.hatch.build]
 packages = ['indico_vc_assistance']
 exclude = [
     '*.no-header',

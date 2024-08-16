@@ -22,5 +22,5 @@ access_override = 'indico_access_override:AccessOverridePlugin'
 requires = ['hatchling==1.25.0']
 build-backend = 'hatchling.build'
 
-[tool.hatch.build.targets.wheel]
+[tool.hatch.build]
 only-include = ['indico_access_override.py']

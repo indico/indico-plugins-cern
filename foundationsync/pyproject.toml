@@ -22,7 +22,7 @@ foundationsync = 'indico_foundationsync.plugin:FoundationSyncPlugin'
 requires = ['hatchling==1.25.0']
 build-backend = 'hatchling.build'
 
-[tool.hatch.build.targets.wheel]
+[tool.hatch.build]
 packages = ['indico_foundationsync']
 exclude = [
     '*.no-header',

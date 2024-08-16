@@ -22,7 +22,7 @@ outlook = 'indico_outlook.plugin:OutlookPlugin'
 requires = ['hatchling==1.25.0']
 build-backend = 'hatchling.build'
 
-[tool.hatch.build.targets.wheel]
+[tool.hatch.build]
 packages = ['indico_outlook']
 exclude = [
     '*.no-header',

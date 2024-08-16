@@ -22,7 +22,7 @@ room_assistance = 'indico_room_assistance.plugin:RoomAssistancePlugin'
 requires = ['hatchling==1.25.0']
 build-backend = 'hatchling.build'
 
-[tool.hatch.build.targets.wheel]
+[tool.hatch.build]
 packages = ['indico_room_assistance']
 exclude = [
     '*.no-header',
