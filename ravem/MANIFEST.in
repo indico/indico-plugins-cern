@@ -1,5 +1,0 @@
-graft indico_ravem/static
-graft indico_ravem/templates
-graft indico_ravem/translations
-
-global-exclude *.pyc __pycache__ .keep

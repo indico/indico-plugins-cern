@@ -1,5 +1,0 @@
-graft indico_conversion/static
-graft indico_conversion/templates
-graft indico_conversion/translations
-
-global-exclude *.pyc __pycache__ .keep

@@ -1,6 +1,0 @@
-graft indico_themes_cern/static
-graft indico_themes_cern/templates
-graft indico_themes_cern/themes
-recursive-include indico_themes_cern *.yaml
-
-global-exclude *.pyc __pycache__ .keep
