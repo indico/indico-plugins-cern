@@ -1,5 +1,0 @@
-graft indico_labotel/migrations
-graft indico_labotel/static
-graft indico_labotel/template_overrides
-
-global-exclude *.pyc __pycache__ .keep
