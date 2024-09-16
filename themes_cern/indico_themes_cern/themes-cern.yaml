@@ -185,6 +185,11 @@ definitions:
     stylesheet: oqi.scss
     title: Open Quantum Institute
 
+  ngt:
+    <<: *standard_themes_cern
+    stylesheet: ngt.scss
+    title: Next Generation Triggers
+
   # Meetings - CERN Administrative
   administrative: &administrative
     event_types: [conference, meeting]
