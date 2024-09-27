@@ -1,5 +1,5 @@
 [project]
-name = 'indico-zoom-rooms'
+name = 'indico-plugin-zoom-rooms'
 description = 'Zoom rooms/Exchange synchronization plugin'
 version = '3.3-dev'
 license = 'MIT'
