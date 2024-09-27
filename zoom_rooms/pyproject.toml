@@ -1,10 +1,9 @@
 [project]
 name = 'indico-zoom-rooms'
 description = 'Zoom rooms/Exchange synchronization plugin'
-readme = 'README.md'
 version = '3.3-dev'
 license = 'MIT'
-author = [{ name = 'Indico Team (CERN)', email = 'indico-team@cern.ch' }]
+authors = [{ name = 'Indico Team', email = 'indico-team@cern.ch' }]
 classifiers = [
     'Environment :: Plugins',
     'Environment :: Web Environment',
@@ -12,16 +11,17 @@ classifiers = [
     'Programming Language :: Python :: 3.12',
 ]
 requires-python = '>=3.12.2, <3.13'
-dependencies = [
-    'indico>=3.3.dev0',
-    'indico-plugin-vc-zoom>=3.3-dev'
-]
+dependencies = ['indico>=3.3.dev0', 'indico-plugin-vc-zoom>=3.3.dev0,<3.4.dev0']
 
 [project.urls]
-GitHub = 'https://github.com/indico/indico-plugins'
+GitHub = 'https://github.com/indico/indico-plugins-cern'
 
 [project.entry-points.'indico.plugins']
 zoom_rooms = 'indico_zoom_rooms.plugin:ZoomRoomsPlugin'
+
+[build-system]
+requires = ['hatchling==1.25.0']
+build-backend = 'hatchling.build'
 
 [tool.hatch.build]
 packages = ['indico_zoom_rooms']
@@ -40,7 +40,3 @@ artifacts = [
     'indico_*/translations/**/*.mo',
     'indico_*/static/dist/',
 ]
-
-[tool.hatch.build.targets.sdist.hooks.custom]
-path = '../hatch_build.py'
-dependencies = ['babel==2.16.0']
