@@ -24,6 +24,28 @@ on:
         type: boolean
         default: true
         description: Append version suffix
+      plugin-name:
+        description: Build specific plugin
+        type: choice
+        options:
+          - ''  # all plugins
+          - access_override
+          - audiovisual
+          - burotel
+          - cern_access
+          - conversion
+          - cronjobs_cern
+          - foundationsync
+          - i18n_demo
+          - labotel
+          - outlook
+          - payment_cern
+          - ravem
+          - room_assistance
+          - themes_cern
+          - themes_lcagenda
+          - vc_assistance
+          - zoom_rooms
 
 permissions:
   contents: read
@@ -37,6 +59,7 @@ jobs:
       extra-plugins-repo: indico/indico-plugins
       extra-plugins-dir: public
       add-version-suffix: ${{ github.event_name != 'workflow_dispatch' || inputs.add-version-suffix }}
+      plugin: ${{ github.event_name == 'workflow_dispatch' && inputs.plugin-name }}
 
   bundle:
     name: Bundle wheels 📦
