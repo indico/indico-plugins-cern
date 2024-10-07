@@ -16,6 +16,7 @@ from celery.schedules import crontab
 from flask import jsonify, request, session
 from itsdangerous import BadData
 
+from indico.core import signals
 from indico.core.celery import celery
 from indico.core.config import config
 from indico.core.db import db
@@ -142,6 +143,7 @@ def request_pdf_from_googledrive(task, attachment):
             return
         pdf = response.content
         save_pdf(attachment, pdf)
+        signals.core.after_process.send()
         db.session.commit()
 
 
@@ -291,6 +293,7 @@ def check_attachment_cloudconvert(task, attachment_id, export_task_id):
         task.retry(countdown=60)
         return
     save_pdf(attachment, resp.content)
+    signals.core.after_process.send()
     cloudconvert_task_cache.delete(export_task_id)
     db.session.commit()
 
