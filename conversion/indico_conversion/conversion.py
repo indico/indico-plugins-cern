@@ -374,6 +374,9 @@ class RHConversionCheck(RH):
 def check_cloudconvert_credits(task):
     from indico_conversion.plugin import ConversionPlugin
 
+    if not ConversionPlugin.settings.get('use_cloudconvert'):
+        return
+
     api_key = ConversionPlugin.settings.get('cloudconvert_api_key')
     client = CloudConvertRestClient(api_key=api_key, sandbox=False)
     notify_threshold = ConversionPlugin.settings.get('cloudconvert_notify_threshold')
