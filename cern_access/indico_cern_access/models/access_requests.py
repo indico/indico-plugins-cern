@@ -39,7 +39,8 @@ class CERNAccessRequest(db.Model):
     )
     reservation_code = db.Column(
         db.String,
-        nullable=False
+        nullable=False,
+        unique=True
     )
     adams_nonce = db.Column(
         db.String,
