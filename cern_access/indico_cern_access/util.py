@@ -272,7 +272,7 @@ def get_random_reservation_code():
 
     while True:
         reservation_code = 'I' + ''.join(random.sample(charset, 6))
-        if CERNAccessRequest.query.filter_by(reservation_code=reservation_code).has_rows():
+        if not CERNAccessRequest.query.filter_by(reservation_code=reservation_code).has_rows():
             return reservation_code
 
 
