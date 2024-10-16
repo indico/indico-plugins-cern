@@ -16,7 +16,7 @@ depends_on = None
 
 
 def upgrade():
-    op.create_unique_constraint('access_requests', ['reservation_code'], schema='plugin_cern_access')
+    op.create_unique_constraint(None, 'access_requests', ['reservation_code'], schema='plugin_cern_access')
 
 
 def downgrade():
