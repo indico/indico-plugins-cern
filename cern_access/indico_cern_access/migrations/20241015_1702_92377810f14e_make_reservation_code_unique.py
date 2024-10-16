@@ -1,4 +1,4 @@
-"""Modify reservation code field
+"""Make reservation code unique
 
 Revision ID: 92377810f14e
 Revises: ee88b64f9494
@@ -18,12 +18,8 @@ depends_on = None
 
 
 def upgrade():
-    op.create_unique_constraint(
-        'uq_reservation_code', 'access_requests', ['reservation_code'],
-        schema='plugin_cern_access')
+    op.create_unique_constraint('access_requests', ['reservation_code'], schema='plugin_cern_access')
 
 
 def downgrade():
-    op.drop_constraint(
-        'uq_reservation_code', 'access_requests',
-        type_='unique', schema='plugin_cern_access')
+    op.drop_constraint('uq_access_requests_reservation_code', 'access_requests', type_='unique', schema='plugin_cern_access')
