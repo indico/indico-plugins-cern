@@ -1,10 +1,11 @@
-"""Make reservation code unique
+"""Make reservation code unique and nullable
 
 Revision ID: 92377810f14e
 Revises: ee88b64f9494
 Create Date: 2024-10-15 17:02:59.886902
 """
 
+import sqlalchemy as sa
 from alembic import op
 
 
@@ -17,7 +18,9 @@ depends_on = None
 
 def upgrade():
     op.create_unique_constraint(None, 'access_requests', ['reservation_code'], schema='plugin_cern_access')
+    op.alter_column('access_requests', 'reservation_code', nullable=True, schema='plugin_cern_access')
 
 
 def downgrade():
-    op.drop_constraint('uq_access_requests_reservation_code', 'access_requests', type_='unique', schema='plugin_cern_access')
+    op.drop_constraint('uq_access_requests_reservation_code', 'access_requests', schema='plugin_cern_access')
+    op.alter_column('access_requests', 'reservation_code', nullable=False, schema='plugin_cern_access')
