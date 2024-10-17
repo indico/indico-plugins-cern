@@ -16,10 +16,18 @@ depends_on = None
 
 
 def upgrade():
-    op.create_unique_constraint(None, 'access_requests', ['reservation_code'], schema='plugin_cern_access')
     op.alter_column('access_requests', 'reservation_code', nullable=True, schema='plugin_cern_access')
+    op.execute('''
+        UPDATE plugin_cern_access.access_requests
+        SET reservation_code = NULL WHERE reservation_code = ''
+    ''')
+    op.create_unique_constraint(None, 'access_requests', ['reservation_code'], schema='plugin_cern_access')
 
 
 def downgrade():
     op.drop_constraint('uq_access_requests_reservation_code', 'access_requests', schema='plugin_cern_access')
+    op.execute('''
+        UPDATE plugin_cern_access.access_requests
+        SET reservation_code = '' WHERE reservation_code IS NULL
+    ''')
     op.alter_column('access_requests', 'reservation_code', nullable=False, schema='plugin_cern_access')
