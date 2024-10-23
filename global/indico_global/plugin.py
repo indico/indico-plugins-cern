@@ -10,11 +10,13 @@ from urllib.parse import urlsplit, urlunsplit
 
 from flask import current_app, flash, redirect, request
 from markupsafe import Markup
-from wtforms import BooleanField, StringField
-from wtforms.validators import DataRequired
+from werkzeug.exceptions import Forbidden
+from wtforms import BooleanField, IntegerField, StringField, TextAreaField
+from wtforms.validators import DataRequired, NumberRange
 
 from indico.core import signals
 from indico.core.db import db
+from indico.core.errors import NoReportError
 from indico.core.plugins import IndicoPlugin
 from indico.modules.events import Event
 from indico.web.flask.util import url_for
@@ -44,12 +46,24 @@ ID_ARG_MAP = {
     'file_id': 'indico.files.id',  # TODO check for cases where file_id is used for something else
 }
 
+CUSTOM_ASSETS_BLUEPRINTS = {'event_images'}
+CUSTOM_ASSETS_ENDPOINTS = {'event_layout.css_display', 'categories.display_logo', 'categories.display_icon'}
+ALLOWED_NON_GET_ENDPOINTS = {'categories.show_future_events', 'categories.show_past_events'}
+
 
 class PluginSettingsForm(IndicoForm):
     global_hostname = StringField('Global hostname', [DataRequired()],
                                   description='The hostname of Indico Global to be used in redirects')
     testing = BooleanField('Testing mode', widget=SwitchWidget(),
                            description='Flash the target URL instead of redirecting')
+    global_category_id = IntegerField('Global category ID', [DataRequired(), NumberRange(min=1)],
+                                      description='The ID of the "Indico Global" category id')
+    read_only = BooleanField('Make global category read-only', widget=SwitchWidget(),
+                             description='Prevents any non-GET requests for categories and events within the '
+                                         'Global category')
+    read_only_msg = TextAreaField('Read-only message',
+                                  description='Displayed in all events/categories within the Global category when '
+                                              'read-only mode is enabled')
 
 
 @functools.cache
@@ -71,6 +85,16 @@ def _map_global_ids(**id_view_args):
     return new_ids
 
 
+def _is_request_likely_seen():
+    return (
+        request.method == 'GET'
+        and not request.is_xhr
+        and not request.is_json
+        and request.blueprint not in CUSTOM_ASSETS_BLUEPRINTS
+        and request.endpoint not in CUSTOM_ASSETS_ENDPOINTS
+    )
+
+
 class GlobalPlugin(IndicoPlugin):
     """Indico Global
 
@@ -82,11 +106,15 @@ class GlobalPlugin(IndicoPlugin):
     default_settings = {
         'global_hostname': 'indico.global',
         'testing': False,
+        'global_category_id': None,
+        'read_only': False,
+        'read_only_msg': '',
     }
 
     def init(self):
         super().init()
         self.connect(signals.plugin.cli, self._extend_indico_cli)
+        self.connect(signals.rh.before_process, self._before_rh_process)
         current_app.before_request(self._before_request)
 
     def _extend_indico_cli(self, sender, **kwargs):
@@ -94,6 +122,23 @@ class GlobalPlugin(IndicoPlugin):
 
     def get_blueprints(self):
         return blueprint
+
+    def _before_rh_process(self, rh_cls, rh):
+        if not self.settings.get('read_only') or (global_id := self.settings.get('global_category_id')) is None:
+            return
+
+        if event := getattr(rh, 'event', None):
+            category = event.category
+        elif not (category := getattr(rh, 'category', None)):
+            return
+
+        if global_id not in category.chain_ids:
+            return
+
+        if (msg := self.settings.get('read_only_msg')) and _is_request_likely_seen():
+            flash(msg, 'info')
+        elif request.method not in ('GET', 'HEAD') and request.endpoint not in ALLOWED_NON_GET_ENDPOINTS:
+            raise NoReportError.wrap_exc(Forbidden(msg or 'This event/category is read-only.'))
 
     def _before_request(self):
         if request.method != 'GET' or not request.endpoint:
@@ -152,7 +197,8 @@ class GlobalPlugin(IndicoPlugin):
         url = urlsplit(request.url)
         new_url = urlunsplit(url._replace(netloc=self.settings.get('global_hostname'), path=new_url_path))
         if self.settings.get('testing'):
-            print(f'IndicoGlobal URL {new_url}')
-            flash(Markup(f'IndicoGlobal version of this page: <a href="{new_url}">{new_url}</a>'))
+            print(f'Indico Global URL: {new_url}')
+            if _is_request_likely_seen():
+                flash(Markup(f'Indico Global version of this page: <a href="{new_url}">{new_url}</a>'))
         else:
             return redirect(new_url, 302 if current_app.debug else 301)
