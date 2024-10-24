@@ -17,6 +17,10 @@ from indico_payment_cern.util import get_order_id
     (123, 456, 'x', 'Foo Bar',                         'XBARFOOc123r456'),
     (123, 456, '',  'FooVeryLongName BarVeryLongName', 'BARVERYLONGNAMEFOOVERYc123r456'),
     (123, 456, 'x', 'FooVeryLongName BarVeryLongName', 'XBARVERYLONGNAMEFOOVERc123r456'),
+    (123, 456, 'x', 'Björn Groß', 'XGROSSBJOERNc123r456'),
+    (123, 456, 'x', 'Søren Åkesson', 'XAAKESSONSORENc123r456'),
+    (123, 456, 'x', 'Tomáš Dvořák', 'XDVORAKTOMASc123r456'),
+    (123, 456, 'x', 'けんじ 中村', 'Xc123r456'),  # XXX: This results in an empty order ID
 ))
 def test_get_order_id(event_id, registration_id, prefix, name, expected):
     first_name, last_name = name.split(' ', 1)
