@@ -7,7 +7,7 @@
 
 from flask_pluginengine import current_plugin
 
-from indico.util.string import remove_accents, remove_non_alpha
+from indico.util.string import remove_non_alpha, str_to_ascii
 
 
 def get_payment_methods(event, currency):
@@ -49,5 +49,5 @@ def get_order_id(registration, prefix, max_len=30):
     """
     payment_id = f'c{registration.event_id}r{registration.id}'
     order_id_extra_len = max_len - len(payment_id)
-    order_id = prefix + remove_non_alpha(remove_accents(registration.last_name + registration.first_name))
+    order_id = prefix + remove_non_alpha(str_to_ascii(registration.last_name + registration.first_name))
     return order_id[:order_id_extra_len].upper().strip() + payment_id
