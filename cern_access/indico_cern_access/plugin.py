@@ -272,7 +272,6 @@ class CERNAccessPlugin(IndicoPlugin):
             license_plate=access_request_data['license_plate'],
             accompanying_persons=sanitize_accompanying_persons(accompanying_persons, registration),
             request_state=CERNAccessRequestState.not_requested,
-            reservation_code=''
         )
 
     def _event_time_changed(self, sender, obj, **kwargs):
