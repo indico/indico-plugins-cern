@@ -269,7 +269,11 @@ def withdraw_event_access_request(req):
 def get_random_reservation_code():
     """Generate random reservation code for data required by ADaMS API."""
     charset = 'ABCDEFGHIJKLMNPQRSTUVWXYZ123456789'
-    return 'I' + ''.join(random.sample(charset, 6))
+
+    while True:
+        reservation_code = 'I' + ''.join(random.sample(charset, 6))
+        if not CERNAccessRequest.query.filter_by(reservation_code=reservation_code).has_rows():
+            return reservation_code
 
 
 def create_access_request(registration, state, reservation_code, nonce):

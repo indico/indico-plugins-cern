@@ -159,5 +159,4 @@ def dummy_access_request(dummy_regform, accompanying_persons_field):
                                                 birth_place='bar',
                                                 license_plate=None,
                                                 request_state=CERNAccessRequestState.not_requested,
-                                                reservation_code='',
                                                 accompanying_persons=accompaning_persons)
