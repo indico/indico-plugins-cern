@@ -47,9 +47,9 @@ def upgrade():
         sa.Column('entry_data', postgresql.JSONB(none_as_null=True, astext_type=sa.Text()), nullable=True),
         sa.Column('extra_args', postgresql.JSONB(none_as_null=True, astext_type=sa.Text()), nullable=True),
         sa.CheckConstraint('action != 3 OR (entry_data IS NULL AND extra_args IS NULL)', name='delete_has_no_args'),
-        sa.CheckConstraint('action = 2 OR extra_args IS NULL', name='ck_queue_move_has_extra_args'),
-        sa.CheckConstraint('action = 2 OR extra_args IS NULL', name='ck_queue_other_actions_have_no_extra_args'),
-        sa.CheckConstraint('action = 3 OR entry_data IS NOT NULL', name='ck_queue_other_actions_have_args'),
+        sa.CheckConstraint('action = 2 OR extra_args IS NULL', name='move_has_extra_args'),
+        sa.CheckConstraint('action = 2 OR extra_args IS NULL', name='other_actions_have_no_extra_args'),
+        sa.CheckConstraint('action = 3 OR entry_data IS NOT NULL', name='other_actions_have_args'),
         schema='plugin_zoom_rooms',
     )
 
