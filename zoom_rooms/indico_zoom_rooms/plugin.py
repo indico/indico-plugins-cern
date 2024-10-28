@@ -10,7 +10,7 @@ from wtforms.fields import BooleanField, FloatField, URLField
 from wtforms.validators import URL, DataRequired, NumberRange
 
 from indico.core import signals
-from indico.core.plugins import IndicoPlugin
+from indico.core.plugins import IndicoPlugin, PluginCategory
 from indico.modules.events.contributions.models.contributions import Contribution
 from indico.modules.events.models.events import Event
 from indico.modules.events.sessions.models.blocks import SessionBlock
@@ -52,6 +52,7 @@ class ZoomRoomsPlugin(IndicoPlugin):
     configurable = True
     settings_form = PluginSettingsForm
     default_settings = {'debug': False, 'service_url': None, 'docs_url': '', 'token': None, 'timeout': 3}
+    category = PluginCategory.videoconference
 
     def init(self):
         super().init()
