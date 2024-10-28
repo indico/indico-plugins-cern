@@ -46,21 +46,13 @@ class ZoomRoomsAction(IndicoIntEnum):
 
 
 def get_entry_data(obj: Event | Contribution | SessionBlock, vc_room: VCRoom) -> EntryData:
-    if isinstance(obj, Event):
-        return {
-            'start_dt': int(obj.start_dt.timestamp()),
-            'end_dt': int(obj.end_dt.timestamp()),
-            'title': vc_room.name,
-            'url': vc_room.data['url'],
-        }
-    else:
-        entry = obj.timetable_entry
-        return {
-            'start_dt': int(entry.start_dt.timestamp()),
-            'end_dt': int(entry.end_dt.timestamp()),
-            'title': vc_room.name,
-            'url': vc_room.data['url'],
-        }
+    entry = obj if isinstance(obj, Event) else obj.timetable_entry
+    return {
+        'start_dt': int(entry.start_dt.timestamp()),
+        'end_dt': int(entry.end_dt.timestamp()),
+        'title': vc_room.name,
+        'url': vc_room.data['url'],
+    }
 
 
 class ZoomRoomsQueueEntry(db.Model):
