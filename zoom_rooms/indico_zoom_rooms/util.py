@@ -30,16 +30,22 @@ def get_zoom_room_id(obj: Event | Contribution | SessionBlock | Room) -> str | N
 
 
 def make_zoom_room_entry_id(user_id: str, obj: Event | Contribution | SessionBlock, vc_room: VCRoom) -> str:
+    """Create a unique entry ID from the room user ID and the object."""
     event_id = obj.id if isinstance(obj, Event) else obj.event.id
-    sub_id = ''
-    if isinstance(obj, Contribution):
-        sub_id = f':contribution:{obj.id}'
-    elif isinstance(obj, SessionBlock):
-        sub_id = f':block:{obj.id}'
+
+    match obj:
+        case Event():
+            event_id = obj.id
+            sub_id = ''
+        case Contribution():
+            event_id = obj.event.id
+            sub_id = f':contribution:{obj.id}'
+        case SessionBlock():
+            event_id = obj.event.id
+            sub_id = f':block:{obj.id}'
 
     zoom_id = vc_room.data['zoom_id']
-
-    return f'zoom_meeting:{user_id}@indico:event:{event_id}{sub_id}#{zoom_id}'
+    return f'zoom_meeting:{user_id}@indico:event:{event_id}{sub_id}:{zoom_id}'
 
 
 def get_vc_room_associations(obj: Session | SessionBlock | Contribution | Event) -> t.Iterable[VCRoomEventAssociation]:

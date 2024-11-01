@@ -17,7 +17,7 @@ from indico.modules.events.models.events import Event
 from indico.modules.events.operations import clone_event, update_event
 from indico.modules.events.sessions.operations import create_session, delete_session, update_session_block
 from indico.modules.events.timetable.operations import (create_session_block_entry, move_timetable_entry,
-                                                        schedule_contribution)
+                                                        schedule_contribution, update_timetable_entry)
 from indico.modules.events.util import track_time_changes
 from indico.modules.rb.models.room_attributes import RoomAttribute, RoomAttributeAssociation
 
@@ -25,6 +25,16 @@ from indico_zoom_rooms.models import ZoomRoomsAction, ZoomRoomsQueueEntry
 
 
 TZ = ZoneInfo('Europe/Zurich')
+
+
+def _entry_data(entry: ZoomRoomsQueueEntry) -> dict:
+    return {
+        'type': entry.action,
+        'entry_id': entry.entry_id,
+        'entry_data': entry.entry_data,
+        'zoom_room_id': entry.zoom_room_id,
+        'extra_args': entry.extra_args,
+    }
 
 
 @pytest.fixture
@@ -188,14 +198,14 @@ def zr_session(zr_event, zr_powered_room, app_context, dummy_room, create_zoom_m
     )
 
 
-EVENT_ENTRY_ID = 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1#zmeeting1'
+EVENT_ENTRY_ID = 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:zmeeting1'
 ENTRY_TITLE = 'Zoom Meeting'
 
 
 def test_event(zr_event, mock_tasks, dummy_room, zr_powered_room):
     tasks = mock_tasks()
 
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.create,
         'entry_id': EVENT_ENTRY_ID,
         'entry_data': {
@@ -218,7 +228,7 @@ def test_event(zr_event, mock_tasks, dummy_room, zr_powered_room):
 
     tasks = mock_tasks()
 
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.update,
         'entry_id': EVENT_ENTRY_ID,
         'entry_data': {
@@ -240,7 +250,7 @@ def test_event(zr_event, mock_tasks, dummy_room, zr_powered_room):
 
     tasks = mock_tasks()
 
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.delete,
         'entry_id': EVENT_ENTRY_ID,
         'entry_data': None,
@@ -256,7 +266,7 @@ def test_event(zr_event, mock_tasks, dummy_room, zr_powered_room):
     )
 
     tasks = mock_tasks()
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.create,
         'entry_id': EVENT_ENTRY_ID,
         'entry_data': {
@@ -274,7 +284,7 @@ def test_event(zr_event, mock_tasks, dummy_room, zr_powered_room):
     zr_event.delete('Unit test')
 
     tasks = mock_tasks()
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.delete,
         'entry_id': EVENT_ENTRY_ID,
         'entry_data': None,
@@ -287,7 +297,7 @@ def test_event(zr_event, mock_tasks, dummy_room, zr_powered_room):
 def test_contrib(mock_tasks, dummy_room, zr_event, zr_contrib, zr_powered_room, another_zr_powered_room):
     tasks = mock_tasks()
 
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.create,
         'entry_id': EVENT_ENTRY_ID,
         'entry_data': {
@@ -299,9 +309,9 @@ def test_contrib(mock_tasks, dummy_room, zr_event, zr_contrib, zr_powered_room, 
         'zoom_room_id': 'test-zoom-room-1@example.com',
         'extra_args': None,
     }
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.create,
-        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:contribution:1#zmeeting2',
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:contribution:1:zmeeting2',
         'entry_data': {
             'title': ENTRY_TITLE,
             'start_dt': datetime(2024, 3, 1, 16, 15, tzinfo=TZ).timestamp(),
@@ -322,9 +332,9 @@ def test_contrib(mock_tasks, dummy_room, zr_event, zr_contrib, zr_powered_room, 
         },
     )
 
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.delete,
-        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:contribution:1#zmeeting2',
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:contribution:1:zmeeting2',
         'entry_data': None,
         'zoom_room_id': 'test-zoom-room-1@example.com',
         'extra_args': None,
@@ -347,9 +357,9 @@ def test_contrib(mock_tasks, dummy_room, zr_event, zr_contrib, zr_powered_room, 
     )
 
     tasks = mock_tasks()
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.create,
-        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:contribution:1#zmeeting2',
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:contribution:1:zmeeting2',
         'entry_data': {
             'title': ENTRY_TITLE,
             'start_dt': datetime(2024, 3, 1, 17, 15, tzinfo=TZ).timestamp(),
@@ -366,9 +376,9 @@ def test_contrib(mock_tasks, dummy_room, zr_event, zr_contrib, zr_powered_room, 
         update_contribution(zr_contrib, {'start_dt': datetime(2024, 3, 1, 16, 25, tzinfo=TZ)})
 
     tasks = mock_tasks()
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.update,
-        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:contribution:1#zmeeting2',
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:contribution:1:zmeeting2',
         'entry_data': {
             'title': ENTRY_TITLE,
             'start_dt': datetime(2024, 3, 1, 16, 25, tzinfo=TZ).timestamp(),
@@ -394,9 +404,9 @@ def test_contrib(mock_tasks, dummy_room, zr_event, zr_contrib, zr_powered_room, 
     )
 
     tasks = mock_tasks()
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.move,
-        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:contribution:1#zmeeting2',
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:contribution:1:zmeeting2',
         'entry_data': {
             'title': ENTRY_TITLE,
             'start_dt': datetime(2024, 3, 1, 16, 25, tzinfo=TZ).timestamp(),
@@ -412,16 +422,16 @@ def test_contrib(mock_tasks, dummy_room, zr_event, zr_contrib, zr_powered_room, 
     delete_contribution(zr_contrib)
 
     tasks = mock_tasks()
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.delete,
-        'entry_id': 'zoom_meeting:test-zoom-room-2@example.com@indico:event:1:contribution:1#zmeeting2',
+        'entry_id': 'zoom_meeting:test-zoom-room-2@example.com@indico:event:1:contribution:1:zmeeting2',
         'entry_data': None,
         'zoom_room_id': 'test-zoom-room-2@example.com',
         'extra_args': None,
     }
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.create,
-        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1#zmeeting2',
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:zmeeting2',
         'entry_data': {
             'title': ENTRY_TITLE,
             'start_dt': datetime(2024, 3, 1, 16, 00, tzinfo=TZ).timestamp(),
@@ -438,16 +448,16 @@ def test_contrib(mock_tasks, dummy_room, zr_event, zr_contrib, zr_powered_room, 
     zr_event.delete('test')
 
     tasks = mock_tasks()
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.delete,
         'entry_id': EVENT_ENTRY_ID,
         'entry_data': None,
         'zoom_room_id': 'test-zoom-room-1@example.com',
         'extra_args': None,
     }
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.delete,
-        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1#zmeeting2',
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:zmeeting2',
         'entry_data': None,
         'zoom_room_id': 'test-zoom-room-1@example.com',
         'extra_args': None,
@@ -461,7 +471,7 @@ def test_session_block(zr_event, mock_tasks, zr_session, zr_powered_room, anothe
 
     tasks = mock_tasks()
 
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.create,
         'entry_id': EVENT_ENTRY_ID,
         'entry_data': {
@@ -473,9 +483,9 @@ def test_session_block(zr_event, mock_tasks, zr_session, zr_powered_room, anothe
         'zoom_room_id': 'test-zoom-room-1@example.com',
         'extra_args': None,
     }
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.create,
-        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:contribution:1#zmeeting2',
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:contribution:1:zmeeting2',
         'entry_data': {
             'title': ENTRY_TITLE,
             'start_dt': datetime(2024, 3, 1, 16, 15, tzinfo=TZ).timestamp(),
@@ -485,9 +495,9 @@ def test_session_block(zr_event, mock_tasks, zr_session, zr_powered_room, anothe
         'zoom_room_id': 'test-zoom-room-1@example.com',
         'extra_args': None,
     }
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.create,
-        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:block:1#zmeeting4',
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:block:1:zmeeting4',
         'entry_data': {
             'title': ENTRY_TITLE,
             'start_dt': datetime(2024, 3, 1, 16, 15, tzinfo=TZ).timestamp(),
@@ -515,9 +525,9 @@ def test_session_block(zr_event, mock_tasks, zr_session, zr_powered_room, anothe
 
     # changing the room to another ZR-powered room should trigger CREATE for block and contribution
     tasks = mock_tasks()
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.create,
-        'entry_id': 'zoom_meeting:test-zoom-room-2@example.com@indico:event:1:block:2#zmeeting5',
+        'entry_id': 'zoom_meeting:test-zoom-room-2@example.com@indico:event:1:block:2:zmeeting5',
         'entry_data': {
             'title': ENTRY_TITLE,
             'start_dt': datetime(2024, 3, 1, 17, 15, tzinfo=TZ).timestamp(),
@@ -527,9 +537,9 @@ def test_session_block(zr_event, mock_tasks, zr_session, zr_powered_room, anothe
         'zoom_room_id': 'test-zoom-room-2@example.com',
         'extra_args': None,
     }
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.create,
-        'entry_id': 'zoom_meeting:test-zoom-room-2@example.com@indico:event:1:contribution:2#zmeeting3',
+        'entry_id': 'zoom_meeting:test-zoom-room-2@example.com@indico:event:1:contribution:2:zmeeting3',
         'entry_data': {
             'title': ENTRY_TITLE,
             'start_dt': datetime(2024, 3, 1, 17, 15, tzinfo=TZ).timestamp(),
@@ -546,9 +556,9 @@ def test_session_block(zr_event, mock_tasks, zr_session, zr_powered_room, anothe
 
     # this should trigger a MOVE of contrib_2, as the event uses a different (equipped) room
     tasks = mock_tasks()
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.move,
-        'entry_id': 'zoom_meeting:test-zoom-room-2@example.com@indico:event:1:contribution:2#zmeeting3',
+        'entry_id': 'zoom_meeting:test-zoom-room-2@example.com@indico:event:1:contribution:2:zmeeting3',
         'entry_data': {
             'title': ENTRY_TITLE,
             'start_dt': datetime(2024, 3, 1, 17, 15, tzinfo=TZ).timestamp(),
@@ -579,58 +589,58 @@ def test_session_block(zr_event, mock_tasks, zr_session, zr_powered_room, anothe
         'url': 'https://example.com/kitties',
     }
 
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.delete,
-        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:block:1#zmeeting4',
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:block:1:zmeeting4',
         'entry_data': None,
         'zoom_room_id': 'test-zoom-room-1@example.com',
         'extra_args': None,
     }
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.create,
-        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1#zmeeting4',
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:zmeeting4',
         'entry_data': entry_data,
         'zoom_room_id': 'test-zoom-room-1@example.com',
         'extra_args': None,
     }
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.delete,
-        'entry_id': 'zoom_meeting:test-zoom-room-2@example.com@indico:event:1:block:2#zmeeting5',
+        'entry_id': 'zoom_meeting:test-zoom-room-2@example.com@indico:event:1:block:2:zmeeting5',
         'entry_data': None,
         'zoom_room_id': 'test-zoom-room-2@example.com',
         'extra_args': None,
     }
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.create,
-        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1#zmeeting5',
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:zmeeting5',
         'entry_data': entry_data,
         'zoom_room_id': 'test-zoom-room-1@example.com',
         'extra_args': None,
     }
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.delete,
-        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:contribution:1#zmeeting2',
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:contribution:1:zmeeting2',
         'entry_data': None,
         'zoom_room_id': 'test-zoom-room-1@example.com',
         'extra_args': None,
     }
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.create,
-        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1#zmeeting2',
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:zmeeting2',
         'entry_data': entry_data,
         'zoom_room_id': 'test-zoom-room-1@example.com',
         'extra_args': None,
     }
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.delete,
-        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:contribution:2#zmeeting3',
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:contribution:2:zmeeting3',
         'entry_data': None,
         'zoom_room_id': 'test-zoom-room-1@example.com',
         'extra_args': None,
     }
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.create,
-        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1#zmeeting3',
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:zmeeting3',
         'entry_data': entry_data,
         'zoom_room_id': 'test-zoom-room-1@example.com',
         'extra_args': None,
@@ -640,23 +650,18 @@ def test_session_block(zr_event, mock_tasks, zr_session, zr_powered_room, anothe
 
 
 def test_move_between_blocks(mock_tasks, zr_session):
+    # ignore all set up operations
     mock_tasks.reset()
 
-    (
-        _session,
-        block_1,
-        block_2,
-        contrib_1,
-        _contrib_2,
-    ) = zr_session
+    _session, block_1, block_2, contrib_1, _contrib_2 = zr_session
 
     # move contrib_1 to block_2
     move_timetable_entry(contrib_1.timetable_entry, parent=block_2.timetable_entry)
 
     tasks = mock_tasks()
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.delete,
-        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:contribution:1#zmeeting2',
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:contribution:1:zmeeting2',
         'entry_data': None,
         'zoom_room_id': 'test-zoom-room-1@example.com',
         'extra_args': None,
@@ -667,9 +672,9 @@ def test_move_between_blocks(mock_tasks, zr_session):
     move_timetable_entry(contrib_1.timetable_entry, parent=block_1.timetable_entry)
 
     tasks = mock_tasks()
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.create,
-        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:contribution:1#zmeeting2',
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:contribution:1:zmeeting2',
         'entry_data': {
             'title': ENTRY_TITLE,
             'start_dt': datetime(2024, 3, 1, 16, 15, tzinfo=TZ).timestamp(),
@@ -693,9 +698,9 @@ def test_clone(zr_event, mock_tasks, zr_session, db_reset_seqs):
     tasks = mock_tasks()
 
     # only block_1 is in an ZR-ready room, so the clone of block_2 shouldn't be mentioned at all
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.create,
-        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:2#zmeeting1',
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:2:zmeeting1',
         'entry_data': {
             'title': 'New Room',
             'start_dt': datetime(2024, 4, 1, 9, 30, tzinfo=TZ).timestamp(),
@@ -705,9 +710,9 @@ def test_clone(zr_event, mock_tasks, zr_session, db_reset_seqs):
         'zoom_room_id': 'test-zoom-room-1@example.com',
         'extra_args': None,
     }
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.create,
-        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:2:contribution:3#zmeeting2',
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:2:contribution:3:zmeeting2',
         'entry_data': {
             'title': 'New Room',
             'start_dt': datetime(2024, 4, 1, 9, 45, tzinfo=TZ).timestamp(),
@@ -717,9 +722,9 @@ def test_clone(zr_event, mock_tasks, zr_session, db_reset_seqs):
         'zoom_room_id': 'test-zoom-room-1@example.com',
         'extra_args': None,
     }
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.create,
-        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:2:block:4#zmeeting4',
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:2:block:4:zmeeting4',
         'entry_data': {
             'title': 'New Room',
             'start_dt': datetime(2024, 4, 1, 9, 45, tzinfo=TZ).timestamp(),
@@ -733,6 +738,7 @@ def test_clone(zr_event, mock_tasks, zr_session, db_reset_seqs):
 
 
 def test_reassign(zr_event, zr_contrib, mock_tasks, test_client, no_csrf_check, zoom_api, db):
+    # ignore all set up operations
     mock_tasks.reset()
 
     with test_client.session_transaction() as sess:
@@ -754,16 +760,16 @@ def test_reassign(zr_event, zr_contrib, mock_tasks, test_client, no_csrf_check, 
         assert resp.status_code == 200
 
     tasks = mock_tasks()
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.delete,
-        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:contribution:1#zmeeting2',
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:contribution:1:zmeeting2',
         'entry_data': None,
         'zoom_room_id': 'test-zoom-room-1@example.com',
         'extra_args': None,
     }
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.create,
-        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1#zmeeting2',
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:zmeeting2',
         'entry_data': {
             'title': ENTRY_TITLE,
             'start_dt': datetime(2024, 3, 1, 16, 00, tzinfo=TZ).timestamp(),
@@ -777,6 +783,7 @@ def test_reassign(zr_event, zr_contrib, mock_tasks, test_client, no_csrf_check, 
 
 
 def test_zoom_meeting_rename(zr_event, mock_tasks, test_client, no_csrf_check, zoom_api, db):
+    # ignore all set up operations
     mock_tasks.reset()
 
     assoc = zr_event.vc_room_associations[0]
@@ -795,9 +802,9 @@ def test_zoom_meeting_rename(zr_event, mock_tasks, test_client, no_csrf_check, z
         assert resp.status_code == 200
 
     tasks = mock_tasks()
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.update,
-        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1#zmeeting1',
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:zmeeting1',
         'entry_data': {
             'title': 'New name for meeting',
             'start_dt': datetime(2024, 3, 1, 16, 00, tzinfo=TZ).timestamp(),
@@ -811,14 +818,15 @@ def test_zoom_meeting_rename(zr_event, mock_tasks, test_client, no_csrf_check, z
 
 
 def test_corner_case_update_no_room(zr_event, mock_tasks):
+    # ignore all set up operations
     mock_tasks.reset()
 
     update_event(zr_event, location_data={'room': None, 'inheriting': False})
 
     tasks = mock_tasks()
-    assert next(tasks).data == {
+    assert _entry_data(next(tasks)) == {
         'type': ZoomRoomsAction.delete,
-        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1#zmeeting1',
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:zmeeting1',
         'entry_data': None,
         'zoom_room_id': 'test-zoom-room-1@example.com',
         'extra_args': None,
@@ -838,4 +846,43 @@ def test_corner_case_create_no_room(create_event, create_zoom_meeting, mock_task
     create_zoom_meeting(event, 'event')
 
     tasks = mock_tasks()
+    assert not next(tasks, None)
+
+
+def test_corner_case_timetable_expand(zr_contrib, mock_tasks, dummy_user, db):
+    zr_contrib.event.end_dt = datetime(2024, 3, 1, 16, 35, tzinfo=TZ)
+    zr_contrib.event.update_principal(dummy_user, full_access=True)
+    mock_tasks.reset()
+
+    # overflow the event by changing the contribution duration
+    with track_time_changes(auto_extend=True, user=dummy_user):
+        update_timetable_entry(zr_contrib.timetable_entry, {'duration': timedelta(minutes=30)})
+
+    tasks = mock_tasks()
+    assert _entry_data(next(tasks)) == {
+        'type': ZoomRoomsAction.update,
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:contribution:1:zmeeting2',
+        'entry_data': {
+            'title': ENTRY_TITLE,
+            'start_dt': datetime(2024, 3, 1, 16, 15, tzinfo=TZ).timestamp(),
+            'end_dt': datetime(2024, 3, 1, 16, 45, tzinfo=TZ).timestamp(),
+            'url': 'https://example.com/kitties',
+        },
+        'zoom_room_id': 'test-zoom-room-1@example.com',
+        'extra_args': None,
+    }
+
+    assert _entry_data(next(tasks)) == {
+        'type': ZoomRoomsAction.update,
+        'entry_id': 'zoom_meeting:test-zoom-room-1@example.com@indico:event:1:zmeeting1',
+        'entry_data': {
+            'title': ENTRY_TITLE,
+            'start_dt': datetime(2024, 3, 1, 16, 00, tzinfo=TZ).timestamp(),
+            'end_dt': datetime(2024, 3, 1, 16, 45, tzinfo=TZ).timestamp(),
+            'url': 'https://example.com/kitties',
+        },
+        'zoom_room_id': 'test-zoom-room-1@example.com',
+        'extra_args': None,
+    }
+
     assert not next(tasks, None)

@@ -12,7 +12,6 @@ from celery.schedules import crontab
 
 from indico.core.celery import celery
 from indico.core.db import db
-from indico.core.plugins import current_plugin
 from indico.util.string import strip_control_chars
 
 from indico_zoom_rooms.models import ZoomRoomsAction, ZoomRoomsQueueEntry
@@ -21,15 +20,15 @@ from indico_zoom_rooms.models import ZoomRoomsAction, ZoomRoomsQueueEntry
 def _send_request(method: str, zr_id: str, entry_id: str, data: dict | None = None) -> bool:
     """Send a request to the corresponding HTTP service."""
     from indico_zoom_rooms.plugin import ZoomRoomsPlugin
-    logger = current_plugin.logger
+    logger = ZoomRoomsPlugin.logger
 
     path = f'/api/v1/users/{zr_id}/events/{entry_id}'
     if not (url := ZoomRoomsPlugin.settings.get('service_url')):
-        raise KeyError('service_url is not set!')
+        raise RuntimeError('service_url is not set!')
     url = url.rstrip('/') + path
 
     if not (token := ZoomRoomsPlugin.settings.get('token')):
-        raise KeyError('token is not set!')
+        raise RuntimeError('token is not set!')
     try:
         res = requests.request(
             method,
@@ -78,13 +77,14 @@ def delete_entry(zr_id: str, entry_id: str) -> bool:
     return _send_request('DELETE', zr_id, entry_id)
 
 
-@celery.periodic_task(run_every=crontab(minute='*/1'), plugin='vc_zoom')
+@celery.periodic_task(run_every=crontab(minute='*'), plugin='vc_zoom')
 def update_zoom_rooms_calendar_entries():
     """Periodic task which sends all queued up entries and sends them to the HTTP API."""
     to_delete = set()
-    logger = current_plugin.logger
+    from indico_zoom_rooms.plugin import ZoomRoomsPlugin
+    logger = ZoomRoomsPlugin.logger
 
-    for entry in ZoomRoomsQueueEntry.query.all():
+    for entry in ZoomRoomsQueueEntry.query.order_by(ZoomRoomsQueueEntry.id).all():
         match entry.action:
             case ZoomRoomsAction.create:
                 logger.info('Creating entry %s for user %s: %s', entry.entry_id, entry.zoom_room_id, entry.entry_data)

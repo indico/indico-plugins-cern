@@ -69,13 +69,10 @@ class ZoomRoomsQueueEntry(db.Model):
     __tablename__ = 'queue'
     __table_args__ = (
         db.CheckConstraint(
-            f'action != {ZoomRoomsAction.delete} OR (entry_data IS NULL AND extra_args IS NULL)', 'delete_has_no_args'
+            f'action != {ZoomRoomsAction.delete} OR (entry_data IS NULL AND extra_args IS NULL)', 'delete_has_no_data'
         ),
-        db.CheckConstraint(f'action = {ZoomRoomsAction.delete} OR entry_data IS NOT NULL', 'other_actions_have_args'),
-        db.CheckConstraint(f'action = {ZoomRoomsAction.move} OR extra_args IS NULL', 'move_has_extra_args'),
-        db.CheckConstraint(
-            f'action = {ZoomRoomsAction.move} OR extra_args IS NULL', 'other_actions_have_no_extra_args'
-        ),
+        db.CheckConstraint(f'action = {ZoomRoomsAction.delete} OR entry_data IS NOT NULL', 'other_actions_have_data'),
+        db.CheckConstraint(f'(action = {ZoomRoomsAction.move}) = (extra_args IS NOT NULL)', 'only_move_has_extra_args'),
         {'schema': 'plugin_zoom_rooms'},
     )
     #: Entry ID (mainly used to sort by insertion order)
@@ -123,23 +120,14 @@ class ZoomRoomsQueueEntry(db.Model):
         else:
             extra_args = None
 
+        entry_data = None if action == ZoomRoomsAction.delete else EntryData(get_entry_data(obj, vc_room), **args)
         entry = cls(
             action=action,
             entry_id=make_zoom_room_entry_id(zoom_room_id, obj, vc_room),
             # DELETE operations have no additional parameters, only the ID
-            entry_data=None if action == ZoomRoomsAction.delete else EntryData(get_entry_data(obj, vc_room), **args),
+            entry_data=entry_data,
             extra_args=extra_args,
             zoom_room_id=zoom_room_id,
         )
         db.session.add(entry)
         db.session.flush()
-
-    @property
-    def data(self) -> dict:
-        return {
-            'type': self.action,
-            'entry_id': self.entry_id,
-            'entry_data': self.entry_data,
-            'zoom_room_id': self.zoom_room_id,
-            'extra_args': self.extra_args,
-        }
