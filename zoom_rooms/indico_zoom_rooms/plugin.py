@@ -12,7 +12,6 @@ from wtforms.validators import URL, DataRequired, NumberRange
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin, PluginCategory
 from indico.modules.events.contributions.models.contributions import Contribution
-from indico.modules.events.models.events import Event
 from indico.modules.events.sessions.models.blocks import SessionBlock
 from indico.modules.vc.models.vc_rooms import VCRoomEventAssociation
 from indico.web.forms.base import IndicoForm
@@ -58,17 +57,16 @@ class ZoomRoomsPlugin(IndicoPlugin):
         super().init()
         # Here we plug the various object signals into the action tracking code
         # Consult the README.md for a summary of the logic behind
-        self.connect(signals.event.contribution_updated, handlers._signal_link_object_updated)
-        self.connect(signals.event.session_block_updated, handlers._signal_link_object_updated)
-        self.connect(signals.event.updated, handlers._signal_event_updated)
-        self.connect(signals.event.times_changed, handlers._signal_tt_entry_updated, sender=Contribution)
-        self.connect(signals.event.times_changed, handlers._signal_tt_entry_updated, sender=SessionBlock)
-        self.connect(signals.event.times_changed, handlers._signal_tt_entry_updated, sender=Event)
-        self.connect(signals.vc.vc_room_created, handlers._signal_zoom_meeting_created)
-        self.connect(signals.vc.vc_room_cloned, handlers._signal_zoom_meeting_cloned)
-        self.connect(signals.vc.vc_room_attached, handlers._signal_zoom_meeting_association_attached)
-        self.connect(signals.vc.vc_room_detached, handlers._signal_zoom_meeting_association_detached)
-        self.connect(signals.vc.vc_room_data_updated, handlers._signal_zoom_meeting_data_updated)
+        self.connect(signals.event.contribution_updated, handlers.signal_link_object_updated)
+        self.connect(signals.event.session_block_updated, handlers.signal_link_object_updated)
+        self.connect(signals.event.updated, handlers.signal_event_updated)
+        self.connect(signals.event.times_changed, handlers.signal_tt_entry_updated, sender=Contribution)
+        self.connect(signals.event.times_changed, handlers.signal_tt_entry_updated, sender=SessionBlock)
+        self.connect(signals.vc.vc_room_created, handlers.signal_zoom_meeting_created)
+        self.connect(signals.vc.vc_room_cloned, handlers.signal_zoom_meeting_cloned)
+        self.connect(signals.vc.vc_room_attached, handlers.signal_zoom_meeting_association_attached)
+        self.connect(signals.vc.vc_room_detached, handlers.signal_zoom_meeting_association_detached)
+        self.connect(signals.vc.vc_room_data_updated, handlers.signal_zoom_meeting_data_updated)
 
         self.template_hook('manage-event-vc-extra-buttons', self.inject_button)
         self.template_hook('event-vc-extra-buttons', self.inject_button)

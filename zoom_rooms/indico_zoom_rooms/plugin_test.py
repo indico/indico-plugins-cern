@@ -219,12 +219,13 @@ def test_event(zr_event, mock_tasks, dummy_room, zr_powered_room):
     }
     assert not next(tasks, None)
 
-    # change time of event
-    update_event(
-        zr_event,
-        start_dt=datetime(2024, 3, 1, 17, 0, tzinfo=TZ),
-        end_dt=datetime(2024, 3, 1, 19, 0, tzinfo=TZ),
-    )
+    with track_time_changes():
+        # change time of event
+        update_event(
+            zr_event,
+            start_dt=datetime(2024, 3, 1, 17, 0, tzinfo=TZ),
+            end_dt=datetime(2024, 3, 1, 19, 0, tzinfo=TZ),
+        )
 
     tasks = mock_tasks()
 

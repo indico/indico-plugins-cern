@@ -146,23 +146,23 @@ def _check_link_object_for_updates(
         _handle_link_object_dt_change(obj, {k: v for k, v in changes.items() if k in ('start_dt, end_dt')})
 
 
-def _signal_link_object_updated(obj: Session | SessionBlock | Contribution, changes: dict | None = None):
+def signal_link_object_updated(obj: Session | SessionBlock | Contribution, changes: dict | None = None):
     _check_link_object_for_updates(obj, changes)
 
 
-def _signal_event_updated(event: Event, changes: dict[str, t.Any]):
+def signal_event_updated(event: Event, changes: dict[str, t.Any]):
     _check_link_object_for_updates(event, changes)
 
 
-def _signal_tt_entry_updated(obj_type, entry: TimetableEntry, obj: Event | Contribution | SessionBlock, changes: dict):
+def signal_tt_entry_updated(obj_type, entry: TimetableEntry, obj: Event | Contribution | SessionBlock, changes: dict):
     _check_link_object_for_updates(obj, changes)
 
 
-def _signal_zoom_meeting_created(vc_room: VCRoom, assoc: VCRoomEventAssociation, event: Event):
+def signal_zoom_meeting_created(vc_room: VCRoom, assoc: VCRoomEventAssociation, event: Event):
     _handle_link_object_created(assoc)
 
 
-def _signal_zoom_meeting_cloned(
+def signal_zoom_meeting_cloned(
     old_assoc: VCRoomEventAssociation,
     new_assoc: VCRoomEventAssociation,
     vc_room: VCRoom,
@@ -173,7 +173,7 @@ def _signal_zoom_meeting_cloned(
         _handle_link_object_created(new_assoc)
 
 
-def _signal_zoom_meeting_association_attached(
+def signal_zoom_meeting_association_attached(
     assoc: VCRoomEventAssociation,
     vc_room: VCRoom,
     event: Event,
@@ -187,7 +187,7 @@ def _signal_zoom_meeting_association_attached(
         _handle_link_object_created(assoc)
 
 
-def _signal_zoom_meeting_association_detached(
+def signal_zoom_meeting_association_detached(
     assoc: VCRoomEventAssociation,
     vc_room: VCRoom,
     old_link: Event | Contribution | SessionBlock,
@@ -199,7 +199,7 @@ def _signal_zoom_meeting_association_detached(
         _delete_zoom_association(old_link, vc_room)
 
 
-def _signal_zoom_meeting_data_updated(vc_room: VCRoom, data: dict):
+def signal_zoom_meeting_data_updated(vc_room: VCRoom, data: dict):
     if vc_room.type == 'zoom' and (name := data.get('name')) and name != vc_room.name:
         for assoc in vc_room.events:
             if zr_id := get_zoom_room_id(assoc.link_object):
