@@ -12,14 +12,13 @@ Revises:
 Create Date: 2024-08-07 10:44:37.218268
 """
 
-from enum import Enum
-
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.sql.ddl import CreateSchema, DropSchema
 
 from indico.core.db.sqlalchemy import PyIntEnum
+from indico.util.enum import IndicoIntEnum
 
 
 # revision identifiers, used by Alembic.
@@ -29,7 +28,7 @@ branch_labels = None
 depends_on = None
 
 
-class _ZoomRoomsAction(int, Enum):
+class _ZoomRoomsAction(IndicoIntEnum):
     create = 0
     update = 1
     move = 2
@@ -46,10 +45,10 @@ def upgrade():
         sa.Column('action', PyIntEnum(_ZoomRoomsAction), nullable=False),
         sa.Column('entry_data', postgresql.JSONB(none_as_null=True, astext_type=sa.Text()), nullable=True),
         sa.Column('extra_args', postgresql.JSONB(none_as_null=True, astext_type=sa.Text()), nullable=True),
-        sa.CheckConstraint('action != 3 OR (entry_data IS NULL AND extra_args IS NULL)', name='delete_has_no_args'),
-        sa.CheckConstraint('action = 2 OR extra_args IS NULL', name='move_has_extra_args'),
-        sa.CheckConstraint('action = 2 OR extra_args IS NULL', name='other_actions_have_no_extra_args'),
-        sa.CheckConstraint('action = 3 OR entry_data IS NOT NULL', name='other_actions_have_args'),
+        sa.CheckConstraint(f'action != {_ZoomRoomsAction.delete} OR (entry_data IS NULL AND extra_args IS NULL)',
+                           'delete_has_no_data'),
+        sa.CheckConstraint(f'action = {_ZoomRoomsAction.delete} OR entry_data IS NOT NULL', 'other_actions_have_data'),
+        sa.CheckConstraint(f'(action = {_ZoomRoomsAction.move}) = (extra_args IS NOT NULL)', 'only_move_has_extra_args'),
         schema='plugin_zoom_rooms',
     )
 
