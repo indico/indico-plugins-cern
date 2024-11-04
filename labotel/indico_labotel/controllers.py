@@ -7,9 +7,11 @@
 
 from dateutil.relativedelta import relativedelta
 from flask import jsonify, session
-from webargs import fields, validate
+from webargs import fields
 from webargs.flaskparser import use_kwargs
 
+from indico.core.db import db
+from indico.modules.rb import Room
 from indico.modules.rb.controllers import RHRoomBookingBase
 from indico.util.date_time import format_datetime
 from indico.util.spreadsheets import send_csv
@@ -37,13 +39,18 @@ class RHLanding(RHRoomBookingBase):
         return WPLabotelBase.display('room_booking.html')
 
 
+class RHDivisions(RHRoomBookingBase):
+    def _process(self):
+        return jsonify(sorted(div for div, in db.session.query(Room.division.distinct())))
+
+
 class RHUserDivision(RHProtected):
     def _process_GET(self):
         from indico_labotel.plugin import LabotelPlugin
         return jsonify(value=LabotelPlugin.user_settings.get(session.user, 'default_division'))
 
     @use_kwargs({
-        'value': fields.String(validate=validate.OneOf({'Laser', 'Clean Room', 'DSF', 'QART'}), allow_none=True)
+        'value': fields.String(allow_none=True)
     })
     def _process_POST(self, value):
         from indico_labotel.plugin import LabotelPlugin

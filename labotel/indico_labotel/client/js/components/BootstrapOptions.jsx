@@ -5,59 +5,54 @@
 // them and/or modify them under the terms of the MIT License; see
 // the LICENSE file for more details.
 
+import divisionsURL from 'indico-url:plugin_labotel.divisions';
 import defaultDivisionURL from 'indico-url:plugin_labotel.user_division';
 
 import PropTypes from 'prop-types';
 import React from 'react';
 import {Button} from 'semantic-ui-react';
 
+import {useIndicoAxios} from 'indico/react/hooks';
 import {Translate} from 'indico/react/i18n';
 import {indicoAxios, handleAxiosError} from 'indico/utils/axios';
 
-export const DIVISIONS = ['Laser', 'Clean Room', 'DSF', 'QART'];
+export default function BootstrapOptions({options: {division}, setOptions}) {
+  const {data: divisions} = useIndicoAxios(divisionsURL());
 
-export default class BootstrapOptions extends React.Component {
-  static propTypes = {
-    setOptions: PropTypes.func.isRequired,
-    options: PropTypes.object.isRequired,
-  };
-
-  handleDivisionClick = async division => {
-    const {setOptions} = this.props;
-    setOptions({division});
+  const handleDivisionClick = async newDivision => {
+    setOptions({division: newDivision});
     try {
-      await indicoAxios.post(defaultDivisionURL(), {value: division});
+      await indicoAxios.post(defaultDivisionURL(), {value: newDivision});
     } catch (error) {
       handleAxiosError(error);
     }
   };
 
-  render() {
-    const {
-      options: {division},
-    } = this.props;
-
-    return (
-      <Button.Group style={{marginBottom: 10}}>
-        {DIVISIONS.map(div => (
-          <Button
-            key={div}
-            onClick={() => this.handleDivisionClick(div)}
-            type="button"
-            primary={division === div}
-          >
-            {div}
-          </Button>
-        ))}
+  return (
+    <Button.Group style={{marginBottom: 10}}>
+      {divisions?.map(div => (
         <Button
-          key="other"
-          onClick={() => this.handleDivisionClick(null)}
+          key={div}
+          onClick={() => handleDivisionClick(div)}
           type="button"
-          primary={!division}
+          primary={division === div}
         >
-          <Translate>All</Translate>
+          {div}
         </Button>
-      </Button.Group>
-    );
-  }
+      ))}
+      <Button
+        key="other"
+        onClick={() => handleDivisionClick(null)}
+        type="button"
+        primary={!division}
+      >
+        <Translate>All</Translate>
+      </Button>
+    </Button.Group>
+  );
 }
+
+BootstrapOptions.propTypes = {
+  setOptions: PropTypes.func.isRequired,
+  options: PropTypes.object.isRequired,
+};

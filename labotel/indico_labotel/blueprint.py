@@ -7,11 +7,12 @@
 
 from indico.core.plugins import IndicoPluginBlueprint
 
-from indico_labotel.controllers import RHLabotelStats, RHLabotelStatsCSV, RHUserDivision
+from indico_labotel.controllers import RHDivisions, RHLabotelStats, RHLabotelStatsCSV, RHUserDivision
 
 
 blueprint = IndicoPluginBlueprint('labotel', __name__, url_prefix='/rooms')
 
+blueprint.add_url_rule('/api/divisions', 'divisions', RHDivisions)
 blueprint.add_url_rule('/api/user/division', 'user_division', RHUserDivision, methods=('GET', 'POST'))
 blueprint.add_url_rule('/api/labotel-stats', 'stats', RHLabotelStats)
 blueprint.add_url_rule('/labotel-stats.csv', 'stats_csv', RHLabotelStatsCSV)

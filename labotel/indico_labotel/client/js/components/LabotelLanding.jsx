@@ -7,32 +7,29 @@
 
 import defaultDivisionURL from 'indico-url:plugin_labotel.user_division';
 
-import React from 'react';
+import React, {useEffect, useRef} from 'react';
 
 import {Landing} from 'indico/modules/rb/modules/landing/Landing';
 import {indicoAxios, handleAxiosError} from 'indico/utils/axios';
 
-export default class LabotelLanding extends React.Component {
-  constructor(props) {
-    super(props);
-    this.landing = React.createRef();
-  }
+export default function LabotelLanding(props) {
+  const landing = useRef();
 
-  async componentDidMount() {
-    let response;
-    try {
-      response = await indicoAxios.get(defaultDivisionURL());
-    } catch (error) {
-      handleAxiosError(error);
-      return;
-    }
-    const division = response.data.value;
-    if (this.landing.current && division) {
-      this.landing.current.setExtraState({division});
-    }
-  }
+  useEffect(() => {
+    (async () => {
+      let response;
+      try {
+        response = await indicoAxios.get(defaultDivisionURL());
+      } catch (error) {
+        handleAxiosError(error);
+        return;
+      }
+      const division = response.data.value;
+      if (landing.current && division) {
+        landing.current.setExtraState({division});
+      }
+    })();
+  }, []);
 
-  render() {
-    return <Landing ref={this.landing} {...this.props} />;
-  }
+  return <Landing ref={landing} {...props} />;
 }

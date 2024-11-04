@@ -5,18 +5,49 @@
 // them and/or modify them under the terms of the MIT License; see
 // the LICENSE file for more details.
 
+import divisionsURL from 'indico-url:plugin_labotel.divisions';
+
 import PropTypes from 'prop-types';
 import React from 'react';
 import {Form} from 'semantic-ui-react';
 
 import {FilterDropdownFactory} from 'indico/modules/rb/common/filters/FilterBar';
 import FilterFormComponent from 'indico/modules/rb/common/filters/FilterFormComponent';
+import {useIndicoAxios} from 'indico/react/hooks';
 import {Translate} from 'indico/react/i18n';
-
-import {DIVISIONS} from './BootstrapOptions';
 
 // eslint-disable-next-line react/prop-types
 const divisionRenderer = ({division}) => (!division ? null : <span>{division}</span>);
+
+function DivisionFilter({division, setDivision}) {
+  const {data: divisions} = useIndicoAxios(divisionsURL());
+
+  return (
+    <Form.Group>
+      {divisions?.map(div => (
+        <Form.Radio
+          checked={division === div}
+          key={div}
+          label={div}
+          onChange={() => {
+            setDivision(div);
+          }}
+        />
+      ))}
+      <Form.Radio
+        checked={!division}
+        key="all"
+        label={Translate.string('All')}
+        onClick={() => setDivision(null)}
+      />
+    </Form.Group>
+  );
+}
+
+DivisionFilter.propTypes = {
+  division: PropTypes.string,
+  setDivision: PropTypes.func.isRequired,
+};
 
 class ExtraFilterForm extends FilterFormComponent {
   state = {
@@ -34,26 +65,7 @@ class ExtraFilterForm extends FilterFormComponent {
 
   render() {
     const {division} = this.state;
-    return (
-      <Form.Group>
-        {DIVISIONS.map(div => (
-          <Form.Radio
-            checked={division === div}
-            key={div}
-            label={div}
-            onChange={() => {
-              this.setDivision(div);
-            }}
-          />
-        ))}
-        <Form.Radio
-          checked={!division}
-          key="all"
-          label={Translate.string('All')}
-          onClick={() => this.setDivision(null)}
-        />
-      </Form.Group>
-    );
+    return <DivisionFilter setDivision={this.setDivision.bind(this)} division={division} />;
   }
 }
 
