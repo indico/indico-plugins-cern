@@ -85,8 +85,7 @@ class ZoomRoomsQueueEntry(db.Model):
     )
 
     def __repr__(self):
-        action = ZoomRoomsAction(self.action).name
-        return format_repr(self, 'id', 'entry_id', action=action)
+        return format_repr(self, 'id', 'entry_id', action=None)
 
     @classmethod
     def record(
