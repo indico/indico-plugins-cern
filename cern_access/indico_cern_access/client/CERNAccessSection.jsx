@@ -121,7 +121,7 @@ function CERNAccessSectionDisplay({countries, start, end, preselected, required,
           <FinalCheckbox
             name="cern_access_request_cern_access"
             label=""
-            toggle
+            showAsToggle
             initialValue={preselected}
           />
         </div>
