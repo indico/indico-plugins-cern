@@ -68,6 +68,7 @@ class OutlookUserPreferences(ExtraUserPreferences):
                                       description=_('The status for Outlook Calendar entries')),
         'outlook_status_overrides': MultipleItemsField(
             _('Outlook entry status overrides'),
+            [HiddenUnless('extra_outlook_active', preserve_data=True)],
             fields=[
                 {'id': 'type', 'caption': _('Type'), 'required': True, 'type': 'select'},
                 {'id': 'id', 'caption': _('Category ID'), 'required': True, 'type': 'number', 'step': 1, 'coerce': int},
