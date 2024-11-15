@@ -80,7 +80,8 @@ class OutlookUserPreferences(ExtraUserPreferences):
                 {'id': 'id', 'caption': _('Category ID'), 'required': True, 'type': 'number', 'step': 1, 'coerce': int},
                 {'id': 'status', 'caption': _('Status'), 'required': False, 'type': 'select'},
                 {'id': 'reminder', 'caption': _('Reminder'), 'required': False, 'type': 'checkbox'},
-                {'id': 'reminder_minutes', 'caption': _('Reminder time'), 'required': False, 'type': 'number', 'step': 1, 'coerce': int},
+                {'id': 'reminder_minutes', 'caption': _('Reminder time'), 'required': False,
+                    'type': 'number', 'step': 1, 'coerce': int},
             ],
             choices={
                 'type': {'category': _('Category'), 'category_tree': _('Category & Subcategories')},
@@ -98,7 +99,8 @@ class OutlookUserPreferences(ExtraUserPreferences):
             'outlook_active': OutlookPlugin.user_settings.get(self.user, 'enabled'),
             'outlook_status': OutlookPlugin.user_settings.get(self.user, 'status', default_status),
             'outlook_reminder': OutlookPlugin.user_settings.get(self.user, 'reminder', default_reminder),
-            'outlook_reminder_minutes': OutlookPlugin.user_settings.get(self.user, 'reminder_minutes', default_reminder_minutes),
+            'outlook_reminder_minutes': OutlookPlugin.user_settings.get(self.user,
+                                                                        'reminder_minutes', default_reminder_minutes),
             'outlook_overrides': OutlookPlugin.user_settings.get(self.user, 'overrides', []),
         }
 
