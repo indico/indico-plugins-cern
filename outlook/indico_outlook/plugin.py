@@ -140,6 +140,8 @@ class OutlookPlugin(IndicoPlugin):
         self.connect(signals.event.registration.registration_deleted, self.event_registration_deleted)
         self.connect(signals.event.updated, self.event_updated)
         self.connect(signals.event.times_changed, self.event_times_changed, sender=Event)
+        self.connect(signals.event.created, self.event_created)
+        self.connect(signals.event.restored, self.event_created)
         self.connect(signals.event.deleted, self.event_deleted)
         self.connect(signals.core.after_process, self._apply_changes)
         self.connect(signals.users.merged, self._merge_users)
@@ -220,6 +222,11 @@ class OutlookPlugin(IndicoPlugin):
 
         self.logger.info('Event time change: updating %r: %r', event, changes)
         self.event_updated(event, changes, **kwargs)
+
+    def event_created(self, event, **kwargs):
+        self.logger.info('Event created: %r', event)
+        # Piggyback on the event_updated handler to avoid duplicating the logic
+        self.event_updated(event, {'title': event.title}, **kwargs)
 
     def event_deleted(self, event, **kwargs):
         users_to_update = set(get_participating_users(event))
