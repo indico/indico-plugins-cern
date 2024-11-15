@@ -245,7 +245,8 @@ class OutlookPlugin(IndicoPlugin):
         # Now look for users that have marked as favorite that event's category (or any of its parents)
         for category in event.category.chain_query.all():
             for user in category.favorite_of:
-                users_to_update.add(user)
+                if event.can_access(user):
+                    users_to_update.add(user)
 
         for user in users_to_update:
             self.logger.info('Event data change: updating %s in %r', user, event)
