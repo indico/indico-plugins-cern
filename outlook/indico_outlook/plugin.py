@@ -170,6 +170,8 @@ class OutlookPlugin(IndicoPlugin):
         self.connect(signals.event.deleted, self.event_deleted)
         self.connect(signals.core.after_process, self._apply_changes)
         self.connect(signals.users.merged, self._merge_users)
+        self.connect(signals.users.favorite_event_added, self.favorite_event_added)
+        self.connect(signals.users.favorite_event_removed, self.favorite_event_removed)
 
     def _extend_indico_cli(self, sender, **kwargs):
         @cli_command()
@@ -180,6 +182,14 @@ class OutlookPlugin(IndicoPlugin):
 
     def extend_user_preferences(self, user, **kwargs):
         return OutlookUserPreferences
+
+    def favorite_event_added(self, user, event, **kwargs):
+        self._record_change(event, user, OutlookAction.add)
+        self.logger.info('Favorite event added: updating %s in %r', user, event)
+
+    def favorite_event_removed(self, user, event, **kwargs):
+        self._record_change(event, user, OutlookAction.remove)
+        self.logger.info('Favorite event removed: updating %s in %r', user, event)
 
     def event_registration_state_changed(self, registration, **kwargs):
         if not registration.user:
@@ -211,7 +221,13 @@ class OutlookPlugin(IndicoPlugin):
     def event_updated(self, event, changes, **kwargs):
         if not changes.keys() & {'title', 'description', 'location_data'}:
             return
-        for user in get_participating_users(event):
+
+        # Registered users need to be informed about changes
+        users_to_update = set(get_participating_users(event))
+        # Users that have marked the event as favorite too
+        users_to_update |= event.favorite_of
+
+        for user in users_to_update:
             self.logger.info('Event data change: updating %s in %r', user, event)
             self._record_change(event, user, OutlookAction.update)
 
@@ -231,6 +247,12 @@ class OutlookPlugin(IndicoPlugin):
             return
         if 'outlook_changes' not in g:
             g.outlook_changes = []
+
+        if action == OutlookAction.remove:
+            # Only remove an event if the user *really* shouldn't have it in their calendar
+            if user in get_participating_users(event) or user in event.favorite_of:
+                return
+
         g.outlook_changes.append((event, user, action))
 
     def _apply_changes(self, sender, **kwargs):
