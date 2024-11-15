@@ -232,7 +232,7 @@ class OutlookPlugin(IndicoPlugin):
             self.logger.info('Registration removed (form deleted): removing %s in %s', registration.user, event)
 
     def event_updated(self, event, changes, **kwargs):
-        if not changes.keys() & {'title', 'description', 'location_data'}:
+        if not changes.keys() & {'title', 'description', 'location_data', 'start_dt', 'end_dt', 'duration'}:
             return
 
         # Registered users need to be informed about changes
@@ -251,9 +251,11 @@ class OutlookPlugin(IndicoPlugin):
 
     def event_times_changed(self, sender, obj, **kwargs):
         event = obj
-        for user in get_participating_users(event):
-            self.logger.info('Event time change: updating %s in %r', user, event)
-            self._record_change(event, user, OutlookAction.update)
+        changes = kwargs['changes']
+        del kwargs['changes']
+
+        self.logger.info('Event time change: updating %r: %r', event, changes)
+        self.event_updated(event, changes, **kwargs)
 
     def event_deleted(self, event, **kwargs):
         users_to_update = set(get_participating_users(event))
