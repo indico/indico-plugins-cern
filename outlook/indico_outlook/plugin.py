@@ -256,9 +256,15 @@ class OutlookPlugin(IndicoPlugin):
             self._record_change(event, user, OutlookAction.update)
 
     def event_deleted(self, event, **kwargs):
-        for user in get_participating_users(event):
+        users_to_update = set(get_participating_users(event))
+        users_to_update |= event.favorite_of
+        for category in event.category.chain_query.all():
+            for user in category.favorite_of:
+                users_to_update.add(user)
+
+        for user in users_to_update:
             self.logger.info('Event deletion: removing %s in %r', user, event)
-            self._record_change(event, user, OutlookAction.remove)
+            self._record_change(event, user, OutlookAction.force_remove)
 
     def _record_change(self, event, user, action):
         if is_event_excluded(event):
@@ -270,6 +276,9 @@ class OutlookPlugin(IndicoPlugin):
             # Only remove an event if the user *really* shouldn't have it in their calendar
             if user in get_participating_users(event) or user in event.favorite_of:
                 return
+            for category in event.category.chain_query.all():
+                if user in category.favorite_of:
+                    return
 
         g.outlook_changes.append((event, user, action))
 
