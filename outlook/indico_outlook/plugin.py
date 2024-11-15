@@ -66,35 +66,49 @@ class OutlookUserPreferences(ExtraUserPreferences):
                                                                                preserve_data=True)],
                                       choices=_status_choices,
                                       description=_('The status for Outlook Calendar entries')),
-        'outlook_status_overrides': MultipleItemsField(
-            _('Outlook entry status overrides'),
+        'outlook_reminder': BooleanField(_('Reminder'), [HiddenUnless('extra_outlook_active',
+                                                preserve_data=True)],
+                                    description=_('Enable calendar reminder')),
+        'outlook_reminder_minutes': IntegerField(_('Reminder time'), [HiddenUnless('extra_outlook_active',
+                                                preserve_data=True), NumberRange(min=0)],
+                                    description=_('Remind users X minutes before the event')),
+        'outlook_overrides': MultipleItemsField(
+            _('Outlook entry overrides'),
             [HiddenUnless('extra_outlook_active', preserve_data=True)],
             fields=[
                 {'id': 'type', 'caption': _('Type'), 'required': True, 'type': 'select'},
                 {'id': 'id', 'caption': _('Category ID'), 'required': True, 'type': 'number', 'step': 1, 'coerce': int},
-                {'id': 'status', 'caption': _('Status'), 'required': True, 'type': 'select'},
+                {'id': 'status', 'caption': _('Status'), 'required': False, 'type': 'select'},
+                {'id': 'reminder', 'caption': _('Reminder'), 'required': False, 'type': 'checkbox'},
+                {'id': 'reminder_minutes', 'caption': _('Reminder time'), 'required': False, 'type': 'number', 'step': 1, 'coerce': int},
             ],
             choices={
                 'type': {'category': _('Category'), 'category_tree': _('Category & Subcategories')},
                 'status': dict(_status_choices),
             },
-            description=_('You can override the calendar entry status for specific categories.')
+            description=_('You can override the calendar entry configuration for specific categories.'),
         )
     }
 
     def load(self):
         default_status = OutlookPlugin.settings.get('status')
+        default_reminder = OutlookPlugin.settings.get('reminder')
+        default_reminder_minutes = OutlookPlugin.settings.get('reminder_minutes')
         return {
             'outlook_active': OutlookPlugin.user_settings.get(self.user, 'enabled'),
             'outlook_status': OutlookPlugin.user_settings.get(self.user, 'status', default_status),
-            'outlook_status_overrides': OutlookPlugin.user_settings.get(self.user, 'status_overrides', [])
+            'outlook_reminder': OutlookPlugin.user_settings.get(self.user, 'reminder', default_reminder),
+            'outlook_reminder_minutes': OutlookPlugin.user_settings.get(self.user, 'reminder_minutes', default_reminder_minutes),
+            'outlook_overrides': OutlookPlugin.user_settings.get(self.user, 'overrides', []),
         }
 
     def save(self, data):
         OutlookPlugin.user_settings.set_multi(self.user, {
             'enabled': data['outlook_active'],
             'status': data['outlook_status'],
-            'status_overrides': data['outlook_status_overrides']
+            'reminder': data['outlook_reminder'],
+            'reminder_minutes': data['outlook_reminder_minutes'],
+            'overrides': data['outlook_overrides'],
         })
 
 
@@ -122,7 +136,9 @@ class OutlookPlugin(IndicoPlugin):
     default_user_settings = {
         'enabled': True,  # XXX: if the default value ever changes, adapt `get_participating_users`!
         'status': None,
-        'status_overrides': [],
+        'reminder': True,
+        'reminder_minutes': 15,
+        'overrides': [],
     }
 
     def init(self):
