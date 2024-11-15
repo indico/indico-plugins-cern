@@ -93,6 +93,7 @@ def _get_reminder(user, event, settings):
             reminder = override.get('reminder', reminder), override.get('reminder_minutes', reminder_minutes)
     return reminder, reminder_minutes
 
+
 def _update_calendar_entry(entry, settings):
     """Executes a single calendar update
 
