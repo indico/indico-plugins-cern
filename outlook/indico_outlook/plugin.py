@@ -62,6 +62,9 @@ class OutlookUserPreferences(ExtraUserPreferences):
         'outlook_active': BooleanField(_('Sync with Outlook'), widget=SwitchWidget(),
                                        description=_('Add Indico events in which I participate to my Outlook '
                                                      'calendar')),
+        'outlook_favorites': BooleanField(_('Sync favorites with Outlook'), [HiddenUnless('extra_outlook_active',
+                                    preserve_data=True)], widget=SwitchWidget(),
+                                    description=_('Add events/categories I mark as favorite to my Outlook calendar')),
         'outlook_status': SelectField(_('Outlook entry status'), [HiddenUnless('extra_outlook_active',
                                                                                preserve_data=True)],
                                       choices=_status_choices,
@@ -86,6 +89,7 @@ class OutlookUserPreferences(ExtraUserPreferences):
         default_status = OutlookPlugin.settings.get('status')
         return {
             'outlook_active': OutlookPlugin.user_settings.get(self.user, 'enabled'),
+            'outlook_favorites': OutlookPlugin.user_settings.get(self.user, 'favorites'),
             'outlook_status': OutlookPlugin.user_settings.get(self.user, 'status', default_status),
             'outlook_status_overrides': OutlookPlugin.user_settings.get(self.user, 'status_overrides', [])
         }
@@ -93,6 +97,7 @@ class OutlookUserPreferences(ExtraUserPreferences):
     def save(self, data):
         OutlookPlugin.user_settings.set_multi(self.user, {
             'enabled': data['outlook_active'],
+            'favorites': data['outlook_favorites'],
             'status': data['outlook_status'],
             'status_overrides': data['outlook_status_overrides']
         })
@@ -121,6 +126,7 @@ class OutlookPlugin(IndicoPlugin):
     }
     default_user_settings = {
         'enabled': True,  # XXX: if the default value ever changes, adapt `get_participating_users`!
+        'favorites': True,
         'status': None,
         'status_overrides': [],
     }
@@ -151,10 +157,14 @@ class OutlookPlugin(IndicoPlugin):
         return OutlookUserPreferences
 
     def favorite_event_added(self, user, event, **kwargs):
+        if not OutlookPlugin.user_settings.get(user, 'favorites', OutlookPlugin.default_user_settings['favorites']):
+            return
         self._record_change(event, user, OutlookAction.add)
         self.logger.info('Favorite event added: updating %s in %r', user, event)
 
     def favorite_event_removed(self, user, event, **kwargs):
+        if not OutlookPlugin.user_settings.get(user, 'favorites', OutlookPlugin.default_user_settings['favorites']):
+            return
         self._record_change(event, user, OutlookAction.remove)
         self.logger.info('Favorite event removed: updating %s in %r', user, event)
 
