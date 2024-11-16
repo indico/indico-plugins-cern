@@ -158,14 +158,17 @@ class OutlookPlugin(IndicoPlugin):
     def extend_user_preferences(self, user, **kwargs):
         return OutlookUserPreferences
 
+    def _user_tracks_favorites(self, user):
+        return OutlookPlugin.user_settings.get(user, 'favorites', OutlookPlugin.default_user_settings['favorites'])
+
     def favorite_event_added(self, user, event, **kwargs):
-        if not OutlookPlugin.user_settings.get(user, 'favorites', OutlookPlugin.default_user_settings['favorites']):
+        if not self._user_tracks_favorites(user):
             return
         self._record_change(event, user, OutlookAction.add)
         self.logger.info('Favorite event added: updating %s in %r', user, event)
 
     def favorite_event_removed(self, user, event, **kwargs):
-        if not OutlookPlugin.user_settings.get(user, 'favorites', OutlookPlugin.default_user_settings['favorites']):
+        if not self._user_tracks_favorites(user):
             return
         self._record_change(event, user, OutlookAction.remove)
         self.logger.info('Favorite event removed: updating %s in %r', user, event)
@@ -204,12 +207,14 @@ class OutlookPlugin(IndicoPlugin):
         # Registered users need to be informed about changes
         users_to_update = set(get_participating_users(event))
         # Users that have marked the event as favorite too
-        users_to_update |= event.favorite_of
+        for user in event.favorite_of:
+            if self._user_tracks_favorites(user):
+                users_to_update.add(user)
 
         # Now look for users that have marked as favorite that event's category (or any of its parents)
         for category in event.category.chain_query.all():
             for user in category.favorite_of:
-                if event.can_access(user):
+                if self._user_tracks_favorites(user) and event.can_access(user):
                     users_to_update.add(user)
 
         for user in users_to_update:
@@ -231,10 +236,13 @@ class OutlookPlugin(IndicoPlugin):
 
     def event_deleted(self, event, **kwargs):
         users_to_update = set(get_participating_users(event))
-        users_to_update |= event.favorite_of
+        for user in event.favorite_of:
+            if self._user_tracks_favorites(user):
+                users_to_update.add(user)
         for category in event.category.chain_query.all():
             for user in category.favorite_of:
-                users_to_update.add(user)
+                if self._user_tracks_favorites(user) and event.can_access(user):
+                    users_to_update.add(user)
 
         for user in users_to_update:
             self.logger.info('Event deletion: removing %s in %r', user, event)
