@@ -1,4 +1,4 @@
-"""add new action
+"""Add new action
 
 Revision ID: 636d44cb7a7c
 Revises:
