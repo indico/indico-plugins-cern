@@ -1,7 +1,7 @@
 """Add new action
 
 Revision ID: 636d44cb7a7c
-Revises:
+Revises: 6093a83228a7
 Create Date: 2024-11-15 20:50:19.477580
 
 """
