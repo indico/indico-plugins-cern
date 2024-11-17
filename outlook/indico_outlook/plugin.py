@@ -28,7 +28,7 @@ from indico.web.forms.widgets import SwitchWidget
 from indico_outlook import _
 from indico_outlook.calendar import update_calendar
 from indico_outlook.models.queue import OutlookAction, OutlookQueueEntry
-from indico_outlook.util import get_participating_users, is_event_excluded, latest_actions_only
+from indico_outlook.util import get_registered_users, is_event_excluded, latest_actions_only
 
 
 _status_choices = [('free', _('Free')),
@@ -175,7 +175,7 @@ class OutlookPlugin(IndicoPlugin):
         'max_event_duration': TimedeltaConverter
     }
     default_user_settings = {
-        'enabled': True,  # XXX: if the default value ever changes, adapt `get_participating_users`!
+        'enabled': True,  # XXX: if the default value ever changes, adapt `get_registered_users`!
         'registered': True,
         'favorite_events': True,
         'favorite_categories': True,
@@ -269,7 +269,7 @@ class OutlookPlugin(IndicoPlugin):
 
         users_to_update = set()
         # Registered users need to be informed about changes
-        for user in get_participating_users(event):
+        for user in get_registered_users(event):
             if self._user_tracks_registered_events(user):
                 users_to_update.add(user)
 
@@ -303,7 +303,7 @@ class OutlookPlugin(IndicoPlugin):
 
     def event_deleted(self, event, **kwargs):
         users_to_update = set()
-        for user in get_participating_users(event):
+        for user in get_registered_users(event):
             if self._user_tracks_registered_events(user):
                 users_to_update.add(user)
         for user in event.favorite_of:
@@ -327,7 +327,7 @@ class OutlookPlugin(IndicoPlugin):
         if action == OutlookAction.remove:
             # Only remove an event if the user *really* shouldn't have it in their calendar
 
-            if user in get_participating_users(event) and self._user_tracks_registered_events(user):
+            if user in get_registered_users(event) and self._user_tracks_registered_events(user):
                 return
             if user in event.favorite_of and self._user_tracks_favorite_events(user):
                 return
