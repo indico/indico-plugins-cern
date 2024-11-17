@@ -62,25 +62,25 @@ class OutlookUserPreferences(ExtraUserPreferences):
         'outlook_active': BooleanField(
             _('Sync with Outlook'),
             widget=SwitchWidget(),
-            description=_('Add Indico events in which I participate to my Outlook calendar'),
+            description=_('Add Indico events to my Outlook calendar'),
         ),
         'outlook_registered': BooleanField(
             _('Sync event registrations with Outlook'),
             [HiddenUnless('extra_outlook_active', preserve_data=True)],
             widget=SwitchWidget(),
-            description=_("Add events I'm registered for to my Outlook calendar"),
+            description=_("Add to my Outlook calendar events I'm registered for"),
         ),
         'outlook_favorite_events': BooleanField(
             _('Sync favorite events with Outlook'),
             [HiddenUnless('extra_outlook_active', preserve_data=True)],
             widget=SwitchWidget(),
-            description=_('Add events I mark as favorite to my Outlook calendar'),
+            description=_('Add to my Outlook calendar events that I mark as favorite'),
         ),
         'outlook_favorite_categories': BooleanField(
             _('Sync favorite categories with Outlook'),
             [HiddenUnless('extra_outlook_active', preserve_data=True)],
             widget=SwitchWidget(),
-            description=_('Add all events in categories (and their first-level subcategories) I mark as favorite to my Outlook calendar'),
+            description=_('Add to my Outlook calendar all events in categories (and their first-level subcategories) I mark as favorite'),
         ),
         'outlook_status': SelectField(
             _('Outlook entry status'),
