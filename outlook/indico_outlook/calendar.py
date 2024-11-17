@@ -69,10 +69,10 @@ def _get_status(user, event, settings):
     from indico_outlook.plugin import OutlookPlugin
     status = OutlookPlugin.user_settings.get(user, 'status', settings['status'])
     for override in OutlookPlugin.user_settings.get(user, 'overrides'):
-        if override['type'] == 'category' and override['id'] == event.category_id and not override['status']:
+        if override['type'] == 'category' and override['id'] == event.category_id:
             # we don't keep going for a specific category Id match
             return override['status']
-        elif override['type'] == 'category_tree' and override['id'] in event.category_chain and not override['status']:
+        elif override['type'] == 'category_tree' and override['id'] in event.category_chain:
             # for category tree matches we keep going in case there's a specific match later.
             # we don't try to see which one is more specific because that'd be overkill!
             status = override['status']
