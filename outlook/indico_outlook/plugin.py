@@ -64,11 +64,17 @@ class OutlookUserPreferences(ExtraUserPreferences):
             widget=SwitchWidget(),
             description=_('Add Indico events in which I participate to my Outlook calendar'),
         ),
-        'outlook_favorites': BooleanField(
-            _('Sync favorites with Outlook'),
+        'outlook_favorite_events': BooleanField(
+            _('Sync favorite events with Outlook'),
             [HiddenUnless('extra_outlook_active', preserve_data=True)],
             widget=SwitchWidget(),
-            description=_('Add events/categories I mark as favorite to my Outlook calendar'),
+            description=_('Add events I mark as favorite to my Outlook calendar'),
+        ),
+        'outlook_favorite_categories': BooleanField(
+            _('Sync favorite categories with Outlook'),
+            [HiddenUnless('extra_outlook_active', preserve_data=True)],
+            widget=SwitchWidget(),
+            description=_('Add all events in categories (and all subcategories) I mark as favorite to my Outlook calendar'),
         ),
         'outlook_status': SelectField(
             _('Outlook entry status'),
@@ -118,7 +124,8 @@ class OutlookUserPreferences(ExtraUserPreferences):
         default_reminder_minutes = OutlookPlugin.settings.get('reminder_minutes')
         return {
             'outlook_active': OutlookPlugin.user_settings.get(self.user, 'enabled'),
-            'outlook_favorites': OutlookPlugin.user_settings.get(self.user, 'favorites'),
+            'outlook_favorite_events': OutlookPlugin.user_settings.get(self.user, 'favorite_events'),
+            'outlook_favorite_categories': OutlookPlugin.user_settings.get(self.user, 'favorite_categories'),
             'outlook_status': OutlookPlugin.user_settings.get(self.user, 'status', default_status),
             'outlook_reminder': OutlookPlugin.user_settings.get(self.user, 'reminder', default_reminder),
             'outlook_reminder_minutes': OutlookPlugin.user_settings.get(self.user,
@@ -129,7 +136,8 @@ class OutlookUserPreferences(ExtraUserPreferences):
     def save(self, data):
         OutlookPlugin.user_settings.set_multi(self.user, {
             'enabled': data['outlook_active'],
-            'favorites': data['outlook_favorites'],
+            'favorite_events': data['outlook_favorite_events'],
+            'favorite_categories': data['outlook_favorite_categories'],
             'status': data['outlook_status'],
             'reminder': data['outlook_reminder'],
             'reminder_minutes': data['outlook_reminder_minutes'],
@@ -160,7 +168,8 @@ class OutlookPlugin(IndicoPlugin):
     }
     default_user_settings = {
         'enabled': True,  # XXX: if the default value ever changes, adapt `get_participating_users`!
-        'favorites': True,
+        'favorite_events': True,
+        'favorite_categories': True,
         'status': None,
         'reminder': True,
         'reminder_minutes': 15,
@@ -194,17 +203,22 @@ class OutlookPlugin(IndicoPlugin):
     def extend_user_preferences(self, user, **kwargs):
         return OutlookUserPreferences
 
-    def _user_tracks_favorites(self, user):
-        return OutlookPlugin.user_settings.get(user, 'favorites', OutlookPlugin.default_user_settings['favorites'])
+    def _user_tracks_favorite_events(self, user):
+        return OutlookPlugin.user_settings.get(user, 'favorite_events',
+                                               OutlookPlugin.default_user_settings['favorite_events'])
+
+    def _user_tracks_favorite_categories(self, user):
+        return OutlookPlugin.user_settings.get(user, 'favorite_categories',
+                                               OutlookPlugin.default_user_settings['favorite_categories'])
 
     def favorite_event_added(self, user, event, **kwargs):
-        if not self._user_tracks_favorites(user):
+        if not self._user_tracks_favorite_events(user):
             return
         self._record_change(event, user, OutlookAction.add)
         self.logger.info('Favorite event added: updating %s in %r', user, event)
 
     def favorite_event_removed(self, user, event, **kwargs):
-        if not self._user_tracks_favorites(user):
+        if not self._user_tracks_favorite_events(user):
             return
         self._record_change(event, user, OutlookAction.remove)
         self.logger.info('Favorite event removed: updating %s in %r', user, event)
@@ -244,13 +258,13 @@ class OutlookPlugin(IndicoPlugin):
         users_to_update = set(get_participating_users(event))
         # Users that have marked the event as favorite too
         for user in event.favorite_of:
-            if self._user_tracks_favorites(user):
+            if self._user_tracks_favorite_events(user):
                 users_to_update.add(user)
 
         # Now look for users that have marked as favorite that event's category (or any of its parents)
         for category in event.category.chain_query.all():
             for user in category.favorite_of:
-                if self._user_tracks_favorites(user) and event.can_access(user):
+                if self._user_tracks_favorite_categories(user) and event.can_access(user):
                     users_to_update.add(user)
 
         for user in users_to_update:
@@ -273,11 +287,11 @@ class OutlookPlugin(IndicoPlugin):
     def event_deleted(self, event, **kwargs):
         users_to_update = set(get_participating_users(event))
         for user in event.favorite_of:
-            if self._user_tracks_favorites(user):
+            if self._user_tracks_favorite_events(user):
                 users_to_update.add(user)
         for category in event.category.chain_query.all():
             for user in category.favorite_of:
-                if self._user_tracks_favorites(user) and event.can_access(user):
+                if self._user_tracks_favorite_categories(user) and event.can_access(user):
                     users_to_update.add(user)
 
         for user in users_to_update:
