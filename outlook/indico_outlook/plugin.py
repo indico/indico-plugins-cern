@@ -78,9 +78,9 @@ class OutlookUserPreferences(ExtraUserPreferences):
             fields=[
                 {'id': 'type', 'caption': _('Type'), 'required': True, 'type': 'select'},
                 {'id': 'id', 'caption': _('Category ID'), 'required': True, 'type': 'number', 'step': 1, 'coerce': int},
-                {'id': 'status', 'caption': _('Status'), 'required': False, 'type': 'select'},
-                {'id': 'reminder', 'caption': _('Reminder'), 'required': False, 'type': 'checkbox'},
-                {'id': 'reminder_minutes', 'caption': _('Reminder time'), 'required': False,
+                {'id': 'status', 'caption': _('Status'), 'required': True, 'type': 'select'},
+                {'id': 'reminder', 'caption': _('Reminder'), 'required': True, 'type': 'checkbox'},
+                {'id': 'reminder_minutes', 'caption': _('Reminder time'), 'required': True,
                     'type': 'number', 'step': 1, 'coerce': int},
             ],
             choices={
