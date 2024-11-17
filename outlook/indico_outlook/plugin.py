@@ -80,7 +80,7 @@ class OutlookUserPreferences(ExtraUserPreferences):
             _('Sync favorite categories with Outlook'),
             [HiddenUnless('extra_outlook_active', preserve_data=True)],
             widget=SwitchWidget(),
-            description=_('Add all events in categories (and all subcategories) I mark as favorite to my Outlook calendar'),
+            description=_('Add all events in categories (and their first-level subcategories) I mark as favorite to my Outlook calendar'),
         ),
         'outlook_status': SelectField(
             _('Outlook entry status'),
@@ -278,11 +278,13 @@ class OutlookPlugin(IndicoPlugin):
             if self._user_tracks_favorite_events(user):
                 users_to_update.add(user)
 
-        # Now look for users that have marked as favorite that event's category (or any of its parents)
-        for category in event.category.chain_query.all():
-            for user in category.favorite_of:
-                if self._user_tracks_favorite_categories(user) and event.can_access(user):
-                    users_to_update.add(user)
+        # Now look for users that have marked as favorite that event's category (or its parent)
+        category_favorites = event.category.favorite_of
+        if event.category.parent:
+            category_favorites |= event.category.parent.favorite_of
+        for user in category_favorites:
+            if self._user_tracks_favorite_categories(user) and event.can_access(user):
+                users_to_update.add(user)
 
         for user in users_to_update:
             self.logger.info('Event data change: updating %s in %r', user, event)
@@ -309,10 +311,12 @@ class OutlookPlugin(IndicoPlugin):
         for user in event.favorite_of:
             if self._user_tracks_favorite_events(user):
                 users_to_update.add(user)
-        for category in event.category.chain_query.all():
-            for user in category.favorite_of:
-                if self._user_tracks_favorite_categories(user) and event.can_access(user):
-                    users_to_update.add(user)
+        category_favorites = event.category.favorite_of
+        if event.category.parent:
+            category_favorites |= event.category.parent.favorite_of
+        for user in category_favorites:
+            if self._user_tracks_favorite_categories(user) and event.can_access(user):
+                users_to_update.add(user)
 
         for user in users_to_update:
             self.logger.info('Event deletion: removing %s in %r', user, event)
@@ -331,11 +335,13 @@ class OutlookPlugin(IndicoPlugin):
                 return
             if user in event.favorite_of and self._user_tracks_favorite_events(user):
                 return
-            for category in event.category.chain_query.all():
-                if user in category.favorite_of \
-                    and self._user_tracks_favorite_categories(user) \
-                    and event.can_access(user):
-                    return
+            category_favorites = event.category.favorite_of
+            if event.category.parent:
+                category_favorites |= event.category.parent.favorite_of
+            if user in category_favorites \
+                and self._user_tracks_favorite_categories(user) \
+                and event.can_access(user):
+                return
 
         g.outlook_changes.append((event, user, action))
 
