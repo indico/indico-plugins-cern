@@ -41,7 +41,7 @@ class RHLanding(RHRoomBookingBase):
 
 class RHDivisions(RHRoomBookingBase):
     def _process(self):
-        return jsonify(sorted(div for div, in db.session.query(Room.division.distinct())))
+        return jsonify(sorted(div for div, in db.session.query(Room.division.distinct()) if div))
 
 
 class RHUserDivision(RHProtected):
