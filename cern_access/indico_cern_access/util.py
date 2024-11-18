@@ -378,7 +378,7 @@ def send_form_link(registrations, email_subject_tpl, email_body_tpl, email_sende
                                              regform=registration.registration_form, registration=registration)
         template = get_template_module('cern_access:emails/identity_data_form_email.html', registration=registration,
                                        email_subject=email_subject, email_body=email_body)
-        email = make_email(to_list=registration.email, from_address=email_sender, template=template, html=True)
+        email = make_email(to_list=registration.email, sender_address=email_sender, template=template, html=True)
         send_email(email, event=registration.registration_form.event, module='Registration', user=session.user)
 
 

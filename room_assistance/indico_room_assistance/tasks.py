@@ -11,7 +11,6 @@ from sqlalchemy import func
 from sqlalchemy.orm import aliased
 
 from indico.core.celery import celery
-from indico.core.config import config
 from indico.core.db import db
 from indico.core.notifications import make_email, send_email
 from indico.core.plugins import get_plugin_template_module
@@ -42,5 +41,5 @@ def room_assistance_emails():
                                           parse_dt=dateutil.parser.parse)
     recipients = RoomAssistancePlugin.settings.get('room_assistance_recipients')
     if recipients:
-        email = make_email(from_address=config.NO_REPLY_EMAIL, to_list=recipients, template=template, html=True)
+        email = make_email(to_list=recipients, template=template, html=True)
         send_email(email)
