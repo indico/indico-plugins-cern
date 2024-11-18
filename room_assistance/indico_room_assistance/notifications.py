@@ -7,7 +7,6 @@
 
 import dateutil.parser
 
-from indico.core.config import config
 from indico.core.notifications import make_email, send_email
 from indico.core.plugins import get_plugin_template_module
 from indico.modules.events.requests.models.requests import RequestState
@@ -25,7 +24,7 @@ def send_email_to_assistance(request, template_name, **template_params):
     template = get_plugin_template_module(f'emails/{template_name}.html', event=request.event,
                                           requested_by=request.created_by_user, request_data=request_data,
                                           **template_params)
-    send_email(make_email(from_address=config.NO_REPLY_EMAIL, to_list=to_list, template=template, html=True))
+    send_email(make_email(to_list=to_list, template=template, html=True))
 
 
 def notify_about_new_request(request):
