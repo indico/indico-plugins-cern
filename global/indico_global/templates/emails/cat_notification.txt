@@ -1,0 +1,68 @@
+{% extends 'emails/base.txt' %}
+
+{% block subject -%}
+    Migration of your Indico Global {% if categories|length == 1 %}subcategory{% else %}subcategories{% endif %} to indico.global
+{%- endblock %}
+
+{% block header_recipient -%}
+    Dear {{ name }}
+{%- endblock %}
+
+{% block body -%}
+    {% filter dedent -%}
+        {% if categories|length == 1 -%}
+            You are receiving this message because you are managing the following Indico
+            category on indico.cern.ch:
+        {%- else -%}
+            You are receiving this message because you are managing the following Indico
+            categories on indico.cern.ch:
+        {%- endif %}
+
+        {% for cat in categories|sort(attribute='chain_titles') -%}
+            - {{ cat.chain_titles[1:]|join(' » ') }}: <{{ url_for('categories.display', cat, _external=true) }}>
+        {% endfor %}
+        In order to separate institutional and hosted content under `indico.cern.ch`,
+        and to make it possible to provide Indico to even more researchers world-wide,
+        we are launching `indico.global`, a new Indico service hosted at CERN and open
+        to the whole world.
+
+        You can find more about it in our blog post announcing it:
+        <https://getindico.io/indico/global/2024/10/09/indico-global.html>
+
+        With the launch of `indico.global`, we will be moving all content currently under
+        the `Global Indico` category to the new server. Old links will still work, and will
+        be automatically redirected to the new URLs. However, any new events will be created
+        directly under the https://indico.global/ domain name after the migration.
+
+        The migration will happen in January 2025 and you will receive an e-mail with the
+        new URLs for your categories once it's concluded. We will also be notifying the
+        managers of upcoming events in your categories individually. They will receive an
+        e-mail with the new URLs for their events.
+
+        On the day of the migration all your categories and events will become read-only for
+        a few hours, while we're moving everything to the new instance.
+
+        In the unlikely scenario that you have CERN-organized events in your category, we
+        recommend that you move them to another category. You should do so **before** the
+        migration date in order to avoid then being moved to the new server.
+
+        {%- if group_acls %}
+
+            IMPORTANT: Your category currently uses CERN egroups to grant access:
+            {{ group_acls|sort|join(', ') }}
+
+            Since this is a very CERN-specific feature, it will no longer be supported on
+            `indico.global`. You may create a custom group ("Category Role") instead if you
+            want to keep managing access in a single place; without any action on your side
+            people who got privileges based on their egroup membership will simply lose them
+            after the migration.
+        {%- endif %}
+
+        Do not hesitate to reach out to us at <indico-team@cern.ch> if you have questions.
+        In case you no longer actively use the category, or are no longer involved in
+        managing it, feel free to simply ignore this email.
+
+        Best regards,
+        The Indico Team
+    {%- endfilter -%}
+{%- endblock %}
