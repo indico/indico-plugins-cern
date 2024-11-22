@@ -108,8 +108,8 @@ def _update_calendar_entry(entry, settings):
             return True
 
         location = (f'{event.room_name} ({event.venue_name})'
-                if event.venue_name and event.room_name
-                else (event.venue_name or event.room_name))
+                    if event.venue_name and event.room_name
+                    else (event.venue_name or event.room_name))
 
         cal_description = []
         if event.person_links:
