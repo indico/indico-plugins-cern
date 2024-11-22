@@ -7,7 +7,6 @@
 
 from pprint import pformat
 
-from lxml import html
 import requests
 from requests.exceptions import RequestException, Timeout
 from sqlalchemy.orm import joinedload
