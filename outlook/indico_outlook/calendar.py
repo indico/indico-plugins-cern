@@ -106,7 +106,11 @@ def _update_calendar_entry(entry, settings):
         if event.is_deleted:
             logger.debug('Ignoring %s for deleted event %s', entry.action.name, entry.event_id)
             return True
-        location = strip_control_chars(event.room_name)
+
+        location = (f'{event.room_name} ({event.venue_name})'
+                if event.venue_name and event.room_name
+                else (event.venue_name or event.room_name))
+
         description = strip_control_chars(event.description)
         event_url = event.external_url
         data = {
@@ -116,7 +120,7 @@ def _update_calendar_entry(entry, settings):
             'subject': strip_control_chars(event.title),
             # XXX: the API expects 'body', we convert it below
             'description': f'<a href="{event_url}">{event_url}</a><br><br>{description}',
-            'location': location,
+            'location': strip_control_chars(location),
             'reminder_on': settings['reminder'],
             'reminder_minutes': settings['reminder_minutes']
         }
