@@ -7,6 +7,7 @@
 
 from pprint import pformat
 
+from lxml import html
 import requests
 from requests.exceptions import RequestException, Timeout
 from sqlalchemy.orm import joinedload
@@ -111,15 +112,22 @@ def _update_calendar_entry(entry, settings):
                 if event.venue_name and event.room_name
                 else (event.venue_name or event.room_name))
 
-        description = strip_control_chars(event.description)
-        event_url = event.external_url
+        cal_description = []
+        if event.person_links:
+            speakers = [f'{x.full_name} ({x.affiliation})' if x.affiliation else x.full_name
+                    for x in event.person_links]
+            cal_description.append(f'<p>Speakers: {', '.join(speakers)}</p>')
+        cal_description.append(event.description)
+        if event.external_url:
+            cal_description.append(f'<p><a href="{event.external_url}">{event.external_url}</a></p>')
+
         data = {
             'status': _get_status(user, event, settings),
             'start': int(event.start_dt.timestamp()),
             'end': int(event.end_dt.timestamp()),
             'subject': strip_control_chars(event.title),
             # XXX: the API expects 'body', we convert it below
-            'description': f'<a href="{event_url}">{event_url}</a><br><br>{description}',
+            'description': strip_control_chars('\n'.join(cal_description)),
             'location': strip_control_chars(location),
             'reminder_on': settings['reminder'],
             'reminder_minutes': settings['reminder_minutes']
