@@ -124,8 +124,8 @@ def _update_calendar_entry(entry, settings):
         # Try to add the VC room URL to the description, if there is one
         for vc_room in event.vc_room_associations:
             try:
-                cal_description.append(f'<p><a href="{vc_room.data.url}">{vc_room.data.url}</a></p>')
-            except AttributeError:
+                cal_description.append(f'<p><a href="{vc_room.data['url']}">{vc_room.data['url']}</a></p>')
+            except KeyError:
                 pass
 
         data = {
