@@ -12,6 +12,7 @@ from flask import g
 from wtforms.fields import BooleanField, FloatField, IntegerField, SelectField, URLField
 from wtforms.fields.simple import StringField
 from wtforms.validators import URL, DataRequired, NumberRange
+from sqlalchemy.orm import subqueryload
 
 from indico.cli.core import cli_command
 from indico.core import signals
@@ -20,6 +21,7 @@ from indico.core.settings.converters import TimedeltaConverter
 from indico.modules.events import Event
 from indico.modules.events.registration.models.registrations import RegistrationState
 from indico.modules.users import ExtraUserPreferences
+from indico.util.date_time import now_utc
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import IndicoPasswordField, MultipleItemsField, TimeDeltaField
 from indico.web.forms.validators import HiddenUnless
@@ -201,6 +203,9 @@ class OutlookPlugin(IndicoPlugin):
         self.connect(signals.users.merged, self._merge_users)
         self.connect(signals.users.favorite_event_added, self.favorite_event_added)
         self.connect(signals.users.favorite_event_removed, self.favorite_event_removed)
+        self.connect(signals.users.favorite_category_added, self.favorite_category_added)
+        self.connect(signals.users.favorite_category_removed, self.favorite_category_removed)
+        self.connect(signals.category.updated, self.category_updated)
 
     def _extend_indico_cli(self, sender, **kwargs):
         @cli_command()
@@ -235,6 +240,47 @@ class OutlookPlugin(IndicoPlugin):
             return
         self._record_change(event, user, OutlookAction.remove)
         self.logger.info('Favorite event removed: updating %s in %r', user, event)
+
+    def favorite_category_added(self, user, category, **kwargs):
+        if not self._user_tracks_favorite_categories(user):
+            return
+
+        query = (Event.query
+                 .filter(Event.is_visible_in(category.id),
+                         Event.start_dt > now_utc(),
+                         ~Event.is_deleted)
+                 .options(subqueryload('acl_entries'))
+                 .order_by(Event.start_dt, Event.id))
+        events = [e for e in query if e.can_access(user)]
+        for event in events:
+            self._record_change(event, user, OutlookAction.add)
+            self.logger.info('Favorite category added: user %s added event %r', user, event)
+
+        self.logger.info('Favorite category added: updating %s in %r', user, category)
+
+    def favorite_category_removed(self, user, category, **kwargs):
+        if not self._user_tracks_favorite_categories(user):
+            return
+
+        query = (Event.query
+                 .filter(Event.is_visible_in(category.id),
+                         Event.start_dt > now_utc(),
+                         ~Event.is_deleted)
+                 .options(subqueryload('acl_entries'))
+                 .order_by(Event.start_dt, Event.id))
+        events = [e for e in query if e.can_access(user)]
+        for event in events:
+            self._record_change(event, user, OutlookAction.remove)
+            self.logger.info('Favorite category added: user %s added event %r', user, event)
+
+        self.logger.info('Favorite category removed: updating %s in %r', user, category)
+
+    def category_updated(self, category, changes, **kwargs):
+        if not changes.keys() & {'visibility', 'protection_mode'}:
+            return
+
+        # If the visibility changes, we should probably update all events in the categories
+        # that may suddenly become visible/invisible to users. Not quite sure how to handle this yet.
 
     def event_registration_state_changed(self, registration, **kwargs):
         if not (registration.user and self._user_tracks_registered_events(registration.user)):
