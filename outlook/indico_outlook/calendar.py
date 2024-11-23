@@ -117,15 +117,7 @@ def _update_calendar_entry(entry, settings):
                         for x in event.person_links]
             cal_description.append(f'<p>Speakers: {', '.join(speakers)}</p>')
         cal_description.append(event.description)
-        if event.external_url:
-            cal_description.append(f'<p><a href="{event.external_url}">{event.external_url}</a></p>')
-
-        # Try to add the VC room URL to the description, if there is one
-        for vc_room in event.vc_room_associations:
-            try:
-                cal_description.append(f'<p><a href="{vc_room.data['url']}">{vc_room.data['url']}</a></p>')
-            except KeyError:
-                pass
+        cal_description.append(f'<p><a href="{event.external_url}">{event.external_url}</a></p>')
 
         data = {
             'status': _get_status(user, event, settings),
