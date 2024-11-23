@@ -114,7 +114,7 @@ def _update_calendar_entry(entry, settings):
         cal_description = []
         if event.person_links:
             speakers = [f'{x.full_name} ({x.affiliation})' if x.affiliation else x.full_name
-                    for x in event.person_links]
+                        for x in event.person_links]
             cal_description.append(f'<p>Speakers: {', '.join(speakers)}</p>')
         cal_description.append(event.description)
         if event.external_url:
