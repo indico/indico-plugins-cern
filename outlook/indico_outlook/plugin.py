@@ -9,10 +9,10 @@ from collections import defaultdict
 from datetime import timedelta
 
 from flask import g
+from sqlalchemy.orm import subqueryload
 from wtforms.fields import BooleanField, FloatField, IntegerField, SelectField, URLField
 from wtforms.fields.simple import StringField
 from wtforms.validators import URL, DataRequired, NumberRange
-from sqlalchemy.orm import subqueryload
 
 from indico.cli.core import cli_command
 from indico.core import signals
