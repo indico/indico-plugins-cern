@@ -205,7 +205,6 @@ class OutlookPlugin(IndicoPlugin):
         self.connect(signals.users.favorite_event_removed, self.favorite_event_removed)
         self.connect(signals.users.favorite_category_added, self.favorite_category_added)
         self.connect(signals.users.favorite_category_removed, self.favorite_category_removed)
-        self.connect(signals.category.updated, self.category_updated)
 
     def _extend_indico_cli(self, sender, **kwargs):
         @cli_command()
@@ -274,13 +273,6 @@ class OutlookPlugin(IndicoPlugin):
             self.logger.info('Favorite category added: user %s added event %r', user, event)
 
         self.logger.info('Favorite category removed: updating %s in %r', user, category)
-
-    def category_updated(self, category, changes, **kwargs):
-        if not changes.keys() & {'visibility', 'protection_mode'}:
-            return
-
-        # If the visibility changes, we should probably update all events in the categories
-        # that may suddenly become visible/invisible to users. Not quite sure how to handle this yet.
 
     def event_registration_state_changed(self, registration, **kwargs):
         if not registration.user or not self._user_tracks_registered_events(registration.user):
