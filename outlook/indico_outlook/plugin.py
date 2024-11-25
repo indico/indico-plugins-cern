@@ -283,7 +283,7 @@ class OutlookPlugin(IndicoPlugin):
         # that may suddenly become visible/invisible to users. Not quite sure how to handle this yet.
 
     def event_registration_state_changed(self, registration, **kwargs):
-        if not (registration.user and self._user_tracks_registered_events(registration.user)):
+        if not registration.user or not self._user_tracks_registered_events(registration.user):
             return
         if registration.state == RegistrationState.complete:
             event = registration.registration_form.event
