@@ -6,6 +6,8 @@ _:
   standard_themes_cern: &standard_themes_cern
     <<: *standard
     user_visible: false
+    user_settings: &standard_cern_user_settings
+      <<: [*user_setting_inline_minutes, *user_setting_numbered_contributions]
 
 
 definitions:
