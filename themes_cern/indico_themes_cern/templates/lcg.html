@@ -1,0 +1,7 @@
+{% extends 'events/display/indico/meeting.html' %}
+
+{% block event_classes -%}
+    {%- if theme_user_settings.get('dark') -%}
+        lcg-dark
+    {%- endif -%}
+{%- endblock %}

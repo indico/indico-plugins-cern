@@ -130,6 +130,14 @@ definitions:
     <<: *standard_themes_cern
     stylesheet: lcg.scss
     title: LCG style
+    template: :lcg.html
+    tt_template: indico/meeting.html  # default, don't override with the custom `template` above
+    user_settings:
+      <<: *standard_cern_user_settings
+      dark:
+        caption: Dark header
+        description: Use a darker header (and lighter logo)
+        type: BooleanField
 
   picosec:
     <<: *standard_themes_cern
