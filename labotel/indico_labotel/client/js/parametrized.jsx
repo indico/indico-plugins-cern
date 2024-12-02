@@ -10,6 +10,7 @@ import React from 'react';
 import {parametrize} from 'react-overridable';
 
 // Import defaults that will be parametrized
+import DefaultRoomBookingMap from 'indico/modules/rb/common/map/RoomBookingMap';
 import DefaultRoomDetailsModal from 'indico/modules/rb/common/rooms/RoomDetailsModal';
 import DefaultApp from 'indico/modules/rb/components/App';
 import DefaultMenu from 'indico/modules/rb/components/Menu';
@@ -23,6 +24,7 @@ import DefaultRoomList from 'indico/modules/rb/modules/roomList/RoomList';
 import {Translate} from 'indico/react/i18n';
 import {ConditionalRoute} from 'indico/react/util';
 
+import MapMarkers from './components/MapMarkers';
 import StatsPage from './components/StatsPage';
 
 const App = parametrize(DefaultApp, {
@@ -62,9 +64,13 @@ const LandingStatistics = parametrize(DefaultLandingStatistics, () => ({
 const Menu = parametrize(DefaultMenu, () => ({
   labels: {
     bookRoom: Translate.string('Book a Lab'),
-    roomList: Translate.string('List of Spaces'),
+    roomList: Translate.string('List of Labs'),
   },
 }));
+
+const RoomBookingMap = parametrize(DefaultRoomBookingMap, {
+  markerComponent: MapMarkers,
+});
 
 const RoomDetailsModal = parametrize(DefaultRoomDetailsModal, () => ({
   title: Translate.string('Lab Details'),
@@ -104,6 +110,7 @@ export default {
   Landing,
   LandingStatistics,
   Menu,
+  RoomBookingMap,
   RoomDetailsModal,
   RoomFilterBar,
   SidebarMenu,
