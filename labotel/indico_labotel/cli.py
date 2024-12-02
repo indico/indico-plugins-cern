@@ -10,7 +10,7 @@ import csv
 import click
 import requests
 from flask_pluginengine import current_plugin
-from pyproj import Proj, transform
+from pyproj import Transformer
 
 from indico.cli.core import cli_group
 from indico.core.db import db
@@ -112,34 +112,23 @@ def _principal_repr(p):
 
 
 def get_latlon_building(building_num):
-    if building_num not in latlon_cache:
-        # this API request should get the positions of a building's
-        # entrance doors
+    try:
+        return latlon_cache[building_num]
+    except KeyError:
+        # this API request should get the positions of a building's entrance doors
         data = requests.get(GIS_URL.format(building_num)).json()
 
-        # local EPSG reference used in results
-        epsg_ref = Proj(init='epsg:{}'.format(data['spatialReference']['wkid']))
-
-        counter = 0
-        x, y = 0, 0
-
-        for c in data['candidates']:
-            x += c['location']['x']
-            y += c['location']['y']
-            counter += 1
-
         # average position of entrance doors
-        x /= counter
-        y /= counter
+        x = sum(c['location']['x'] for c in data['candidates']) / len(data['candidates'])
+        y = sum(c['location']['y'] for c in data['candidates']) / len(data['candidates'])
 
-        # these coordinates are relative to a local EPSG reference.
-        # we'll have to convert them to EPSG:4326, used by GPS
-        latlon_ref = Proj(init='epsg:4326')
-        lon, lat = transform(epsg_ref, latlon_ref, x, y)
+        # transform to correct GPS coordinate system
+        transformer = Transformer.from_crs(f'epsg:{data['spatialReference']['wkid']}', 'epsg:4326')
+        lat, lon = transformer.transform(x, y)
 
-        latlon_cache[building_num] = (lat, lon)
+        latlon_cache[building_num] = lat, lon
         print(cformat('%{cyan}{}%{reset}: %{green}{}%{reset}, %{green}{}%{reset}').format(building_num, lat, lon))
-    return latlon_cache[building_num]
+        return latlon_cache[building_num]
 
 
 @cli.command()
