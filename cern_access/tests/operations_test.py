@@ -47,7 +47,7 @@ def api_post(mocker):
 def setup_fixtures(func):
     """Set up fixtures (utlity decorator)."""
     func = pytest.mark.usefixtures('smtp', 'mock_access_request', 'dummy_access_request')(func)
-    return pytest.mark.parametrize('mock_access_request', [{
+    return pytest.mark.parametrize('mock_access_request', ({
         'during_registration': True,
         'during_registration_required': True,
         'personal_data': generate_personal_data(),
@@ -57,7 +57,7 @@ def setup_fixtures(func):
         'during_registration_required': True,
         'personal_data': generate_personal_data(),
         'include_accompanying_persons': True
-    }], indirect=True)(func)
+    }), indirect=True)(func)
 
 
 @setup_fixtures
