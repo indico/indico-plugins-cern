@@ -8,6 +8,7 @@
 import {push as pushRoute} from 'connected-react-router';
 import React from 'react';
 import {parametrize} from 'react-overridable';
+import {Item} from 'semantic-ui-react';
 
 // Import defaults that will be parametrized
 import DefaultRoomBookingMap from 'indico/modules/rb/common/map/RoomBookingMap';
@@ -23,8 +24,11 @@ import {RoomFilterBarBase} from 'indico/modules/rb/modules/roomList/RoomFilterBa
 import DefaultRoomList from 'indico/modules/rb/modules/roomList/RoomList';
 import {Translate} from 'indico/react/i18n';
 import {ConditionalRoute} from 'indico/react/util';
+import DefaultRoomRenderer from 'indico/modules/rb/common/rooms/RoomRenderer';
+import DefaultRoom from 'indico/modules/rb/components/Room';
 
 import MapMarkers from './components/MapMarkers';
+import LabRenderer from './components/LabRenderer';
 import StatsPage from './components/StatsPage';
 
 const App = parametrize(DefaultApp, {
@@ -34,6 +38,14 @@ const App = parametrize(DefaultApp, {
     // add statistics page
     return <ConditionalRoute path="/stats" component={StatsPage} active={!isInitializing} />;
   },
+});
+
+const RoomRenderer = parametrize(DefaultRoomRenderer, {
+  containerComponent: ({children}) => <div style={{marginTop: 30}}><Item.Group divided>{children}</Item.Group></div>,
+});
+
+const Room = parametrize(DefaultRoom, {
+  customRenderer: roomInstance => <LabRenderer roomInstance={roomInstance} />,
 });
 
 const RoomFilterBar = parametrize(RoomFilterBarBase, {
@@ -115,4 +127,6 @@ export default {
   RoomFilterBar,
   SidebarMenu,
   RoomList,
+  RoomRenderer,
+  Room,
 };

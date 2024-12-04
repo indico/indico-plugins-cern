@@ -8,11 +8,9 @@
 import BootstrapOptions from './components/BootstrapOptions';
 import LabotelLanding from './components/LabotelLanding';
 import ExtraFilters from './components/ExtraFilters';
-import LabRenderer from './components/LabRenderer';
 
 export default {
   'Landing': LabotelLanding,
   'Landing.bootstrapOptions': BootstrapOptions,
   'RoomFilterBar.extraFilters': ExtraFilters,
-  'RoomRenderer': LabRenderer,
 };
