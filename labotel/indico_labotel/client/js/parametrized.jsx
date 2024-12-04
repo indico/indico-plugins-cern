@@ -13,8 +13,10 @@ import {Item} from 'semantic-ui-react';
 // Import defaults that will be parametrized
 import DefaultRoomBookingMap from 'indico/modules/rb/common/map/RoomBookingMap';
 import DefaultRoomDetailsModal from 'indico/modules/rb/common/rooms/RoomDetailsModal';
+import DefaultRoomRenderer from 'indico/modules/rb/common/rooms/RoomRenderer';
 import DefaultApp from 'indico/modules/rb/components/App';
 import DefaultMenu from 'indico/modules/rb/components/Menu';
+import DefaultRoom from 'indico/modules/rb/components/Room';
 import DefaultSidebarMenu from 'indico/modules/rb/components/SidebarMenu';
 import DefaultBookRoom from 'indico/modules/rb/modules/bookRoom/BookRoom';
 import DefaultBookRoomModal from 'indico/modules/rb/modules/bookRoom/BookRoomModal';
@@ -24,11 +26,9 @@ import {RoomFilterBarBase} from 'indico/modules/rb/modules/roomList/RoomFilterBa
 import DefaultRoomList from 'indico/modules/rb/modules/roomList/RoomList';
 import {Translate} from 'indico/react/i18n';
 import {ConditionalRoute} from 'indico/react/util';
-import DefaultRoomRenderer from 'indico/modules/rb/common/rooms/RoomRenderer';
-import DefaultRoom from 'indico/modules/rb/components/Room';
 
-import MapMarkers from './components/MapMarkers';
 import LabRenderer from './components/LabRenderer';
+import MapMarkers from './components/MapMarkers';
 import StatsPage from './components/StatsPage';
 
 const App = parametrize(DefaultApp, {
@@ -41,7 +41,11 @@ const App = parametrize(DefaultApp, {
 });
 
 const RoomRenderer = parametrize(DefaultRoomRenderer, {
-  containerComponent: ({children}) => <div style={{marginTop: 30}}><Item.Group divided>{children}</Item.Group></div>,
+  containerComponent: ({children}) => (
+    <div style={{marginTop: 30}}>
+      <Item.Group divided>{children}</Item.Group>
+    </div>
+  ),
 });
 
 const Room = parametrize(DefaultRoom, {
