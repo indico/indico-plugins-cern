@@ -27,7 +27,7 @@ import DefaultRoomList from 'indico/modules/rb/modules/roomList/RoomList';
 import {Translate} from 'indico/react/i18n';
 import {ConditionalRoute} from 'indico/react/util';
 
-import LabRenderer from './components/LabRenderer';
+import LabItem from './components/LabRenderer';
 import MapMarkers from './components/MapMarkers';
 import StatsPage from './components/StatsPage';
 
@@ -49,7 +49,7 @@ const RoomRenderer = parametrize(DefaultRoomRenderer, {
 });
 
 const Room = parametrize(DefaultRoom, {
-  customRenderer: roomInstance => <LabRenderer roomInstance={roomInstance} />,
+  customRoomComponent: LabItem,
 });
 
 const RoomFilterBar = parametrize(RoomFilterBarBase, {

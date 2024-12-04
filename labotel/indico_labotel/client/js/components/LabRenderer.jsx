@@ -7,8 +7,7 @@
 
 import PropTypes from 'prop-types';
 import React from 'react';
-import {connect} from 'react-redux';
-import {bindActionCreators} from 'redux';
+import {useDispatch} from 'react-redux';
 import {Item} from 'semantic-ui-react';
 
 import {actions as roomActions} from 'indico/modules/rb/common/rooms';
@@ -17,9 +16,10 @@ import {Slot, Markdown} from 'indico/react/util';
 
 import './LabRenderer.module.scss';
 
-function LabItem({roomInstance, openRoomDetails}) {
-  const {room} = roomInstance.props;
+export default function LabItem({roomInstance, room}) {
   const {actions} = Slot.split(roomInstance.props.children);
+  const dispatch = useDispatch();
+  const openRoomDetails = () => dispatch(roomActions.openRoomDetailsBook(room.id));
   return (
     <Item key={room.id} styleName="lab-item">
       <Item.Image
@@ -32,8 +32,11 @@ function LabItem({roomInstance, openRoomDetails}) {
       </Item.Image>
       <Item.Content>
         <Item.Header styleName="lab-item-header">
-          <div onClick={() => openRoomDetails(room.id)} style={{cursor: 'pointer'}}>
-            {room.fullName}
+          <div>
+            <span onClick={() => openRoomDetails(room.id)} style={{cursor: 'pointer'}}>
+              {room.fullName}
+            </span>{' '}
+            {roomInstance.renderRoomStatus()}
           </div>
           <div>
             {actions}
@@ -42,7 +45,7 @@ function LabItem({roomInstance, openRoomDetails}) {
         </Item.Header>
         <Item.Meta>{room.division}</Item.Meta>
         <Item.Description>
-          <Markdown disallowedElements={['br']}>{room.comments}</Markdown>
+          <Markdown targetBlank>{room.comments}</Markdown>
         </Item.Description>
       </Item.Content>
     </Item>
@@ -51,23 +54,5 @@ function LabItem({roomInstance, openRoomDetails}) {
 
 LabItem.propTypes = {
   roomInstance: PropTypes.object.isRequired,
-  openRoomDetails: PropTypes.func.isRequired,
+  room: PropTypes.object.isRequired,
 };
-
-export function LabRenderer({roomInstance, openRoomDetails}) {
-  return <LabItem roomInstance={roomInstance} openRoomDetails={openRoomDetails} />;
-}
-
-LabRenderer.propTypes = {
-  roomInstance: PropTypes.object.isRequired,
-  openRoomDetails: PropTypes.func.isRequired,
-};
-
-const mapDispatchToProps = dispatch => ({
-  openRoomDetails: bindActionCreators(roomActions.openRoomDetailsBook, dispatch),
-});
-
-export default connect(
-  null,
-  mapDispatchToProps
-)(LabRenderer);
