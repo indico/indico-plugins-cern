@@ -1,0 +1,10 @@
+{% extends '~rb/emails/reservations/creation_email_to_user.txt' %}
+
+{% block booking_details -%}
+The lab {{ reservation.room.full_name }}
+has been {% block prebooked_prefix %}{% endblock %}booked for {{ reservation.booked_for_name }}
+from {{ reservation.start_dt | format_date('EEEE dd/MM/yyyy', locale='en_GB') }} to {{ reservation.end_dt | format_date('EEEE dd/MM/yyyy', locale='en_GB') }}.
+Reason: {{ reservation.booking_reason }}
+{%- endblock -%}
+
+{% block confirmed_booking %}{% endblock %}

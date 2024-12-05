@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "name": "indico-plugin-labotel",
+  "main": "indico_labotel/client/index.js",
+  "dependencies": {
+    "react-charts": "^2.0.0-beta.6"
+  }
+}

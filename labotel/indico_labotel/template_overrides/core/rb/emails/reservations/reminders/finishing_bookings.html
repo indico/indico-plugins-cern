@@ -1,0 +1,17 @@
+{% extends '~rb/emails/reservations/reminders/finishing_bookings.html' %}
+
+{% block subject -%}
+    {% if reservations|length == 1 -%}
+        One of your lab reservations is finishing soon
+    {%- else -%}
+        Some of your lab reservations are finishing soon
+    {%- endif %}
+{%- endblock %}
+
+{% block message -%}
+    {%- if reservations|length == 1 -%}
+        There is a lab booking under your name that will soon come to an end:<br>
+    {%- else -%}
+        There are lab bookings under your name that will soon come to an end:<br>
+    {%- endif %}
+{%- endblock %}
