@@ -8,29 +8,16 @@
 import os
 
 from flask import current_app, redirect, request, url_for
-from wtforms.fields import SelectField
-from wtforms.validators import DataRequired
 
 from indico.core import signals
-from indico.core.auth import multipass
 from indico.core.plugins import IndicoPlugin
 from indico.modules.rb.models.rooms import Room
 from indico.modules.rb.schemas import RoomSchema
 from indico.web.flask.util import make_view_func
-from indico.web.forms.base import IndicoForm
 
-from indico_labotel import _
 from indico_labotel.blueprint import blueprint
 from indico_labotel.cli import cli
 from indico_labotel.controllers import RHLanding, WPLabotelBase
-
-
-class SettingsForm(IndicoForm):
-    cern_identity_provider = SelectField(_('CERN Identity Provider'), validators=[DataRequired()])
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.cern_identity_provider.choices = [(k, p.title) for k, p in multipass.identity_providers.items()]
 
 
 class LabotelPlugin(IndicoPlugin):
@@ -39,11 +26,6 @@ class LabotelPlugin(IndicoPlugin):
     Provides labotel-specific functionality
     """
 
-    configurable = True
-    settings_form = SettingsForm
-    default_settings = {
-        'cern_identity_provider': ''
-    }
     default_user_settings = {
         'default_division': None,
     }
