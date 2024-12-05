@@ -197,6 +197,12 @@ def test_unlinked_room_has_no_access(mocker):
     assert not has_access(event_vc_room)
 
 
+def _mock_get_attribute_value(name, default=None):
+    if name == 'ip':
+        return '111.222.123.123'
+    return default
+
+
 @pytest.mark.usefixtures('db', 'request_context')
 def test_check_if_current_user_is_room_owner(mocker):
     session = mocker.patch('indico_ravem.util.session')
@@ -208,7 +214,7 @@ def test_check_if_current_user_is_room_owner(mocker):
 
     event_vc_room = MagicMock()
     event_vc_room.link_object.room.has_equipment = MagicMock(return_value=True)
-    event_vc_room.link_object.room.get_attribute_value.return_value = request.remote_addr
+    event_vc_room.link_object.room.get_attribute_value = _mock_get_attribute_value
     event_vc_room.vc_room.data.get.return_value = 'User:123'
     event_vc_room.event.can_manage.return_value = False
 
@@ -225,7 +231,7 @@ def test_check_if_current_user_can_modify(mocker):
 
     event_vc_room = MagicMock()
     event_vc_room.link_object.room.has_equipment = MagicMock(return_value=True)
-    event_vc_room.link_object.room.get_attribute_value.return_value = request.remote_addr
+    event_vc_room.link_object.room.get_attribute_value = _mock_get_attribute_value
     event_vc_room.event.can_manage.return_value = True
 
     assert has_access(event_vc_room)
