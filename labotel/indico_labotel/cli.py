@@ -49,9 +49,9 @@ def get_latlon_building(building_num):
 @click.option('--dry-run', is_flag=True, help="Don't actually change the database, just report on the changes")
 def geocode(dry_run):
     """Set geographical location for all labs/buildings."""
-    for desk in Room.query.filter(~Room.is_deleted):
-        latlon = get_latlon_building(desk.building)
+    for lab in Room.query.filter(~Room.is_deleted):
+        latlon = get_latlon_building(lab.building)
         if not dry_run:
-            desk.latitude, desk.longitude = latlon
+            lab.latitude, lab.longitude = latlon
     if not dry_run:
         db.session.commit()

@@ -102,16 +102,16 @@ class RHLabotelStatsCSV(RHProtected):
                 row = {
                     'Building': building,
                     'Category': experiment,
-                    'Number of labs': row_data['desk_count']
+                    'Number of labs': row_data['lab_count']
                 }
                 for i, m in enumerate(row_data['months']):
                     month_dt = months[i]
                     month_duration = ((months[i] + relativedelta(months=1, days=-1)) - months[i]).days + 1
-                    percent = float(m) / (row_data['desk_count'] * month_duration) * 100
+                    percent = float(m) / (row_data['lab_count'] * month_duration) * 100
                     row[month_dt.strftime('%b %Y')] = m
                     row[month_dt.strftime('%b %Y (%%)')] = f'{percent:.2f}%'
                 row['Total'] = row_data['bookings']
-                percent = float(row_data['bookings']) / (row_data['desk_count'] * num_days) * 100
+                percent = float(row_data['bookings']) / (row_data['lab_count'] * num_days) * 100
                 row['Total (%)'] = f'{percent:.2f}%'
                 rows.append(row)
         return send_csv('labotel_stats.csv', headers, rows)

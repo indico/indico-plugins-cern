@@ -35,19 +35,19 @@ def calculate_monthly_stats(start_dt, end_dt):
     room = aliased(Room)
     months = list(rrule(freq=MONTHLY, dtstart=start_dt, until=end_dt))
 
-    desk_count = (db.session.query(db.func.count(room.id))
+    lab_count = (db.session.query(db.func.count(room.id))
                   .filter(
                       Room.building == room.building,
                       Room.division == room.division,
                       room.is_reservable,
                       ~room.is_deleted)
-                  ).label('desk_count')
+                  ).label('lab_count')
 
     # a first query which retrieves building data as well as the total number of bookings
     building_query = _build_per_building_query(
         Room.building.label('number'),
         Room.division.label('experiment'),
-        desk_count,
+        lab_count,
         db.func.count(
             db.func.concat(Reservation.id, ReservationOccurrence.start_dt)).label('bookings')
     ).filter(ReservationOccurrence.start_dt >= start_dt, ReservationOccurrence.end_dt <= end_dt).order_by('number')
@@ -70,7 +70,7 @@ def calculate_monthly_stats(start_dt, end_dt):
 
     # rearrange the returned rows in a more processable format
     bldg_exp_map = [
-        ((building, experiment), {'bookings': bookings, 'desk_count': count, 'months': [0] * len(months)})
+        ((building, experiment), {'bookings': bookings, 'lab_count': count, 'months': [0] * len(months)})
         for building, experiment, count, bookings in building_query
     ]
 
@@ -89,17 +89,17 @@ def calculate_monthly_stats(start_dt, end_dt):
 
     # this is a third query which adds in buildings/experiments not matched in the previous ones
     unmatched_query = (db.session
-                       .query(Room.building, Room.division, desk_count)
+                       .query(Room.building, Room.division, lab_count)
                        .filter(Room.is_reservable, ~Room.is_deleted)
                        .group_by(Room.building, Room.division))
 
     # let's add all "unmatched" buildings/experiments with zeroed totals
-    for building, experiment, desk_count in unmatched_query:
+    for building, experiment, lab_count in unmatched_query:
         if not bldg_map.get(building, {}).get(experiment):
             bldg_map.setdefault(building, {})
             bldg_map[building][experiment] = {
                 'bookings': 0,
-                'desk_count': desk_count,
+                'lab_count': lab_count,
                 'months': [0] * len(months)
             }
 

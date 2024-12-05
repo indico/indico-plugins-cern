@@ -6,8 +6,6 @@ with some additional customizations, constraints and integrations.
 
 ## CLI
 
-The `indico labotel` command can be used to perform a series of maintenance operations:
+The `indico labotel` command can be used to perform maintenance operations:
 
- * **`export`** - Export desk list to a CSV file.
- * **`geocode`** - Set geographical location for all desks/buildings.
- * **`update`** - Update the Labotels from a CSV file.
+ * **`geocode`** - Set geographical location for all buildings.

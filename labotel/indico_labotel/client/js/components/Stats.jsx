@@ -93,7 +93,7 @@ function StatsTable({data, numDays, months}) {
               <Translate>Category</Translate>
             </Table.HeaderCell>
             <Table.HeaderCell>
-              <Translate>Number of desks</Translate>
+              <Translate>Number of labs</Translate>
             </Table.HeaderCell>
             {months.map(({name}) => (
               <Table.HeaderCell key={name}>{name}</Table.HeaderCell>
@@ -105,19 +105,19 @@ function StatsTable({data, numDays, months}) {
         </Table.Header>
         <Table.Body>
           {data.map(([building, experiments]) =>
-            experiments.map(([experiment, {bookings, deskCount, months: monthData}]) => (
+            experiments.map(([experiment, {bookings, labCount, months: monthData}]) => (
               <Table.Row key={`row-${building}-${experiment}`}>
                 <Table.Cell>{building}</Table.Cell>
                 <Table.Cell>{experiment}</Table.Cell>
-                <Table.Cell>{deskCount}</Table.Cell>
+                <Table.Cell>{labCount}</Table.Cell>
                 {monthData.map((value, i) => (
                   <PercentCell
                     key={`month-${months[i].id}`}
                     value={value}
-                    total={deskCount * months[i].numDays}
+                    total={labCount * months[i].numDays}
                   />
                 ))}
-                <PercentCell value={bookings} total={deskCount * numDays} highlight />
+                <PercentCell value={bookings} total={labCount * numDays} highlight />
               </Table.Row>
             ))
           )}
