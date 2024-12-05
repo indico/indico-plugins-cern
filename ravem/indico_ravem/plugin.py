@@ -99,7 +99,7 @@ class RavemPlugin(IndicoPlugin):
 
     def inject_connect_button(self, template, event_vc_room, **kwargs):  # pragma: no cover
         from indico_ravem.util import has_access
-        if event_vc_room.vc_room.type not in ('vidyo', 'zoom') or not has_access(event_vc_room):
+        if event_vc_room.vc_room.type != 'zoom' or not has_access(event_vc_room):
             return
 
         return render_plugin_template(template, room_name=event_vc_room.link_object.room.name,
