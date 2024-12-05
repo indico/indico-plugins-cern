@@ -36,6 +36,7 @@ on:
           - conversion
           - cronjobs_cern
           - foundationsync
+          - global
           - i18n_demo
           - labotel
           - outlook
