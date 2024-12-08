@@ -78,8 +78,8 @@ def _handle_link_object_dt_change(
 def _handle_contribution_move(obj: Contribution, original_block: SessionBlock, new_block: SessionBlock):
     """Handle contributions moved between blocks."""
     # block is None -> attached to the event
-    if (orig_zr_id := get_zoom_room_id(original_block.room if original_block else obj.event.room)) != (
-        new_zr_id := get_zoom_room_id(new_block.room if new_block else obj.event.room)
+    if (orig_zr_id := get_zoom_room_id(original_block or obj.event)) != (
+        new_zr_id := get_zoom_room_id(new_block or obj.event)
     ):
         _handle_linked_obj_location_change(obj, orig_zr_id, new_zr_id)
 
@@ -204,4 +204,3 @@ def signal_zoom_meeting_data_updated(vc_room: VCRoom, data: dict):
         for assoc in vc_room.events:
             if zr_id := get_zoom_room_id(assoc.link_object):
                 ZoomRoomsQueueEntry.record(ZoomRoomsAction.update, zr_id, assoc=assoc, args=OperationArgs(title=name))
-
