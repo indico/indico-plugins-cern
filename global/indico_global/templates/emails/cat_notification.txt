@@ -22,11 +22,11 @@
             - {{ cat.chain_titles[1:]|join(' » ') }}: <{{ url_for('categories.display', cat, _external=true) }}>
         {% endfor %}
         In order to separate institutional and hosted content under `indico.cern.ch`,
-        and to make it possible to provide Indico to even more researchers world-wide,
+        and to make it possible to provide Indico to even more researchers worldwide,
         we are launching `indico.global`, a new Indico service hosted at CERN and open
         to the whole world.
 
-        You can find more about it in our blog post announcing it:
+        You can find more about it in our blog post announcement:
         <https://getindico.io/indico/global/2024/10/09/indico-global.html>
 
         With the launch of `indico.global`, we will be moving all content currently under
@@ -39,23 +39,25 @@
         managers of upcoming events in your categories individually. They will receive an
         e-mail with the new URLs for their events.
 
-        On the day of the migration all your categories and events will become read-only for
-        a few hours, while we're moving everything to the new instance.
+        On the day of the migration, all your categories and events will become read-only for
+        a few hours, while we're moving everything to the new server.
 
         In the unlikely scenario that you have CERN-organized events in your category, we
         recommend that you move them to another category. You should do so **before** the
-        migration date in order to avoid then being moved to the new server.
+        migration date in order to avoid them being moved to the new server.
 
         {%- if group_acls %}
 
-            IMPORTANT: Your category currently uses CERN egroups to grant access:
+            IMPORTANT: Your category currently uses CERN e-groups to grant access:
             {{ group_acls|sort|join(', ') }}
 
             Since this is a very CERN-specific feature, it will no longer be supported on
             `indico.global`. You may create a custom group ("Category Role") instead if you
-            want to keep managing access in a single place; without any action on your side
-            people who got privileges based on their egroup membership will simply lose them
-            after the migration.
+            want to keep managing access in a single place:
+            <https://learn.getindico.io/custom_roles/#category-roles>
+
+            Otherwise, without any action on your side, people who got privileges based on
+            their e-group membership will simply lose them after the migration.
         {%- endif %}
 
         Do not hesitate to reach out to us at <indico-team@cern.ch> if you have questions.
