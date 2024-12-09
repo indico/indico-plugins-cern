@@ -7,6 +7,7 @@
 
 import sys
 from collections import defaultdict
+from datetime import datetime
 from operator import itemgetter
 
 import click
@@ -20,6 +21,7 @@ from indico.core.notifications import make_email, send_email
 from indico.core.plugins import get_plugin_template_module
 from indico.core.settings import SettingsProxyBase
 from indico.modules.categories import Category
+from indico.modules.events import Event
 from indico.util.console import verbose_iterator
 
 from indico_global.models.id_map import GlobalIdMap
@@ -74,5 +76,37 @@ def notify_category_managers():
             for x in cat.acl_entries if x.type == PrincipalType.multipass_group
         }
         tpl = get_plugin_template_module('emails/cat_notification.txt', name=user.first_name, categories=cats,
-                                         group_acls=group_acls)
+                                         group_acls=group_acls, reply_to='indico-team@cern.ch')
+        send_email(make_email(to_list={user.email}, template=tpl))
+
+
+@cli.command()
+def notify_event_managers():
+    """Notify event managers about upcoming migration."""
+    from indico_global.plugin import GlobalPlugin
+
+    SettingsProxyBase.allow_cache_outside_request = True  # avoid re-querying site_title for every email
+    global_cat = Category.get(GlobalPlugin.settings.get('global_category_id'))
+    query = (Event.query
+            .filter(Event.category_chain_overlaps(global_cat.id),
+                    ~Event.is_deleted,
+                    Event.acl_entries.any(),
+                    Event.end_dt >= datetime(2024, 7, 1))
+            .options(subqueryload(Event.acl_entries)))
+    managers = defaultdict(set)
+    for event in query:
+        if not (evt_managers := {x.user for x in event.acl_entries if x.full_access and x.type == PrincipalType.user}):
+            continue
+        for user in evt_managers:
+            managers[user].add(event)
+
+    for user, events in managers.items():
+        group_acls = {
+            x.multipass_group_name
+            for evt in events
+            for x in evt.acl_entries if x.type == PrincipalType.multipass_group
+        }
+
+        tpl = get_plugin_template_module('emails/event_notification.txt', name=user.first_name, events=events,
+                                         group_acls=group_acls, reply_to='indico-team@cern.ch')
         send_email(make_email(to_list={user.email}, template=tpl))
