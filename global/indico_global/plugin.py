@@ -19,6 +19,8 @@ from indico.core.db import db
 from indico.core.errors import NoReportError
 from indico.core.plugins import IndicoPlugin
 from indico.modules.events import Event
+from indico.modules.events.forms import EventCreationFormBase
+from indico.modules.events.management.forms import CloneCategorySelectForm
 from indico.web.flask.util import url_for
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.widgets import SwitchWidget
@@ -115,6 +117,7 @@ class GlobalPlugin(IndicoPlugin):
         super().init()
         self.connect(signals.plugin.cli, self._extend_indico_cli)
         self.connect(signals.rh.before_process, self._before_rh_process)
+        self.connect(signals.core.form_validated, self._event_creation_form_validated)
         current_app.before_request(self._before_request)
 
     def _extend_indico_cli(self, sender, **kwargs):
@@ -123,16 +126,38 @@ class GlobalPlugin(IndicoPlugin):
     def get_blueprints(self):
         return blueprint
 
-    def _before_rh_process(self, rh_cls, rh):
+    def _event_creation_form_validated(self, form, **kwargs):
+        match form:
+            case EventCreationFormBase():
+                if not form.listing.data:
+                    return
+            case CloneCategorySelectForm():
+                # cannot clone to unlisted atm, so nothing special to do here yet
+                pass
+            case _:
+                return
+        if not self.settings.get('read_only') or (global_id := self.settings.get('global_category_id')) is None:
+            return
+        if global_id not in form.category.data.chain_ids:
+            return
+        form.category.errors.append(self.settings.get('read_only_msg') or 'This category is read-only.')
+        return False
+
+    def _before_rh_process(self, rh_cls, rh, **kwargs):
         if not self.settings.get('read_only') or (global_id := self.settings.get('global_category_id')) is None:
             return
 
-        if event := getattr(rh, 'event', None):
-            category = event.category
-        else:
-            category = getattr(rh, 'category', None)
+        categories = set()
+        if (event := getattr(rh, 'event', None)) and event.category:
+            categories.add(event.category)
+        elif category := getattr(rh, 'category', None):
+            categories.add(category)
 
-        if not category or global_id not in category.chain_ids:
+        # moving events/categories
+        if target_category := getattr(rh, 'target_category', None):
+            categories.add(target_category)
+
+        if not any(global_id in cat.chain_ids for cat in categories):
             return
 
         if (msg := self.settings.get('read_only_msg')) and _is_request_likely_seen():
