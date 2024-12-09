@@ -129,10 +129,10 @@ class GlobalPlugin(IndicoPlugin):
 
         if event := getattr(rh, 'event', None):
             category = event.category
-        elif not (category := getattr(rh, 'category', None)):
-            return
+        else:
+            category = getattr(rh, 'category', None)
 
-        if global_id not in category.chain_ids:
+        if not category or global_id not in category.chain_ids:
             return
 
         if (msg := self.settings.get('read_only_msg')) and _is_request_likely_seen():
