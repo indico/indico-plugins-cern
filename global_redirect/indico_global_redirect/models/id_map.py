@@ -13,7 +13,7 @@ from indico.util.string import format_repr
 
 class GlobalIdMap(db.Model):
     __tablename__ = 'id_map'
-    __table_args__ = {'schema': 'plugin_global'}
+    __table_args__ = {'schema': 'plugin_global_redirect'}
 
     col = db.Column(db.String, primary_key=True)
     local_id = db.Column(db.Integer, primary_key=True)

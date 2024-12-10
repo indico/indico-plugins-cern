@@ -1,5 +1,5 @@
 [project]
-name = 'indico-plugin-global'
+name = 'indico-plugin-global-redirect'
 version = '3.3-dev'
 license = 'MIT'
 authors = [{ name = 'Indico Team', email = 'indico-team@cern.ch' }]
@@ -16,14 +16,14 @@ dependencies = ['indico>=3.3']
 GitHub = 'https://github.com/indico/indico-plugins-cern'
 
 [project.entry-points.'indico.plugins']
-global = 'indico_global.plugin:GlobalPlugin'
+global_redirect = 'indico_global_redirect.plugin:GlobalRedirectPlugin'
 
 [build-system]
 requires = ['hatchling==1.25.0']
 build-backend = 'hatchling.build'
 
 [tool.hatch.build]
-packages = ['indico_global']
+packages = ['indico_global_redirect']
 exclude = [
     '*.no-header',
     '.keep',
