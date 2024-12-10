@@ -25,9 +25,9 @@ from indico.web.flask.util import url_for
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.widgets import SwitchWidget
 
-from indico_global.blueprint import blueprint
-from indico_global.cli import cli
-from indico_global.models.id_map import GlobalIdMap
+from indico_global_redirect.blueprint import blueprint
+from indico_global_redirect.cli import cli
+from indico_global_redirect.models.id_map import GlobalIdMap
 
 
 ID_ARG_MAP = {
@@ -97,8 +97,8 @@ def _is_request_likely_seen():
     )
 
 
-class GlobalPlugin(IndicoPlugin):
-    """Indico Global
+class GlobalRedirectPlugin(IndicoPlugin):
+    """Indico Global Redirect
 
     Provides functionality related to Indico Global on the main Indico instance.
     """

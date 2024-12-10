@@ -24,12 +24,12 @@ from indico.modules.categories import Category
 from indico.modules.events import Event
 from indico.util.console import verbose_iterator
 
-from indico_global.models.id_map import GlobalIdMap
+from indico_global_redirect.models.id_map import GlobalIdMap
 
 
 @cli_group(name='global')
 def cli():
-    """Manage the Global plugin."""
+    """Manage the Global Redirect plugin."""
 
 
 @cli.command()
@@ -55,10 +55,10 @@ def load_mapping(mapping_file):
 @cli.command()
 def notify_category_managers():
     """Notify category managers about upcoming migration."""
-    from indico_global.plugin import GlobalPlugin
+    from indico_global_redirect.plugin import GlobalRedirectPlugin
 
     SettingsProxyBase.allow_cache_outside_request = True  # avoid re-querying site_title for every email
-    global_cat = Category.get(GlobalPlugin.settings.get('global_category_id'))
+    global_cat = Category.get(GlobalRedirectPlugin.settings.get('global_category_id'))
     query = (global_cat.deep_children_query
             .filter(~Category.is_deleted, Category.acl_entries.any())
             .options(subqueryload(Category.acl_entries), undefer('chain_titles')))
@@ -83,10 +83,10 @@ def notify_category_managers():
 @cli.command()
 def notify_event_managers():
     """Notify event managers about upcoming migration."""
-    from indico_global.plugin import GlobalPlugin
+    from indico_global_redirect.plugin import GlobalRedirectPlugin
 
     SettingsProxyBase.allow_cache_outside_request = True  # avoid re-querying site_title for every email
-    global_cat = Category.get(GlobalPlugin.settings.get('global_category_id'))
+    global_cat = Category.get(GlobalRedirectPlugin.settings.get('global_category_id'))
     query = (Event.query
             .filter(Event.category_chain_overlaps(global_cat.id),
                     ~Event.is_deleted,
