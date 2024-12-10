@@ -68,15 +68,30 @@ def update_calendar():
 def _get_status(user, event, settings):
     from indico_outlook.plugin import OutlookPlugin
     status = OutlookPlugin.user_settings.get(user, 'status', settings['status'])
-    for override in OutlookPlugin.user_settings.get(user, 'status_overrides'):
+    for override in OutlookPlugin.user_settings.get(user, 'overrides'):
         if override['type'] == 'category' and override['id'] == event.category_id:
-            # we don't keep going for a specific category Id match
+            # we don't keep going for a specific category id match
             return override['status']
         elif override['type'] == 'category_tree' and override['id'] in event.category_chain:
             # for category tree matches we keep going in case there's a specific match later.
-            # we don't try to see which one is more specific becauase that'd be overkill!
+            # we don't try to see which one is more specific because that'd be overkill!
             status = override['status']
     return status
+
+
+def _get_reminder(user, event, settings):
+    from indico_outlook.plugin import OutlookPlugin
+    reminder = OutlookPlugin.user_settings.get(user, 'reminder', settings['reminder'])
+    reminder_minutes = OutlookPlugin.user_settings.get(user, 'reminder_minutes', settings['reminder_minutes'])
+    for override in OutlookPlugin.user_settings.get(user, 'overrides'):
+        if override['type'] == 'category' and override['id'] == event.category_id:
+            # we don't keep going for a specific category id match
+            return override.get('reminder', reminder), override.get('reminder_minutes', reminder_minutes)
+        elif override['type'] == 'category_tree' and override['id'] in event.category_chain:
+            # for category tree matches we keep going in case there's a specific match later.
+            # we don't try to see which one is more specific becauase that'd be overkill!
+            reminder = override.get('reminder', reminder), override.get('reminder_minutes', reminder_minutes)
+    return reminder, reminder_minutes
 
 
 def _update_calendar_entry(entry, settings):
@@ -109,6 +124,7 @@ def _update_calendar_entry(entry, settings):
         location = strip_control_chars(event.room_name)
         description = strip_control_chars(event.description)
         event_url = event.external_url
+        reminder, reminder_minutes = _get_reminder(user, event, settings)
         data = {
             'status': _get_status(user, event, settings),
             'start': int(event.start_dt.timestamp()),
@@ -117,8 +133,8 @@ def _update_calendar_entry(entry, settings):
             # XXX: the API expects 'body', we convert it below
             'description': f'<a href="{event_url}">{event_url}</a><br><br>{description}',
             'location': location,
-            'reminder_on': settings['reminder'],
-            'reminder_minutes': settings['reminder_minutes']
+            'reminder_on': reminder,
+            'reminder_minutes': reminder_minutes,
         }
 
         # check whether the plugins want to add/override any data
