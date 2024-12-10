@@ -31,7 +31,7 @@ def upgrade():
             )
             FROM jsonb_array_elements(value) AS elem
         )
-        WHERE module = 'plugin_outlook' AND name = 'overrides'
+        WHERE module = 'plugin_outlook' AND name = 'overrides' AND value::text != '[]'
     ''')
 
 
@@ -45,7 +45,7 @@ def downgrade():
             )
             FROM jsonb_array_elements(value) AS elem
         )
-        WHERE module = 'plugin_outlook' AND name = 'overrides'
+        WHERE module = 'plugin_outlook' AND name = 'overrides' AND value::text != '[]'
     ''')
     # Rename the field back to status_overrides
     op.execute('''
