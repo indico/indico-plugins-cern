@@ -20,7 +20,7 @@ GitHub = 'https://github.com/indico/indico-plugins-cern'
 zoom_rooms = 'indico_zoom_rooms.plugin:ZoomRoomsPlugin'
 
 [build-system]
-requires = ['hatchling==1.25.0']
+requires = ['hatchling==1.26.3']
 build-backend = 'hatchling.build'
 
 [tool.hatch.build]
