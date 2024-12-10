@@ -59,36 +59,51 @@ class SettingsForm(IndicoForm):
 
 class OutlookUserPreferences(ExtraUserPreferences):
     fields = {
-        'outlook_active': BooleanField(_('Sync with Outlook'), widget=SwitchWidget(),
-                                       description=_('Add Indico events in which I participate to my Outlook '
-                                                     'calendar')),
-        'outlook_status': SelectField(_('Outlook entry status'), [HiddenUnless('extra_outlook_active',
-                                                                               preserve_data=True)],
-                                      choices=_status_choices,
-                                      description=_('The status for Outlook Calendar entries')),
-        'outlook_reminder': BooleanField(_('Reminder'), [HiddenUnless('extra_outlook_active',
-                                                preserve_data=True)],
-                                    description=_('Enable calendar reminder')),
-        'outlook_reminder_minutes': IntegerField(_('Reminder time'), [HiddenUnless('extra_outlook_active',
-                                                preserve_data=True), NumberRange(min=0)],
-                                    description=_('Remind users X minutes before the event')),
+        'outlook_active': BooleanField(
+            _('Sync with Outlook'),
+            widget=SwitchWidget(),
+            description=_('Add Indico events in which I participate to my Outlook calendar'),
+        ),
+        'outlook_status': SelectField(
+            _('Outlook entry status'),
+            [HiddenUnless('extra_outlook_active', preserve_data=True)],
+            choices=_status_choices,
+            description=_('The status for Outlook Calendar entries'),
+        ),
+        'outlook_reminder': BooleanField(
+            _('Outlook reminders'),
+            [HiddenUnless('extra_outlook_active', preserve_data=True)],
+            widget=SwitchWidget(),
+            description=_('Enable reminder for Outlook Calendar entries'),
+        ),
+        'outlook_reminder_minutes': IntegerField(
+            _('Outlook reminder time'),
+            [HiddenUnless('extra_outlook_active', preserve_data=True), NumberRange(min=0)],
+            description=_('Remind X minutes before the event'),
+        ),
         'outlook_overrides': MultipleItemsField(
-            _('Outlook entry overrides'),
+            _('Outlook overrides'),
             [HiddenUnless('extra_outlook_active', preserve_data=True)],
             fields=[
                 {'id': 'type', 'caption': _('Type'), 'required': True, 'type': 'select'},
                 {'id': 'id', 'caption': _('Category ID'), 'required': True, 'type': 'number', 'step': 1, 'coerce': int},
                 {'id': 'status', 'caption': _('Status'), 'required': True, 'type': 'select'},
                 {'id': 'reminder', 'caption': _('Reminder'), 'required': True, 'type': 'checkbox'},
-                {'id': 'reminder_minutes', 'caption': _('Reminder time'), 'required': True,
-                    'type': 'number', 'step': 1, 'coerce': int},
+                {
+                    'id': 'reminder_minutes',
+                    'caption': _('Reminder time'),
+                    'required': True,
+                    'type': 'number',
+                    'step': 1,
+                    'coerce': int,
+                },
             ],
             choices={
                 'type': {'category': _('Category'), 'category_tree': _('Category & Subcategories')},
                 'status': dict(_status_choices),
             },
             description=_('You can override the calendar entry configuration for specific categories.'),
-        )
+        ),
     }
 
     def load(self):
