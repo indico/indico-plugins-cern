@@ -70,7 +70,7 @@ def _get_status(user, event, settings):
     status = OutlookPlugin.user_settings.get(user, 'status', settings['status'])
     for override in OutlookPlugin.user_settings.get(user, 'overrides'):
         if override['type'] == 'category' and override['id'] == event.category_id:
-            # we don't keep going for a specific category Id match
+            # we don't keep going for a specific category id match
             return override['status']
         elif override['type'] == 'category_tree' and override['id'] in event.category_chain:
             # for category tree matches we keep going in case there's a specific match later.
@@ -85,7 +85,7 @@ def _get_reminder(user, event, settings):
     reminder_minutes = OutlookPlugin.user_settings.get(user, 'reminder_minutes', settings['reminder_minutes'])
     for override in OutlookPlugin.user_settings.get(user, 'overrides'):
         if override['type'] == 'category' and override['id'] == event.category_id:
-            # we don't keep going for a specific category Id match
+            # we don't keep going for a specific category id match
             return override.get('reminder', reminder), override.get('reminder_minutes', reminder_minutes)
         elif override['type'] == 'category_tree' and override['id'] in event.category_chain:
             # for category tree matches we keep going in case there's a specific match later.
