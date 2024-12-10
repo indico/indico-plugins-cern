@@ -18,16 +18,16 @@ depends_on = None
 
 
 def upgrade():
-    op.execute(CreateSchema('plugin_global'))
+    op.execute(CreateSchema('plugin_global_redirect'))
     op.create_table(
         'id_map',
         sa.Column('col', sa.String(), primary_key=True),
         sa.Column('local_id', sa.Integer(), primary_key=True),
         sa.Column('global_id', sa.Integer(), nullable=False),
-        schema='plugin_global',
+        schema='plugin_global_redirect',
     )
 
 
 def downgrade():
-    op.drop_table('id_map', schema='plugin_global')
-    op.execute(DropSchema('plugin_global'))
+    op.drop_table('id_map', schema='plugin_global_redirect')
+    op.execute(DropSchema('plugin_global_redirect'))

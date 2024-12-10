@@ -8,4 +8,4 @@
 from indico.core.plugins import IndicoPluginBlueprint
 
 
-blueprint = IndicoPluginBlueprint('global', __name__)
+blueprint = IndicoPluginBlueprint('global_redirect', __name__)
