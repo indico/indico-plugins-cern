@@ -91,7 +91,7 @@ def notify_event_managers():
             .filter(Event.category_chain_overlaps(global_cat.id),
                     ~Event.is_deleted,
                     Event.acl_entries.any(),
-                    Event.end_dt >= datetime(2024, 7, 1))
+                    Event.end_dt >= datetime(2024, 1, 1))
             .options(subqueryload(Event.acl_entries)))
     managers = defaultdict(set)
     for event in query:
