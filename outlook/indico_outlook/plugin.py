@@ -82,7 +82,8 @@ class OutlookUserPreferences(ExtraUserPreferences):
             _('Sync favorite categories with Outlook'),
             [HiddenUnless('extra_outlook_active', preserve_data=True)],
             widget=SwitchWidget(),
-            description=_('Add to my Outlook calendar all events in categories (and their subcategories) I mark as favorite'),
+            description=_('Add to my Outlook calendar all events in categories (and their subcategories) '
+                          'I mark as favorite'),
         ),
         'outlook_status': SelectField(
             _('Outlook entry status'),
