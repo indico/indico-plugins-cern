@@ -35,9 +35,9 @@
         be automatically redirected to the new URLs. However, any new events will be created
         directly under the https://indico.global/ domain name after the migration.
 
-        The migration will happen in January 2025. On the day of the migration, all your
-        events will become read-only for a few hours, while we're moving everything to the new
-        server. In case you want to find out the new URL for
+        The migration will happen in January 2025, on the weekend of the 18th/19th. During the
+        migration, all you events will become read-only for a few hours, while we're moving
+        everything to the new server.
 
         In the unlikely scenario that any of your events are CERN-organized, we recommend
         that you move them to another category. You should do so **before** the migration
