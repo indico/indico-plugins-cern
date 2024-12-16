@@ -20,8 +20,9 @@ from indico.core.db.sqlalchemy.principals import PrincipalType
 from indico.core.notifications import make_email, send_email
 from indico.core.plugins import get_plugin_template_module
 from indico.core.settings import SettingsProxyBase
-from indico.modules.categories import Category
-from indico.modules.events import Event
+from indico.modules.categories import Category, CategoryLogRealm
+from indico.modules.events import Event, EventLogRealm
+from indico.modules.logs import LogKind
 from indico.util.console import verbose_iterator
 
 from indico_global_redirect.models.id_map import GlobalIdMap
@@ -67,11 +68,13 @@ def notify_category_managers():
             .filter(~Category.is_deleted, Category.acl_entries.any())
             .options(subqueryload(Category.acl_entries), undefer('chain_titles')))
     managers = defaultdict(set)
+    managers_by_category = defaultdict(set)
     for cat in query:
         if not (cat_managers := {x.user for x in cat.acl_entries if x.full_access and x.type == PrincipalType.user}):
             continue
         for user in cat_managers:
             managers[user].add(cat)
+            managers_by_category[cat].add(user)
 
     for user, cats in managers.items():
         group_acls = {
@@ -82,6 +85,11 @@ def notify_category_managers():
         tpl = get_plugin_template_module('emails/cat_notification.txt', name=user.first_name, categories=cats,
                                          group_acls=group_acls, reply_to='indico-team@cern.ch')
         send_email(make_email(to_list={user.email}, template=tpl))
+
+    for cat, users in managers_by_category.items():
+        cat.log(CategoryLogRealm.category, LogKind.other, 'Indico Global', 'Sent migration notifications',
+                data={'Recipient IDs': ', '.join(map(str, sorted(u.id for u in users))),
+                      'Recipients': ', '.join(sorted(u.full_name for u in users))})
 
     GlobalRedirectPlugin.settings.set('allow_cat_notifications', False)
     db.session.commit()
@@ -105,11 +113,13 @@ def notify_event_managers():
                     Event.end_dt >= datetime(2024, 1, 1))
             .options(subqueryload(Event.acl_entries)))
     managers = defaultdict(set)
+    managers_by_event = defaultdict(set)
     for event in query:
         if not (evt_managers := {x.user for x in event.acl_entries if x.full_access and x.type == PrincipalType.user}):
             continue
         for user in evt_managers:
             managers[user].add(event)
+            managers_by_event[event].add(user)
 
     for user, events in managers.items():
         group_acls = {
@@ -121,6 +131,11 @@ def notify_event_managers():
         tpl = get_plugin_template_module('emails/event_notification.txt', name=user.first_name, events=events,
                                          group_acls=group_acls, reply_to='indico-team@cern.ch')
         send_email(make_email(to_list={user.email}, template=tpl))
+
+    for event, users in managers_by_event.items():
+        event.log(EventLogRealm.event, LogKind.other, 'Indico Global', 'Sent migration notifications',
+                  data={'Recipient IDs': ', '.join(map(str, sorted(u.id for u in users))),
+                        'Recipients': ', '.join(sorted(u.full_name for u in users))})
 
     GlobalRedirectPlugin.settings.set('allow_event_notifications', False)
     db.session.commit()
