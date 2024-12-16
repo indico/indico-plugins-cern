@@ -66,6 +66,10 @@ class PluginSettingsForm(IndicoForm):
     read_only_msg = TextAreaField('Read-only message',
                                   description='Displayed in all events/categories within the Global category when '
                                               'read-only mode is enabled')
+    allow_cat_notifications = BooleanField('Allow sending category notifications', widget=SwitchWidget(),
+                                           description='Enable this to allow notifying category managers via the CLI.')
+    allow_event_notifications = BooleanField('Allow sending event notifications', widget=SwitchWidget(),
+                                             description='Enable this to allow notifying event managers via the CLI.')
 
 
 @functools.cache
@@ -111,6 +115,8 @@ class GlobalRedirectPlugin(IndicoPlugin):
         'global_category_id': None,
         'read_only': False,
         'read_only_msg': '',
+        'allow_cat_notifications': False,
+        'allow_event_notifications': False,
     }
 
     def init(self):
