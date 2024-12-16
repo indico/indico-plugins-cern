@@ -53,7 +53,7 @@
             <https://learn.getindico.io/custom_roles/#event-roles>
 
             Otherwise, without any action on your side, people who got privileges based on
-            their e-group membership will simply lose them after the migratio.
+            their e-group membership will simply lose them after the migration.
         {%- endif %}
 
         Do not hesitate to reach out to us at <indico-team@cern.ch> if you have questions.
