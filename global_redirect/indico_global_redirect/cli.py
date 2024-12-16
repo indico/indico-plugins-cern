@@ -57,6 +57,10 @@ def notify_category_managers():
     """Notify category managers about upcoming migration."""
     from indico_global_redirect.plugin import GlobalRedirectPlugin
 
+    if not GlobalRedirectPlugin.settings.get('allow_cat_notifications'):
+        click.echo('Category notifications are disabled (maybe already sent?)')
+        return
+
     SettingsProxyBase.allow_cache_outside_request = True  # avoid re-querying site_title for every email
     global_cat = Category.get(GlobalRedirectPlugin.settings.get('global_category_id'))
     query = (global_cat.deep_children_query
@@ -79,11 +83,18 @@ def notify_category_managers():
                                          group_acls=group_acls, reply_to='indico-team@cern.ch')
         send_email(make_email(to_list={user.email}, template=tpl))
 
+    GlobalRedirectPlugin.settings.set('allow_cat_notifications', False)
+    db.session.commit()
+
 
 @cli.command()
 def notify_event_managers():
     """Notify event managers about upcoming migration."""
     from indico_global_redirect.plugin import GlobalRedirectPlugin
+
+    if not GlobalRedirectPlugin.settings.get('allow_event_notifications'):
+        click.echo('Event notifications are disabled (maybe already sent?)')
+        return
 
     SettingsProxyBase.allow_cache_outside_request = True  # avoid re-querying site_title for every email
     global_cat = Category.get(GlobalRedirectPlugin.settings.get('global_category_id'))
@@ -110,3 +121,6 @@ def notify_event_managers():
         tpl = get_plugin_template_module('emails/event_notification.txt', name=user.first_name, events=events,
                                          group_acls=group_acls, reply_to='indico-team@cern.ch')
         send_email(make_email(to_list={user.email}, template=tpl))
+
+    GlobalRedirectPlugin.settings.set('allow_event_notifications', False)
+    db.session.commit()
