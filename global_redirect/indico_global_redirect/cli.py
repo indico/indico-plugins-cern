@@ -15,6 +15,7 @@ import yaml
 from sqlalchemy.orm import subqueryload, undefer
 
 from indico.cli.core import cli_group
+from indico.core.config import config
 from indico.core.db import db
 from indico.core.db.sqlalchemy.principals import PrincipalType
 from indico.core.notifications import make_email, send_email
@@ -84,7 +85,9 @@ def notify_category_managers():
         }
         tpl = get_plugin_template_module('emails/cat_notification.txt', name=user.first_name, categories=cats,
                                          group_acls=group_acls)
-        send_email(make_email(to_list={user.email}, template=tpl, reply_address='indico-team@cern.ch'))
+        send_email(make_email(to_list={user.email}, template=tpl,
+                              sender_address=f'Indico Team <{config.NO_REPLY_EMAIL}>',
+                              reply_address='indico-team@cern.ch'))
 
     for cat, users in managers_by_category.items():
         cat.log(CategoryLogRealm.category, LogKind.other, 'Indico Global', 'Sent migration notifications',
@@ -130,7 +133,9 @@ def notify_event_managers():
 
         tpl = get_plugin_template_module('emails/event_notification.txt', name=user.first_name, events=events,
                                          group_acls=group_acls)
-        send_email(make_email(to_list={user.email}, template=tpl, reply_address='indico-team@cern.ch'))
+        send_email(make_email(to_list={user.email}, template=tpl,
+                              sender_address=f'Indico Team <{config.NO_REPLY_EMAIL}>',
+                              reply_address='indico-team@cern.ch'))
 
     for event, users in managers_by_event.items():
         event.log(EventLogRealm.event, LogKind.other, 'Indico Global', 'Sent migration notifications',
