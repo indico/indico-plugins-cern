@@ -83,8 +83,8 @@ def notify_category_managers():
             for x in cat.acl_entries if x.type == PrincipalType.multipass_group
         }
         tpl = get_plugin_template_module('emails/cat_notification.txt', name=user.first_name, categories=cats,
-                                         group_acls=group_acls, reply_to='indico-team@cern.ch')
-        send_email(make_email(to_list={user.email}, template=tpl))
+                                         group_acls=group_acls)
+        send_email(make_email(to_list={user.email}, template=tpl, reply_address='indico-team@cern.ch'))
 
     for cat, users in managers_by_category.items():
         cat.log(CategoryLogRealm.category, LogKind.other, 'Indico Global', 'Sent migration notifications',
@@ -129,8 +129,8 @@ def notify_event_managers():
         }
 
         tpl = get_plugin_template_module('emails/event_notification.txt', name=user.first_name, events=events,
-                                         group_acls=group_acls, reply_to='indico-team@cern.ch')
-        send_email(make_email(to_list={user.email}, template=tpl))
+                                         group_acls=group_acls)
+        send_email(make_email(to_list={user.email}, template=tpl, reply_address='indico-team@cern.ch'))
 
     for event, users in managers_by_event.items():
         event.log(EventLogRealm.event, LogKind.other, 'Indico Global', 'Sent migration notifications',
