@@ -20,7 +20,7 @@ class GlobalIdMap(db.Model):
     global_id = db.Column(db.Integer, nullable=False)
 
     def __repr__(self):
-        return format_repr(self, 'id', 'col', _repr=self.global_id)
+        return format_repr(self, 'local_id', 'col', _repr=self.global_id)
 
     @classmethod
     @functools.cache
