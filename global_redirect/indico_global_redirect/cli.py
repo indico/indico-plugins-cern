@@ -43,7 +43,7 @@ def load_mapping(mapping_file):
         if not click.confirm('Continue anyway?'):
             sys.exit(1)
 
-    click.echo('Loading mapping data (this take take a while)...')
+    click.echo('Loading mapping data (this may take a while)...')
     mapping = yaml.safe_load(mapping_file)
     for col, data in mapping.items():
         click.echo(f'Processing {col}...')
