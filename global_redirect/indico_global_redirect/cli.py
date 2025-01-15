@@ -144,3 +144,45 @@ def notify_event_managers():
 
     GlobalRedirectPlugin.settings.set('allow_event_notifications', False)
     db.session.commit()
+
+
+@cli.command()
+def notify_event_managers_zoom():
+    """Notify event managers w/ Zoom meetings about upcoming migration."""
+    from indico_global_redirect.plugin import GlobalRedirectPlugin
+
+    if not GlobalRedirectPlugin.settings.get('allow_event_notifications_zoom'):
+        click.echo('Zoom event notifications are disabled (maybe already sent?)')
+        return
+
+    SettingsProxyBase.allow_cache_outside_request = True  # avoid re-querying site_title for every email
+    global_cat = Category.get(GlobalRedirectPlugin.settings.get('global_category_id'))
+    query = (Event.query
+            .filter(Event.category_chain_overlaps(global_cat.id),
+                    ~Event.is_deleted,
+                    Event.acl_entries.any(),
+                    Event.end_dt >= datetime(2025, 1, 18),
+                    Event.vc_room_associations.any())
+            .options(subqueryload(Event.acl_entries)))
+    managers = defaultdict(set)
+    managers_by_event = defaultdict(set)
+    for event in query:
+        if not (evt_managers := {x.user for x in event.acl_entries if x.full_access and x.type == PrincipalType.user}):
+            continue
+        for user in evt_managers:
+            managers[user].add(event)
+            managers_by_event[event].add(user)
+
+    for user, events in managers.items():
+        tpl = get_plugin_template_module('emails/event_notification_zoom.txt', name=user.first_name, events=events)
+        send_email(make_email(to_list={user.email}, template=tpl,
+                              sender_address=f'Indico Team <{config.NO_REPLY_EMAIL}>',
+                              reply_address='indico-team@cern.ch'))
+
+    for event, users in managers_by_event.items():
+        event.log(EventLogRealm.event, LogKind.other, 'Indico Global', 'Sent migration notifications (Zoom)',
+                  data={'Recipient IDs': ', '.join(map(str, sorted(u.id for u in users))),
+                        'Recipients': ', '.join(sorted(u.full_name for u in users))})
+
+    GlobalRedirectPlugin.settings.set('allow_event_notifications_zoom', False)
+    db.session.commit()

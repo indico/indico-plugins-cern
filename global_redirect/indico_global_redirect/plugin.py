@@ -70,6 +70,9 @@ class PluginSettingsForm(IndicoForm):
                                            description='Enable this to allow notifying category managers via the CLI.')
     allow_event_notifications = BooleanField('Allow sending event notifications', widget=SwitchWidget(),
                                              description='Enable this to allow notifying event managers via the CLI.')
+    allow_event_notifications_zoom = BooleanField('Allow sending event notifications for Zoom', widget=SwitchWidget(),
+                                             description='Enable this to allow notifying event managers with Zoom '
+                                                         'meetings via the CLI.')
 
 
 @functools.cache
@@ -117,6 +120,7 @@ class GlobalRedirectPlugin(IndicoPlugin):
         'read_only_msg': '',
         'allow_cat_notifications': False,
         'allow_event_notifications': False,
+        'allow_event_notifications_zoom': False,
     }
 
     def init(self):

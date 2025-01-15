@@ -1,0 +1,62 @@
+{% extends 'emails/base.txt' %}
+
+{% block subject -%}
+    Your Indico Global {% if events|length == 1 %}event{% else %}events{% endif %} will lose Zoom functionality
+{%- endblock %}
+
+{% block header_recipient -%}
+    Dear {{ name }}
+{%- endblock %}
+
+{% block body -%}
+    {% filter dedent -%}
+        {% if events|length == 1 -%}
+            You are receiving this message because you are managing the following Indico
+            event within the "Indico Global" category on indico.cern.ch (note: only future
+            events are listed):
+        {%- else -%}
+            You are receiving this message because you are managing the following Indico
+            events on indico.cern.ch (note: only future events are listed):
+        {%- endif %}
+
+        {% for evt in events|sort(attribute='category.chain_titles,start_dt') -%}
+            - {{ evt.category.chain_titles[1:]|join(' » ') }} » {{ evt.title }} ({{ evt.start_dt|format_date(timezone=evt.tzinfo) }}): <{{ evt.external_url }}>
+        {% endfor %}
+        You have already received a notification about the migration on the weekend of the
+        18th/19th, and a reminder a few days ago, so we're not going to repeat the information
+        in here.
+
+        However, there is one thing we'd like to point out: As per the Global Indico fair-use
+        policy, "The usage of the CERN Zoom service is strictly limited to CERN activities" and
+        "using Global Indico does not grant you the right to use the CERN Zoom service":
+        <https://cern.service-now.com/service-portal?id=kb_article&n=KB0004606>
+
+        Nonetheless this is a limitation which we did not actively enforce, so those with a CERN
+        Zoom account (because they are affiliated with CERN) were able to create Zoom meetings
+        even for events inside Indico Global.
+
+        But since it makes no sense to even have this Zoom integration on indico.global (which is
+        not meant for CERN events after all), the Zoom meeting links will disappear from the events
+        linked above, and you will not be able to create new ones.
+
+        You can, however, add any Zoom link to the event in the event description or as material.
+
+        In case any of the events above are CERN-organized, or otherwise have links to CERN which
+        justify keeping them on indico.cern.ch, and using e.g. the CERN Zoom infrastructure, we
+        recommend that you move them to another category. You should do so ASAP (this week!) in
+        order to avoid them being moved to the new server.
+
+        Do not hesitate to reach out to us at <indico-team@cern.ch> if you have questions, or need
+        help moving the events.
+
+        In case you no longer actively use Indico Global, or are no longer involved in managing the
+        events above, feel free to simply ignore this email as well.
+
+        PS: Apologies if you already received an email about this topic, we contacted some of you
+        manually. This is an email that is sent for all affected events. If you are already in touch
+        with us, simply ignore it.
+
+        Best regards,
+        The Indico Team
+    {%- endfilter -%}
+{%- endblock %}
