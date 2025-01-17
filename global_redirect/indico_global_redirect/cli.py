@@ -6,15 +6,17 @@
 # the LICENSE file for more details.
 
 import sys
+import weakref
 from collections import defaultdict
 from datetime import datetime
-from operator import itemgetter
+from operator import attrgetter, itemgetter
 
 import click
 import yaml
 from sqlalchemy.orm import subqueryload, undefer
 
 from indico.cli.core import cli_group
+from indico.core import signals
 from indico.core.config import config
 from indico.core.db import db
 from indico.core.db.sqlalchemy.principals import PrincipalType
@@ -22,6 +24,7 @@ from indico.core.notifications import make_email, send_email
 from indico.core.plugins import get_plugin_template_module
 from indico.core.settings import SettingsProxyBase
 from indico.modules.categories import Category, CategoryLogRealm
+from indico.modules.categories.operations import delete_category
 from indico.modules.events import Event, EventLogRealm
 from indico.modules.logs import LogKind
 from indico.util.console import verbose_iterator
@@ -51,6 +54,49 @@ def load_mapping(mapping_file):
             GlobalIdMap.create(col, local_id, global_id)
 
     click.echo('Import finished, committing data...')
+    db.session.commit()
+
+
+@cli.command()
+def delete_migrated():
+    """Mark migrated events + categories as deleted."""
+    from indico_global_redirect.plugin import GlobalRedirectPlugin
+
+    global_cat_id = GlobalRedirectPlugin.settings.get('global_category_id')
+
+    categories = (
+        Category.query.join(GlobalIdMap, db.and_(GlobalIdMap.local_id == Category.id,
+                                                 GlobalIdMap.col == 'categories.categories.id'))
+        .filter(~Category.is_deleted, Category.id != global_cat_id)
+        .all()
+    )
+    for cat in verbose_iterator(categories, len(categories), get_id=attrgetter('id'), get_title=attrgetter('title')):
+        delete_category(cat)
+
+    remove_handler_modules = {
+        'indico.modules.rb',  # cancels physical room bookings
+        'indico.modules.vc',  # deletes zoom meetings
+        'indico_outlook.plugin',  # removes event from people's CERN calendars
+        'indico_cern_access.plugin',  # revokes CERN visitor cards
+    }
+    for rcv in list(signals.event.deleted.receivers.values()):
+        if isinstance(rcv, weakref.ref):
+            rcv = rcv()
+        if rcv.__module__ in remove_handler_modules:
+            signals.event.deleted.disconnect(rcv)
+
+    events = (
+        Event.query.join(GlobalIdMap, db.and_(GlobalIdMap.local_id == Event.id,
+                                              GlobalIdMap.col == 'events.events.id'))
+        .filter(~Event.is_deleted)
+        .all()
+    )
+    for event in verbose_iterator(events, len(events), get_id=attrgetter('id'), get_title=attrgetter('title')):
+        event.delete('Migrated to Indico Global')
+        break
+
+    # make sure livesync picks up the event deletions
+    signals.core.after_process.send()
     db.session.commit()
 
 
