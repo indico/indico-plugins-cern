@@ -58,6 +58,8 @@ class PluginSettingsForm(IndicoForm):
                                   description='The hostname of Indico Global to be used in redirects')
     testing = BooleanField('Testing mode', widget=SwitchWidget(),
                            description='Flash the target URL instead of redirecting')
+    permanent_redirects = BooleanField('Permanent redirects', widget=SwitchWidget(),
+                                       description='Use permanent (HTTP 301) redirects')
     global_category_id = IntegerField('Global category ID', [DataRequired(), NumberRange(min=1)],
                                       description='The ID of the "Indico Global" category id')
     read_only = BooleanField('Make global category read-only', widget=SwitchWidget(),
@@ -115,6 +117,7 @@ class GlobalRedirectPlugin(IndicoPlugin):
     default_settings = {
         'global_hostname': 'indico.global',
         'testing': False,
+        'permanent_redirects': False,
         'global_category_id': None,
         'read_only': False,
         'read_only_msg': '',
@@ -236,4 +239,4 @@ class GlobalRedirectPlugin(IndicoPlugin):
             if _is_request_likely_seen():
                 flash(Markup(f'Indico Global version of this page: <a href="{new_url}">{new_url}</a>'))
         else:
-            return redirect(new_url, 302 if current_app.debug else 301)
+            return redirect(new_url, 301 if self.settings.get('permanent_redirects') else 302)
