@@ -62,17 +62,6 @@ def delete_migrated():
     """Mark migrated events + categories as deleted."""
     from indico_global_redirect.plugin import GlobalRedirectPlugin
 
-    global_cat_id = GlobalRedirectPlugin.settings.get('global_category_id')
-
-    categories = (
-        Category.query.join(GlobalIdMap, db.and_(GlobalIdMap.local_id == Category.id,
-                                                 GlobalIdMap.col == 'categories.categories.id'))
-        .filter(~Category.is_deleted, Category.id != global_cat_id)
-        .all()
-    )
-    for cat in verbose_iterator(categories, len(categories), get_id=attrgetter('id'), get_title=attrgetter('title')):
-        delete_category(cat)
-
     remove_handler_modules = {
         'indico.modules.rb',  # cancels physical room bookings
         'indico.modules.vc',  # deletes zoom meetings
@@ -93,7 +82,16 @@ def delete_migrated():
     )
     for event in verbose_iterator(events, len(events), get_id=attrgetter('id'), get_title=attrgetter('title')):
         event.delete('Migrated to Indico Global')
-        break
+
+    global_cat_id = GlobalRedirectPlugin.settings.get('global_category_id')
+    categories = (
+        Category.query.join(GlobalIdMap, db.and_(GlobalIdMap.local_id == Category.id,
+                                                 GlobalIdMap.col == 'categories.categories.id'))
+        .filter(~Category.is_deleted, Category.id != global_cat_id)
+        .all()
+    )
+    for cat in verbose_iterator(categories, len(categories), get_id=attrgetter('id'), get_title=attrgetter('title')):
+        delete_category(cat)
 
     # make sure livesync picks up the event deletions
     signals.core.after_process.send()
