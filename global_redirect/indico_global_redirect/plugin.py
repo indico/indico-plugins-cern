@@ -213,8 +213,13 @@ class GlobalRedirectPlugin(IndicoPlugin):
             # not an event/category page
             return
 
-        if set(id_view_args) <= set(ID_ARG_MAP):
-            new_ids = _map_global_ids(**id_view_args)
+        if (
+            set(id_view_args) <= set(ID_ARG_MAP) and
+            (new_ids := _map_global_ids(**id_view_args)) and
+            # avoid breakage when the ids do not match, e.g. a session id from a different event.
+            # in that case we get None for the wrong id, and thus building the URL would fail
+            None not in new_ids.values()
+        ):
             if request.endpoint == 'papers.download_file':
                 # this one uses file_id for PaperFile for which we do not have an ID mapping
                 new_url_path = url_for('contributions.display_contribution', event_id=new_ids['event_id'],
