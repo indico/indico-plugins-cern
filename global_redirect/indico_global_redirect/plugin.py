@@ -45,7 +45,7 @@ ID_ARG_MAP = {
     'survey_id': 'event_surveys.surveys.id',
     'track_id': 'events.tracks.id',
     'page_id': 'events.pages.id',
-    'file_id': 'indico.files.id',  # TODO check for cases where file_id is used for something else
+    'file_id': 'indico.files.id',
 }
 
 CUSTOM_ASSETS_BLUEPRINTS = {'event_images'}
@@ -215,7 +215,12 @@ class GlobalRedirectPlugin(IndicoPlugin):
 
         if set(id_view_args) <= set(ID_ARG_MAP):
             new_ids = _map_global_ids(**id_view_args)
-            new_url_path = url_for(request.endpoint, **{**request.view_args, **new_ids})
+            if request.endpoint == 'papers.download_file':
+                # this one uses file_id for PaperFile for which we do not have an ID mapping
+                new_url_path = url_for('contributions.display_contribution', event_id=new_ids['event_id'],
+                                       contrib_id=new_ids['contrib_id'])
+            else:
+                new_url_path = url_for(request.endpoint, **{**request.view_args, **new_ids})
         elif event_id is not None:
             if self.settings.get('testing'):
                 print('\n\nSome ids not mapped, using just the event id\n\n')
