@@ -10,6 +10,7 @@ import dateutil.parser
 from indico.core.notifications import make_email, send_email
 from indico.core.plugins import get_plugin_template_module
 from indico.modules.events.requests.models.requests import RequestState
+from indico.util.date_time import now_utc
 
 
 def send_email_to_assistance(request, template_name, **template_params):
@@ -38,6 +39,6 @@ def notify_about_request_modification(request, changes):
 
 
 def notify_about_withdrawn_request(request):
-    if request.state != RequestState.withdrawn:
+    if request.state != RequestState.withdrawn or request.event.end_dt <= now_utc():
         return
     send_email_to_assistance(request, template_name='withdrawn_email_to_assistance')
