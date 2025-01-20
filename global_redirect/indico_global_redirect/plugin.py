@@ -46,6 +46,7 @@ ID_ARG_MAP = {
     'track_id': 'events.tracks.id',
     'page_id': 'events.pages.id',
     'file_id': 'indico.files.id',
+    'image_id': 'events.image_files.id',
 }
 
 CUSTOM_ASSETS_BLUEPRINTS = {'event_images'}
