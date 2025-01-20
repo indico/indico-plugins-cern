@@ -78,8 +78,8 @@ class PluginSettingsForm(IndicoForm):
                                                          'meetings via the CLI.')
 
 
-@functools.cache
-def _get_primary_mappings():
+@functools.lru_cache(maxsize=1)
+def _get_primary_mappings(_mapping_cache_version):
     return {
         'events.events.id': {x.local_id: x.global_id for x in GlobalIdMap.query.filter_by(col='events.events.id')},
         'categories.categories.id': {
@@ -125,6 +125,7 @@ class GlobalRedirectPlugin(IndicoPlugin):
         'allow_cat_notifications': False,
         'allow_event_notifications': False,
         'allow_event_notifications_zoom': False,
+        'mapping_cache_version': 1,
     }
 
     def init(self):
@@ -187,7 +188,7 @@ class GlobalRedirectPlugin(IndicoPlugin):
             # those never need redirecting
             return
 
-        primary_mappings = _get_primary_mappings()
+        primary_mappings = _get_primary_mappings(self.settings.get('mapping_cache_version'))
         id_view_args = {k: v for k, v in request.view_args.items() if k.endswith('_id')}
         event_id = category_id = None
         if (event_id := id_view_args.get('event_id')) is not None:

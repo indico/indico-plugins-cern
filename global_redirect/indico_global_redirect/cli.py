@@ -96,6 +96,8 @@ def demigrate_event(event_id, category_id):
     db.session.delete(mapping)
     event.move(target_category)
     event.restore('Reverted Global Indico migration')
+    GlobalRedirectPlugin.settings.set('mapping_cache_version',
+                                      GlobalRedirectPlugin.settings.get('mapping_cache_version') + 1)
     signals.core.after_process.send()
     db.session.commit()
     click.secho(f'Event restored: "{event.title}"', fg='green')
