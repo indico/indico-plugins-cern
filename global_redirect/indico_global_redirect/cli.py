@@ -58,6 +58,50 @@ def load_mapping(mapping_file):
 
 
 @cli.command()
+@click.argument('event_id', type=int)
+@click.argument('category_id', type=int)
+def demigrate_event(event_id, category_id):
+    """Revert migration of an event.
+
+    This moves the event to a new category outside Global Indico and undeletes it.
+    """
+    from indico_global_redirect.plugin import GlobalRedirectPlugin
+
+    global_cat = Category.get(GlobalRedirectPlugin.settings.get('global_category_id'))
+    event = Event.get(event_id)
+    if event is None:
+        click.secho('This event does not exist', fg='red')
+        sys.exit(1)
+    elif not event.is_deleted:
+        click.secho('This event is not deleted', fg='yellow')
+        sys.exit(1)
+    elif global_cat.id not in event.category.chain_ids:
+        click.secho('This event is not in Global Indico', fg='red')
+        sys.exit(1)
+
+    col = f'{Event.__table__.fullname}.{Event.id.name}'
+    mapping = GlobalIdMap.query.filter_by(col=col, local_id=event.id).one_or_none()
+    if mapping is None:
+        click.secho('This event has no Global Indico mapping', fg='red')
+        sys.exit(1)
+
+    target_category = Category.get(category_id, is_deleted=False)
+    if target_category is None:
+        click.secho('This category does not exist', fg='red')
+        sys.exit(1)
+    elif global_cat.id in target_category.chain_ids:
+        click.secho('This category is in Global Indico', fg='red')
+        sys.exit(1)
+
+    db.session.delete(mapping)
+    event.move(target_category)
+    event.restore('Reverted Global Indico migration')
+    signals.core.after_process.send()
+    db.session.commit()
+    click.secho(f'Event restored: "{event.title}"', fg='green')
+
+
+@cli.command()
 def delete_migrated():
     """Mark migrated events + categories as deleted."""
     from indico_global_redirect.plugin import GlobalRedirectPlugin
