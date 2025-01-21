@@ -13,7 +13,6 @@ import React from 'react';
 import {Button} from 'semantic-ui-react';
 
 import {useIndicoAxios} from 'indico/react/hooks';
-import {Translate} from 'indico/react/i18n';
 import {indicoAxios, handleAxiosError} from 'indico/utils/axios';
 
 export default function BootstrapOptions({options: {division}, setOptions}) {
@@ -33,21 +32,14 @@ export default function BootstrapOptions({options: {division}, setOptions}) {
       {divisions?.map(div => (
         <Button
           key={div}
-          onClick={() => handleDivisionClick(div)}
+          onClick={() => handleDivisionClick(division === div ? null : div)}
           type="button"
-          primary={division === div}
+          toggle
+          active={division === div}
         >
           {div}
         </Button>
       ))}
-      <Button
-        key="other"
-        onClick={() => handleDivisionClick(null)}
-        type="button"
-        primary={!division}
-      >
-        <Translate>All</Translate>
-      </Button>
     </Button.Group>
   );
 }
