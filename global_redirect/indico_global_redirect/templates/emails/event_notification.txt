@@ -1,0 +1,66 @@
+{% extends 'emails/base.txt' %}
+
+{% block subject -%}
+    Migration of your Indico Global {% if events|length == 1 %}event{% else %}events{% endif %} to indico.global
+{%- endblock %}
+
+{% block header_recipient -%}
+    Dear {{ name }}
+{%- endblock %}
+
+{% block body -%}
+    {% filter dedent -%}
+        {% if events|length == 1 -%}
+            You are receiving this message because you are managing the following Indico
+            event within the "Indico Global" category on indico.cern.ch (note: only recent
+            and future events are listed):
+        {%- else -%}
+            You are receiving this message because you are managing the following Indico
+            events on indico.cern.ch (note: only recent and future events are listed):
+        {%- endif %}
+
+        {% for evt in events|sort(attribute='category.chain_titles,start_dt') -%}
+            - {{ evt.category.chain_titles[1:]|join(' » ') }} » {{ evt.title }} ({{ evt.start_dt|format_date(timezone=evt.tzinfo) }}): <{{ evt.external_url }}>
+        {% endfor %}
+        In order to separate institutional and hosted content under `indico.cern.ch`,
+        and to make it possible to provide Indico to even more researchers worldwide,
+        we are launching `indico.global`, a new Indico service hosted at CERN and open
+        to the whole world.
+
+        You can find more about it in our blog post announcement:
+        <https://getindico.io/indico/global/2024/10/09/indico-global.html>
+
+        With the launch of `indico.global`, we will be moving all content currently under
+        the `Global Indico` category to the new server. Old links will still work, and will
+        be automatically redirected to the new URLs. However, any new events will be created
+        directly under the https://indico.global/ domain name after the migration.
+
+        The migration will happen in January 2025, on the weekend of the 18th/19th. During the
+        migration, all you events will become read-only for a few hours, while we're moving
+        everything to the new server.
+
+        In the unlikely scenario that any of your events are CERN-organized, we recommend
+        that you move them to another category. You should do so **before** the migration
+        date in order to avoid them being moved to the new server.
+
+        {%- if group_acls %}
+
+            IMPORTANT: Your event currently uses CERN e-groups to grant access:
+            {{ group_acls|sort|join(', ') }}
+
+            Since this is a very CERN-specific feature, it will no longer be supported on
+            `indico.global`. You may create a custom group ("Event Role") instead:
+            <https://learn.getindico.io/custom_roles/#event-roles>
+
+            Otherwise, without any action on your side, people who got privileges based on
+            their e-group membership will simply lose them after the migration.
+        {%- endif %}
+
+        Do not hesitate to reach out to us at <indico-team@cern.ch> if you have questions.
+        In case you no longer actively use Indico Global, or are no longer involved in
+        managing it, feel free to simply ignore this email.
+
+        Best regards,
+        The Indico Team
+    {%- endfilter -%}
+{%- endblock %}
