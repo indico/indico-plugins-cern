@@ -44,19 +44,6 @@ class RHDivisions(RHRoomBookingBase):
         return jsonify(sorted(div for div, in db.session.query(Room.division.distinct()) if div))
 
 
-class RHUserDivision(RHProtected):
-    def _process_GET(self):
-        from indico_labotel.plugin import LabotelPlugin
-        return jsonify(value=LabotelPlugin.user_settings.get(session.user, 'default_division'))
-
-    @use_kwargs({
-        'value': fields.String(allow_none=True)
-    })
-    def _process_POST(self, value):
-        from indico_labotel.plugin import LabotelPlugin
-        LabotelPlugin.user_settings.set(session.user, 'default_division', value)
-
-
 class RHLabotelStats(RHProtected):
     @use_kwargs({
         'start_month': fields.DateTime('%Y-%m'),

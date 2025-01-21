@@ -26,10 +26,6 @@ class LabotelPlugin(IndicoPlugin):
     Provides labotel-specific functionality
     """
 
-    default_user_settings = {
-        'default_division': None,
-    }
-
     def init(self):
         super().init()
         current_app.before_request(self._before_request)

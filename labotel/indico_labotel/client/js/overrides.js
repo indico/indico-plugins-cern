@@ -7,10 +7,8 @@
 
 import BootstrapOptions from './components/BootstrapOptions';
 import ExtraFilters from './components/ExtraFilters';
-import LabotelLanding from './components/LabotelLanding';
 
 export default {
-  'Landing': LabotelLanding,
   'Landing.bootstrapOptions': BootstrapOptions,
   'RoomFilterBar.extraFilters': ExtraFilters,
 };

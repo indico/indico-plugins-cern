@@ -6,7 +6,6 @@
 // the LICENSE file for more details.
 
 import divisionsURL from 'indico-url:plugin_labotel.divisions';
-import defaultDivisionURL from 'indico-url:plugin_labotel.user_division';
 
 import PropTypes from 'prop-types';
 import React from 'react';
@@ -16,7 +15,6 @@ import {Form, Button, Checkbox} from 'semantic-ui-react';
 import {selectors as userSelectors} from 'indico/modules/rb/common/user';
 import {useIndicoAxios} from 'indico/react/hooks';
 import {Translate} from 'indico/react/i18n';
-import {indicoAxios, handleAxiosError} from 'indico/utils/axios';
 
 export default function BootstrapOptions({options: {division}, setOptions}) {
   const userHasFavorites = useSelector(userSelectors.hasFavoriteRooms);
@@ -24,11 +22,6 @@ export default function BootstrapOptions({options: {division}, setOptions}) {
 
   const handleDivisionClick = async newDivision => {
     setOptions({division: newDivision});
-    try {
-      await indicoAxios.post(defaultDivisionURL(), {value: newDivision});
-    } catch (error) {
-      handleAxiosError(error);
-    }
   };
 
   return (
