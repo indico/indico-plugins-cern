@@ -74,7 +74,7 @@ const Landing = parametrize(DefaultLanding, {
 
 const LandingStatistics = parametrize(DefaultLandingStatistics, () => ({
   labels: {
-    activeRooms: Translate.string('Labs in use'),
+    activeRooms: Translate.string('Resources in use'),
   },
 }));
 
