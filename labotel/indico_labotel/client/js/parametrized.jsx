@@ -18,6 +18,7 @@ import DefaultApp from 'indico/modules/rb/components/App';
 import DefaultMenu from 'indico/modules/rb/components/Menu';
 import DefaultRoom from 'indico/modules/rb/components/Room';
 import DefaultSidebarMenu from 'indico/modules/rb/components/SidebarMenu';
+import DefaultBookFromListModal from 'indico/modules/rb/modules/bookRoom/BookFromListModal';
 import DefaultBookRoom from 'indico/modules/rb/modules/bookRoom/BookRoom';
 import DefaultBookRoomModal from 'indico/modules/rb/modules/bookRoom/BookRoomModal';
 import DefaultLanding from 'indico/modules/rb/modules/landing/Landing';
@@ -79,8 +80,8 @@ const LandingStatistics = parametrize(DefaultLandingStatistics, () => ({
 
 const Menu = parametrize(DefaultMenu, () => ({
   labels: {
-    bookRoom: Translate.string('Book a Lab'),
-    roomList: Translate.string('List of Labs'),
+    bookRoom: Translate.string('Book a Resource'),
+    roomList: Translate.string('List of Resources'),
   },
 }));
 
@@ -89,13 +90,22 @@ const RoomBookingMap = parametrize(DefaultRoomBookingMap, {
 });
 
 const RoomDetailsModal = parametrize(DefaultRoomDetailsModal, () => ({
-  title: Translate.string('Lab Details'),
+  title: Translate.string('Resource Details'),
 }));
 
 const BookRoomModal = parametrize(DefaultBookRoomModal, () => ({
   defaultTitles: {
-    booking: Translate.string('Book a Lab'),
-    preBooking: Translate.string('Pre-book a Lab'),
+    booking: Translate.string('Book Resource'),
+    preBooking: Translate.string('Pre-book Resource'),
+  },
+}));
+
+const BookFromListModal = parametrize(DefaultBookFromListModal, () => ({
+  labels: {
+    bookTitle: Translate.string('Book Resource'),
+    preBookTitle: Translate.string('Pre-book Resource'),
+    bookBtn: Translate.string('Book'),
+    preBookBtn: Translate.string('Pre-Book'),
   },
 }));
 
@@ -123,6 +133,7 @@ export default {
   App,
   BookRoom,
   BookRoomModal,
+  BookFromListModal,
   Landing,
   LandingStatistics,
   Menu,
