@@ -6,8 +6,8 @@
 // the LICENSE file for more details.
 
 import BootstrapOptions from './components/BootstrapOptions';
-import LabotelLanding from './components/LabotelLanding';
 import ExtraFilters from './components/ExtraFilters';
+import LabotelLanding from './components/LabotelLanding';
 
 export default {
   'Landing': LabotelLanding,
