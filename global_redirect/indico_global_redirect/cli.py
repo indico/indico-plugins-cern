@@ -21,12 +21,12 @@ from indico.core.config import config
 from indico.core.db import db
 from indico.core.db.sqlalchemy.principals import PrincipalType
 from indico.core.notifications import make_email, send_email
-from indico.core.plugins import get_plugin_template_module
+from indico.core.plugins import get_plugin_template_module, plugin_engine
 from indico.core.settings import SettingsProxyBase
 from indico.modules.categories import Category, CategoryLogRealm
 from indico.modules.categories.operations import delete_category
 from indico.modules.events import Event, EventLogRealm
-from indico.modules.logs import LogKind
+from indico.modules.logs import EventLogEntry, LogKind
 from indico.util.console import verbose_iterator
 
 from indico_global_redirect.models.id_map import GlobalIdMap
@@ -101,6 +101,86 @@ def demigrate_event(event_id, category_id):
     signals.core.after_process.send()
     db.session.commit()
     click.secho(f'Event restored: "{event.title}"', fg='green')
+
+
+@cli.command()
+@click.argument('category_id', type=int)
+@click.argument('new_parent_category_id', type=int)
+def demigrate_category(category_id, new_parent_category_id):
+    """Revert migration of a category and its events.
+
+    This moves the category to a new category outside Global Indico and undeletes
+    it and its events (that have been deleted during the migration).
+    """
+    from indico_global_redirect.plugin import GlobalRedirectPlugin
+
+    global_cat = Category.get(GlobalRedirectPlugin.settings.get('global_category_id'))
+    category = Category.get(category_id)
+    if category is None:
+        click.secho('This category does not exist', fg='red')
+        sys.exit(1)
+    elif not category.is_deleted:
+        click.secho('This category is not deleted', fg='yellow')
+        sys.exit(1)
+    elif global_cat.id not in category.chain_ids:
+        click.secho('This category is not in Global Indico', fg='red')
+        sys.exit(1)
+
+    cat_col = f'{Category.__table__.fullname}.{Category.id.name}'
+    cat_mapping = GlobalIdMap.query.filter_by(col=cat_col, local_id=category.id).one_or_none()
+    if cat_mapping is None:
+        click.secho('This category has no Global Indico mapping', fg='red')
+        sys.exit(1)
+
+    target_category = Category.get(new_parent_category_id, is_deleted=False)
+    if target_category is None:
+        click.secho('This category does not exist', fg='red')
+        sys.exit(1)
+    elif global_cat.id in target_category.chain_ids:
+        click.secho('This category is in Global Indico', fg='red')
+        sys.exit(1)
+
+    db.session.delete(cat_mapping)
+    category.move(target_category)
+    category.is_deleted = False
+    category.log(CategoryLogRealm.category, LogKind.positive, 'Category', 'Category restored',
+                 data={'Reason': 'Reverted Global Indico migration'})
+
+    event_col = f'{Event.__table__.fullname}.{Event.id.name}'
+    events = (
+        Event.query
+        .filter(
+            Event.category_id == category.id,
+            Event.is_deleted,
+            Event.log_entries.any(db.and_(
+                EventLogEntry.summary == 'Event deleted',
+                EventLogEntry.data['Reason'].astext == 'Migrated to Indico Global'
+            ))
+        )
+        .all()
+    )
+    for event in events:
+        event_mapping = GlobalIdMap.query.filter_by(col=event_col, local_id=event.id).one_or_none()
+        if event_mapping is None:
+            click.secho(f'Event {event.id} has no Global Indico mapping', fg='red')
+            sys.exit(1)
+        db.session.delete(event_mapping)
+        event.restore('Reverted Global Indico migration')
+    GlobalRedirectPlugin.settings.set('mapping_cache_version',
+                                      GlobalRedirectPlugin.settings.get('mapping_cache_version') + 1)
+    signals.core.after_process.send()
+
+    if plugin_engine.has_plugin('livesync'):
+        # the "moved" record would trigger updates for everything inside, but for (previously) deleted events
+        # this makes no sense, so we remove that entry - the events are handled by the `undeleted` updates.
+        from indico_livesync.models.queue import ChangeType, LiveSyncQueueEntry
+        queue_entry = (category.livesync_queue_entries
+                       .filter(LiveSyncQueueEntry.change == ChangeType.moved, ~LiveSyncQueueEntry.processed)
+                       .one())
+        db.session.delete(queue_entry)
+
+    db.session.commit()
+    click.secho(f'Category restored: "{category.title}"', fg='green')
 
 
 @cli.command()
