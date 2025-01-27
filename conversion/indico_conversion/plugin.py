@@ -11,7 +11,8 @@ from urllib.parse import urlparse
 
 from flask import flash, g
 from flask_pluginengine import render_plugin_template, uses
-from wtforms.fields import BooleanField, EmailField, IntegerField, URLField, TextAreaField
+from markupsafe import Markup
+from wtforms.fields import BooleanField, EmailField, IntegerField, TextAreaField, URLField
 from wtforms.validators import DataRequired, NumberRange, Optional
 
 from indico.core import signals
@@ -59,7 +60,8 @@ class SettingsForm(IndicoForm):
                                            description=_('Email to send the notifications to'))
     cloudconvert_conversion_notice = TextAreaField(_('PDF conversion notice'),
                                                    description=_('A notice that will be shown to end users when '
-                                                                 'converting PDF files in the upload files dialog.'))
+                                                                 'converting PDF files in the upload files dialog. '
+                                                                 'You may use basic HTML elements for formatting.'))
     valid_extensions = TextListField(_('Extensions'),
                                      filters=[lambda exts: sorted({ext.lower().lstrip('.').strip() for ext in exts})],
                                      description=_('File extensions for which PDF conversion is supported. '
@@ -112,11 +114,11 @@ class ConversionPlugin(IndicoPlugin):
         description = _('If enabled, your files will be converted to PDF if possible. '
                         'The following file types can be converted: {exts}').format(exts=exts)
         if self.settings.get('cloudconvert_conversion_notice'):
-            description = '{}\n\n{}'.format(self.settings.get('cloudconvert_conversion_notice'),
+            description = '{}<br>{}'.format(self.settings.get('cloudconvert_conversion_notice'),
                                           _('The following file types can be converted: {exts}').format(exts=exts))
         return 'convert_to_pdf', \
                BooleanField(_('Convert to PDF'), widget=SwitchWidget(),
-                            description=description,
+                            description=Markup(description),
                             default=True)
 
     def _add_url_form_fields(self, form_cls, **kwargs):
