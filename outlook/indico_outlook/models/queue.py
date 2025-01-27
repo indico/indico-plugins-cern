@@ -13,6 +13,7 @@ class OutlookAction(IndicoIntEnum):
     add = 1
     update = 2
     remove = 3
+    force_remove = 4
 
 
 class OutlookQueueEntry(db.Model):
