@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 
 from flask import flash, g
 from flask_pluginengine import render_plugin_template, uses
-from wtforms.fields import BooleanField, EmailField, IntegerField, URLField
+from wtforms.fields import BooleanField, EmailField, IntegerField, URLField, TextAreaField
 from wtforms.validators import DataRequired, NumberRange, Optional
 
 from indico.core import signals
@@ -57,6 +57,9 @@ class SettingsForm(IndicoForm):
     cloudconvert_notify_email = EmailField(_('Notification email'), [HiddenUnless('use_cloudconvert',
                                                                                   preserve_data=True)],
                                            description=_('Email to send the notifications to'))
+    cloudconvert_conversion_notice = TextAreaField(_('PDF conversion notice'),
+                                                   description=_('A notice that will be shown to end users when '
+                                                                 'converting PDF files in the upload files dialog.'))
     valid_extensions = TextListField(_('Extensions'),
                                      filters=[lambda exts: sorted({ext.lower().lstrip('.').strip() for ext in exts})],
                                      description=_('File extensions for which PDF conversion is supported. '
@@ -81,6 +84,7 @@ class ConversionPlugin(IndicoPlugin):
                         'cloudconvert_sandbox': False,
                         'cloudconvert_notify_threshold': None,
                         'cloudconvert_notify_email': '',
+                        'cloudconvert_conversion_notice': '',
                         'valid_extensions': ['ppt', 'doc', 'pptx', 'docx', 'odp', 'sxi']}
 
     def init(self):
@@ -105,10 +109,14 @@ class ConversionPlugin(IndicoPlugin):
 
     def _add_file_form_fields(self, form_cls, **kwargs):
         exts = ', '.join(self.settings.get('valid_extensions'))
+        description = _('If enabled, your files will be converted to PDF if possible. '
+                        'The following file types can be converted: {exts}').format(exts=exts)
+        if self.settings.get('cloudconvert_conversion_notice'):
+            description = '{}\n\n{}'.format(self.settings.get('cloudconvert_conversion_notice'),
+                                          _('The following file types can be converted: {exts}').format(exts=exts))
         return 'convert_to_pdf', \
                BooleanField(_('Convert to PDF'), widget=SwitchWidget(),
-                            description=_('If enabled, your files will be be converted to PDF if possible. '
-                                          'The following file types can be converted: {exts}').format(exts=exts),
+                            description=description,
                             default=True)
 
     def _add_url_form_fields(self, form_cls, **kwargs):
@@ -152,7 +160,7 @@ class ConversionPlugin(IndicoPlugin):
         # Prepare for submission (after commit)
         if 'convert_attachments' not in g:
             g.convert_attachments = set()
-        g.convert_attachments.add((attachment, attachment.is_protected))
+        g.convert_attachments.add(attachment)
         # Set cache entry to show the pending attachment
         pdf_state_cache.set(str(attachment.id), 'pending', timeout=info_ttl)
         if not g.get('attachment_conversion_msg_displayed'):
@@ -165,9 +173,9 @@ class ConversionPlugin(IndicoPlugin):
                         'automatically once the conversion is finished.'))
 
     def _after_commit(self, sender, **kwargs):
-        for attachment, is_protected in g.get('convert_attachments', ()):
+        for attachment in g.get('convert_attachments', ()):
             if attachment.type == AttachmentType.file:
-                if self.settings.get('use_cloudconvert') and not is_protected:
+                if self.settings.get('use_cloudconvert'):
                     submit_attachment_cloudconvert.delay(attachment)
                 else:
                     submit_attachment_doconverter.delay(attachment)
