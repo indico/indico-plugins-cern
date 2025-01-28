@@ -21,6 +21,7 @@ from indico.modules.attachments.forms import AddAttachmentFilesForm, AddAttachme
 from indico.modules.attachments.models.attachments import AttachmentType
 from indico.modules.events.views import WPSimpleEventDisplay
 from indico.util.date_time import now_utc
+from indico.util.string import render_markdown
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import IndicoPasswordField, TextListField
 from indico.web.forms.validators import HiddenUnless
@@ -61,7 +62,8 @@ class SettingsForm(IndicoForm):
     cloudconvert_conversion_notice = TextAreaField(_('PDF conversion notice'),
                                                    description=_('A notice that will be shown to end users when '
                                                                  'converting PDF files in the upload files dialog. '
-                                                                 'You may use basic HTML elements for formatting.'))
+                                                                 'You may use Markdown and basic HTML elements for '
+                                                                 'formatting.'))
     valid_extensions = TextListField(_('Extensions'),
                                      filters=[lambda exts: sorted({ext.lower().lstrip('.').strip() for ext in exts})],
                                      description=_('File extensions for which PDF conversion is supported. '
@@ -114,11 +116,14 @@ class ConversionPlugin(IndicoPlugin):
         description = _('If enabled, your files will be converted to PDF if possible. '
                         'The following file types can be converted: {exts}').format(exts=exts)
         if self.settings.get('cloudconvert_conversion_notice'):
-            description = '{}<br>{}'.format(self.settings.get('cloudconvert_conversion_notice'),
-                                          _('The following file types can be converted: {exts}').format(exts=exts))
+            notice = Markup(render_markdown(self.settings.get('cloudconvert_conversion_notice')))
+            description = Markup('{}<br>{}').format(
+                notice,
+                _('The following file types can be converted: {exts}').format(exts=exts)
+            )
         return 'convert_to_pdf', \
                BooleanField(_('Convert to PDF'), widget=SwitchWidget(),
-                            description=Markup(description),
+                            description=description,
                             default=True)
 
     def _add_url_form_fields(self, form_cls, **kwargs):
