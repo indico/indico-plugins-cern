@@ -117,9 +117,10 @@ class ConversionPlugin(IndicoPlugin):
                         'The following file types can be converted: {exts}').format(exts=exts)
         if self.settings.get('cloudconvert_conversion_notice'):
             notice = Markup(render_markdown(self.settings.get('cloudconvert_conversion_notice')))
-            description = Markup('{}<br>{}').format(
-                notice,
-                _('The following file types can be converted: {exts}').format(exts=exts)
+            description = Markup('{}<br><br>{}').format(
+                _('If enabled, your files will be converted to PDF if possible. '
+                  'The following file types can be converted: {exts}').format(exts=exts),
+                  notice,
             )
         return 'convert_to_pdf', \
                BooleanField(_('Convert to PDF'), widget=SwitchWidget(),
