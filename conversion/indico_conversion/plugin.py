@@ -42,7 +42,7 @@ class SettingsForm(IndicoForm):
                                description=_('Temporarily disable submitting files. The tasks will be kept and once '
                                              'this setting is disabled the files will be submitted.'))
     use_cloudconvert = BooleanField(_('Use CloudConvert'), widget=SwitchWidget(),
-                                    description=_('Use Cloudconvert instead of Doconverter for public materials'))
+                                    description=_('Use Cloudconvert instead of Doconverter for PDF conversion.'))
     server_url = URLField(_('Doconverter server URL'), [DataRequired()],
                           description=_("The URL to the conversion server's uploadFile.py script."))
     cloudconvert_api_key = IndicoPasswordField(_('CloudConvert API key'),
@@ -51,14 +51,14 @@ class SettingsForm(IndicoForm):
     cloudconvert_sandbox = BooleanField(_('Sandbox'),
                                         [HiddenUnless('use_cloudconvert', preserve_data=True)],
                                         widget=SwitchWidget(),
-                                        description=_('Use CloudConvert sandbox'))
+                                        description=_('Use CloudConvert sandbox.'))
     cloudconvert_notify_threshold = IntegerField(_('CloudConvert credit threshold'),
                                                  [Optional(), NumberRange(min=0), HiddenUnless('use_cloudconvert',
                                                                                                preserve_data=True)],
-                                                 description=_('Send an email when credits drop below this threshold'))
+                                                 description=_('Send an email when credits drop below this threshold.'))
     cloudconvert_notify_email = EmailField(_('Notification email'), [HiddenUnless('use_cloudconvert',
                                                                                   preserve_data=True)],
-                                           description=_('Email to send the notifications to'))
+                                           description=_('Email to send the notifications to.'))
     cloudconvert_conversion_notice = TextAreaField(_('PDF conversion notice'),
                                                    description=_('A notice that will be shown to end users when '
                                                                  'converting PDF files in the upload files dialog. '
