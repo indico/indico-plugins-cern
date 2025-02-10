@@ -5,13 +5,16 @@
 // them and/or modify them under the terms of the MIT License; see
 // the LICENSE file for more details.
 
+/* eslint-disable func-name-matching */
+/* eslint-disable import/unambiguous */
+
 (function() {
   const $t = $T.domain('ravem');
   const ravemButton = (function makeRavemButton() {
     const states = {
       connected: {
         icon: 'x',
-        tooltip: $t.gettext('Disconnect {0} from the videoconference room {1}'),
+        tooltip: $t.gettext('Disconnect {0} from the videoconference room {3}'),
         action: 'disconnect',
         handler: function disconnectHandler(data, btn) {
           const name = btn.data('roomName');
@@ -192,7 +195,7 @@
     /**
      *  Sets a new state for the button and update its icon, label and tool tip.
      */
-    function setButtonState(btn, newState, tooltipMessage) {
+    function setButtonState(btn, newState, tooltipMessage = '', currentVCRoom = '') {
       btn.data('state', newState);
 
       const name = btn.data('roomName');
@@ -203,7 +206,7 @@
 
       tooltipMessage = tooltipMessage ? `${tooltipMessage}<br>` : '';
       const qtip = {
-        content: states[newState].tooltip.format(name, vcRoomName, tooltipMessage),
+        content: states[newState].tooltip.format(name, vcRoomName, tooltipMessage, currentVCRoom),
         position: {my: 'top center', at: 'bottom center'},
         show: 'mouseover',
         hide: {
@@ -316,7 +319,7 @@
             return;
           }
           const connected = data.connected;
-          setButtonState(btn, connected ? 'connected' : 'disconnected');
+          setButtonState(btn, connected ? 'connected' : 'disconnected', '', data.vc_room_id);
         });
       return btn;
     }
