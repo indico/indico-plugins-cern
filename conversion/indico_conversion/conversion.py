@@ -207,13 +207,14 @@ def submit_attachment_cloudconvert(task, attachment):
     }
 
     try:
+        file_ext = os.path.splitext(attachment.file.filename)[1]
         job = client.Job.create(payload=job_definition)
         upload_task = job['tasks'][0]
         export_task = job['tasks'][-1]
         assert upload_task['operation'] == 'import/upload'
         assert export_task['operation'] == 'export/url'
         with attachment.file.open() as fd:
-            client.Task.upload(upload_task, attachment.file.filename, fd, attachment.file.content_type)
+            client.Task.upload(upload_task, f'attachment{file_ext}', fd, attachment.file.content_type)
         # add polling in case we miss a webhook
         export_task_id = export_task['id']
         cloudconvert_task_cache.set(export_task_id, 'pending')
