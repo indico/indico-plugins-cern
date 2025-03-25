@@ -8,6 +8,7 @@
 from pprint import pformat
 
 import requests
+from markupsafe import Markup
 from requests.exceptions import RequestException, Timeout
 from sqlalchemy.orm import joinedload
 from werkzeug.datastructures import MultiDict
@@ -121,18 +122,27 @@ def _update_calendar_entry(entry, settings):
         if event.is_deleted:
             logger.debug('Ignoring %s for deleted event %s', entry.action.name, entry.event_id)
             return True
-        location = strip_control_chars(event.room_name)
-        description = strip_control_chars(event.description)
-        event_url = event.external_url
         reminder, reminder_minutes = _get_reminder(user, event, settings)
+        location = (f'{event.room_name} ({event.venue_name})'
+                    if event.venue_name and event.room_name
+                    else (event.venue_name or event.room_name))
+
+        cal_description = []
+        if event.person_links:
+            speakers = [f'{x.full_name} ({x.affiliation})' if x.affiliation else x.full_name
+                        for x in event.person_links]
+            cal_description.append(Markup('<p>Speakers: {}</p>').format(', '.join(speakers)))
+        cal_description.append(event.description)
+        cal_description.append(f'<p><a href="{event.external_url}">{event.external_url}</a></p>')
+
         data = {
             'status': _get_status(user, event, settings),
             'start': int(event.start_dt.timestamp()),
             'end': int(event.end_dt.timestamp()),
             'subject': strip_control_chars(event.title),
             # XXX: the API expects 'body', we convert it below
-            'description': f'<a href="{event_url}">{event_url}</a><br><br>{description}',
-            'location': location,
+            'description': strip_control_chars('\n<br>\n'.join(cal_description)),
+            'location': strip_control_chars(location),
             'reminder_on': reminder,
             'reminder_minutes': reminder_minutes,
         }
