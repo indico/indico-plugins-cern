@@ -141,7 +141,7 @@ def _update_calendar_entry(entry, settings):
             'end': int(event.end_dt.timestamp()),
             'subject': strip_control_chars(event.title),
             # XXX: the API expects 'body', we convert it below
-            'description': strip_control_chars('\n'.join(cal_description)),
+            'description': strip_control_chars('\n<br>\n'.join(cal_description)),
             'location': strip_control_chars(location),
             'reminder_on': reminder,
             'reminder_minutes': reminder_minutes,
