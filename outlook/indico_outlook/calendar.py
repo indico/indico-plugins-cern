@@ -8,6 +8,7 @@
 from pprint import pformat
 
 import requests
+from markupsafe import Markup
 from requests.exceptions import RequestException, Timeout
 from sqlalchemy.orm import joinedload
 from werkzeug.datastructures import MultiDict
@@ -130,7 +131,7 @@ def _update_calendar_entry(entry, settings):
         if event.person_links:
             speakers = [f'{x.full_name} ({x.affiliation})' if x.affiliation else x.full_name
                         for x in event.person_links]
-            cal_description.append(f'<p>Speakers: {', '.join(speakers)}</p>')
+            cal_description.append(Markup('<p>Speakers: {}</p>').format(', '.join(speakers)))
         cal_description.append(event.description)
         cal_description.append(f'<p><a href="{event.external_url}">{event.external_url}</a></p>')
 
