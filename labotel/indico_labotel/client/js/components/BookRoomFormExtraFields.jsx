@@ -17,7 +17,7 @@ export default function BookRoomFormExtraFields({room: {confirmationPrompt}, boo
     return null;
   }
   return (
-    <Segment inverted color="orange">
+    <Segment color="orange">
       <h3 style={{marginBottom: '0.5em'}}>
         <Icon name="warning sign" />
         Confirm requirements
