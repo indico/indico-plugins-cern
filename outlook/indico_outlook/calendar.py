@@ -5,7 +5,9 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
+from datetime import datetime
 from pprint import pformat
+from urllib.parse import urlsplit
 
 import requests
 from markupsafe import Markup
@@ -14,6 +16,7 @@ from sqlalchemy.orm import joinedload
 from werkzeug.datastructures import MultiDict
 
 from indico.core import signals
+from indico.core.config import config
 from indico.core.db import db
 from indico.util.signals import values_from_signal
 from indico.util.string import strip_control_chars
@@ -113,7 +116,11 @@ def _update_calendar_entry(entry, settings):
         logger.debug('User %s has disabled calendar entries', user)
         return True
 
-    unique_id = '{}{}_{}'.format(settings['id_prefix'], user.id, entry.event_id)
+    # Use common format for event calendar ID if the event was created on or after 2025-04-01
+    if entry.event.created_dt >= datetime(2025, 4, 1):
+        unique_id = f'indico-event-{entry.event_id}@{urlsplit(config.BASE_URL).hostname}'
+    else:
+        unique_id = '{}{}_{}'.format(settings['id_prefix'], user.id, entry.event_id)
     path = f'/api/v1/users/{user.email}/events/{unique_id}'
     url = settings['service_url'].rstrip('/') + path
     if entry.action in {OutlookAction.add, OutlookAction.update}:
