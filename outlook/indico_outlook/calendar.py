@@ -5,8 +5,10 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
+from datetime import datetime
 from pprint import pformat
 
+import pytz
 import requests
 from markupsafe import Markup
 from requests.exceptions import RequestException, Timeout
@@ -114,7 +116,11 @@ def _update_calendar_entry(entry, settings):
         logger.debug('User %s has disabled calendar entries', user)
         return True
 
-    unique_id = '{}{}_{}'.format(settings['id_prefix'], user.id, entry.event_id)
+    # Use common format for event calendar ID if the event was created on or after 2025-04-06
+    if entry.event.created_dt >= datetime(2025, 4, 6, tzinfo=pytz.UTC):
+        unique_id = entry.event.ical_uid
+    else:
+        unique_id = '{}{}_{}'.format(settings['id_prefix'], user.id, entry.event_id)
     path = f'/api/v1/users/{user.email}/events/{unique_id}'
     url = settings['service_url'].rstrip('/') + path
     if entry.action in {OutlookAction.add, OutlookAction.update}:
