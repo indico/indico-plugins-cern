@@ -7,7 +7,7 @@
 
 import PropTypes from 'prop-types';
 import React from 'react';
-import {useDispatch} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import {Item} from 'semantic-ui-react';
 
 import {actions as roomActions} from 'indico/modules/rb/common/rooms';
@@ -19,7 +19,12 @@ import './LabRenderer.module.scss';
 export default function LabItem({roomInstance, room}) {
   const {actions} = Slot.split(roomInstance.props.children);
   const dispatch = useDispatch();
-  const openRoomDetails = () => dispatch(roomActions.openRoomDetailsBook(room.id));
+  const pathname = useSelector(state => state.router.location.pathname);
+  const isBooking = pathname === '/book';
+  const openRoomDetails = () =>
+    dispatch(
+      isBooking ? roomActions.openRoomDetailsBook(room.id) : roomActions.openRoomDetails(room.id)
+    );
   return (
     <Item key={room.id} styleName="lab-item">
       <Item.Image
