@@ -33,18 +33,6 @@
     .field {
       margin-bottom: 3px;
     }
-
-    :global(.SingleDatePickerInput) {
-      border-radius: 4px;
-
-      & > :global(.DateInput) {
-        max-width: 130px;
-      }
-
-      & > button {
-        margin-left: 5px;
-      }
-    }
   }
 }
 
