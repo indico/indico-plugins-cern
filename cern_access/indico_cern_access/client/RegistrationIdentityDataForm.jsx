@@ -11,7 +11,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import {Dropdown, Form, Input} from 'semantic-ui-react';
 
-import {FinalSingleDatePicker, SingleDatePicker} from 'indico/react/components';
+import {FinalDatePicker, DatePicker} from 'indico/react/components';
 import {
   FieldCondition,
   FinalCheckbox,
@@ -19,7 +19,7 @@ import {
   FinalField,
   FinalInput,
 } from 'indico/react/forms';
-import {serializeDate, toMoment} from 'indico/utils/date';
+import {serializeDate} from 'indico/utils/date';
 
 import {Translate} from './i18n';
 
@@ -81,16 +81,13 @@ function AccompanyingPersonsComponent({onChange, value, countryOptions, accompan
               {firstName} {lastName}
             </td>
             <td>
-              <SingleDatePicker
+              <DatePicker
                 name="birth_date"
-                isOutsideRange={v => v.isAfter()}
-                placeholder={moment.localeData().longDateFormat('L')}
-                date={toMoment(value[id]?.birth_date, 'YYYY-MM-DD')}
-                onDateChange={date => handleOnChange(id, 'birth_date', serializeDate(date))}
-                enableOutsideDays
+                max={serializeDate(moment())}
+                value={value[id]?.birth_date}
+                onChange={date => handleOnChange(id, 'birth_date', date)}
+                invalidValue={null}
                 required
-                yearsBefore={100}
-                yearsAfter={0}
               />
             </td>
             <td>
@@ -156,13 +153,9 @@ export default function RegistrationIdentityDataForm({
       <CERNAccessItem
         name="cern_access_birth_date"
         title={Translate.string('Birth date')}
-        as={FinalSingleDatePicker}
+        as={FinalDatePicker}
         required
-        isOutsideRange={value => value.isAfter()}
-        enableOutsideDays
-        placeholder={moment.localeData().longDateFormat('L')}
-        yearsBefore={100}
-        yearsAfter={0}
+        max={serializeDate(moment())}
       />
       <CERNAccessItem
         name="cern_access_nationality"
