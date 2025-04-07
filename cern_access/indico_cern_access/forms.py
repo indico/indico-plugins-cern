@@ -46,7 +46,8 @@ class GrantAccessEmailForm(EmailRegistrantsForm):
 class CERNAccessForm(RequestFormBase):
     regforms = IndicoSelectMultipleCheckboxField(_('Registration forms'),
                                                  [DataRequired(_('At least one registration form has to be selected'))],
-                                                 widget=JinjaWidget('regform_list_widget.html', 'cern_access'))
+                                                 widget=JinjaWidget('regform_list_widget.html', 'cern_access'),
+                                                 option_widget=SwitchWidget())
     during_registration = BooleanField(_('Show during user registration'), widget=SwitchWidget(),
                                        description=_('When enabled, users can request site access while registering '
                                                      'and provide their additional personal data in the registration '
