@@ -5,10 +5,8 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from datetime import datetime
 from pprint import pformat
 
-import pytz
 import requests
 from markupsafe import Markup
 from requests.exceptions import RequestException, Timeout
@@ -116,8 +114,8 @@ def _update_calendar_entry(entry, settings):
         logger.debug('User %s has disabled calendar entries', user)
         return True
 
-    # Use common format for event calendar ID if the event was created on or after 2025-04-06
-    if entry.event.created_dt >= datetime(2025, 4, 6, tzinfo=pytz.UTC):
+    # Use common format for event calendar ID if the event was created after the cutoff event
+    if settings['event_id_cutoff'] != -1 and entry.event_id > settings['event_id_cutoff']:
         unique_id = entry.event.ical_uid
     else:
         unique_id = '{}{}_{}'.format(settings['id_prefix'], user.id, entry.event_id)
