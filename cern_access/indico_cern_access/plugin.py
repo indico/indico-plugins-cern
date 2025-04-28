@@ -44,8 +44,8 @@ from indico_cern_access import _
 from indico_cern_access.blueprint import blueprint
 from indico_cern_access.definition import CERNAccessRequestDefinition
 from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState
-from indico_cern_access.placeholders import (AccessPeriodPlaceholder, FormLinkPlaceholder, TicketAccessDatesPlaceholder,
-                                             TicketLicensePlatePlaceholder)
+from indico_cern_access.placeholders import (AccessCodePlaceholder, AccessPeriodPlaceholder, FormLinkPlaceholder,
+                                             TicketAccessDatesPlaceholder, TicketLicensePlatePlaceholder)
 from indico_cern_access.schemas import RequestAccessSchema
 from indico_cern_access.util import (build_access_request_data_from_reg, get_access_dates, get_last_request,
                                      get_requested_forms, get_requested_registrations, handle_event_time_update,
@@ -140,7 +140,8 @@ class CERNAccessPlugin(IndicoPlugin):
         self.connect(signals.event.registration.generate_accompanying_person_id, self._generate_accompanying_person_id)
         self.connect(signals.event.registration.generate_ticket_qr_code, self._generate_ticket_qr_code)
         self.connect(signals.core.get_placeholders, self._get_designer_placeholders, sender='designer-fields')
-        self.connect(signals.core.get_placeholders, self._get_email_placeholders, sender='cern-access-email')
+        self.connect(signals.core.get_placeholders, self._get_access_email_placeholders, sender='cern-access-email')
+        self.connect(signals.core.get_placeholders, self._get_reg_email_placeholders, sender='registration-email')
         self.connect(signals.plugin.schema_pre_load, self._registration_schema_pre_load)
         self.inject_bundle('main.js', WPAccessRequestDetails)
         self.inject_bundle('main.js', WPDisplayRegistrationFormConference)
@@ -441,9 +442,13 @@ class CERNAccessPlugin(IndicoPlugin):
         yield TicketAccessDatesPlaceholder
         yield TicketLicensePlatePlaceholder
 
-    def _get_email_placeholders(self, sender, **kwargs):
+    def _get_access_email_placeholders(self, sender, **kwargs):
         yield FirstNamePlaceholder
         yield LastNamePlaceholder
         yield EventTitlePlaceholder
         yield FormLinkPlaceholder
         yield AccessPeriodPlaceholder
+
+    def _get_reg_email_placeholders(self, sender, regform, **kwargs):
+        if regform.cern_access_request and regform.cern_access_request.is_active:
+            yield AccessCodePlaceholder
