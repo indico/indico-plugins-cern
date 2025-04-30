@@ -11,7 +11,7 @@ from indico.core.plugins import url_for_plugin
 from indico.modules.designer.placeholders import DesignerPlaceholder
 from indico.util.date_time import format_datetime
 from indico.util.i18n import _
-from indico.util.placeholders import ParametrizedPlaceholder
+from indico.util.placeholders import ParametrizedPlaceholder, Placeholder
 from indico.web.flask.templating import get_template_module
 
 from indico_cern_access.util import get_access_dates, get_last_request
@@ -78,3 +78,16 @@ class AccessPeriodPlaceholder(ParametrizedPlaceholder):
         start_dt, end_dt = get_access_dates(get_last_request(registration.event))
         tpl = get_template_module('cern_access:_common.html')
         return Markup(tpl.render_access_dates(start_dt, end_dt, **locale_data[param]))
+
+
+class AccessCodePlaceholder(Placeholder):
+    name = 'cern_access_code'
+    description = _('The access code to print a CERN visitor badge')
+
+    @classmethod
+    def render(cls, regform, registration):
+        if not (req := registration.cern_access_request):
+            return '-------'
+        if not req.is_active or not req.has_identity_info:
+            return '-------'
+        return req.reservation_code
