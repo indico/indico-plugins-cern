@@ -316,9 +316,21 @@ class OutlookPlugin(IndicoPlugin):
             self.logger.info('Registration removed (form deleted): removing %s in %s', registration.user, event)
 
     def event_updated(self, event, changes, **kwargs):
-        monitored_keys = {'title', 'description', 'location_data', 'person_links', 'start_dt', 'end_dt', 'duration'}
+        monitored_keys = {'title', 'description', 'location_data', 'person_links',
+                          'start_dt', 'end_dt', 'duration', 'label'}
         if not changes.keys() & monitored_keys:
             return
+
+        if 'label' in changes:
+            (old_label, new_label) = changes['label']
+            # If the event is not happening, treat this as a deletion
+            if new_label and new_label.is_event_not_happening:
+                self.event_deleted(event, **kwargs)
+                return
+            # If the event wasn't happening before but it is now, treat this as a creation
+            if new_label and not new_label.is_event_not_happening and old_label and old_label.is_event_not_happening:
+                self.event_created(event, **kwargs)
+                return
 
         users_to_update = set()
         # Registered users need to be informed about changes
