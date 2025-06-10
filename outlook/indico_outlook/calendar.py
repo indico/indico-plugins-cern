@@ -91,7 +91,8 @@ def _get_reminder(user, event, settings):
         elif override['type'] == 'category_tree' and override['id'] in event.category_chain:
             # for category tree matches we keep going in case there's a specific match later.
             # we don't try to see which one is more specific becauase that'd be overkill!
-            reminder = override.get('reminder', reminder), override.get('reminder_minutes', reminder_minutes)
+            reminder = override.get('reminder', reminder)
+            reminder_minutes = override.get('reminder_minutes', reminder_minutes)
     return reminder, reminder_minutes
 
 
