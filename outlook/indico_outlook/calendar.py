@@ -114,7 +114,11 @@ def _update_calendar_entry(entry, settings):
         logger.debug('User %s has disabled calendar entries', user)
         return True
 
-    unique_id = '{}{}_{}'.format(settings['id_prefix'], user.id, entry.event_id)
+    # Use common format for event calendar ID if the event was created after the cutoff event
+    if settings['event_id_cutoff'] != -1 and entry.event_id > settings['event_id_cutoff']:
+        unique_id = entry.event.ical_uid
+    else:
+        unique_id = '{}{}_{}'.format(settings['id_prefix'], user.id, entry.event_id)
     path = f'/api/v1/users/{user.email}/events/{unique_id}'
     url = settings['service_url'].rstrip('/') + path
     if entry.action in {OutlookAction.add, OutlookAction.update}:
