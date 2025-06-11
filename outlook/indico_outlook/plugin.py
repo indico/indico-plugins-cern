@@ -53,8 +53,8 @@ class SettingsForm(IndicoForm):
                             description=_('Prefix for calendar item IDs. If you change this, existing calendar entries '
                                           'cannot be deleted/updated anymore!'))
     event_id_cutoff = IntegerField(_('Event ID Cutoff'), [NumberRange(min=-1)],
-                                    description=_('Last event ID before switching to new calendar item ID format.'
-                                                  ' Set to -1 to keep the old format for all calendar items.'))
+                                    description=_('Last event ID before switching to new calendar item ID format. '
+                                                  'Set to -1 to keep the old format for all calendar items.'))
     timeout = FloatField(_('Request timeout'), [NumberRange(min=0.25)], description=_('Request timeout in seconds'))
     max_event_duration = TimeDeltaField(_('Maximum Duration'), [DataRequired()], units=('days',),
                                         description=_('Events lasting longer will not be sent to Exchange'))
