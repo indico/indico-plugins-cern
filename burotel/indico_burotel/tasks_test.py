@@ -73,7 +73,7 @@ def test_update_called_on_create(db, dummy_user, mocker, create_room, no_csrf_cl
         'end_dt': '2020-02-02',
         'repeat_frequency': 'DAY',
         'repeat_interval': 1,
-        'booked_for_user': dummy_user.identifier,
+        'user': dummy_user.identifier,
         'reason': 'just chillin',
         'room_id': room.id
     }).status_code == 200
@@ -89,7 +89,7 @@ def test_update_called_on_create(db, dummy_user, mocker, create_room, no_csrf_cl
         'end_dt': '2020-02-04',
         'repeat_frequency': 'DAY',
         'repeat_interval': 1,
-        'booked_for_user': dummy_user.identifier,
+        'user': dummy_user.identifier,
         'reason': 'just chillin',
         'room_id': room.id
     }).status_code == 200
@@ -113,7 +113,7 @@ def test_update_called_on_accept(create_room, mocker, no_csrf_client, dummy_user
         'end_dt': '2020-02-02',
         'repeat_frequency': 'DAY',
         'repeat_interval': 1,
-        'booked_for_user': dummy_user.identifier,
+        'user': dummy_user.identifier,
         'reason': 'just chillin',
         'room_id': room.id,
         'is_prebooking': True
@@ -145,7 +145,7 @@ def test_update_called_on_modify(create_room, mocker, no_csrf_client, dummy_user
         'end_dt': '2020-02-02',
         'repeat_frequency': 'DAY',
         'repeat_interval': 1,
-        'booked_for_user': dummy_user.identifier,
+        'user': dummy_user.identifier,
         'reason': 'just chillin',
         'room_id': room.id
     })
@@ -159,7 +159,7 @@ def test_update_called_on_modify(create_room, mocker, no_csrf_client, dummy_user
     response = no_csrf_client.patch(url_for('rb.update_booking', booking_id=response.json['booking']['id']), json={
         'repeat_frequency': 'DAY',
         'repeat_interval': 1,
-        'booked_for_user': dummy_user.identifier,
+        'user': dummy_user.identifier,
         'reason': 'just chillin',
         'room_id': room.id,
         'start_dt': '2020-02-02',
@@ -188,7 +188,7 @@ def test_update_called_on_reject(dummy_user, create_room, mocker, no_csrf_client
         'end_dt': '2020-02-06',
         'repeat_frequency': 'DAY',
         'repeat_interval': 1,
-        'booked_for_user': dummy_user.identifier,
+        'user': dummy_user.identifier,
         'reason': 'just chillin',
         'room_id': room.id,
     })
@@ -222,7 +222,7 @@ def test_auto_cancel(db, create_room, mocker, no_csrf_client, dummy_user, room_a
         'end_dt': '2020-03-10',
         'repeat_frequency': 'DAY',
         'repeat_interval': 1,
-        'booked_for_user': dummy_user.identifier,
+        'user': dummy_user.identifier,
         'reason': 'just chillin',
         'room_id': room.id,
         'is_prebooking': True
@@ -269,7 +269,7 @@ def test_auto_cancel_weekend(db, create_room, mocker, no_csrf_client, dummy_user
         'end_dt': '2020-03-15',
         'repeat_frequency': 'DAY',
         'repeat_interval': 1,
-        'booked_for_user': dummy_user.identifier,
+        'user': dummy_user.identifier,
         'reason': 'just chillin',
         'room_id': room.id,
         'is_prebooking': True
@@ -326,7 +326,7 @@ def test_no_auto_cancel(db, create_room, mocker, no_csrf_client, dummy_user, roo
         'end_dt': '2020-03-10',
         'repeat_frequency': 'DAY',
         'repeat_interval': 1,
-        'booked_for_user': dummy_user.identifier,
+        'user': dummy_user.identifier,
         'reason': 'just chillin',
         'room_id': room.id,
         'is_prebooking': True
