@@ -17,6 +17,7 @@ class OutlookAction(IndicoIntEnum):
 
 class OutlookQueueEntry(db.Model):
     """Pending calendar updates"""
+
     __tablename__ = 'queue'
     __table_args__ = (db.Index(None, 'user_id', 'event_id', 'action'),
                       {'schema': 'plugin_outlook'})

@@ -180,7 +180,6 @@ def handle_event_time_update(event):
 
 def update_access_request(req):
     """Add, update and delete CERN access requests from registration forms."""
-
     event = req.event
     existing_forms = get_requested_forms(event)
     requested_forms = req.data['regforms']

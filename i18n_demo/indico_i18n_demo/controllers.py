@@ -24,6 +24,7 @@ class RHCloneEvent(RHProtectedEventBase):
     If the category does not exist, it will be created.
     The user has full management rights within the category.
     """
+
     ALLOW_LOCKED = True
 
     def _process(self):

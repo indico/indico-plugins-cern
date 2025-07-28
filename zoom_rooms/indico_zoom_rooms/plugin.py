@@ -46,7 +46,8 @@ class PluginSettingsForm(IndicoForm):
 class ZoomRoomsPlugin(IndicoPlugin):
     """Zoom Rooms
 
-    Zoom Rooms / Exchange synchronization plugin for Indico."""
+    Zoom Rooms / Exchange synchronization plugin for Indico.
+    """
 
     configurable = True
     settings_form = PluginSettingsForm

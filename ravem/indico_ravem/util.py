@@ -35,7 +35,6 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
     :raises: HTTPError if the request returns an HTTP Error (400 or 500)
     :raises: RavemAPIException if RAVEM returns an error message
     """
-
     root_endpoint = RavemPlugin.settings.get('api_endpoint')
     access_token = RavemPlugin.settings.get('access_token')
     headers = {
@@ -109,8 +108,9 @@ def has_access(event_vc_room, _split_re=re.compile(r'[\s,;]+')):
 
 
 def _retrieve_principal(principal):
-    """Retrieve a principal from a serialized string defined by a list ``[User, 23]`` or a comma
-       delimited string like ``User:23``.
+    """
+    Retrieve a principal from a serialized string defined by a list ``[User, 23]`` or a comma
+    delimited string like ``User:23``.
     """
     from indico.modules.users import User
     type_, id_ = principal if isinstance(principal, (list, tuple)) else principal.split(':')
@@ -129,6 +129,7 @@ class RavemException(Exception):
     Functions raising this exception should document the possible reasons with
     which the exception can be raised.
     """
+
     def __init__(self, message, reason='operation-failed'):
         super().__init__(message)
         self.reason = reason

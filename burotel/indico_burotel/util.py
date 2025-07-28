@@ -43,7 +43,6 @@ def query_user_overlapping_bookings(booking):
 
 def calculate_monthly_stats(start_dt, end_dt):
     """Calculate monthly stats for the Burotel system, based on a date range."""
-
     room = aliased(Room)
     months = list(rrule(freq=MONTHLY, dtstart=start_dt, until=end_dt))
 

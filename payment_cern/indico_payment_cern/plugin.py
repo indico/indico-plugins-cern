@@ -93,6 +93,7 @@ class CERNPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     Extra fees can be set for each payment method so the price after the
     cut taken by the bank is the correct one.
     """
+
     configurable = True
     settings_form = PluginSettingsForm
     event_settings_form = EventSettingsForm

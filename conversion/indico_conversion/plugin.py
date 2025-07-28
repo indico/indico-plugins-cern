@@ -78,6 +78,7 @@ class ConversionPlugin(IndicoPlugin):
 
     Provides PDF conversion for materials
     """
+
     configurable = True
     settings_form = SettingsForm
     default_settings = {'use_cloudconvert': False,

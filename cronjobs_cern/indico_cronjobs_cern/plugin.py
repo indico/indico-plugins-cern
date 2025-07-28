@@ -35,6 +35,7 @@ class CERNCronjobsPlugin(IndicoPlugin):
 
     This plugin sends email notifications in regular intervals, informing people about upcoming events etc.
     """
+
     configurable = True
     settings_form = SettingsForm
     default_settings = {

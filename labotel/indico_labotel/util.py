@@ -31,7 +31,6 @@ def _build_per_building_query(*query_results):
 
 def calculate_monthly_stats(start_dt, end_dt):
     """Calculate monthly stats for the Labotel system, based on a date range."""
-
     room = aliased(Room)
     months = list(rrule(freq=MONTHLY, dtstart=start_dt, until=end_dt))
 

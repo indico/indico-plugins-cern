@@ -5,11 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-"""
-Synchronizes rooms with the CERN Foundation Database.
-"""
-
-
 import logging
 import sys
 from logging import StreamHandler
@@ -51,6 +46,7 @@ class FoundationSyncPlugin(IndicoPlugin):
 
     Synchronizes rooms with the CERN Foundation Database.
     """
+
     configurable = True
     settings_form = SettingsForm
     default_settings = {'connection_string': '', 'disable_sync': False}

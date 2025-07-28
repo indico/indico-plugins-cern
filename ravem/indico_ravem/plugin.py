@@ -55,6 +55,7 @@ class RavemPlugin(IndicoPlugin):
     Manages connections from physical rooms to videoconference rooms through Indico using
     the RAVEM API.
     """
+
     configurable = True
     settings_form = SettingsForm
     default_settings = {
