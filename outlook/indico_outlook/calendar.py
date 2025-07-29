@@ -18,6 +18,7 @@ from indico.core.db import db
 from indico.util.signals import values_from_signal
 from indico.util.string import strip_control_chars
 
+from indico_outlook.models.entry import OutlookCalendarEntry
 from indico_outlook.models.queue import OutlookAction, OutlookQueueEntry
 from indico_outlook.util import check_config, is_event_excluded
 
@@ -63,7 +64,7 @@ def update_calendar():
     finally:
         if delete_ids:
             OutlookQueueEntry.query.filter(OutlookQueueEntry.id.in_(delete_ids)).delete(synchronize_session=False)
-            db.session.commit()
+        db.session.commit()
 
 
 def _get_status(user, event, settings):
@@ -96,7 +97,13 @@ def _get_reminder(user, event, settings):
     return reminder, reminder_minutes
 
 
-def _update_calendar_entry(entry, settings):
+def _make_calendar_id(event, user, settings):
+    if settings['event_id_cutoff'] != -1 and event.id > settings['event_id_cutoff']:
+        return event.ical_uid
+    return f'{settings["id_prefix"]}{user.id}_{event.id}'
+
+
+def _update_calendar_entry(entry: OutlookQueueEntry, settings):
     """Executes a single calendar update
 
     :param entry: a :class:`OutlookQueueEntry`
@@ -114,11 +121,16 @@ def _update_calendar_entry(entry, settings):
         logger.debug('User %s has disabled calendar entries', user)
         return True
 
+    if existing := OutlookCalendarEntry.get(entry.event, user):
+        logger.debug('Found existing calendar entry in DB: %s', existing.calendar_entry_id)
+    elif entry.action == OutlookAction.update:
+        logger.info('No calendar entry found in DB for event=%s/user=%s during update', entry.event.id, user.id)
+    elif entry.action == OutlookAction.remove:
+        logger.debug('No calendar entry found in DB for event=%s/user=%s, ignoring remove', entry.event.id, user.id)
+        return True
+
     # Use common format for event calendar ID if the event was created after the cutoff event
-    if settings['event_id_cutoff'] != -1 and entry.event_id > settings['event_id_cutoff']:
-        unique_id = entry.event.ical_uid
-    else:
-        unique_id = '{}{}_{}'.format(settings['id_prefix'], user.id, entry.event_id)
+    unique_id = existing.calendar_entry_id if existing else _make_calendar_id(entry.event, user, settings)
     path = f'/api/v1/users/{user.email}/events/{unique_id}'
     url = settings['service_url'].rstrip('/') + path
     if entry.action in {OutlookAction.add, OutlookAction.update}:
@@ -183,6 +195,21 @@ def _update_calendar_entry(entry, settings):
         return False
     else:
         logger.info('Request to %s %s finished with status %r and body %r', method, path, res.status_code, res.text)
+        if res.ok and not existing and entry.action in {OutlookAction.add, OutlookAction.update}:
+            # successfully added or updated w/ no reference to existing entry
+            OutlookCalendarEntry.create(event, user, unique_id)
+            logger.debug('Recorded calendar entry in DB')
+            db.session.flush()
+        elif (res.ok or res.status_code == 404) and entry.action == OutlookAction.remove:
+            # successfully removed or nothing to remove
+            db.session.delete(existing)
+            db.session.flush()
+            logger.debug('Removed calendar entry from DB')
+        elif res.status_code == 404 and entry.action == OutlookAction.update and existing:
+            # tried to update but nothing to update
+            db.session.delete(existing)
+            db.session.flush()
+            logger.debug('Removed calendar entry from DB')
         # 404 is "already deleted" or "user has no mailbox" - both cases we consider a success
         if res.ok or res.status_code == 404:
             return True
