@@ -209,12 +209,10 @@ class OutlookPlugin(IndicoPlugin):
         return OutlookUserPreferences
 
     def _user_tracks_registered_events(self, user):
-        return OutlookPlugin.user_settings.get(user, 'registered',
-                                               OutlookPlugin.default_user_settings['registered'])
+        return OutlookPlugin.user_settings.get(user, 'registered')
 
     def _user_tracks_favorite_events(self, user):
-        return OutlookPlugin.user_settings.get(user, 'favorite_events',
-                                               OutlookPlugin.default_user_settings['favorite_events'])
+        return OutlookPlugin.user_settings.get(user, 'favorite_events')
 
     def favorite_event_added(self, user, event, **kwargs):
         if not self._user_tracks_favorite_events(user):
