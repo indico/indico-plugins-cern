@@ -213,8 +213,32 @@ class OutlookPlugin(IndicoPlugin):
             self._record_change(event, registration.user, OutlookAction.remove)
             self.logger.info('Registration removed (form deleted): removing %s in %s', registration.user, event)
 
+    def _is_event_not_happening(self, event):
+        return event.label is not None and event.label.is_event_not_happening
+
     def event_updated(self, event, changes, **kwargs):
-        if not changes.keys() & {'title', 'description', 'location_data', 'person_links'}:
+        changes = dict(changes)
+        monitored_keys = {'title', 'description', 'location_data', 'person_links', 'label'}
+        if not changes.keys() & monitored_keys:
+            return
+        if label_change := changes.pop('label', None):
+            old_label, new_label = label_change
+            old_not_happening = old_label is not None and old_label.is_event_not_happening
+            new_not_happening = new_label is not None and new_label.is_event_not_happening
+            match old_not_happening, new_not_happening:
+                case False, True:
+                    self.logger.debug('Event cancelled via label, removing it')
+                    self.event_deleted(event)
+                    return
+                case True, False:
+                    self.logger.debug('Event no longer cancelled via label, adding it')
+                    self.event_created(event)
+                    return
+                case True, True:
+                    self.logger.debug('Event already cancelled via label, ignoring changes')
+                    # bail out early since the event is not happening, but should have already been removed
+                    return
+        if not changes:
             return
         for user in get_participating_users(event):
             self.logger.info('Event data change: updating %s in %r', user, event)
@@ -226,9 +250,16 @@ class OutlookPlugin(IndicoPlugin):
             self.logger.info('Event time change: updating %s in %r', user, event)
             self._record_change(event, user, OutlookAction.update)
 
-    def event_deleted(self, event, **kwargs):
+    def event_created(self, event, **kwargs):
+        self.logger.info('Event created: %r', event)
         for user in get_participating_users(event):
-            self.logger.info('Event deletion: removing %s in %r', user, event)
+            self.logger.info('Adding user %s', user)
+            self._record_change(event, user, OutlookAction.add)
+
+    def event_deleted(self, event, **kwargs):
+        self.logger.info('Event deleted: %r', event)
+        for user in get_participating_users(event):
+            self.logger.info('Removing user %s', user)
             self._record_change(event, user, OutlookAction.remove)
 
     def _record_change(self, event, user, action):
@@ -248,6 +279,9 @@ class OutlookPlugin(IndicoPlugin):
             user_events[(user, event)].append(action)
         for (user, event), data in user_events.items():
             for action in latest_actions_only(data):
+                if action != OutlookAction.remove and self._is_event_not_happening(event):
+                    # ignore additions/updates when the event is not happening
+                    continue
                 OutlookQueueEntry.record(event, user, action)
 
     def _merge_users(self, target, source, **kwargs):
