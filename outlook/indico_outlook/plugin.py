@@ -9,6 +9,7 @@ from collections import defaultdict
 from datetime import timedelta
 
 from flask import g
+from sqlalchemy.orm import joinedload
 from wtforms.fields import BooleanField, FloatField, IntegerField, SelectField, URLField
 from wtforms.fields.simple import StringField
 from wtforms.validators import URL, DataRequired, NumberRange
@@ -26,6 +27,7 @@ from indico.web.forms.widgets import SwitchWidget
 
 from indico_outlook import _
 from indico_outlook.calendar import update_calendar
+from indico_outlook.models.entry import OutlookCalendarEntry
 from indico_outlook.models.queue import OutlookAction, OutlookQueueEntry
 from indico_outlook.util import get_registered_users, is_event_excluded, latest_actions_only
 
@@ -218,13 +220,13 @@ class OutlookPlugin(IndicoPlugin):
         if not self._user_tracks_favorite_events(user):
             return
         self.logger.info('Favorite event added: adding %s in %r', user, event)
-        self._record_change(event, user, OutlookAction.add)
+        self._record_change(event, user, OutlookAction.add, check_existing=True)
 
     def favorite_event_removed(self, user, event, **kwargs):
         if not self._user_tracks_favorite_events(user):
             return
         self.logger.info('Favorite event removed: removing %s in %r', user, event)
-        self._record_change(event, user, OutlookAction.remove)
+        self._record_change(event, user, OutlookAction.remove, check_existing=True)
 
     def event_registration_state_changed(self, registration, **kwargs):
         if not registration.user or not self._user_tracks_registered_events(registration.user):
@@ -232,17 +234,17 @@ class OutlookPlugin(IndicoPlugin):
         if registration.state == RegistrationState.complete:
             event = registration.registration_form.event
             self.logger.info('Registration added: adding %s in %r', registration.user, event)
-            self._record_change(event, registration.user, OutlookAction.add)
+            self._record_change(event, registration.user, OutlookAction.add, check_existing=True)
         elif registration.state == RegistrationState.withdrawn:
             event = registration.registration_form.event
             self.logger.info('Registration withdrawn: removing %s in %r', registration.user, event)
-            self._record_change(event, registration.user, OutlookAction.remove)
+            self._record_change(event, registration.user, OutlookAction.remove, check_existing=True)
 
     def event_registration_deleted(self, registration, **kwargs):
         if registration.user and self._user_tracks_registered_events(registration.user):
             event = registration.registration_form.event
             self.logger.info('Registration removed: removing %s in %r', registration.user, event)
-            self._record_change(event, registration.user, OutlookAction.remove)
+            self._record_change(event, registration.user, OutlookAction.remove, check_existing=True)
 
     def event_registration_form_deleted(self, registration_form, **kwargs):
         """In this case we will emit "remove" actions for all participants in `registration_form`"""
@@ -251,12 +253,12 @@ class OutlookPlugin(IndicoPlugin):
             if not (registration.user and self._user_tracks_registered_events(registration.user)):
                 continue
             self.logger.info('Registration removed (form deleted): removing %s in %s', registration.user, event)
-            self._record_change(event, registration.user, OutlookAction.remove)
+            self._record_change(event, registration.user, OutlookAction.remove, check_existing=True)
 
     def _is_event_not_happening(self, event):
         return event.label is not None and event.label.is_event_not_happening
 
-    def _get_users_to_update(self, event):
+    def _get_users_to_update(self, event, action):
         users_to_update = set()
         # Registered users need to be informed about changes
         for user in get_registered_users(event):
@@ -266,6 +268,15 @@ class OutlookPlugin(IndicoPlugin):
         for user in event.favorite_of:
             if self._user_tracks_favorite_events(user):
                 users_to_update.add(user)
+
+        existing_users = {x.user for x in event.outlook_calendar_entries.options(joinedload(OutlookCalendarEntry.user))}
+        if action == OutlookAction.add:
+            # skip users who already have calendar entries
+            users_to_update -= existing_users
+        elif action in {OutlookAction.update, OutlookAction.remove}:
+            # skip users who do not have entries
+            users_to_update &= existing_users
+
         return users_to_update
 
     def event_updated(self, event, changes, **kwargs):
@@ -294,27 +305,38 @@ class OutlookPlugin(IndicoPlugin):
             return
 
         self.logger.info('Event changed: %r (%s)', event, ', '.join(changes.keys() & monitored_keys))
-        for user in self._get_users_to_update(event):
+        for user in self._get_users_to_update(event, OutlookAction.update):
             self.logger.info('Updating user %s', user)
             self._record_change(event, user, OutlookAction.update)
 
     def event_created(self, event, **kwargs):
         self.logger.info('Event created: %r', event)
-        for user in self._get_users_to_update(event):
+        for user in self._get_users_to_update(event, OutlookAction.add):
             self.logger.info('Adding user %s', user)
             self._record_change(event, user, OutlookAction.add)
 
     def event_deleted(self, event, **kwargs):
         self.logger.info('Event deleted: %r', event)
-        for user in self._get_users_to_update(event):
+        for user in self._get_users_to_update(event, OutlookAction.remove):
             self.logger.info('Removing user %s', user)
             self._record_change(event, user, OutlookAction.remove, force_remove=True)
 
-    def _record_change(self, event, user, action, *, force_remove=False):
+    def _record_change(self, event, user, action, *, force_remove=False, check_existing=False):
         if is_event_excluded(event):
             return
         if 'outlook_changes' not in g:
             g.outlook_changes = []
+
+        if check_existing:
+            match action:
+                case OutlookAction.remove:
+                    if not OutlookCalendarEntry.get(event, user):
+                        self.logger.debug('Ignoring remove for %r; no calendar entry', user)
+                        return
+                case OutlookAction.add:
+                    if OutlookCalendarEntry.get(event, user):
+                        self.logger.debug('Ignoring add for %r; calendar entry exists', user)
+                        return
 
         if action == OutlookAction.remove and not force_remove:
             # Only remove an event if the user *really* shouldn't have it in their calendar
