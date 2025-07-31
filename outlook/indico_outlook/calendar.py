@@ -144,6 +144,10 @@ def _update_calendar_entry(entry: OutlookQueueEntry, settings):
                     if event.venue_name and event.room_name
                     else (event.venue_name or event.room_name))
 
+        title = event.title
+        if event.label:
+            title = f'[{event.label.title}] {title}'
+
         cal_description = []
         if event.person_links:
             speakers = [f'{x.full_name} ({x.affiliation})' if x.affiliation else x.full_name
@@ -156,7 +160,7 @@ def _update_calendar_entry(entry: OutlookQueueEntry, settings):
             'status': _get_status(user, event, settings),
             'start': int(event.start_dt.timestamp()),
             'end': int(event.end_dt.timestamp()),
-            'subject': strip_control_chars(event.title),
+            'subject': strip_control_chars(title),
             # XXX: the API expects 'body', we convert it below
             'description': strip_control_chars('\n<br>\n'.join(cal_description)),
             'location': strip_control_chars(location),
