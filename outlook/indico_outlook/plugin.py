@@ -208,7 +208,6 @@ class OutlookPlugin(IndicoPlugin):
         self.connect(signals.event.registration.registration_state_updated, self.event_registration_state_changed)
         self.connect(signals.event.registration.registration_deleted, self.event_registration_deleted)
         self.connect(signals.event.updated, self.event_updated)
-        self.connect(signals.event.times_changed, self.event_times_changed, sender=Event)
         self.connect(signals.event.created, self.event_created)
         self.connect(signals.event.restored, self.event_created)
         self.connect(signals.event.deleted, self.event_deleted)
@@ -345,8 +344,7 @@ class OutlookPlugin(IndicoPlugin):
 
     def event_updated(self, event, changes, **kwargs):
         changes = dict(changes)
-        monitored_keys = {'title', 'description', 'location_data', 'person_links', 'label',
-                          'start_dt', 'end_dt', 'duration'}
+        monitored_keys = {'title', 'description', 'location_data', 'person_links', 'label', 'start_dt', 'end_dt'}
         if not changes.keys() & monitored_keys:
             return
         if label_change := changes.pop('label', None):
@@ -369,18 +367,10 @@ class OutlookPlugin(IndicoPlugin):
         if not changes:
             return
 
-        self.logger.info('Event changed: %r', event)
+        self.logger.info('Event changed: %r (%s)', event, ', '.join(changes.keys() & monitored_keys))
         for user in self._get_users_to_update(event):
             self.logger.info('Updating user %s', user)
             self._record_change(event, user, OutlookAction.update)
-
-    def event_times_changed(self, sender, obj, **kwargs):
-        event = obj
-        changes = kwargs['changes']
-        del kwargs['changes']
-
-        self.logger.info('Event time change: updating %r: %r', event, changes)
-        self.event_updated(event, changes, **kwargs)
 
     def event_created(self, event, **kwargs):
         self.logger.info('Event created: %r', event)
