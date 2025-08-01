@@ -248,7 +248,7 @@ class OutlookPlugin(IndicoPlugin):
         """In this case we will emit "remove" actions for all participants in `registration_form`"""
         event = registration_form.event
         for registration in registration_form.active_registrations:
-            if not (registration.user and self._user_tracks_registered_events(registration.user)):
+            if not registration.user or not self._user_tracks_registered_events(registration.user):
                 continue
             self.logger.info('Registration removed (form deleted): removing %s in %s', registration.user, event)
             self._record_change(event, registration.user, OutlookAction.remove, check_existing=True)
