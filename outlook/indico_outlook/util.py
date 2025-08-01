@@ -42,6 +42,13 @@ def get_registered_users(event):
                                      UserSetting.value == db.func.to_jsonb(False))
                              .correlate(Registration)
                              .exists())
+                     .filter(~UserSetting.query
+                             .filter(UserSetting.user_id == Registration.user_id,
+                                     UserSetting.module == 'plugin_outlook',
+                                     UserSetting.name == 'registered',
+                                     UserSetting.value == db.func.to_jsonb(False))
+                             .correlate(Registration)
+                             .exists())
                      .join(Registration.registration_form)
                      .options(joinedload(Registration.user)))
     return {reg.user for reg in registrations}

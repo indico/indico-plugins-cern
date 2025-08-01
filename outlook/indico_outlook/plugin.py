@@ -174,7 +174,7 @@ class OutlookPlugin(IndicoPlugin):
     }
     default_user_settings = {
         'enabled': True,  # XXX: if the default value ever changes, adapt `get_registered_users`!
-        'registered': True,
+        'registered': True,  # XXX: if the default value ever changes, adapt `get_registered_users`!
         'favorite_events': True,
         'status': None,
         'reminder': True,
@@ -259,9 +259,7 @@ class OutlookPlugin(IndicoPlugin):
     def _get_users_to_update(self, event, action):
         users_to_update = set()
         # Registered users need to be informed about changes
-        for user in get_registered_users(event):
-            if self._user_tracks_registered_events(user):
-                users_to_update.add(user)
+        users_to_update |= get_registered_users(event)
         # Users that have marked the event as favorite too
         for user in event.favorite_of:
             if self._user_tracks_favorite_events(user):
@@ -338,7 +336,7 @@ class OutlookPlugin(IndicoPlugin):
 
         if action == OutlookAction.remove and not force_remove:
             # Only remove an event if the user *really* shouldn't have it in their calendar
-            if user in get_registered_users(event) and self._user_tracks_registered_events(user):
+            if user in get_registered_users(event):
                 self.logger.debug('Ignoring remove for %r; user is registered', user)
                 return
             if user in event.favorite_of and self._user_tracks_favorite_events(user):
