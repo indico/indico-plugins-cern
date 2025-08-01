@@ -324,15 +324,12 @@ class OutlookPlugin(IndicoPlugin):
             g.outlook_changes = []
 
         if check_existing:
-            match action:
-                case OutlookAction.remove:
-                    if not OutlookCalendarEntry.get(event, user):
-                        self.logger.debug('Ignoring remove for %r; no calendar entry', user)
-                        return
-                case OutlookAction.add:
-                    if OutlookCalendarEntry.get(event, user):
-                        self.logger.debug('Ignoring add for %r; calendar entry exists', user)
-                        return
+            if action == OutlookAction.remove and not OutlookCalendarEntry.get(event, user):
+                self.logger.debug('Ignoring remove for %r; no calendar entry', user)
+                return
+            elif action == OutlookAction.add and OutlookCalendarEntry.get(event, user):
+                self.logger.debug('Ignoring add for %r; calendar entry exists', user)
+                return
 
         if action == OutlookAction.remove and not force_remove:
             # Only remove an event if the user *really* shouldn't have it in their calendar
