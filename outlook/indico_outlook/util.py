@@ -28,7 +28,7 @@ def is_event_excluded(event):
     return event.duration > OutlookPlugin.settings.get('max_event_duration') or event.end_dt <= now_utc()
 
 
-def get_participating_users(event):
+def get_registered_users(event):
     """Return participating users of an event who did not disable calendar updates."""
     registrations = (Registration.query
                      .filter(Registration.is_active,
@@ -39,6 +39,13 @@ def get_participating_users(event):
                              .filter(UserSetting.user_id == Registration.user_id,
                                      UserSetting.module == 'plugin_outlook',
                                      UserSetting.name == 'enabled',
+                                     UserSetting.value == db.func.to_jsonb(False))
+                             .correlate(Registration)
+                             .exists())
+                     .filter(~UserSetting.query
+                             .filter(UserSetting.user_id == Registration.user_id,
+                                     UserSetting.module == 'plugin_outlook',
+                                     UserSetting.name == 'registered',
                                      UserSetting.value == db.func.to_jsonb(False))
                              .correlate(Registration)
                              .exists())
