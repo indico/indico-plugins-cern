@@ -318,7 +318,7 @@ class OutlookPlugin(IndicoPlugin):
             self._record_change(event, user, OutlookAction.remove, force_remove=True)
 
     def _record_change(self, event, user, action, *, force_remove=False, check_existing=False):
-        if is_event_excluded(event):
+        if is_event_excluded(event, self.logger):
             return
         if 'outlook_changes' not in g:
             g.outlook_changes = []

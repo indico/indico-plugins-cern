@@ -22,10 +22,18 @@ def check_config():
     return all(settings[x] for x in ('service_url', 'token'))
 
 
-def is_event_excluded(event):
+def is_event_excluded(event, logger=None):
     """Check if an event is excluded from the calendar"""
     from indico_outlook.plugin import OutlookPlugin
-    return event.duration > OutlookPlugin.settings.get('max_event_duration') or event.end_dt <= now_utc()
+    if event.duration > OutlookPlugin.settings.get('max_event_duration'):
+        if logger:
+            logger.debug('Ignoring overly long event')
+        return True
+    if event.end_dt <= now_utc():
+        if logger:
+            logger.debug('Ignoring past event')
+        return True
+    return False
 
 
 def get_registered_users(event):
