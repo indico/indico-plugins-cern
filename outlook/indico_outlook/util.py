@@ -22,13 +22,21 @@ def check_config():
     return all(settings[x] for x in ('service_url', 'token'))
 
 
-def is_event_excluded(event):
+def is_event_excluded(event, logger=None):
     """Check if an event is excluded from the calendar"""
     from indico_outlook.plugin import OutlookPlugin
-    return event.duration > OutlookPlugin.settings.get('max_event_duration') or event.end_dt <= now_utc()
+    if event.duration > OutlookPlugin.settings.get('max_event_duration'):
+        if logger:
+            logger.debug('Ignoring overly long event')
+        return True
+    if event.end_dt <= now_utc():
+        if logger:
+            logger.debug('Ignoring past event')
+        return True
+    return False
 
 
-def get_participating_users(event):
+def get_registered_users(event):
     """Return participating users of an event who did not disable calendar updates."""
     registrations = (Registration.query
                      .filter(Registration.is_active,
@@ -39,6 +47,13 @@ def get_participating_users(event):
                              .filter(UserSetting.user_id == Registration.user_id,
                                      UserSetting.module == 'plugin_outlook',
                                      UserSetting.name == 'enabled',
+                                     UserSetting.value == db.func.to_jsonb(False))
+                             .correlate(Registration)
+                             .exists())
+                     .filter(~UserSetting.query
+                             .filter(UserSetting.user_id == Registration.user_id,
+                                     UserSetting.module == 'plugin_outlook',
+                                     UserSetting.name == 'registered',
                                      UserSetting.value == db.func.to_jsonb(False))
                              .correlate(Registration)
                              .exists())
