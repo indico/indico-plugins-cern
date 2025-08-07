@@ -9,10 +9,9 @@ from collections import defaultdict
 from datetime import timedelta
 
 from flask import g
-from sqlalchemy.orm import joinedload
 from wtforms.fields import BooleanField, FloatField, IntegerField, SelectField, URLField
 from wtforms.fields.simple import StringField
-from wtforms.validators import URL, DataRequired, NumberRange
+from wtforms.validators import URL, DataRequired, InputRequired, NumberRange
 
 from indico.cli.core import cli_command
 from indico.core import signals
@@ -29,7 +28,8 @@ from indico_outlook import _
 from indico_outlook.calendar import update_calendar
 from indico_outlook.models.entry import OutlookCalendarEntry
 from indico_outlook.models.queue import OutlookAction, OutlookQueueEntry
-from indico_outlook.util import get_registered_users, is_event_excluded, latest_actions_only
+from indico_outlook.util import (is_event_excluded, is_user_cat_favorite, is_user_favorite, is_user_registered,
+                                 latest_actions_only)
 
 
 _status_choices = [('free', _('Free')),
@@ -59,6 +59,18 @@ class SettingsForm(IndicoForm):
     timeout = FloatField(_('Request timeout'), [NumberRange(min=0.25)], description=_('Request timeout in seconds'))
     max_event_duration = TimeDeltaField(_('Maximum Duration'), [DataRequired()], units=('days',),
                                         description=_('Events lasting longer will not be sent to Exchange'))
+    max_category_events = IntegerField(
+        _('Maximum total event count'), [InputRequired(), NumberRange(min=1)],
+        description=_("By default adding a new favorite category will add existing future events to the user's "
+                      "calendar if they enabled the integration for favorite categories. To avoid flooding the "
+                      "calendar in case someone adds a huge category, no events are added if the number of future "
+                      "events in the category is above this threshold.")
+    )
+    max_accessible_category_events = IntegerField(
+        _('Maximum event count'), [InputRequired(), NumberRange(min=1)],
+        description=_('Like the max total event count, but applied to the number of events the user can access and '
+                      'thus would get added to their calendar.')
+    )
 
 
 class OutlookUserPreferences(ExtraUserPreferences):
@@ -79,6 +91,14 @@ class OutlookUserPreferences(ExtraUserPreferences):
             [HiddenUnless('extra_outlook_active', preserve_data=True)],
             widget=SwitchWidget(),
             description=_('Add to my Outlook calendar events that I mark as favorite'),
+        ),
+        'outlook_favorite_categories': BooleanField(
+            _('Sync favorite categories with Outlook'),
+            [HiddenUnless('extra_outlook_active', preserve_data=True)],
+            widget=SwitchWidget(),
+            description=_('Add to my Outlook calendar all events in categories (and their subcategories) '
+                          'I mark as favorite. This applies only to newly added favorite categories and newly '
+                          'created events in existing favorite categories.'),
         ),
         'outlook_status': SelectField(
             _('Outlook entry status'),
@@ -130,6 +150,7 @@ class OutlookUserPreferences(ExtraUserPreferences):
             'outlook_active': OutlookPlugin.user_settings.get(self.user, 'enabled'),
             'outlook_registered': OutlookPlugin.user_settings.get(self.user, 'registered'),
             'outlook_favorite_events': OutlookPlugin.user_settings.get(self.user, 'favorite_events'),
+            'outlook_favorite_categories': OutlookPlugin.user_settings.get(self.user, 'favorite_categories'),
             'outlook_status': OutlookPlugin.user_settings.get(self.user, 'status', default_status),
             'outlook_reminder': OutlookPlugin.user_settings.get(self.user, 'reminder', default_reminder),
             'outlook_reminder_minutes': OutlookPlugin.user_settings.get(self.user,
@@ -142,6 +163,7 @@ class OutlookUserPreferences(ExtraUserPreferences):
             'enabled': data['outlook_active'],
             'registered': data['outlook_registered'],
             'favorite_events': data['outlook_favorite_events'],
+            'favorite_categories': data['outlook_favorite_categories'],
             'status': data['outlook_status'],
             'reminder': data['outlook_reminder'],
             'reminder_minutes': data['outlook_reminder_minutes'],
@@ -168,14 +190,17 @@ class OutlookPlugin(IndicoPlugin):
         'event_id_cutoff': -1,
         'timeout': 3,
         'max_event_duration': timedelta(days=30),
+        'max_category_events': 1000,
+        'max_accessible_category_events': 100,
     }
     settings_converters = {
         'max_event_duration': TimedeltaConverter
     }
     default_user_settings = {
-        'enabled': True,  # XXX: if the default value ever changes, adapt `get_registered_users`!
-        'registered': True,  # XXX: if the default value ever changes, adapt `get_registered_users`!
-        'favorite_events': True,
+        'enabled': True,  # XXX: if the default value ever changes, adapt `_query_registered_users`
+        'registered': True,  # XXX: if the default value ever changes, adapt `_query_registered_users`
+        'favorite_events': True,  # XXX: if the default value ever changes, adapt `_query_favorite_users`
+        'favorite_categories': False,
         'status': None,
         'reminder': True,
         'reminder_minutes': 15,
@@ -197,6 +222,8 @@ class OutlookPlugin(IndicoPlugin):
         self.connect(signals.users.merged, self._merge_users)
         self.connect(signals.users.favorite_event_added, self.favorite_event_added)
         self.connect(signals.users.favorite_event_removed, self.favorite_event_removed)
+        self.connect(signals.users.favorite_category_added, self.favorite_category_added)
+        self.connect(signals.users.favorite_category_removed, self.favorite_category_removed)
 
     def _extend_indico_cli(self, sender, **kwargs):
         @cli_command()
@@ -214,29 +241,47 @@ class OutlookPlugin(IndicoPlugin):
     def _user_tracks_favorite_events(self, user):
         return OutlookPlugin.user_settings.get(user, 'favorite_events')
 
+    def _user_tracks_favorite_categories(self, user):
+        return OutlookPlugin.user_settings.get(user, 'favorite_categories')
+
     def favorite_event_added(self, user, event, **kwargs):
         if not self._user_tracks_favorite_events(user):
             return
         self.logger.info('Favorite event added: adding %s in %r', user, event)
-        self._record_change(event, user, OutlookAction.add, check_existing=True)
+        self._record_change(event, user, OutlookAction.add)
 
     def favorite_event_removed(self, user, event, **kwargs):
         if not self._user_tracks_favorite_events(user):
             return
         self.logger.info('Favorite event removed: removing %s in %r', user, event)
-        self._record_change(event, user, OutlookAction.remove, check_existing=True)
+        self._record_change(event, user, OutlookAction.remove)
+
+    def favorite_category_added(self, user, category, **kwargs):
+        if not self._user_tracks_favorite_categories(user):
+            return
+        self._record_category_change(category, user, OutlookAction.add)
+        self.logger.info('Favorite category %r added by %r', category, user)
+
+    def favorite_category_removed(self, user, category, **kwargs):
+        if not self._user_tracks_favorite_categories(user):
+            return
+        self.logger.info('Favorite category %r removed by %r', category, user)
+        self._record_category_change(category, user, OutlookAction.remove)
 
     def event_registration_state_changed(self, registration, **kwargs):
         if not registration.user or not self._user_tracks_registered_events(registration.user):
             return
+        # XXX we don't use check_existing in here to avoid weird overlaps in case someone e.g. removed
+        # the favorite flag (records a remove) and then registers for the event (would not register an
+        # add due to the existing calendar entry)
         if registration.state == RegistrationState.complete:
             event = registration.registration_form.event
             self.logger.info('Registration added: adding %s in %r', registration.user, event)
-            self._record_change(event, registration.user, OutlookAction.add, check_existing=True)
+            self._record_change(event, registration.user, OutlookAction.add)
         elif registration.state == RegistrationState.withdrawn:
             event = registration.registration_form.event
             self.logger.info('Registration withdrawn: removing %s in %r', registration.user, event)
-            self._record_change(event, registration.user, OutlookAction.remove, check_existing=True)
+            self._record_change(event, registration.user, OutlookAction.remove)
 
     def event_registration_deleted(self, registration, **kwargs):
         if registration.user and self._user_tracks_registered_events(registration.user):
@@ -255,25 +300,6 @@ class OutlookPlugin(IndicoPlugin):
 
     def _is_event_not_happening(self, event):
         return event.label is not None and event.label.is_event_not_happening
-
-    def _get_users_to_update(self, event, action):
-        users_to_update = set()
-        # Registered users need to be informed about changes
-        users_to_update |= get_registered_users(event)
-        # Users that have marked the event as favorite too
-        for user in event.favorite_of:
-            if self._user_tracks_favorite_events(user):
-                users_to_update.add(user)
-
-        existing_users = {x.user for x in event.outlook_calendar_entries.options(joinedload(OutlookCalendarEntry.user))}
-        if action == OutlookAction.add:
-            # skip users who already have calendar entries
-            users_to_update -= existing_users
-        elif action in {OutlookAction.update, OutlookAction.remove}:
-            # skip users who do not have entries
-            users_to_update &= existing_users
-
-        return users_to_update
 
     def event_updated(self, event, changes, **kwargs):
         changes = dict(changes)
@@ -301,21 +327,23 @@ class OutlookPlugin(IndicoPlugin):
             return
 
         self.logger.info('Event changed: %r (%s)', event, ', '.join(changes.keys() & monitored_keys))
-        for user in self._get_users_to_update(event, OutlookAction.update):
-            self.logger.info('Updating user %s', user)
-            self._record_change(event, user, OutlookAction.update)
+        self._record_change(event, None, OutlookAction.update)
 
     def event_created(self, event, **kwargs):
+        if event.is_unlisted:
+            return
         self.logger.info('Event created: %r', event)
-        for user in self._get_users_to_update(event, OutlookAction.add):
-            self.logger.info('Adding user %s', user)
-            self._record_change(event, user, OutlookAction.add)
+        self._record_change(event, None, OutlookAction.add)
 
     def event_deleted(self, event, **kwargs):
         self.logger.info('Event deleted: %r', event)
-        for user in self._get_users_to_update(event, OutlookAction.remove):
-            self.logger.info('Removing user %s', user)
-            self._record_change(event, user, OutlookAction.remove, force_remove=True)
+        self._record_change(event, None, OutlookAction.remove)
+
+    def _record_category_change(self, category, user, action):
+        # category changes are limited to adding/removing favorite categories, so these
+        # signals are called exactly one during a request so we do not need to do any
+        # queueing until the end of the request
+        OutlookQueueEntry.record(category, user, action)
 
     def _record_change(self, event, user, action, *, force_remove=False, check_existing=False):
         if is_event_excluded(event, self.logger):
@@ -324,6 +352,7 @@ class OutlookPlugin(IndicoPlugin):
             g.outlook_changes = []
 
         if check_existing:
+            assert user is not None
             if action == OutlookAction.remove and not OutlookCalendarEntry.get(event, user):
                 self.logger.debug('Ignoring remove for %r; no calendar entry', user)
                 return
@@ -331,13 +360,16 @@ class OutlookPlugin(IndicoPlugin):
                 self.logger.debug('Ignoring add for %r; calendar entry exists', user)
                 return
 
-        if action == OutlookAction.remove and not force_remove:
+        if action == OutlookAction.remove and not force_remove and user is not None:
             # Only remove an event if the user *really* shouldn't have it in their calendar
-            if user in get_registered_users(event):
+            if is_user_registered(event, user):
                 self.logger.debug('Ignoring remove for %r; user is registered', user)
                 return
-            if user in event.favorite_of and self._user_tracks_favorite_events(user):
+            if is_user_favorite(event, user):
                 self.logger.debug('Ignoring remove for %r; event is favorite', user)
+                return
+            if is_user_cat_favorite(event, user):
+                self.logger.debug('Ignoring remove for %r; event is cat favorite', user)
                 return
 
         g.outlook_changes.append((event, user, action))
