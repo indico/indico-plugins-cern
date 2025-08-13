@@ -5,18 +5,12 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-import logging
-import sys
-from logging import StreamHandler
-
-import click
 from celery.schedules import crontab
 from flask import g, session
 from webargs import flaskparser
 from wtforms import StringField
 from wtforms.fields import BooleanField
 
-from indico.cli.core import cli_command
 from indico.core import signals
 from indico.core.celery import celery
 from indico.core.plugins import IndicoPlugin
@@ -27,6 +21,7 @@ from indico.util.i18n import _
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.widgets import SwitchWidget
 
+from indico_foundationsync.cli import cli
 from indico_foundationsync.sync import FoundationSync
 
 
@@ -89,22 +84,7 @@ class FoundationSyncPlugin(IndicoPlugin):
             flaskparser.abort(422, messages=messages)
 
     def _extend_indico_cli(self, sender, **kwargs):
-        @cli_command()
-        @click.option('--room', 'room_name', metavar='ROOM', help="Synchronize only a given room (e.g. '513 R-055')")
-        @click.option('--dry-run', '-n', is_flag=True, help='Do not commit the changes to the database')
-        def foundationsync(room_name, dry_run):
-            """Synchronize rooms with the CERN Foundation Database"""
-            db_name = self.settings.get('connection_string')
-            if not db_name:
-                print('Foundation DB connection string is not set')
-                sys.exit(1)
-
-            # Log to stdout
-            handler = StreamHandler()
-            handler.setLevel(logging.INFO)
-            self.logger.addHandler(handler)
-            FoundationSync(db_name, self.logger).run_all(room_name, dry_run=dry_run)
-        return foundationsync
+        return cli
 
 
 @celery.periodic_task(run_every=crontab(minute='0'))
@@ -112,7 +92,7 @@ def scheduled_update(room_name=None):
     if FoundationSyncPlugin.settings.get('disable_sync'):
         FoundationSyncPlugin.logger.warning('Sync is currently disabled')
         return
-    db_name = FoundationSyncPlugin.settings.get('connection_string')
-    if not db_name:
+    dsn = FoundationSyncPlugin.settings.get('connection_string')
+    if not dsn:
         raise RuntimeError('Foundation DB connection string is not set')
-    FoundationSync(db_name, FoundationSyncPlugin.logger).run_all(room_name)
+    FoundationSync(dsn, FoundationSyncPlugin.logger).run_all(room_name)
