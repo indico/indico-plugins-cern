@@ -35,11 +35,11 @@ def _get_room_role_map(connection):
 
 
 class FoundationSync:
-    def __init__(self, db_name, logger):
+    def __init__(self, dsn, logger):
         # memoize results in case we are on the slower auth API
         self.get_user_by_email = functools.cache(get_user_by_email)
 
-        self.db_name = db_name
+        self.dsn = dsn
         self._logger = logger
 
         try:
@@ -51,7 +51,7 @@ class FoundationSync:
     @contextmanager
     def connect_to_foundation(self):
         try:
-            connection = oracledb.connect(self.db_name, config_dir='/etc')
+            connection = oracledb.connect(self.dsn, config_dir='/etc')
             self._logger.debug('Connected to Foundation DB')
             yield connection
             connection.close()
