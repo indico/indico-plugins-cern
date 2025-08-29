@@ -148,7 +148,7 @@ def update(csv_file, add_missing, dry_run):
         acl = {get_principal(principal) for principal in acl_row.split(';')} if acl_row else None
 
         data = {
-            'id': int(room_id.decode('utf-8-sig')) if room_id else None,
+            'id': int(room_id) if room_id else None,
             'division': division,
             'building': building,
             'floor': floor,
