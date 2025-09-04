@@ -63,13 +63,15 @@ class RHRegistrationGrantCERNAccess(RHRegistrationsActionBase):
             del form.subject
             del form.body
             del form.sender_address
+            del form.remind_existing
             del form.save_default
         if form.validate_on_submit():
             if not all_have_data and form.save_default.data:
                 current_plugin.event_settings.set(self.event, 'email_subject', form.subject.data)
                 current_plugin.event_settings.set(self.event, 'email_body', form.body.data)
             email_data = (form.subject.data, form.body.data, form.sender_address.data) if not all_have_data else ()
-            grant_access(self.registrations, self.regform, *email_data)
+            remind_existing = form.remind_existing.data if not all_have_data else False
+            grant_access(self.registrations, self.regform, *email_data, remind_existing=remind_existing)
             return jsonify_data(**self.list_generator.render_list())
         elif not all_have_data and not form.is_submitted():
             form.subject.data = current_plugin.event_settings.get(self.event, 'email_subject') or default_subject
