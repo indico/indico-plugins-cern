@@ -16,6 +16,7 @@ from indico.web.forms.base import FormDefaults
 
 from indico_cern_access import _
 from indico_cern_access.forms import CERNAccessForm
+from indico_cern_access.models.access_requests import CERNAccessRequest
 from indico_cern_access.util import (check_access, get_access_dates, get_requested_registrations,
                                      handle_event_time_update, is_authorized_user, is_category_blacklisted,
                                      is_event_too_early, update_access_request, withdraw_event_access_request)
@@ -91,3 +92,22 @@ class CERNAccessRequestDefinition(RequestDefinitionBase):
     def withdraw(cls, req, notify_event_managers=False):
         withdraw_event_access_request(req)
         super().withdraw(req, notify_event_managers)
+
+
+class CERNTicketCode:
+    """CERN QR code from the visitor badge printers.
+
+    The self-service terminals only print the visitor validation token/link, but
+    none of the Indico details around it which are needed for the check-in app.
+    """
+
+    name = 'cern-visitor'
+    regex = r'^https://(?:www\.)?cern\.ch/adams(?:-dev)?/checkextvisitorbadge\.php\?nonce=[^& ]+&$'
+
+    @classmethod
+    def lookup_registration(cls, data: str):
+        """Lookup a registration based on custom ticket code data."""
+        reqs = CERNAccessRequest.query.filter_by(adams_nonce=data).all()
+        if len(reqs) != 1:
+            return None
+        return reqs[0].registration

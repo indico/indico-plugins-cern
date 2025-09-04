@@ -42,7 +42,7 @@ from indico.web.forms.fields import (IndicoDateTimeField, IndicoPasswordField, M
 
 from indico_cern_access import _
 from indico_cern_access.blueprint import blueprint
-from indico_cern_access.definition import CERNAccessRequestDefinition
+from indico_cern_access.definition import CERNAccessRequestDefinition, CERNTicketCode
 from indico_cern_access.models.access_requests import CERNAccessRequest, CERNAccessRequestState
 from indico_cern_access.placeholders import (AccessCodePlaceholder, AccessPeriodPlaceholder, FormLinkPlaceholder,
                                              TicketAccessDatesPlaceholder, TicketLicensePlatePlaceholder)
@@ -124,6 +124,7 @@ class CERNAccessPlugin(IndicoPlugin):
         self.template_hook('registration-status-action-button', self._get_access_action_button)
         self.template_hook('regform-container-attrs', self._get_regform_container_attrs, markup=False)
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
+        self.connect(signals.event.registration.custom_ticket_qr_code_handler, self._custom_qr_handler)
         self.connect(signals.event.registration_deleted, self._registration_deleted)
         self.connect(signals.event.registration_created, self._registration_created)
         self.connect(signals.event.timetable.times_changed, self._event_time_changed, sender=Event)
@@ -212,6 +213,9 @@ class CERNAccessPlugin(IndicoPlugin):
 
     def _get_event_request_definitions(self, sender, **kwargs):
         return CERNAccessRequestDefinition
+
+    def _custom_qr_handler(self, sender, **kwargs):
+        return CERNTicketCode
 
     def _get_access_action_button(self, regform, **kwargs):
         if regform.cern_access_request and regform.cern_access_request.is_active:
