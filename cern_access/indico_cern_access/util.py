@@ -349,7 +349,8 @@ def is_event_too_early(event):
     return earliest_start_dt is not None and event.start_dt < earliest_start_dt
 
 
-def grant_access(registrations, regform, email_subject=None, email_body=None, email_sender=None):
+def grant_access(registrations, regform, email_subject=None, email_body=None, email_sender=None, *,
+                 remind_existing=False):
     event = regform.event
     new_registrations = [reg for reg in registrations
                          if not (reg.cern_access_request and
@@ -357,12 +358,24 @@ def grant_access(registrations, regform, email_subject=None, email_body=None, em
                                  reg.cern_access_request.is_active)]
     state, data, nonces = send_adams_post_request(event, new_registrations)
     add_access_requests(new_registrations, data, state, nonces)
-    registrations_without_data = []
+    registrations_without_data = set()
     for registration in new_registrations:
         if not registration.cern_access_request.has_identity_info:
-            registrations_without_data.append(registration)
+            registrations_without_data.add(registration)
         elif regform.ticket_on_email:
             send_ticket(registration)
+
+    if remind_existing:
+        registrations_without_data |= {
+            reg
+            for reg in registrations
+            if (
+                reg.cern_access_request
+                and not reg.cern_access_request.is_withdrawn
+                and reg.cern_access_request.is_active and
+                not reg.cern_access_request.has_identity_info
+            )
+        }
 
     if registrations_without_data:
         send_form_link(registrations_without_data, email_subject, email_body, email_sender)

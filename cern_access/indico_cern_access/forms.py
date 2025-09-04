@@ -25,6 +25,9 @@ class GrantAccessEmailForm(EmailRegistrantsForm):
     save_default = BooleanField(_('Save as default'), widget=SwitchWidget(),
                                 description=_("Save this email's content as the default that will be used the next "
                                               "time a CERN access request is sent for a registrant in this event."))
+    remind_existing = BooleanField(_('Remind existing'), widget=SwitchWidget(),
+                                   description=_('If enabled, the email is also sent to participants who have received '
+                                                 'the link before but have not provided the necessary details yet.'))
 
     def __init__(self, *args, **kwargs):
         reset_text = (Markup('<a id="reset-cern-access-email">{}</a><br>')
