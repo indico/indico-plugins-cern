@@ -7,7 +7,8 @@
 
 import os
 from datetime import timedelta
-from urllib.parse import urlparse
+from io import BytesIO
+from urllib.parse import parse_qs, urlparse, urlsplit
 
 import dateutil.parser
 import requests
@@ -15,6 +16,8 @@ from celery.exceptions import MaxRetriesExceededError, Retry
 from celery.schedules import crontab
 from flask import jsonify, request, session
 from itsdangerous import BadData
+from pypdf import PdfReader, PdfWriter
+from pypdf.generic import NameObject, TextStringObject
 
 from indico.core import signals
 from indico.core.celery import celery
@@ -141,10 +144,31 @@ def request_pdf_from_googledrive(task, attachment):
                                             attachment.link_url, content_type)
             pdf_state_cache.delete(str(attachment.id))
             return
-        pdf = response.content
+        pdf = BytesIO(response.content)
+        pdf = _strip_google_tracking(pdf)
         save_pdf(attachment, pdf)
         signals.core.after_process.send()
         db.session.commit()
+
+
+def _strip_google_tracking(pdf: BytesIO) -> BytesIO:
+    reader = PdfReader(pdf)
+    writer = PdfWriter()
+    for page in reader.pages:
+        for annot in page.annotations:
+            obj = annot.get_object()
+            if (
+                (link := obj.get('/A'))
+                and (uri := link.get('/URI'))
+                and uri.startswith('https://www.google.com/url?q=')
+            ):
+                q = parse_qs(urlsplit(uri).query)['q'][0]
+                link[NameObject('/URI')] = TextStringObject(q)
+        writer.add_page(page)
+    buf = BytesIO()
+    writer.write(buf)
+    buf.seek(0)
+    return buf.getvalue()
 
 
 class RHDoconverterFinished(RH):
