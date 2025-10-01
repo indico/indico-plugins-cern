@@ -155,7 +155,7 @@ def _strip_google_tracking(pdf: BytesIO) -> BytesIO:
     reader = PdfReader(pdf)
     writer = PdfWriter()
     for page in reader.pages:
-        for annot in page.annotations:
+        for annot in (page.annotations or ()):
             obj = annot.get_object()
             if (
                 (link := obj.get('/A'))
