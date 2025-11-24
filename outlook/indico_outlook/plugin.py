@@ -17,6 +17,7 @@ from indico.cli.core import cli_command
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin
 from indico.core.settings.converters import TimedeltaConverter
+from indico.modules.events import Event
 from indico.modules.events.registration.models.registrations import RegistrationState
 from indico.modules.users import ExtraUserPreferences
 from indico.web.forms.base import IndicoForm
@@ -215,6 +216,7 @@ class OutlookPlugin(IndicoPlugin):
         self.connect(signals.event.registration.registration_state_updated, self.event_registration_state_changed)
         self.connect(signals.event.registration.registration_deleted, self.event_registration_deleted)
         self.connect(signals.event.updated, self.event_updated)
+        self.connect(signals.event.location_changed, self.event_location_changed, sender=Event)
         self.connect(signals.event.created, self.event_created)
         self.connect(signals.event.restored, self.event_created)
         self.connect(signals.event.deleted, self.event_deleted)
@@ -300,6 +302,12 @@ class OutlookPlugin(IndicoPlugin):
 
     def _is_event_not_happening(self, event):
         return event.label is not None and event.label.is_event_not_happening
+
+    def event_location_changed(self, obj_type, obj, changes, **kwargs):
+        # this is a bit of a hack because we do not receive full location_data in this signal,
+        # but since `event_updated` does not care about the actual change to the data we can
+        # just send dummy data. unpacking it would fail but this isn't done anyway
+        self.event_updated(obj, {'location_data': True})
 
     def event_updated(self, event, changes, **kwargs):
         changes = dict(changes)
