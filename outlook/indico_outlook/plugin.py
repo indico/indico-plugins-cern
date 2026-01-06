@@ -27,7 +27,6 @@ from indico.web.forms.widgets import SwitchWidget
 
 from indico_outlook import _
 from indico_outlook.calendar import update_calendar
-from indico_outlook.models.entry import OutlookCalendarEntry
 from indico_outlook.models.queue import OutlookAction, OutlookQueueEntry
 from indico_outlook.util import (is_event_excluded, is_user_cat_favorite, is_user_favorite, is_user_registered,
                                  latest_actions_only)
@@ -289,7 +288,7 @@ class OutlookPlugin(IndicoPlugin):
         if registration.user and self._user_tracks_registered_events(registration.user):
             event = registration.registration_form.event
             self.logger.info('Registration removed: removing %s in %r', registration.user, event)
-            self._record_change(event, registration.user, OutlookAction.remove, check_existing=True)
+            self._record_change(event, registration.user, OutlookAction.remove)
 
     def event_registration_form_deleted(self, registration_form, **kwargs):
         """In this case we will emit "remove" actions for all participants in `registration_form`"""
@@ -298,7 +297,7 @@ class OutlookPlugin(IndicoPlugin):
             if not registration.user or not self._user_tracks_registered_events(registration.user):
                 continue
             self.logger.info('Registration removed (form deleted): removing %s in %s', registration.user, event)
-            self._record_change(event, registration.user, OutlookAction.remove, check_existing=True)
+            self._record_change(event, registration.user, OutlookAction.remove)
 
     def _is_event_not_happening(self, event):
         return event.label is not None and event.label.is_event_not_happening
@@ -353,20 +352,11 @@ class OutlookPlugin(IndicoPlugin):
         # queueing until the end of the request
         OutlookQueueEntry.record(category, user, action)
 
-    def _record_change(self, event, user, action, *, force_remove=False, check_existing=False):
+    def _record_change(self, event, user, action, *, force_remove=False):
         if is_event_excluded(event, self.logger):
             return
         if 'outlook_changes' not in g:
             g.outlook_changes = []
-
-        if check_existing:
-            assert user is not None
-            if action == OutlookAction.remove and not OutlookCalendarEntry.get(event, user):
-                self.logger.debug('Ignoring remove for %r; no calendar entry', user)
-                return
-            elif action == OutlookAction.add and OutlookCalendarEntry.get(event, user):
-                self.logger.debug('Ignoring add for %r; calendar entry exists', user)
-                return
 
         if action == OutlookAction.remove and not force_remove and user is not None:
             # Only remove an event if the user *really* shouldn't have it in their calendar
