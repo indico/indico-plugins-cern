@@ -190,7 +190,7 @@ def update_access_permissions(booking, modify_dates=None):
             suffix = ' [FAILED]'
         date_range = f'{booking.start_dt.date()} - {booking.end_dt.date()}'
         booking.add_edit_log(ReservationEditLog(user_name='Burotel', info=[
-            f'Removing ADaMS access from {user.full_name} ({user.id}), {date_range} '
+            f'Removing ADaMS access from {user.full_name} ({user.id}), {date_range} '  # noqa: ISC004
             f'(booking rejected/cancelled){suffix}'
         ]))
     else:
