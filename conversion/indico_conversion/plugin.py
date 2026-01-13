@@ -17,6 +17,7 @@ from wtforms.validators import DataRequired, NumberRange, Optional
 
 from indico.core import signals
 from indico.core.plugins import IndicoPlugin, plugin_engine, url_for_plugin
+from indico.core.settings.converters import DatetimeConverter
 from indico.modules.attachments.forms import AddAttachmentFilesForm, AddAttachmentLinkForm
 from indico.modules.attachments.models.attachments import AttachmentType
 from indico.modules.events.views import WPSimpleEventDisplay
@@ -27,11 +28,11 @@ from indico.web.forms.fields import IndicoPasswordField, TextListField
 from indico.web.forms.validators import HiddenUnless
 from indico.web.forms.widgets import SwitchWidget
 
-from indico_conversion import _, pdf_state_cache
-from indico_conversion.blueprint import blueprint
-from indico_conversion.conversion import (request_pdf_from_googledrive, submit_attachment_cloudconvert,
-                                          submit_attachment_doconverter)
-from indico_conversion.util import get_pdf_title
+from . import tasks  # noqa: F401
+from . import _, pdf_state_cache
+from .blueprint import blueprint
+from .conversion import request_pdf_from_googledrive, submit_attachment_cloudconvert, submit_attachment_doconverter
+from .util import get_pdf_title
 
 
 info_ttl = timedelta(hours=1)
@@ -70,6 +71,23 @@ class SettingsForm(IndicoForm):
                                                    'One extension per line.'))
     googledrive_api_key = IndicoPasswordField(_('GoogleDrive API key'), toggle=True,
                                               description=_('API key used for converting files on Google Docs.'))
+    codimd_archive_enabled = BooleanField(
+        _('Archive CodiMD content'),
+        widget=SwitchWidget(),
+        description=_('Links to your CodiMD/Hedgedoc instance can be automatically archived'),
+    )
+    codimd_base_url = URLField(
+        _('CodiMD base URL'),
+        [DataRequired(), HiddenUnless('codimd_archive_enabled', preserve_data=True)],
+        default='https://codimd.cern.ch',
+        description=_('The base URL of the CodiMD/Hedgedoc instance used.'),
+    )
+    codimd_min_age = IntegerField(
+        _('CodiMD minimum age (hours)'),
+        [DataRequired(), NumberRange(min=0), HiddenUnless('codimd_archive_enabled', preserve_data=True)],
+        default=24,
+        description=_('Minimum age of the event (based on end date) to consider for archiving CodiMD attachments.'),
+    )
 
 
 @uses('owncloud')
@@ -90,7 +108,16 @@ class ConversionPlugin(IndicoPlugin):
                         'cloudconvert_notify_threshold': None,
                         'cloudconvert_notify_email': '',
                         'cloudconvert_conversion_notice': '',
-                        'valid_extensions': ['ppt', 'doc', 'pptx', 'docx', 'odp', 'sxi']}
+                        'valid_extensions': ['ppt', 'doc', 'pptx', 'docx', 'odp', 'sxi'],
+                        'codimd_archive_enabled': False,
+                        'codimd_base_url': 'https://codimd.cern.ch',
+                        'codimd_min_age': 7,
+
+                        # CodiMD archival - not used in the settings form
+                        'codimd_archive_last_run_dt': None}
+    settings_converters = {
+        'codimd_archive_last_run_dt': DatetimeConverter
+    }
 
     def init(self):
         super().init()
@@ -105,6 +132,7 @@ class ConversionPlugin(IndicoPlugin):
         self.template_hook('event-display-after-attachment', self._event_display_after_attachment)
         self.inject_bundle('main.css', WPSimpleEventDisplay)
         self.inject_bundle('main.js', WPSimpleEventDisplay)
+        self.connect(signals.plugin.cli, self._extend_indico_cli)
 
     def get_blueprints(self):
         return blueprint
@@ -198,3 +226,7 @@ class ConversionPlugin(IndicoPlugin):
             return None
         return render_plugin_template('pdf_attachment.html', attachment=attachment, top_level=top_level,
                                       has_label=has_label, title=get_pdf_title(attachment))
+
+    def _extend_indico_cli(self, sender, **kwargs):
+        from .cli import cli
+        return cli
