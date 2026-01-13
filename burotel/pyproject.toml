@@ -19,7 +19,7 @@ GitHub = 'https://github.com/indico/indico-plugins-cern'
 burotel = 'indico_burotel.plugin:BurotelPlugin'
 
 [build-system]
-requires = ['hatchling==1.27.0']
+requires = ['hatchling==1.28.0']
 build-backend = 'hatchling.build'
 
 [tool.hatch.build]
