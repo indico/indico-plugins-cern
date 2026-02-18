@@ -14,7 +14,7 @@ import {Button} from 'semantic-ui-react';
 import {Translate} from 'indico/react/i18n';
 import {indicoAxios, handleAxiosError} from 'indico/utils/axios';
 
-export const EXPERIMENTS = ['ATLAS', 'CMS', 'ALICE', 'LHCb', 'HSE'];
+export const EXPERIMENTS = ['ATLAS', 'CMS', 'ALICE', 'LHCb', 'HSE', 'TH'];
 
 export default class BootstrapOptions extends React.Component {
   static propTypes = {
