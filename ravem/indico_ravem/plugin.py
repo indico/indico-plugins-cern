@@ -33,9 +33,12 @@ class SettingsForm(IndicoForm):  # pragma: no cover
                             description=_('The endpoint for the RAVEM API'))
     access_token = IndicoPasswordField(_('Access token'), [DataRequired()], toggle=True,
                                        description=_('The access token used to connect to the RAVEM API'))
-    timeout = IntegerField(_('Timeout'), [NumberRange(min=0)],
+    timeout = IntegerField(_('Status timeout'), [NumberRange(min=0)],
                            description=_('The amount of time in seconds to wait for RAVEM to reply<br>'
                                          '(0 to disable the timeout)'))
+    action_timeout = IntegerField(_('Action timeout'), [NumberRange(min=0)],
+                           description=_('The amount of time in seconds to wait for RAVEM to reply when triggering an '
+                                         'action such as connecting a room (0 to disable the timeout)'))
     polling_limit = IntegerField(_('Polling limit'), [NumberRange(min=1)],
                                  description=_('The maximum number of time Indico should poll RAVEM for the status of '
                                                'an operation before considering it as failed<br>'
@@ -62,7 +65,8 @@ class RavemPlugin(IndicoPlugin):
         'debug': False,
         'api_endpoint': '',
         'access_token': None,
-        'timeout': 30,
+        'timeout': 5,
+        'action_timeout': 30,
         'polling_limit': 8,
         'polling_interval': 4000,
         'room_feature': None

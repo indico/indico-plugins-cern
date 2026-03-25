@@ -23,7 +23,7 @@ class BaseAPI(ABC):
         :param room_name: str -- the name of the physical room
         """
         room_name = room_name.replace('/', '-', 1)
-        return ravem_api_call('rooms/details', method='GET',
+        return ravem_api_call('rooms/details', method='GET', fast=True,
                               params={'where': 'room_name', 'value': room_name})
 
     @abstractmethod
