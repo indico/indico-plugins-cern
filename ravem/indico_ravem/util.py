@@ -18,7 +18,7 @@ from indico.util.i18n import _
 from indico_ravem.plugin import RavemPlugin
 
 
-def ravem_api_call(api_endpoint, method='GET', **kwargs):
+def ravem_api_call(api_endpoint, *, method='GET', fast=False, **kwargs):
     """Emits a call to the given RAVEM API endpoint.
 
     This function is meant to be used to easily generate calls to the RAVEM API.
@@ -28,6 +28,7 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
     :param api_endpoint: str -- The RAVEM API endpoint to call.
     :param method: str -- The HTTP method to use for the call, currently, RAVEM
                    only supports `GET` or `POST`
+    :param fast: bool -- Whether a short timeout should be used
     :param kwargs: The field names and values used for the RAVEM API as
                      strings
 
@@ -41,7 +42,7 @@ def ravem_api_call(api_endpoint, method='GET', **kwargs):
         'Accept': 'application/json',
         'Authorization': f'Bearer {access_token}',
     }
-    timeout = RavemPlugin.settings.get('timeout') or None
+    timeout = RavemPlugin.settings.get('timeout' if fast else 'action_timeout') or None
     url = urljoin(root_endpoint, api_endpoint)
 
     if RavemPlugin.settings.get('debug') and method != 'GET':
