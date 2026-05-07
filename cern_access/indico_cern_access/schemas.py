@@ -36,7 +36,8 @@ class RequestAccessSchema(mm.Schema):
     accompanying_persons = fields.Dict(keys=fields.String(), values=fields.Nested(AccompanyingPersonAccessSchema),
                                        load_default={}, data_key='cern_access_accompanying_persons')
     by_car = fields.Bool(load_default=False, data_key='cern_access_by_car')
-    license_plate = fields.String(data_key='cern_access_license_plate', load_default=None)
+    license_plate = fields.String(data_key='cern_access_license_plate', validate=validate.Length(max=24),
+                                  load_default=None)
 
     @validates_schema
     def validate_everything(self, data, **kwargs):
