@@ -225,6 +225,7 @@ export default function RegistrationIdentityDataForm({
           as={FinalInput}
           required
           nullIfEmpty
+          maxLength={24}
           validate={val => {
             if (!val) {
               return undefined;
