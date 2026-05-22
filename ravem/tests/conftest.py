@@ -6,7 +6,6 @@
 # the LICENSE file for more details.
 
 import pytest
-import responses
 
 from indico_ravem.api import ZoomAPI
 
@@ -43,12 +42,6 @@ fixtures = disconnected_fixtures + connected_fixtures
 
 def gen_params(fixtures, *params):
     return params, ([fixture[param] for param in params] for fixture in fixtures)
-
-
-@pytest.fixture
-def mocked_responses():
-    with responses.RequestsMock() as rsps:
-        yield rsps
 
 
 @pytest.fixture(autouse=True)

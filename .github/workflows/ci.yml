@@ -170,6 +170,7 @@ jobs:
           - plugin: payment_cern
           - plugin: ravem
           - plugin: zoom_rooms
+          - plugin: conversion
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -208,7 +209,7 @@ jobs:
           echo "$(pwd)/.venv/bin" >> $GITHUB_PATH
 
       - name: Install extra dependencies
-        if: matrix.plugin == 'ravem' || matrix.plugin == 'zoom_rooms'
+        if: matrix.plugin == 'ravem' || matrix.plugin == 'zoom_rooms' || matrix.plugin == 'conversion'
         run: |
           uv pip install responses
           uv pip install "indico-plugin-vc-zoom @ git+https://github.com/${PLUGINS_REPO}.git@${PLUGINS_BRANCH}#subdirectory=vc_zoom"
