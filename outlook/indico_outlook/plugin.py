@@ -310,7 +310,7 @@ class OutlookPlugin(IndicoPlugin):
 
     def event_updated(self, event, changes, **kwargs):
         changes = dict(changes)
-        monitored_keys = {'title', 'description', 'location_data', 'person_links', 'label', 'start_dt', 'end_dt'}
+        monitored_keys = {'title', 'description', 'location_data', 'person_links', 'label', 'start_dt', 'end_dt', 'visibility'}
         if not changes.keys() & monitored_keys:
             return
         if label_change := changes.pop('label', None):
