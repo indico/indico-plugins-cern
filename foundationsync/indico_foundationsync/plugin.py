@@ -61,6 +61,11 @@ class FoundationSyncPlugin(IndicoPlugin):
         blocked_collisions = set(data) & BLOCKED_FIELDS
         messages = {}
 
+        if room := getattr(g.rh, 'room', None):
+            for k in list(sync_collisions):
+                if getattr(room, k) is None and data[k] is not None:
+                    sync_collisions.discard(k)
+
         messages.update({
             k: [_('This field is managed via the Locations application. You cannot change it from here.')]
             for k in sync_collisions
