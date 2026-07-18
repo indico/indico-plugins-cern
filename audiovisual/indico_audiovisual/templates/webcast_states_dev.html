@@ -1,0 +1,56 @@
+{% extends 'overview/base.html' %}
+{% from 'audiovisual:_webcast_card.html' import webcast_card %}
+
+{% block title %}Webcast card states{% endblock %}
+
+{% macro specimen(caption, state, has_recording=true) %}
+    <section class="av-dev-specimen" {% if state %}data-specimen-state="{{ state }}"{% endif %}>
+        <h3>{{ caption }}</h3>
+        <div class="event-details">
+            <div class="event-details-row">
+                <div class="event-details-label align-top">Webcast</div>
+                <div class="event-details-content">
+                    {{ webcast_card('#',
+                                    planned_start_dt=planned_start_dt,
+                                    tzinfo=tzinfo,
+                                    has_recording=has_recording) }}
+                </div>
+            </div>
+        </div>
+    </section>
+{% endmacro %}
+
+{% block content %}
+    <div id="av-webcast-dev">
+        <p>Demo of the webcast state cards (debug mode only).</p>
+
+        {{ specimen('Fallback — relay unavailable / not configured', 'fallback') }}
+        {{ specimen('Upcoming — before start, with countdown', 'upcoming') }}
+        {{ specimen('Live — streaming and recording', 'live') }}
+        {{ specimen('Ended — stream over, recording processing', 'ended') }}
+        {{ specimen('Live — webcast only, no recording requested', 'live', has_recording=false) }}
+
+        <section class="av-dev-specimen js-interactive">
+            <h3>Interactive — feed mock payloads through applyState()</h3>
+            <div class="toolbar">
+                <div class="group">
+                    <button type="button" class="i-button" data-mock-state="upcoming">Upcoming</button>
+                    <button type="button" class="i-button" data-mock-state="live">Live</button>
+                    <button type="button" class="i-button" data-mock-state="ended">Ended</button>
+                    <button type="button" class="i-button" data-mock-state="fallback">Unavailable</button>
+                </div>
+            </div>
+            <div class="event-details">
+                <div class="event-details-row">
+                    <div class="event-details-label align-top">Webcast</div>
+                    <div class="event-details-content">
+                        {{ webcast_card('#',
+                                        planned_start_dt=planned_start_dt,
+                                        tzinfo=tzinfo,
+                                        has_recording=true) }}
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+{% endblock %}

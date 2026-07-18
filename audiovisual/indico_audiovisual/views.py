@@ -18,3 +18,11 @@ class WPAudiovisualManagers(WPJinjaMixinPlugin, WPDecorated):
 
     def _get_body(self, params):
         return self._get_page_content(params)
+
+
+class WPWebcastStatesDev(WPJinjaMixinPlugin, WPDecorated):
+    def _get_breadcrumbs(self):
+        return render_breadcrumbs(_('Webcast card states'))
+
+    def _get_body(self, params):
+        return self._get_page_content(params)
