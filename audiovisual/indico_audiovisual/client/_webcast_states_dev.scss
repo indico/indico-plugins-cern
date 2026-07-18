@@ -1,0 +1,49 @@
+// This file is part of the CERN Indico plugins.
+// Copyright (C) 2014 - 2026 CERN
+//
+// The CERN Indico plugins are free software; you can redistribute
+// them and/or modify them under the terms of the MIT License; see
+// the LICENSE file for more details.
+
+@use 'base/palette' as *;
+
+// Styling for the debug-only webcast card showcase page
+
+#av-webcast-dev {
+  .av-dev-specimen {
+    margin-top: 2em;
+    max-width: 760px;
+
+    h3 {
+      font-size: 1em;
+      color: $light-black;
+      margin-bottom: 0.5em;
+    }
+
+    .toolbar {
+      margin-bottom: 0.7em;
+    }
+
+    // mimic the meeting page
+    .event-details {
+      background: white;
+      border: 1px solid #e6e6e8;
+      border-radius: 4px;
+      padding: 16px 20px 16px 0;
+    }
+
+    .event-details-row {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      align-items: start;
+    }
+
+    .event-details-label {
+      text-align: right;
+      padding: 11px 16px 0 0;
+      font-weight: bold;
+      color: #444;
+      white-space: nowrap;
+    }
+  }
+}

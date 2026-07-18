@@ -5,29 +5,30 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
+from datetime import timedelta
 from io import BytesIO
 from operator import itemgetter
 
 import icalendar
-from flask import request, session
+from flask import current_app, request, session
 from marshmallow import validate
 from webargs import fields
-from werkzeug.exceptions import Forbidden
+from werkzeug.exceptions import Forbidden, NotFound
 
 from indico.modules.events.requests.models.requests import RequestState
-from indico.util.date_time import as_utc, get_day_end, get_day_start, now_utc
+from indico.util.date_time import as_utc, get_day_end, get_day_start, get_display_tz, now_utc
 from indico.util.iterables import group_list
 from indico.util.marshmallow import RelativeDayDateTime
 from indico.web.args import use_kwargs
 from indico.web.flask.util import send_file
-from indico.web.rh import RHProtected, allow_signed_url
+from indico.web.rh import RH, RHProtected, allow_signed_url
 from indico.web.util import jsonify_data, jsonify_form, signed_url_for_user
 
 from indico_audiovisual import _
 from indico_audiovisual.api import _ical_serialize_av, _serialize_obj
 from indico_audiovisual.forms import RequestCalendarForm, RequestListFilterForm
 from indico_audiovisual.util import find_requests, is_av_manager
-from indico_audiovisual.views import WPAudiovisualManagers
+from indico_audiovisual.views import WPAudiovisualManagers, WPWebcastStatesDev
 
 
 class RHAVManagerProtected(RHProtected):
@@ -97,3 +98,16 @@ class RHRequestCalendarLink(RHAVManagerProtected):
             session['audiovisual_calendar_link_url'] = url
             return jsonify_data(flash=False)
         return jsonify_form(form, submit=_('Generate link'), disabled_until_change=False)
+
+
+class RHWebcastStatesDev(RH):
+    """Debug-only showcase of the webcast state card"""
+
+    def _check_access(self):
+        if not current_app.debug:
+            raise NotFound
+
+    def _process(self):
+        return WPWebcastStatesDev.render_template('webcast_states_dev.html',
+                                                  planned_start_dt=now_utc() + timedelta(hours=3, minutes=14),
+                                                  tzinfo=get_display_tz())
