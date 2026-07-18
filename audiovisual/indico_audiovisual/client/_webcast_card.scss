@@ -1,0 +1,150 @@
+// This file is part of the CERN Indico plugins.
+// Copyright (C) 2014 - 2026 CERN
+//
+// The CERN Indico plugins are free software; you can redistribute
+// them and/or modify them under the terms of the MIT License; see
+// the LICENSE file for more details.
+
+@use 'base/palette' as *;
+
+@keyframes av-live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.av-webcast-card {
+  display: flex;
+  flex-direction: column;
+  background: $light-gray;
+  border: 1px solid $pastel-gray;
+  border-radius: 2px;
+  box-shadow: 0 2px 1px -1px $pastel-gray;
+
+  // only the variant matching the card's current state is shown
+  [data-for-state] {
+    display: none;
+  }
+
+  @each $state in fallback, upcoming, live, ended {
+    &[data-state='#{$state}'] [data-for-state~='#{$state}'] {
+      display: flex;
+    }
+  }
+
+  .av-wc-variant {
+    align-items: center;
+    gap: 11px;
+    padding: 7px 10px;
+  }
+
+  .av-wc-icon {
+    flex: none;
+    font-size: 1.4em;
+    color: $light-black;
+  }
+
+  .av-wc-body {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .av-wc-title {
+    line-height: 1.5;
+
+    .av-live-badge {
+      margin-right: 6px;
+    }
+  }
+
+  .av-wc-sub {
+    font-size: var(--text-size-rel-s);
+    color: $light-black;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+
+    &.hidden {
+      display: none;
+    }
+  }
+
+  .av-wc-sep {
+    color: $gray;
+  }
+
+  .av-wc-action {
+    flex: none;
+    margin-left: 6px;
+  }
+}
+
+.av-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: $red;
+  color: white;
+  font-size: var(--text-size-rel-s);
+  font-weight: bold;
+  letter-spacing: 0.08em;
+  padding: 2px 8px 2px 7px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+
+.av-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: white;
+  flex: none;
+}
+
+.av-dot-pulse {
+  animation: av-live-pulse 1.6s ease-in-out infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+.av-wc-foot {
+  padding: 8px 10px;
+  border-top: 1px solid $pastel-gray;
+  background: white;
+  font-size: var(--text-size-rel-s);
+  color: $light-black;
+  line-height: 1.4;
+
+  .av-wc-foot-item {
+    align-items: center;
+    gap: 9px;
+  }
+
+  .av-wc-foot-eta {
+    color: $dark-gray;
+  }
+}
+
+// TODO: remove this once "circles" icon from icomoon is used instead
+.av-rec-disc {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  color: $dark-gray;
+
+  .rolling & {
+    color: $dark-red;
+  }
+}

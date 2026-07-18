@@ -19,6 +19,7 @@ from indico.modules.events import Event
 from indico.modules.events.contributions import Contribution
 from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.modules.events.requests.views import WPRequestsEventManagement
+from indico.modules.events.views import WPSimpleEventDisplay
 from indico.modules.rb.models.room_features import RoomFeature
 from indico.modules.users import User
 from indico.web.forms.base import IndicoForm
@@ -105,6 +106,8 @@ class AVRequestsPlugin(IndicoPlugin):
         self.inject_bundle('main.css', WPAudiovisualManagers)
         self.inject_bundle('main.css', WPRequestsEventManagement, subclasses=False,
                            condition=lambda: request.view_args.get('type') == AVRequest.name)
+        self.inject_bundle('main.css', WPSimpleEventDisplay)
+        self.inject_bundle('main.js', WPSimpleEventDisplay)
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
         self.connect(signals.agreements.get_definitions, self._get_agreement_definitions)
         self.connect(signals.acl.can_access, self._can_access_event, sender=Event)
@@ -176,27 +179,33 @@ class AVRequestsPlugin(IndicoPlugin):
             req.data['identifiers'] = identifiers
             flag_modified(req, 'data')
 
-    def _get_event_webcast_url(self, event):
+    def _get_webcast_request(self, event):
         req = Request.find_latest_for_event(event, AVRequest.name)
         if not req or req.state != RequestState.accepted or 'webcast' not in req.data['services']:
             return None
         if req.data.get('webcast_hidden'):
             return None
+        return req
+
+    def _get_webcast_url(self, req):
         url = req.data.get('custom_webcast_url') or self.settings.get('webcast_url')
         try:
-            return url.format(event_id=event.id)
+            return url.format(event_id=req.event_id)
         except Exception:
             self.logger.exception('Could not build webcast URL')
             return None
 
     def _inject_event_header(self, event, **kwargs):
-        url = self._get_event_webcast_url(event)
+        req = self._get_webcast_request(event)
+        url = self._get_webcast_url(req) if req else None
         if not url:
             return
-        return render_plugin_template('event_header.html', url=url)
+        return render_plugin_template('event_header.html', event=event, url=url,
+                                      has_recording='recording' in req.data['services'])
 
     def _inject_conference_header_subtitle(self, event, **kwargs):
-        url = self._get_event_webcast_url(event)
+        req = self._get_webcast_request(event)
+        url = self._get_webcast_url(req) if req else None
         if not url:
             return
         return render_plugin_template('conference_header.html', url=url)
