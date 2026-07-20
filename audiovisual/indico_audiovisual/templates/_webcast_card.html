@@ -1,4 +1,5 @@
-{% macro webcast_card(watch_url, planned_start_dt=none, tzinfo=none, has_recording=false, initial_state='fallback') %}
+{% macro webcast_card(watch_url, planned_start_dt=none, tzinfo=none, has_recording=false, initial_state='fallback',
+                      state_url=none) %}
     {# TODO: replace with `icon-circles` once it's added to the icomoon font in indico core #}
     {% set rec_disc %}
         <svg class="av-rec-disc" viewBox="0 0 24 24" aria-hidden="true">
@@ -9,7 +10,8 @@
     <div class="av-webcast-card"
          data-state="{{ initial_state }}"
          {% if planned_start_dt %}data-planned-start-dt="{{ planned_start_dt.isoformat() }}"{% endif %}
-         {% if tzinfo %}data-tz="{{ tzinfo.zone }}"{% endif %}>
+         {% if tzinfo %}data-tz="{{ tzinfo.zone }}"{% endif %}
+         {% if state_url %}data-state-url="{{ state_url }}"{% endif %}>
         <div class="av-wc-main">
             {# ---- fallback: static banner ---- #}
             <div class="av-wc-variant" data-for-state="fallback">

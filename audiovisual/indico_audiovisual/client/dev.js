@@ -13,28 +13,28 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
   const now = Date.now();
-  const mockPayloads = {
-    fallback: {state: 'unavailable', stream_start_date_time: null, stream_stop_date_time: null},
-    upcoming: {state: 'upcoming', stream_start_date_time: null, stream_stop_date_time: null},
+  const mockStates = {
+    fallback: {state: 'unavailable', streamStartDateTime: null, streamStopDateTime: null},
+    upcoming: {state: 'upcoming', streamStartDateTime: null, streamStopDateTime: null},
     live: {
       state: 'live',
-      stream_start_date_time: new Date(now - 23 * 60000).toISOString(),
-      stream_stop_date_time: null,
+      streamStartDateTime: new Date(now - 23 * 60000).toISOString(),
+      streamStopDateTime: null,
     },
     ended: {
       state: 'ended',
-      stream_start_date_time: new Date(now - 81 * 60000).toISOString(),
-      stream_stop_date_time: new Date(now - 23 * 60000).toISOString(),
+      streamStartDateTime: new Date(now - 81 * 60000).toISOString(),
+      streamStopDateTime: new Date(now - 23 * 60000).toISOString(),
     },
   };
   devRoot.querySelectorAll('[data-specimen-state]').forEach(spec => {
     const card = spec.querySelector('.av-webcast-card');
-    applyState(card, mockPayloads[spec.dataset.specimenState]);
+    applyState(card, mockStates[spec.dataset.specimenState]);
   });
   devRoot.querySelectorAll('[data-mock-state]').forEach(btn => {
     btn.addEventListener('click', () => {
-      const payload = mockPayloads[btn.dataset.mockState];
-      devRoot.querySelectorAll('.js-interactive .av-webcast-card').forEach(card => applyState(card, payload));
+      const webcastState = mockStates[btn.dataset.mockState];
+      devRoot.querySelectorAll('.js-interactive .av-webcast-card').forEach(card => applyState(card, webcastState));
     });
   });
 });

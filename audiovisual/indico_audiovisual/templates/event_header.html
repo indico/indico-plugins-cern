@@ -4,6 +4,6 @@
     <div class="event-details-label align-top">{% trans %}Webcast{% endtrans %}</div>
     <div class="event-details-content">
         {{ webcast_card(url, planned_start_dt=event.start_dt, tzinfo=event.display_tzinfo,
-                        has_recording=has_recording) }}
+                        has_recording=has_recording, state_url=state_url) }}
     </div>
 </div>

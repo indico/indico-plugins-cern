@@ -5,11 +5,13 @@
 // them and/or modify them under the terms of the MIT License; see
 // the LICENSE file for more details.
 
+/* global moment */
+
 import {bindTranslateComponents} from 'indico/react/i18n';
 
 const {Translate} = bindTranslateComponents('audiovisual');
 
-const KNOWN_STATES = ['upcoming', 'live', 'ended'];
+const SUPPORTED_STATES = ['upcoming', 'live', 'ended'];
 const RELATIVE_TIME_THRESHOLDS = {m: 60, h: 24};
 
 function formatStreamDuration(ms) {
@@ -83,15 +85,17 @@ export function refreshCard(card) {
   }
 }
 
-export function applyState(card, payload) {
-  card.dataset.state = KNOWN_STATES.includes(payload.state) ? payload.state : 'fallback';
-  if (payload.stream_start_date_time) {
-    card.dataset.streamStartDt = payload.stream_start_date_time;
+export function applyState(card, webcastState) {
+  card.dataset.state = SUPPORTED_STATES.includes(webcastState.state)
+    ? webcastState.state
+    : 'fallback';
+  if (webcastState.streamStartDateTime) {
+    card.dataset.streamStartDt = webcastState.streamStartDateTime;
   } else {
     delete card.dataset.streamStartDt;
   }
-  if (payload.stream_stop_date_time) {
-    card.dataset.streamStopDt = payload.stream_stop_date_time;
+  if (webcastState.streamStopDateTime) {
+    card.dataset.streamStopDt = webcastState.streamStopDateTime;
   } else {
     delete card.dataset.streamStopDt;
   }

@@ -64,6 +64,10 @@ class PluginSettingsForm(IndicoForm):
     webcast_url = URLField(_('Webcast URL'), [DataRequired()],
                            description=_('The URL to watch the webcast for an event. Can contain {event_id} which '
                                          'will be replaced with the ID of the event.'))
+    webcast_state_relay_url = URLField(_('Webcast State Relay URL'),
+                                       description=_('The webcast-state-relay URL used to subscribe to the live '
+                                                     'webcast status shown on event pages. Must contain the '
+                                                     '{event_id} placeholder. Leave empty to disable.'))
     agreement_paper_url = URLField(_('Agreement Paper URL'),
                                    description=_('The URL to the agreement that can be printed and signed offline.'))
     recording_cds_url = URLField(_('CDS URL'),
@@ -76,6 +80,10 @@ class PluginSettingsForm(IndicoForm):
     def validate_recording_cds_url(self, field):
         if field.data and '{cds_id}' not in field.data:
             raise ValidationError('{cds_id} placeholder is missing')
+
+    def validate_webcast_state_relay_url(self, field):
+        if field.data and '{event_id}' not in field.data:
+            raise ValidationError('{event_id} placeholder is missing')
 
 
 class AVRequestsPlugin(IndicoPlugin):
@@ -93,6 +101,7 @@ class AVRequestsPlugin(IndicoPlugin):
                         'notification_emails': [],
                         'webcast_ping_url': '',
                         'webcast_url': '',
+                        'webcast_state_relay_url': '',
                         'agreement_paper_url': None,
                         'recording_cds_url': 'https://cds.cern.ch/record/{cds_id}',
                         'room_feature': None}
@@ -198,13 +207,18 @@ class AVRequestsPlugin(IndicoPlugin):
             self.logger.exception('Could not build webcast URL')
             return None
 
+    def _get_webcast_state_url(self, event):
+        url = self.settings.get('webcast_state_relay_url')
+        return url.format(event_id=event.id) if url else None
+
     def _inject_event_header(self, event, **kwargs):
         req = self._get_webcast_request(event)
         url = self._get_webcast_url(req) if req else None
         if not url:
             return
         return render_plugin_template('event_header.html', event=event, url=url,
-                                      has_recording='recording' in req.data['services'])
+                                      has_recording='recording' in req.data['services'],
+                                      state_url=self._get_webcast_state_url(event))
 
     def _inject_conference_header_subtitle(self, event, **kwargs):
         req = self._get_webcast_request(event)
