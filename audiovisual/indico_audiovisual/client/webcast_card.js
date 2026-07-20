@@ -42,8 +42,8 @@ function updateCountdown(card) {
     const diff = startDt - Date.now();
     countdown.textContent =
       diff > 60000
-        ? moment.duration(diff).humanize(false, RELATIVE_TIME_THRESHOLDS)
-        : Translate.string('a moment');
+        ? moment.duration(diff).humanize(true, RELATIVE_TIME_THRESHOLDS)
+        : Translate.string('soon');
   }
 }
 
