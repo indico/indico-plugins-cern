@@ -5,7 +5,7 @@
 // them and/or modify them under the terms of the MIT License; see
 // the LICENSE file for more details.
 
-import {applyState, refreshCard} from './webcast_card';
+import {applyState, initCard, refreshCard} from './webcast_card';
 
 import './style.scss';
 
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!cards.length) {
     return;
   }
-  cards.forEach(refreshCard);
+  cards.forEach(initCard);
   cards.forEach(subscribeToStateUpdates);
   setInterval(() => cards.forEach(refreshCard), REFRESH_INTERVAL);
 });

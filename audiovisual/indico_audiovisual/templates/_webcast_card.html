@@ -1,5 +1,5 @@
-{% macro webcast_card(watch_url, planned_start_dt=none, tzinfo=none, has_recording=false, initial_state='fallback',
-                      state_url=none) %}
+{% macro webcast_card(watch_url, planned_start_dt=none, tzinfo=none, is_recording_planned=false, initial_state='fallback',
+                      state_url=none, recording_url=none, recording_thumbnail_url=none, inner_recording_count=0) %}
     {# TODO: replace with `icon-circles` once it's added to the icomoon font in indico core #}
     {% set rec_disc %}
         <svg class="av-rec-disc" viewBox="0 0 24 24" aria-hidden="true">
@@ -11,8 +11,19 @@
          data-state="{{ initial_state }}"
          {% if planned_start_dt %}data-planned-start-dt="{{ planned_start_dt.isoformat() }}"{% endif %}
          {% if tzinfo %}data-tz="{{ tzinfo.zone }}"{% endif %}
-         {% if state_url %}data-state-url="{{ state_url }}"{% endif %}>
+         {% if state_url %}data-state-url="{{ state_url }}"{% endif %}
+         {% if recording_thumbnail_url %}data-recording-thumb="{{ recording_thumbnail_url }}"{% endif %}>
         <div class="av-wc-main">
+            <div class="av-wc-thumb">
+                <img class="av-wc-thumb-img js-thumb" alt="">
+                <span class="av-wc-thumb-play" aria-hidden="true">
+                    <i class="icon-play"></i>
+                </span>
+                {% if recording_url %}
+                    <a class="av-wc-thumb-link" href="{{ recording_url }}" aria-hidden="true" tabindex="-1"></a>
+                {% endif %}
+            </div>
+
             {# ---- fallback: static banner ---- #}
             <div class="av-wc-variant" data-for-state="fallback">
                 <i class="av-wc-icon icon-camera"></i>
@@ -74,16 +85,29 @@
             <div class="av-wc-variant" data-for-state="ended">
                 <i class="av-wc-icon icon-camera"></i>
                 <div class="av-wc-body">
-                    <div class="av-wc-title">{% trans %}The webcast has ended{% endtrans %}</div>
+                    <div class="av-wc-title">
+                        {% if recording_url %}
+                            {% trans %}Recording available{% endtrans %}
+                        {% else %}
+                            {% trans %}Webcast has ended{% endtrans %}
+                        {% endif %}
+                    </div>
                     <div class="av-wc-sub js-ended-sub hidden">
                         <i class="icon-time"></i>
                         <span class="js-sub-text"></span>
                     </div>
                 </div>
+                {% if recording_url %}
+                    <div class="av-wc-action">
+                        <a class="i-button i-button-small highlight" href="{{ recording_url }}">
+                            <strong>{% trans %}Watch now{% endtrans %}</strong>
+                        </a>
+                    </div>
+                {% endif %}
             </div>
         </div>
         {# ---- recording footer: planned / rolling / processing ---- #}
-        {% if has_recording %}
+        {% if is_recording_planned and not recording_url %}
             <div class="av-wc-foot">
                 <span class="av-wc-foot-item" data-for-state="fallback upcoming">
                     {{ rec_disc }}
@@ -95,8 +119,18 @@
                 </span>
                 <span class="av-wc-foot-item" data-for-state="ended">
                     <i class="icon-file-play"></i>
-                    <span>{% trans %}Recording is being prepared{% endtrans %}</span>
-                    <span class="av-wc-foot-eta">&middot; {% trans %}usually within a few days{% endtrans %}</span>
+                    {% if inner_recording_count %}
+                        <span>
+                            {%- trans count=inner_recording_count -%}
+                                {{ count }} recording available
+                            {%- pluralize -%}
+                                {{ count }} recordings available
+                            {%- endtrans -%}
+                        </span>
+                    {% else %}
+                        <span>{% trans %}Recording is being prepared{% endtrans %}</span>
+                        <span class="av-wc-foot-eta">&middot; {% trans %}usually within a few days{% endtrans %}</span>
+                    {% endif %}
                 </span>
             </div>
         {% endif %}
