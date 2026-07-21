@@ -74,6 +74,19 @@ function updateEndedSubline(card) {
   setSublineText(sub, text);
 }
 
+function resolveLiveThumbnail(card, webcastState) {
+  const path = webcastState.thumbnails?.main;
+  const base = card.dataset.stateUrl;
+  if (!path || !base) {
+    return null;
+  }
+  try {
+    return new URL(path, base).href;
+  } catch {
+    return null;
+  }
+}
+
 function resolveThumbnailUrl(card) {
   if (card.dataset.state === 'ended') {
     return card.dataset.recordingThumb || null;
@@ -134,8 +147,9 @@ export function applyState(card, webcastState) {
   } else {
     delete card.dataset.streamStopDt;
   }
-  if (webcastState.thumbnailUrl) {
-    card.dataset.liveThumb = webcastState.thumbnailUrl;
+  const liveThumb = resolveLiveThumbnail(card, webcastState);
+  if (liveThumb) {
+    card.dataset.liveThumb = liveThumb;
   } else {
     delete card.dataset.liveThumb;
   }

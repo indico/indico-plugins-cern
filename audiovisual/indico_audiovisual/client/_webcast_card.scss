@@ -76,9 +76,9 @@
     pointer-events: none;
 
     .icon-play {
-      display: flex; // Triangle is not centered vertically by default
+      display: flex; // Play is not centered vertically by default
       font-size: 16px;
-      margin-left: 2px; // optical horizontal centering of the triangle
+      margin-left: 2px; // Make the triangle look centered horizontally
     }
   }
 
@@ -97,10 +97,10 @@
     .av-wc-icon {
       display: none;
     }
+  }
 
-    .av-wc-thumb-play {
-      display: flex;
-    }
+  &[data-state='ended'].has-thumb .av-wc-thumb-play {
+    display: flex;
   }
 
   .av-wc-variant {
