@@ -74,6 +74,30 @@ function updateEndedSubline(card) {
   setSublineText(sub, text);
 }
 
+function resolveThumbnailUrl(card) {
+  if (card.dataset.state === 'ended') {
+    return card.dataset.recordingThumb || null;
+  }
+  if (card.dataset.state === 'live') {
+    return card.dataset.liveThumb || null;
+  }
+  return null;
+}
+
+function updateThumbnail(card) {
+  const thumb = card.querySelector('.js-thumb');
+  const url = resolveThumbnailUrl(card);
+  // a source that already failed is not retried on every refresh
+  if (!url || url === thumb.dataset.failedUrl) {
+    card.classList.remove('has-thumb');
+    return;
+  }
+  if (thumb.getAttribute('src') !== url) {
+    thumb.src = url;
+  }
+  card.classList.add('has-thumb');
+}
+
 export function refreshCard(card) {
   const state = card.dataset.state;
   if (state === 'upcoming') {
@@ -83,6 +107,17 @@ export function refreshCard(card) {
   } else if (state === 'ended') {
     updateEndedSubline(card);
   }
+  updateThumbnail(card);
+}
+
+export function initCard(card) {
+  const thumb = card.querySelector('.js-thumb');
+  // an inline onerror would be blocked by the CSP, so the handler is bound here
+  thumb.addEventListener('error', () => {
+    thumb.dataset.failedUrl = thumb.getAttribute('src') || '';
+    card.classList.remove('has-thumb');
+  });
+  refreshCard(card);
 }
 
 export function applyState(card, webcastState) {
@@ -98,6 +133,11 @@ export function applyState(card, webcastState) {
     card.dataset.streamStopDt = webcastState.streamStopDateTime;
   } else {
     delete card.dataset.streamStopDt;
+  }
+  if (webcastState.thumbnailUrl) {
+    card.dataset.liveThumb = webcastState.thumbnailUrl;
+  } else {
+    delete card.dataset.liveThumb;
   }
   refreshCard(card);
 }

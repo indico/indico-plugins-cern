@@ -30,6 +30,7 @@ from indico.web.menu import TopMenuItem
 
 from indico_audiovisual import _
 from indico_audiovisual.api import AVExportHook, RecordingLinkAPI
+from indico_audiovisual.recordings import get_recording_thumbnail_url, get_recordings
 from indico_audiovisual.blueprint import blueprint
 from indico_audiovisual.compat import compat_blueprint
 from indico_audiovisual.definition import AVRequest, SpeakerReleaseAgreement, TalkPlaceholder
@@ -216,8 +217,13 @@ class AVRequestsPlugin(IndicoPlugin):
         url = self._get_webcast_url(req) if req else None
         if not url:
             return
+        recording, inner_recordings = get_recordings(event, session.user)
         return render_plugin_template('event_header.html', event=event, url=url,
-                                      has_recording='recording' in req.data['services'],
+                                      is_recording_planned='recording' in req.data['services'],
+                                      recording_url=(recording.link_url if recording else None),
+                                      recording_thumbnail_url=(get_recording_thumbnail_url(recording.link_url)
+                                                               if recording else None),
+                                      inner_recording_count=len(inner_recordings),
                                       state_url=self._get_webcast_state_url(event))
 
     def _inject_conference_header_subtitle(self, event, **kwargs):

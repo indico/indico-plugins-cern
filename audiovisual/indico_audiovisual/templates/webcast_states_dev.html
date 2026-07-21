@@ -3,7 +3,9 @@
 
 {% block title %}Webcast card states{% endblock %}
 
-{% macro specimen(caption, state, has_recording=true) %}
+{% set demo_recording_url = 'https://videos.cern.ch/record/3026459' %}
+
+{% macro specimen(caption, state, is_recording_planned=true, recording_url=none, inner_recording_count=0) %}
     <section class="av-dev-specimen" {% if state %}data-specimen-state="{{ state }}"{% endif %}>
         <h3>{{ caption }}</h3>
         <div class="event-details">
@@ -13,7 +15,11 @@
                     {{ webcast_card('#',
                                     planned_start_dt=planned_start_dt,
                                     tzinfo=tzinfo,
-                                    has_recording=has_recording) }}
+                                    is_recording_planned=is_recording_planned,
+                                    recording_url=recording_url,
+                                    recording_thumbnail_url=(recording_url ~ '/files/frame-1.jpg'
+                                                             if recording_url else none),
+                                    inner_recording_count=inner_recording_count) }}
                 </div>
             </div>
         </div>
@@ -28,7 +34,10 @@
         {{ specimen('Upcoming — before start, with countdown', 'upcoming') }}
         {{ specimen('Live — streaming and recording', 'live') }}
         {{ specimen('Ended — stream over, recording processing', 'ended') }}
-        {{ specimen('Live — webcast only, no recording requested', 'live', has_recording=false) }}
+        {{ specimen('Ended — recording available on the event', 'ended', recording_url=demo_recording_url) }}
+        {{ specimen('Ended — recordings available on the contributions', 'ended', inner_recording_count=3) }}
+        {{ specimen('Ended — a single recording on a contribution', 'ended', inner_recording_count=1) }}
+        {{ specimen('Live — webcast only, no recording requested', 'live', is_recording_planned=false) }}
 
         <section class="av-dev-specimen js-interactive">
             <h3>Interactive — feed mock payloads through applyState()</h3>
@@ -47,7 +56,7 @@
                         {{ webcast_card('#',
                                         planned_start_dt=planned_start_dt,
                                         tzinfo=tzinfo,
-                                        has_recording=true) }}
+                                        is_recording_planned=true) }}
                     </div>
                 </div>
             </div>

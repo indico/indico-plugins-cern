@@ -5,7 +5,7 @@
 // them and/or modify them under the terms of the MIT License; see
 // the LICENSE file for more details.
 
-import {applyState} from './webcast_card';
+import {applyState, initCard} from './webcast_card';
 
 document.addEventListener('DOMContentLoaded', () => {
   const devRoot = document.querySelector('#av-webcast-dev');
@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
       streamStopDateTime: new Date(now - 23 * 60000).toISOString(),
     },
   };
+  devRoot.querySelectorAll('.av-webcast-card').forEach(initCard);
   devRoot.querySelectorAll('[data-specimen-state]').forEach(spec => {
     const card = spec.querySelector('.av-webcast-card');
     applyState(card, mockStates[spec.dataset.specimenState]);
