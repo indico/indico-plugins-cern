@@ -81,7 +81,12 @@ function resolveLiveThumbnail(card, webcastState) {
     return null;
   }
   try {
-    return new URL(path, base).href;
+    const thumbUrl = new URL(path, base);
+    const token = card.dataset.viewerToken;
+    if (token) {
+      thumbUrl.searchParams.set('token', token);
+    }
+    return thumbUrl.href;
   } catch {
     return null;
   }

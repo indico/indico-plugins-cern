@@ -1,5 +1,6 @@
 {% macro webcast_card(watch_url, planned_start_dt=none, tzinfo=none, is_recording_planned=false, initial_state='fallback',
-                      state_url=none, recording_url=none, recording_thumbnail_url=none, inner_recording_count=0) %}
+                      state_url=none, viewer_token=none, recording_url=none, recording_thumbnail_url=none,
+                      inner_recording_count=0) %}
     {# TODO: replace with `icon-circles` once it's added to the icomoon font in indico core #}
     {% set rec_disc %}
         <svg class="av-rec-disc" viewBox="0 0 24 24" aria-hidden="true">
@@ -12,6 +13,7 @@
          {% if planned_start_dt %}data-planned-start-dt="{{ planned_start_dt.isoformat() }}"{% endif %}
          {% if tzinfo %}data-tz="{{ tzinfo.zone }}"{% endif %}
          {% if state_url %}data-state-url="{{ state_url }}"{% endif %}
+         {% if viewer_token %}data-viewer-token="{{ viewer_token }}"{% endif %}
          {% if recording_thumbnail_url %}data-recording-thumb="{{ recording_thumbnail_url }}"{% endif %}>
         <div class="av-wc-main">
             <div class="av-wc-thumb">

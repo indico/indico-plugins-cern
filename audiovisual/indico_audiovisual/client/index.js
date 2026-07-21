@@ -12,9 +12,14 @@ import './style.scss';
 const REFRESH_INTERVAL = 30000;
 
 function subscribeToStateUpdates(card) {
-  const url = card.dataset.stateUrl;
-  if (!url) {
+  const base = card.dataset.stateUrl;
+  if (!base) {
     return;
+  }
+  const url = new URL(base);
+  const token = card.dataset.viewerToken;
+  if (token) {
+    url.searchParams.set('token', token);
   }
   const source = new EventSource(url);
   source.addEventListener('state', evt => {
