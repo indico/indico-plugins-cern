@@ -5,6 +5,9 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
+from datetime import datetime, timedelta, timezone
+
+from authlib.jose import jwt as jose_jwt
 from flask import g, request, session
 from flask_pluginengine import render_plugin_template, url_for_plugin
 from sqlalchemy.orm.attributes import flag_modified
@@ -40,6 +43,9 @@ from indico_audiovisual.util import (compare_data_identifiers, count_capable_con
 from indico_audiovisual.views import WPAudiovisualManagers, WPWebcastStatesDev
 
 
+VIEWER_TOKEN_TTL = timedelta(hours=24)
+
+
 class PluginSettingsForm(IndicoForm):
     managers = PrincipalListField(_('Managers'), allow_groups=True,
                                   description=_('List of users who can manage recording/webcast requests.'))
@@ -69,6 +75,11 @@ class PluginSettingsForm(IndicoForm):
                                        description=_('The webcast-state-relay URL used to subscribe to the live '
                                                      'webcast status shown on event pages. Must contain the '
                                                      '{event_id} placeholder. Leave empty to disable.'))
+    webcast_state_viewer_token_secret = StringField(_('Webcast State Viewer Token Secret'),
+                                                    description=_('Shared secret used to sign the short-lived tokens '
+                                                                 'that authorize a viewer to subscribe to the live '
+                                                                 'webcast status. Must match the relay\'s '
+                                                                 'RELAY_VIEWER_TOKEN_SECRET.'))
     agreement_paper_url = URLField(_('Agreement Paper URL'),
                                    description=_('The URL to the agreement that can be printed and signed offline.'))
     recording_cds_url = URLField(_('CDS URL'),
@@ -103,6 +114,7 @@ class AVRequestsPlugin(IndicoPlugin):
                         'webcast_ping_url': '',
                         'webcast_url': '',
                         'webcast_state_relay_url': '',
+                        'webcast_state_viewer_token_secret': '',
                         'agreement_paper_url': None,
                         'recording_cds_url': 'https://cds.cern.ch/record/{cds_id}',
                         'room_feature': None}
@@ -212,19 +224,38 @@ class AVRequestsPlugin(IndicoPlugin):
         url = self.settings.get('webcast_state_relay_url')
         return url.format(event_id=event.id) if url else None
 
+    def _build_webcast_viewer_token(self, event):
+        secret = self.settings.get('webcast_state_viewer_token_secret')
+        if not secret:
+            return None
+        now = datetime.now(timezone.utc)
+        payload = {'indicoId': event.id,
+                   'iat': int(now.timestamp()),
+                   'exp': int((now + VIEWER_TOKEN_TTL).timestamp())}
+        if session.user:
+            payload['sub'] = str(session.user.id)
+        try:
+            return jose_jwt.encode({'alg': 'HS256'}, payload, secret).decode()
+        except Exception:
+            self.logger.exception('Could not build webcast state token')
+            return None
+
     def _inject_event_header(self, event, **kwargs):
         req = self._get_webcast_request(event)
         url = self._get_webcast_url(req) if req else None
         if not url:
             return
         recording, inner_recordings = get_recordings(event, session.user)
+        recording_url = recording.link_url if recording else None
+        recording_thumbnail_url = get_recording_thumbnail_url(recording_url) if recording_url else None
+        state_url = self._get_webcast_state_url(event)
+        viewer_token = self._build_webcast_viewer_token(event) if state_url else None
         return render_plugin_template('event_header.html', event=event, url=url,
                                       is_recording_planned='recording' in req.data['services'],
-                                      recording_url=(recording.link_url if recording else None),
-                                      recording_thumbnail_url=(get_recording_thumbnail_url(recording.link_url)
-                                                               if recording else None),
+                                      recording_url=recording_url,
+                                      recording_thumbnail_url=recording_thumbnail_url,
                                       inner_recording_count=len(inner_recordings),
-                                      state_url=self._get_webcast_state_url(event))
+                                      state_url=state_url, viewer_token=viewer_token)
 
     def _inject_conference_header_subtitle(self, event, **kwargs):
         req = self._get_webcast_request(event)
