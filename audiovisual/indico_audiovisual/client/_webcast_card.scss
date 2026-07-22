@@ -18,6 +18,7 @@
   }
 }
 
+// based on .event-service-row styles
 .av-webcast-card {
   display: flex;
   flex-direction: column;
@@ -26,11 +27,11 @@
   border-radius: 2px;
   box-shadow: 0 2px 1px -1px $pastel-gray;
 
-  // only the variant matching the card's current state is shown
   [data-for-state] {
     display: none;
   }
 
+  // only the variant matching the card's current state is shown
   @each $state in fallback, upcoming, live, ended {
     &[data-state='#{$state}'] [data-for-state~='#{$state}'] {
       display: flex;
@@ -76,9 +77,10 @@
     pointer-events: none;
 
     .icon-play {
-      display: flex; // Play is not centered vertically by default
+      // icon is not centered vertically by default
+      display: flex;
       font-size: 16px;
-      margin-left: 2px; // Make the triangle look centered horizontally
+      margin-left: 2px;
     }
   }
 
@@ -93,7 +95,7 @@
       display: block;
     }
 
-    // the thumbnail takes over the icon's role
+    // the thumbnail replaces the camera icon
     .av-wc-icon {
       display: none;
     }
@@ -126,8 +128,6 @@
   }
 
   .av-wc-title {
-    line-height: 1.5;
-
     .av-live-badge {
       margin-right: 6px;
     }

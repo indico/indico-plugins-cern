@@ -73,13 +73,12 @@ class PluginSettingsForm(IndicoForm):
                                          'will be replaced with the ID of the event.'))
     webcast_state_relay_url = URLField(_('Webcast State Relay URL'),
                                        description=_('The webcast-state-relay URL used to subscribe to the live '
-                                                     'webcast status shown on event pages. Must contain the '
+                                                     'webcast state shown on event pages. Must contain the '
                                                      '{event_id} placeholder. Leave empty to disable.'))
     webcast_state_viewer_token_secret = StringField(_('Webcast State Viewer Token Secret'),
                                                     description=_('Shared secret used to sign the short-lived tokens '
                                                                  'that authorize a viewer to subscribe to the live '
-                                                                 'webcast status. Must match the relay\'s '
-                                                                 'RELAY_VIEWER_TOKEN_SECRET.'))
+                                                                 'webcast state.'))
     agreement_paper_url = URLField(_('Agreement Paper URL'),
                                    description=_('The URL to the agreement that can be printed and signed offline.'))
     recording_cds_url = URLField(_('CDS URL'),

@@ -26,7 +26,7 @@
                 {% endif %}
             </div>
 
-            {# ---- fallback: static banner ---- #}
+            {# ---- fallback (static) ---- #}
             <div class="av-wc-variant" data-for-state="fallback">
                 <i class="av-wc-icon icon-camera"></i>
                 <div class="av-wc-body">
@@ -38,7 +38,7 @@
                     </a>
                 </div>
             </div>
-            {# ---- upcoming: countdown + absolute start time ---- #}
+            {# ---- upcoming ---- #}
             <div class="av-wc-variant" data-for-state="upcoming">
                 <i class="av-wc-icon icon-camera"></i>
                 <div class="av-wc-body">
@@ -63,7 +63,7 @@
                     </a>
                 </div>
             </div>
-            {# ---- live: LIVE badge + elapsed time ---- #}
+            {# ---- live ---- #}
             <div class="av-wc-variant" data-for-state="live">
                 <div class="av-wc-body">
                     <div class="av-wc-title">
@@ -83,7 +83,7 @@
                     </a>
                 </div>
             </div>
-            {# ---- ended: streamed date + duration ---- #}
+            {# ---- ended ---- #}
             <div class="av-wc-variant" data-for-state="ended">
                 <i class="av-wc-icon icon-camera"></i>
                 <div class="av-wc-body">
@@ -108,7 +108,7 @@
                 {% endif %}
             </div>
         </div>
-        {# ---- recording footer: planned / rolling / processing ---- #}
+        {# ---- recording footer (planned / rolling / processing / available) ---- #}
         {% if is_recording_planned and not recording_url %}
             <div class="av-wc-foot">
                 <span class="av-wc-foot-item" data-for-state="fallback upcoming">
