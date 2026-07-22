@@ -5,7 +5,8 @@
 
 {% set demo_recording_url = 'https://videos.cern.ch/record/3026459' %}
 
-{% macro specimen(caption, state, is_recording_planned=true, recording_url=none, inner_recording_count=0) %}
+{% macro specimen(caption, state, is_recording_planned=true, recording_url=none, inner_recording_count=0,
+                  state_url=none) %}
     <section class="av-dev-specimen" {% if state %}data-specimen-state="{{ state }}"{% endif %}>
         <h3>{{ caption }}</h3>
         <div class="event-details">
@@ -16,6 +17,7 @@
                                     planned_start_dt=planned_start_dt,
                                     tzinfo=tzinfo,
                                     is_recording_planned=is_recording_planned,
+                                    state_url=state_url,
                                     recording_url=recording_url,
                                     recording_thumbnail_url=(recording_url ~ '/files/frame-1.jpg'
                                                              if recording_url else none),
@@ -30,17 +32,18 @@
     <div id="av-webcast-dev">
         <p>Demo of the webcast state cards (debug mode only).</p>
 
-        {{ specimen('Fallback — relay unavailable / not configured', 'fallback') }}
-        {{ specimen('Upcoming — before start, with countdown', 'upcoming') }}
-        {{ specimen('Live — streaming and recording', 'live') }}
-        {{ specimen('Ended — stream over, recording processing', 'ended') }}
-        {{ specimen('Ended — recording available on the event', 'ended', recording_url=demo_recording_url) }}
-        {{ specimen('Ended — recordings available on the contributions', 'ended', inner_recording_count=3) }}
-        {{ specimen('Ended — a single recording on a contribution', 'ended', inner_recording_count=1) }}
-        {{ specimen('Live — webcast only, no recording requested', 'live', is_recording_planned=false) }}
+        {{ specimen('Fallback: relay unavailable', 'fallback') }}
+        {{ specimen('Upcoming: countdown to start', 'upcoming') }}
+        {{ specimen('Live: streaming and recording', 'live') }}
+        {{ specimen('Live: with thumbnail', 'liveThumb', state_url=demo_recording_url ~ '/') }}
+        {{ specimen('Live: webcast only, no recording', 'live', is_recording_planned=false) }}
+        {{ specimen('Ended: recording processing', 'ended') }}
+        {{ specimen('Ended: recording on the event', 'ended', recording_url=demo_recording_url) }}
+        {{ specimen('Ended: recordings on the contributions', 'ended', inner_recording_count=3) }}
+        {{ specimen('Ended: single recording on a contribution', 'ended', inner_recording_count=1) }}
 
         <section class="av-dev-specimen js-interactive">
-            <h3>Interactive — feed mock payloads through applyState()</h3>
+            <h3>Interactive: feed mock payloads through applyState()</h3>
             <div class="toolbar">
                 <div class="group">
                     <button type="button" class="i-button" data-mock-state="upcoming">Upcoming</button>
