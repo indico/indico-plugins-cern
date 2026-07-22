@@ -226,7 +226,7 @@ class AVRequestsPlugin(IndicoPlugin):
         if not secret:
             return None
         now = now_utc()
-        payload = {'indicoId': event.id,
+        payload = {'event_id': event.id,
                    'iat': int(now.timestamp()),
                    'exp': int((now + VIEWER_TOKEN_TTL).timestamp())}
         if session.user:
