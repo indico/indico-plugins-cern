@@ -21,6 +21,12 @@ document.addEventListener('DOMContentLoaded', () => {
       streamStartDateTime: new Date(now - 23 * 60000).toISOString(),
       streamStopDateTime: null,
     },
+    liveThumb: {
+      state: 'live',
+      streamStartDateTime: new Date(now - 23 * 60000).toISOString(),
+      streamStopDateTime: null,
+      thumbnails: {main: 'files/frame-1.jpg'},
+    },
     ended: {
       state: 'ended',
       streamStartDateTime: new Date(now - 81 * 60000).toISOString(),
