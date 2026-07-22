@@ -18,16 +18,7 @@ function formatStreamDuration(ms) {
   const minutes = Math.max(1, Math.round(ms / 60000));
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
-  if (Intl.DurationFormat) {
-    return new Intl.DurationFormat(moment.locale(), {style: 'narrow'}).format({hours, minutes: mins});
-  }
-  // TODO: drop the fallback once the browserslist floor clears chrome 129 / firefox 136
-  if (!hours) {
-    return Translate.string('{mins}m', {mins});
-  }
-  return mins
-    ? Translate.string('{hours}h {mins}m', {hours, mins})
-    : Translate.string('{hours}h', {hours});
+  return new Intl.DurationFormat(moment.locale(), {style: 'narrow'}).format({hours, minutes: mins});
 }
 
 function setSublineText(sub, text) {

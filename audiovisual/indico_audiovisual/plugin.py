@@ -78,8 +78,8 @@ class PluginSettingsForm(IndicoForm):
                                                      '{event_id} placeholder. Leave empty to disable.'))
     webcast_state_viewer_token_secret = StringField(_('Webcast State Viewer Token Secret'),
                                                     description=_('Shared secret used to sign the short-lived tokens '
-                                                                 'that authorize a viewer to subscribe to the live '
-                                                                 'webcast state.'))
+                                                                  'that authorize a viewer to subscribe to the live '
+                                                                  'webcast state.'))
     agreement_paper_url = URLField(_('Agreement Paper URL'),
                                    description=_('The URL to the agreement that can be printed and signed offline.'))
     recording_cds_url = URLField(_('CDS URL'),
