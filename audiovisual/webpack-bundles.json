@@ -1,6 +1,5 @@
 {
   "entry": {
-    "main": "./index.js",
-    "dev": "./dev.js"
+    "main": "./index.js"
   }
 }
