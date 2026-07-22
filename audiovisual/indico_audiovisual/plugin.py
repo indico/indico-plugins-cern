@@ -5,7 +5,7 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from authlib.jose import jwt as jose_jwt
 from flask import g, request, session
@@ -33,11 +33,11 @@ from indico.web.menu import TopMenuItem
 
 from indico_audiovisual import _
 from indico_audiovisual.api import AVExportHook, RecordingLinkAPI
-from indico_audiovisual.recordings import get_recording_thumbnail_url, get_recordings
 from indico_audiovisual.blueprint import blueprint
 from indico_audiovisual.compat import compat_blueprint
 from indico_audiovisual.definition import AVRequest, SpeakerReleaseAgreement, TalkPlaceholder
 from indico_audiovisual.notifications import notify_relocated_request, notify_rescheduled_request
+from indico_audiovisual.recordings import get_recording_thumbnail_url, get_recordings
 from indico_audiovisual.util import (compare_data_identifiers, count_capable_contributions, get_data_identifiers,
                                      is_av_manager)
 from indico_audiovisual.views import WPAudiovisualManagers
@@ -224,7 +224,7 @@ class AVRequestsPlugin(IndicoPlugin):
         secret = self.settings.get('webcast_state_viewer_token_secret')
         if not secret:
             return None
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         payload = {'indicoId': event.id,
                    'iat': int(now.timestamp()),
                    'exp': int((now + VIEWER_TOKEN_TTL).timestamp())}
