@@ -40,7 +40,7 @@ from indico_audiovisual.definition import AVRequest, SpeakerReleaseAgreement, Ta
 from indico_audiovisual.notifications import notify_relocated_request, notify_rescheduled_request
 from indico_audiovisual.util import (compare_data_identifiers, count_capable_contributions, get_data_identifiers,
                                      is_av_manager)
-from indico_audiovisual.views import WPAudiovisualManagers, WPWebcastStatesDev
+from indico_audiovisual.views import WPAudiovisualManagers
 
 
 VIEWER_TOKEN_TTL = timedelta(hours=24)
@@ -130,9 +130,6 @@ class AVRequestsPlugin(IndicoPlugin):
                            condition=lambda: request.view_args.get('type') == AVRequest.name)
         self.inject_bundle('main.css', WPSimpleEventDisplay)
         self.inject_bundle('main.js', WPSimpleEventDisplay)
-        self.inject_bundle('main.css', WPWebcastStatesDev)
-        self.inject_bundle('main.js', WPWebcastStatesDev)
-        self.inject_bundle('dev.js', WPWebcastStatesDev)
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
         self.connect(signals.agreements.get_definitions, self._get_agreement_definitions)
         self.connect(signals.acl.can_access, self._can_access_event, sender=Event)
