@@ -8,7 +8,6 @@
 import re
 
 from marshmallow import ValidationError
-from sqlalchemy.orm import noload
 
 from indico.core import signals
 from indico.core.db import db
@@ -66,8 +65,7 @@ def cds_link_exists(obj, url):
                      AttachmentFolder.object == obj,
                      Attachment.type == AttachmentType.link,
                      Attachment.link_url == url)
-             .join(AttachmentFolder)
-             .options(noload('*')))
+             .join(AttachmentFolder))
     return db.session.query(query.exists()).scalar()
 
 

@@ -105,7 +105,6 @@ function resolveThumbnailUrl(card) {
 function updateThumbnail(card) {
   const thumb = card.querySelector('.js-thumb');
   const url = resolveThumbnailUrl(card);
-  // a source that already failed is not retried on every refresh
   if (!url || url === thumb.dataset.failedUrl) {
     card.classList.remove('has-thumb');
     return;
@@ -130,7 +129,6 @@ export function refreshCard(card) {
 
 export function initCard(card) {
   const thumb = card.querySelector('.js-thumb');
-  // an inline onerror would be blocked by the CSP, so the handler is bound here
   thumb.addEventListener('error', () => {
     thumb.dataset.failedUrl = thumb.getAttribute('src') || '';
     card.classList.remove('has-thumb');
