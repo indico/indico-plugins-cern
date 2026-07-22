@@ -5,7 +5,7 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 
 from authlib.jose import jwt as jose_jwt
 from flask import g, request, session
@@ -25,6 +25,7 @@ from indico.modules.events.requests.views import WPRequestsEventManagement
 from indico.modules.events.views import WPSimpleEventDisplay
 from indico.modules.rb.models.room_features import RoomFeature
 from indico.modules.users import User
+from indico.util.date_time import now_utc
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import EmailListField, MultipleItemsField, PrincipalListField
 from indico.web.forms.validators import IndicoEmail
@@ -224,7 +225,7 @@ class AVRequestsPlugin(IndicoPlugin):
         secret = self.settings.get('webcast_state_viewer_token_secret')
         if not secret:
             return None
-        now = datetime.now(UTC)
+        now = now_utc()
         payload = {'indicoId': event.id,
                    'iat': int(now.timestamp()),
                    'exp': int((now + VIEWER_TOKEN_TTL).timestamp())}
