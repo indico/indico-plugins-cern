@@ -214,10 +214,20 @@ def _process_events(ignore, settings, logger):
 
 
 def _update_bulk(event, action, settings):
-    if action in {OutlookAction.update, OutlookAction.remove}:
+    if action == OutlookAction.remove:
         success = True
         for cal_entry in event.outlook_calendar_entries:
             if not _update_calendar_entry(event, cal_entry.user, action, settings):
+                success = False
+        return success
+    elif action == OutlookAction.update:
+        success = True
+        users = {cal_entry.user for cal_entry in event.outlook_calendar_entries}
+        # in some cases a user may not have a calendar entry yet, e.g. if the event was created
+        # as invisible, and the visibility only got updated later
+        users |= get_users_to_add(event)
+        for user in users:
+            if not _update_calendar_entry(event, user, action, settings):
                 success = False
         return success
     elif action == OutlookAction.add:
