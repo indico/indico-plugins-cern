@@ -7,9 +7,10 @@
 
 from datetime import timedelta
 
-from authlib.jose import jwt as jose_jwt
 from flask import g, request, session
 from flask_pluginengine import render_plugin_template, url_for_plugin
+from joserfc import jwt as jose_jwt
+from joserfc.jwk import OctKey
 from sqlalchemy.orm.attributes import flag_modified
 from wtforms.fields import StringField, URLField
 from wtforms.validators import DataRequired, ValidationError
@@ -232,7 +233,7 @@ class AVRequestsPlugin(IndicoPlugin):
         if session.user:
             payload['sub'] = str(session.user.id)
         try:
-            return jose_jwt.encode({'alg': 'HS256'}, payload, secret).decode()
+            return jose_jwt.encode({'alg': 'HS256'}, payload, OctKey.import_key(secret))
         except Exception:
             self.logger.exception('Could not build webcast state token')
             return None
