@@ -5,7 +5,6 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-import json
 import random
 import re
 from copy import deepcopy
@@ -72,10 +71,22 @@ def _send_adams_http_request(method, data):
 
     url = CERNAccessPlugin.settings.get('adams_url')
     credentials = (CERNAccessPlugin.settings.get('username'), CERNAccessPlugin.settings.get('password'))
-    request_headers = {'Content-Type': 'application/json'}
+
+    if method == 'DELETE':
+        # deletion is weird. after a change on the ADaMS side, it no longer accepts DELETE with a payload.
+        # so if it's just a single one to be deleted we make a classic DELETE request with the ID in the URL
+        # and for bulk deletion we use their new endpoint with POST and the classic payload
+        if len(data) == 1:
+            url = f'{url}{data[0]}'
+            data = None
+        else:
+            # the original url always has a trailing slash (it 404s without it), so no need to the
+            # case of a url without one in here
+            method = 'POST'
+            url = f'{url}bulkdelete'
 
     try:
-        r = requests.request(method, url, data=json.dumps(data), headers=request_headers, auth=credentials)
+        r = requests.request(method, url, json=data, auth=credentials)
         r.raise_for_status()
     except requests.exceptions.RequestException:
         CERNAccessPlugin.logger.exception('Request to ADAMS failed (%r)', data)
