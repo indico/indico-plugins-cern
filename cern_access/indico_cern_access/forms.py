@@ -86,6 +86,13 @@ class CERNAccessForm(RequestFormBase):
         self.start_dt_override.default_time = self.event.start_dt_local.time()
         self.end_dt_override.default_time = self.event.end_dt_local.time()
 
+    def validate_include_accompanying_persons(self, field):
+        if not field.data:
+            return
+        regforms = {rf for rf in get_regforms(self.event) if str(rf.id) in self.regforms.data}
+        if any(rf.has_anonymous_accompanying_persons_fields for rf in regforms):
+            raise ValidationError(_('You cannot generate visitor badges for anonymous accompanying persons.'))
+
     def validate_start_dt_override(self, field):
         if bool(self.start_dt_override.data) != bool(self.end_dt_override.data):
             raise ValidationError(_('You need to specify both date overrides or neither of them.'))

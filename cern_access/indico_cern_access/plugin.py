@@ -11,6 +11,7 @@ from datetime import time, timedelta
 
 from flask import g, request, session
 from flask_pluginengine import render_plugin_template
+from marshmallow import ValidationError
 from werkzeug.exceptions import Forbidden
 from wtforms.fields import StringField, URLField
 from wtforms.validators import DataRequired, Optional
@@ -25,6 +26,7 @@ from indico.modules.designer import TemplateType
 from indico.modules.designer.models.templates import DesignerTemplate
 from indico.modules.events import Event
 from indico.modules.events.registration.controllers.display import RHRegistrationForm
+from indico.modules.events.registration.fields.accompanying import AccompanyingPersonsFieldDataSchema
 from indico.modules.events.registration.forms import TicketsForm
 from indico.modules.events.registration.models.forms import RegistrationForm
 from indico.modules.events.registration.models.items import RegistrationFormItem
@@ -34,6 +36,7 @@ from indico.modules.events.registration.placeholders.registrations import (Event
 from indico.modules.events.registration.util import RegistrationSchemaBase
 from indico.modules.events.registration.views import (WPDisplayRegistrationFormConference,
                                                       WPDisplayRegistrationFormSimpleEvent, WPManageRegistration)
+from indico.modules.events.requests.controllers import RequestState
 from indico.util.countries import get_countries
 from indico.util.date_time import now_utc
 from indico.web.forms.base import IndicoForm
@@ -144,6 +147,7 @@ class CERNAccessPlugin(IndicoPlugin):
         self.connect(signals.core.get_placeholders, self._get_access_email_placeholders, sender='cern-access-email')
         self.connect(signals.core.get_placeholders, self._get_reg_email_placeholders, sender='registration-email')
         self.connect(signals.plugin.schema_pre_load, self._registration_schema_pre_load)
+        self.connect(signals.plugin.schema_post_load, self._accompanying_setup_schema_post_load)
         self.inject_bundle('main.js', WPAccessRequestDetails)
         self.inject_bundle('main.js', WPDisplayRegistrationFormConference)
         self.inject_bundle('main.js', WPDisplayRegistrationFormSimpleEvent)
@@ -153,6 +157,18 @@ class CERNAccessPlugin(IndicoPlugin):
         self.inject_bundle('main.css', WPDisplayRegistrationFormSimpleEvent)
         self.inject_bundle('main.css', WPAccessRequestDetails)
         self.inject_bundle('main.css', WPManageRegistration)
+
+    def _accompanying_setup_schema_post_load(self, schema, data, **kwargs):
+        if not issubclass(schema, AccompanyingPersonsFieldDataSchema):
+            return
+        if not data['is_anonymous']:
+            return
+        if not (req := get_last_request(g.rh.event)) or req.state != RequestState.accepted:
+            return
+        if not req.data.get('include_accompanying_persons'):
+            return
+        raise ValidationError(_('Anonymous accompanying persons are not compatible with CERN visitor badges'),
+                              'is_anonymous')
 
     def _registration_schema_pre_load(self, schema, data, **kwargs):
         if not issubclass(schema, RegistrationSchemaBase):
