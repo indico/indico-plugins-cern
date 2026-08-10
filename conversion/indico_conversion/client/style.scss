@@ -5,6 +5,7 @@
 // them and/or modify them under the terms of the MIT License; see
 // the LICENSE file for more details.
 
+@use 'base/utilities' as *;
 @use 'base/palette' as *;
 @use 'base/animation' as *;
 
@@ -15,6 +16,16 @@
 .folder > .attachment.pdf-pending,
 .folder > .attachments > .attachment.pdf-pending {
   background-color: lighten($gray, 10%);
+
+  @include icon-after('icon-magic');
+
+  &:after {
+    line-height: 1;
+    font-size: 1.2em;
+    color: $dark-gray;
+    vertical-align: top;
+    margin-left: 0.5em;
+  }  
 }
 
 .attachment.pdf-pending,
