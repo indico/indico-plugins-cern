@@ -41,6 +41,7 @@ class I18nDemoPlugin(IndicoPlugin):
     def init(self):
         super().init()
         self.template_hook('event-status-labels', self._inject_clone_button)
+        self.connect(signals.event.reminder.before_reminder_make_email, self._before_reminder_make_email)
         self.connect(signals.plugin.interceptable_function, self._intercept_make_email,
                      sender=interceptable_sender(make_email))
 
@@ -57,6 +58,9 @@ class I18nDemoPlugin(IndicoPlugin):
         if event.category != test_category and not event.category.is_descendant_of(test_category):
             return render_plugin_template('clone_button.html', event=event, disabled=not session.user)
 
+    def _before_reminder_make_email(self, reminder, to_list, **kwargs):
+        return {'to_list': reminder.creator.email}
+
     def _intercept_make_email(self, sender, func, args, **kwargs):
         ret = func(**args.arguments)
 
@@ -64,7 +68,8 @@ class I18nDemoPlugin(IndicoPlugin):
             # If we're outside the request context (i.e. in a celery task),
             # we can't access the session so we just return the original email unmodified.
             # This can happen for data export and event reminders (and maybe some other places?).
-            # In those cases, we trust the users not to spam random people.
+            # Event reminders are handled separately by overwriting their recipient list, since we
+            # do not have a session user when a scheduled reminder is sent.
             return ret
 
         if session.get('register_verification_email_sent'):
