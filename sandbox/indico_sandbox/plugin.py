@@ -6,57 +6,25 @@
 # the LICENSE file for more details.
 
 from flask import has_request_context, session
-from flask_pluginengine.plugin import render_plugin_template
-from wtforms.fields import IntegerField
-from wtforms.validators import NumberRange, Optional
 
 from indico.core import signals
 from indico.core.config import config
 from indico.core.notifications import make_email
 from indico.core.plugins import IndicoPlugin
-from indico.modules.categories.models.categories import Category
 from indico.util.signals import interceptable_sender
-from indico.web.forms.base import IndicoForm
-
-from indico_i18n_demo.blueprint import blueprint
 
 
-class PluginSettingsForm(IndicoForm):
-    test_category_id = IntegerField('Test category ID', [Optional(), NumberRange(min=1)],
-                                    description='The ID of the category to clone events to')
+class SandboxPlugin(IndicoPlugin):
+    """Sandbox
 
-
-class I18nDemoPlugin(IndicoPlugin):
-    """I18n Demo
-
-    Provides utilities for the i18n-demo instance.
+    Provides utilities for the sandbox instance.
     """
-
-    configurable = True
-    settings_form = PluginSettingsForm
-    default_settings = {
-        'test_category_id': ''
-    }
 
     def init(self):
         super().init()
-        self.template_hook('event-status-labels', self._inject_clone_button)
         self.connect(signals.event.reminder.before_reminder_make_email, self._before_reminder_make_email)
         self.connect(signals.plugin.interceptable_function, self._intercept_make_email,
                      sender=interceptable_sender(make_email))
-
-    def get_blueprints(self):
-        return blueprint
-
-    def _inject_clone_button(self, event, **kwargs):
-        if not (test_category_id := self.settings.get('test_category_id')):
-            return
-
-        if not (test_category := Category.get(int(test_category_id))):
-            return
-
-        if event.category != test_category and not event.category.is_descendant_of(test_category):
-            return render_plugin_template('clone_button.html', event=event, disabled=not session.user)
 
     def _before_reminder_make_email(self, reminder, to_list, **kwargs):
         return {'to_list': reminder.creator.email}

@@ -9,5 +9,3 @@ instance](https://localization-demo.getindico.io). It does two things:
   corresponding event is cloned into your own personal subcategory and you get
   management rights to it. This way, you can see the management area without
   accidentally modifying the example events.
-
-![](example.png)
