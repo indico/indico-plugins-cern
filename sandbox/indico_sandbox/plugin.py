@@ -5,7 +5,7 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
-from flask import has_request_context, session
+from flask import g, has_request_context, session
 
 from indico.core import signals
 from indico.core.config import config
@@ -27,7 +27,8 @@ class SandboxPlugin(IndicoPlugin):
                      sender=interceptable_sender(make_email))
 
     def _before_reminder_make_email(self, reminder, to_list, **kwargs):
-        return {'to_list': reminder.creator.email}
+        if reminder.event.id > 5958:
+            return {'to_list': reminder.creator.email}
 
     def _intercept_make_email(self, sender, func, args, **kwargs):
         ret = func(**args.arguments)
@@ -42,6 +43,9 @@ class SandboxPlugin(IndicoPlugin):
 
         if session.get('register_verification_email_sent'):
             # Let verification emails through
+            return ret
+
+        if (rh := g.get('rh')) and (event := getattr(rh, 'event', None)) and event.id <= 5958:
             return ret
 
         # If the user is logged in, redirect the email to them, otherwise do not send it
