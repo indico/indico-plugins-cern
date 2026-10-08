@@ -1,0 +1,9 @@
+@use 'base/palette' as *;
+
+$header-bg-color: $light-gray;
+$header-icon-color: $light-black;
+$header-text-color: $black;
+
+@import 'themes/indico';
+
+@include header-logo('themes_cern:iris_logo.png', 10px 15px, 230px, 20%);
