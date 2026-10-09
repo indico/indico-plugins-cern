@@ -5,8 +5,12 @@
 # them and/or modify them under the terms of the MIT License; see
 # the LICENSE file for more details.
 
+from datetime import timedelta
+
 from flask import g, request, session
 from flask_pluginengine import render_plugin_template, url_for_plugin
+from joserfc import jwt as jose_jwt
+from joserfc.jwk import OctKey
 from sqlalchemy.orm.attributes import flag_modified
 from wtforms.fields import StringField, URLField
 from wtforms.validators import DataRequired, ValidationError
@@ -19,8 +23,10 @@ from indico.modules.events import Event
 from indico.modules.events.contributions import Contribution
 from indico.modules.events.requests.models.requests import Request, RequestState
 from indico.modules.events.requests.views import WPRequestsEventManagement
+from indico.modules.events.views import WPSimpleEventDisplay
 from indico.modules.rb.models.room_features import RoomFeature
 from indico.modules.users import User
+from indico.util.date_time import now_utc
 from indico.web.forms.base import IndicoForm
 from indico.web.forms.fields import EmailListField, MultipleItemsField, PrincipalListField
 from indico.web.forms.validators import IndicoEmail
@@ -33,9 +39,13 @@ from indico_audiovisual.blueprint import blueprint
 from indico_audiovisual.compat import compat_blueprint
 from indico_audiovisual.definition import AVRequest, SpeakerReleaseAgreement, TalkPlaceholder
 from indico_audiovisual.notifications import notify_relocated_request, notify_rescheduled_request
+from indico_audiovisual.recordings import get_recording_thumbnail_url, get_recordings
 from indico_audiovisual.util import (compare_data_identifiers, count_capable_contributions, get_data_identifiers,
                                      is_av_manager)
 from indico_audiovisual.views import WPAudiovisualManagers
+
+
+VIEWER_TOKEN_TTL = timedelta(hours=24)
 
 
 class PluginSettingsForm(IndicoForm):
@@ -63,6 +73,14 @@ class PluginSettingsForm(IndicoForm):
     webcast_url = URLField(_('Webcast URL'), [DataRequired()],
                            description=_('The URL to watch the webcast for an event. Can contain {event_id} which '
                                          'will be replaced with the ID of the event.'))
+    webcast_state_relay_url = URLField(_('Webcast State Relay URL'),
+                                       description=_('The webcast-state-relay URL used to subscribe to the live '
+                                                     'webcast state shown on event pages. Must contain the '
+                                                     '{event_id} placeholder. Leave empty to disable.'))
+    webcast_state_viewer_token_secret = StringField(_('Webcast State Viewer Token Secret'),
+                                                    description=_('Shared secret used to sign the short-lived tokens '
+                                                                  'that authorize a viewer to subscribe to the live '
+                                                                  'webcast state.'))
     agreement_paper_url = URLField(_('Agreement Paper URL'),
                                    description=_('The URL to the agreement that can be printed and signed offline.'))
     recording_cds_url = URLField(_('CDS URL'),
@@ -75,6 +93,10 @@ class PluginSettingsForm(IndicoForm):
     def validate_recording_cds_url(self, field):
         if field.data and '{cds_id}' not in field.data:
             raise ValidationError('{cds_id} placeholder is missing')
+
+    def validate_webcast_state_relay_url(self, field):
+        if field.data and '{event_id}' not in field.data:
+            raise ValidationError('{event_id} placeholder is missing')
 
 
 class AVRequestsPlugin(IndicoPlugin):
@@ -92,6 +114,8 @@ class AVRequestsPlugin(IndicoPlugin):
                         'notification_emails': [],
                         'webcast_ping_url': '',
                         'webcast_url': '',
+                        'webcast_state_relay_url': '',
+                        'webcast_state_viewer_token_secret': '',
                         'agreement_paper_url': None,
                         'recording_cds_url': 'https://cds.cern.ch/record/{cds_id}',
                         'room_feature': None}
@@ -105,6 +129,8 @@ class AVRequestsPlugin(IndicoPlugin):
         self.inject_bundle('main.css', WPAudiovisualManagers)
         self.inject_bundle('main.css', WPRequestsEventManagement, subclasses=False,
                            condition=lambda: request.view_args.get('type') == AVRequest.name)
+        self.inject_bundle('main.css', WPSimpleEventDisplay)
+        self.inject_bundle('main.js', WPSimpleEventDisplay)
         self.connect(signals.plugin.get_event_request_definitions, self._get_event_request_definitions)
         self.connect(signals.agreements.get_definitions, self._get_agreement_definitions)
         self.connect(signals.acl.can_access, self._can_access_event, sender=Event)
@@ -176,27 +202,62 @@ class AVRequestsPlugin(IndicoPlugin):
             req.data['identifiers'] = identifiers
             flag_modified(req, 'data')
 
-    def _get_event_webcast_url(self, event):
+    def _get_webcast_request(self, event):
         req = Request.find_latest_for_event(event, AVRequest.name)
         if not req or req.state != RequestState.accepted or 'webcast' not in req.data['services']:
             return None
         if req.data.get('webcast_hidden'):
             return None
+        return req
+
+    def _get_webcast_url(self, req):
         url = req.data.get('custom_webcast_url') or self.settings.get('webcast_url')
         try:
-            return url.format(event_id=event.id)
+            return url.format(event_id=req.event_id)
         except Exception:
             self.logger.exception('Could not build webcast URL')
             return None
 
+    def _get_webcast_state_url(self, event):
+        url = self.settings.get('webcast_state_relay_url')
+        return url.format(event_id=event.id) if url else None
+
+    def _build_webcast_viewer_token(self, event):
+        secret = self.settings.get('webcast_state_viewer_token_secret')
+        if not secret:
+            return None
+        now = now_utc()
+        payload = {'event_id': event.id,
+                   'iat': int(now.timestamp()),
+                   'exp': int((now + VIEWER_TOKEN_TTL).timestamp())}
+        if session.user:
+            payload['sub'] = str(session.user.id)
+        try:
+            return jose_jwt.encode({'alg': 'HS256'}, payload, OctKey.import_key(secret))
+        except Exception:
+            self.logger.exception('Could not build webcast state token')
+            return None
+
     def _inject_event_header(self, event, **kwargs):
-        url = self._get_event_webcast_url(event)
+        req = self._get_webcast_request(event)
+        url = self._get_webcast_url(req) if req else None
         if not url:
             return
-        return render_plugin_template('event_header.html', url=url)
+        recording, inner_recordings = get_recordings(event, session.user)
+        recording_url = recording.link_url if recording else None
+        recording_thumbnail_url = get_recording_thumbnail_url(recording_url) if recording_url else None
+        state_url = self._get_webcast_state_url(event)
+        viewer_token = self._build_webcast_viewer_token(event) if state_url else None
+        return render_plugin_template('event_header.html', event=event, url=url,
+                                      is_recording_planned='recording' in req.data['services'],
+                                      recording_url=recording_url,
+                                      recording_thumbnail_url=recording_thumbnail_url,
+                                      inner_recording_count=len(inner_recordings),
+                                      state_url=state_url, viewer_token=viewer_token)
 
     def _inject_conference_header_subtitle(self, event, **kwargs):
-        url = self._get_event_webcast_url(event)
+        req = self._get_webcast_request(event)
+        url = self._get_webcast_url(req) if req else None
         if not url:
             return
         return render_plugin_template('conference_header.html', url=url)
