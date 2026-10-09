@@ -200,6 +200,11 @@ definitions:
     stylesheet: ngt.scss
     title: Next Generation Triggers
 
+  iris:
+    <<: *standard_themes_cern
+    stylesheet: iris.scss
+    title: iRIS
+
   # Meetings - CERN Administrative
   administrative: &administrative
     event_types: [conference, meeting]
