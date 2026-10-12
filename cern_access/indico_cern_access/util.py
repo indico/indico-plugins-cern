@@ -134,7 +134,7 @@ def generate_access_id(person_id):
     if isinstance(person_id, str):
         # If it is an accomanying person UUID, truncate it to 16 characters
         person_id = person_id.replace('-', '')[16:]
-    return f'in{person_id}'
+    return f'IN{person_id}'
 
 
 def build_access_request_data(id, first_name, last_name, event, license_plate=None, reservation_code=None):
