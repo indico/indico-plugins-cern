@@ -1,0 +1,218 @@
+// This file is part of the CERN Indico plugins.
+// Copyright (C) 2014 - 2026 CERN
+//
+// The CERN Indico plugins are free software; you can redistribute
+// them and/or modify them under the terms of the MIT License; see
+// the LICENSE file for more details.
+
+@use 'base/palette' as *;
+
+@keyframes av-live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
+}
+
+// based on .event-service-row styles
+.av-webcast-card {
+  display: flex;
+  flex-direction: column;
+  background: $light-gray;
+  border: 1px solid $pastel-gray;
+  box-shadow: 0 2px 1px -1px $pastel-gray;
+
+  [data-for-state] {
+    display: none;
+  }
+
+  // only the variant matching the card's current state is shown
+  @each $state in fallback, upcoming, live, ended {
+    &[data-state='#{$state}'] [data-for-state~='#{$state}'] {
+      display: flex;
+    }
+  }
+
+  .av-wc-main {
+    display: flex;
+    align-items: stretch;
+  }
+
+  .av-wc-thumb {
+    position: relative;
+    display: none;
+    flex: none;
+    align-self: center;
+    width: 150px;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: $pastel-gray;
+  }
+
+  .av-wc-thumb-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .av-wc-thumb-play {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 34px;
+    height: 34px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgb(0 0 0 / 55%);
+    color: white;
+    pointer-events: none;
+
+    .icon-play {
+      // icon is not centered vertically by default
+      display: flex;
+      font-size: 16px;
+      margin-left: 2px;
+    }
+  }
+
+  .av-wc-thumb-link {
+    position: absolute;
+    inset: 0;
+    cursor: pointer;
+  }
+
+  &.has-thumb {
+    .av-wc-thumb {
+      display: block;
+    }
+
+    // the thumbnail replaces the camera icon
+    .av-wc-icon {
+      display: none;
+    }
+  }
+
+  &[data-state='ended'].has-thumb .av-wc-thumb-play {
+    display: flex;
+  }
+
+  .av-wc-variant {
+    min-width: 0;
+    flex: 1;
+    align-items: center;
+    gap: 11px;
+    padding: 7px 10px;
+  }
+
+  .av-wc-icon {
+    flex: none;
+    font-size: 1.4em;
+    color: $light-black;
+  }
+
+  .av-wc-body {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .av-wc-title {
+    .av-live-badge {
+      margin-right: 6px;
+    }
+  }
+
+  .av-wc-sub {
+    font-size: var(--text-size-rel-s);
+    color: $light-black;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+
+    &.hidden {
+      display: none;
+    }
+  }
+
+  .av-wc-sep {
+    color: $gray;
+  }
+
+  .av-wc-action {
+    flex: none;
+    margin-left: 6px;
+    // matches the registration card's toolbar right margin
+    margin-right: 2em;
+  }
+}
+
+.av-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: $red;
+  color: white;
+  font-size: var(--text-size-rel-s);
+  font-weight: bold;
+  letter-spacing: 0.08em;
+  padding: 2px 8px 2px 7px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+
+.av-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: white;
+  flex: none;
+}
+
+.av-dot-pulse {
+  animation: av-live-pulse 1.6s ease-in-out infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+.av-wc-foot {
+  padding: 8px 10px;
+  border-top: 1px solid $pastel-gray;
+  background: white;
+  font-size: var(--text-size-rel-s);
+  color: $light-black;
+  line-height: 1.4;
+
+  .av-wc-foot-item {
+    align-items: center;
+    gap: 9px;
+  }
+
+  .av-wc-foot-eta {
+    color: $dark-gray;
+  }
+}
+
+// TODO: remove this once "circles" icon from icomoon is used instead
+.av-rec-disc {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  color: $dark-gray;
+
+  .rolling & {
+    color: $dark-red;
+  }
+}
