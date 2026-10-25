@@ -146,7 +146,7 @@ def request_pdf_from_googledrive(task, attachment):
             return
         pdf = BytesIO(response.content)
         pdf = _strip_google_tracking(pdf)
-        save_pdf(attachment, pdf)
+        save_pdf(attachment, pdf, source='googledrive')
         signals.core.after_process.send()
         db.session.commit()
 
@@ -191,7 +191,7 @@ class RHDoconverterFinished(RH):
             ConversionPlugin.logger.error('Received invalid status %s for %s', request.form['status'], attachment)
             return jsonify(success=False)
         pdf = request.files['content'].stream.read()
-        save_pdf(attachment, pdf)
+        save_pdf(attachment, pdf, source='doconverter')
         return jsonify(success=True)
 
 
@@ -317,7 +317,7 @@ def check_attachment_cloudconvert(task, attachment_id, export_task_id):
                                         attachment_id, export_task_id, exc, response_text)
         task.retry(countdown=60)
         return
-    save_pdf(attachment, resp.content)
+    save_pdf(attachment, resp.content, source='cloudconvert')
     signals.core.after_process.send()
     cloudconvert_task_cache.delete(export_task_id)
     db.session.commit()
@@ -368,7 +368,7 @@ class RHCloudConvertFinished(RH):
                                               attachment_id, task['id'], exc, response_text)
                 return jsonify(success=False)
 
-            save_pdf(attachment, resp.content)
+            save_pdf(attachment, resp.content, source='cloudconvert')
         except Exception:
             # if anything goes wrong here give the polling task a chance to succeed
             cloudconvert_task_cache.set(task['id'], 'pending', 3600)
