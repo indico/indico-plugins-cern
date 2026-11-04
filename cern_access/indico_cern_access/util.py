@@ -133,7 +133,7 @@ def generate_access_id(person_id):
     """Generate an id in format required by ADaMS API."""
     if isinstance(person_id, str):
         # If it is an accomanying person UUID, truncate it to 16 characters
-        person_id = person_id.replace('-', '')[16:]
+        person_id = person_id.replace('-', '')[16:].upper()
     return f'IN{person_id}'
 
 
