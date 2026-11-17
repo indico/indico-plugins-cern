@@ -1,0 +1,7 @@
+@use 'base/palette' as *;
+
+$header-bg-color: #0033A0 ;
+
+@import 'themes/indico';
+
+@include header-logo('themes_cern:bl4s_logo.png', 20px 0px, 170px, 13%);
