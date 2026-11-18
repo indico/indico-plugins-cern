@@ -205,6 +205,11 @@ definitions:
     stylesheet: iris.scss
     title: iRIS
 
+  bl4s:
+    <<: *standard_themes_cern
+    stylesheet: bl4s.scss
+    title: Beamline for Schools
+
   # Meetings - CERN Administrative
   administrative: &administrative
     event_types: [conference, meeting]
